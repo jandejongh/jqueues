@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--
+-->
+<html>
+  <head>
+    <title>jqueues (r1)</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <div>A small package for simulation of queueing systems.
+      <p>
+        It uses two important concepts:
+      <ul>
+        <li>Jobs (<code>interface SimJob</code>): a job represents an amount of work to be carried out by one or more servers
+        <li>Queues (<code>interface SimQueue</code>): a queue is an abstract waiting line holding jobs
+          to be served by one or more servers associated with the queue
+      </ul>
+      The so-called queue discipline determines in what order jobs are served by the server(s).
+      <p>
+        An important class of queueing disciplines are the non-preemptive ones, in which jobs, once taken into service,
+        cannot be preempted (and, for instance, later resumed) in favor of another job. 
+    </div>
+  </body>
+</html>

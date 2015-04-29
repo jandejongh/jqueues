@@ -174,7 +174,7 @@ public abstract class NonPreemptiveQueue
             }
           };
 
-  /** Create a non-preemptive queue given an event queue.
+  /** Create a non-preemptive queue given an event list.
    *
    * @param eventList The event list to use.
    *
@@ -248,7 +248,12 @@ public abstract class NonPreemptiveQueue
 
 
   }
-
+  
+  /** The {@link FIFO} queue serves jobs in order of arrival times.
+   * 
+   * First In First Out, also known as First Come First Served (FCFS).
+   * 
+   */
   public static class FIFO extends NonPreemptiveQueue
   {
 
@@ -384,6 +389,13 @@ public abstract class NonPreemptiveQueue
 
   }
 
+  /** The {@link LIFO} queue serves jobs in reverse order of arrival times.
+   * 
+   * Last In First Out, also known as Last Come First Served (LCFS).
+   * Note that this is the non-preemptive version of the queueing discipline:
+   * Once a job is taken into service, it is not preempted in favor of a new arrival.
+   * 
+   */
   public static class LIFO extends FIFO
   {
 
@@ -394,6 +406,9 @@ public abstract class NonPreemptiveQueue
 
   }
 
+  /** The {@link RANDOM} queue serves jobs in random order.
+   * 
+   */
   public static class RANDOM extends FIFO
   {
 
@@ -412,6 +427,12 @@ public abstract class NonPreemptiveQueue
 
   }
 
+  /** The {@link IS} queue serves all jobs simultaneously.
+   * 
+   * Infinite Server.
+   * This queueing discipline, unlike e.g., {@link FIFO}, has multiple (actually infinite) servers.
+   * 
+   */
   public static class IS extends NonPreemptiveQueue
   {
 
