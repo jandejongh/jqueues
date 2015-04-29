@@ -1,6 +1,6 @@
-package nl.jdj.jsimulation.v1.jobqueue;
+package nl.jdj.jqueues.r1;
 
-import nl.jdj.jsimulation.v1.SimEventAction;
+import nl.jdj.jsimulation.r2.SimEventAction;
 
 /** A queue has one or more waiting lines for {@link SimJob}s
  *  and zero or more servers to serve them.
@@ -23,7 +23,7 @@ import nl.jdj.jsimulation.v1.SimEventAction;
  * {@link #arrive}.
  *
  * <p>
- * A {@link SimQueue} supports registration and deregistration of
+ * A {@link SimQueue} supports registration and un-registration of
  * queue-specific {@link SimAction}s to be invoked for specific events,
  * in particular job arrivals ({@link #addArrivalAction} and {@link #removeArrivalAction}),
  * job service start events ({@link #addStartAction} and {@link #removeStartAction}),
@@ -41,7 +41,7 @@ import nl.jdj.jsimulation.v1.SimEventAction;
  * All {@link SimAction}s described above are called only <i>after</i> the
  * {@link SimQueue} has updated all relevant fields in the
  * {@link SimQueue} and {@link SimJob} objects,
- * i.e., <i>after</i> both objects truely reflect the new state of the queue
+ * i.e., <i>after</i> both objects truly reflect the new state of the queue
  * and the job, respectively.
  * As a general rule, queue-registered (global) actions take precedence
  * over job-specific actions, in the sense that the former are called
@@ -49,7 +49,7 @@ import nl.jdj.jsimulation.v1.SimEventAction;
  * However, we think it is bad practice to depend upon this behavior.
  *
  * <p>
- * If a job is succesfully revoked, none of the departure actions are
+ * If a job is successfully revoked, none of the departure actions are
  * called. Also, be aware that there is no guarantee that a start-service
  * or a departure event is ever called for a {@link SimJob} at all.
  *
@@ -72,17 +72,17 @@ public interface SimQueue
    */
   public void arrive (SimJob job, double time);
 
-  /** Revokation of a job at a queue.
+  /** Revocation of a job at a queue.
    *
    * @param job  The job to be revoked from the queue.
    * @param time The time at which the request is issued
    *               (i.e., the current time).
    * @param interruptService Whether to allow interruption of the job's
    *                           service if already started.
-   *                         If false, revokation will only succeed if the
+   *                         If false, revocation will only succeed if the
    *                           job has not received any service yet.
    *
-   * @return True if revokation succeeded.
+   * @return True if revocation succeeded.
    *
    */
   public boolean revoke (SimJob job, double time, boolean interruptService);

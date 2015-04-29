@@ -1,6 +1,6 @@
-package nl.jdj.jsimulation.v1.jobqueue;
+package nl.jdj.jqueues.r1;
 
-import nl.jdj.jsimulation.v1.SimEventAction;
+import nl.jdj.jsimulation.r2.SimEventAction;
 
 /** A {@link SimJob} represents an amount (finite) of work to be carried out by one
  *  or more {@link SimQueue}s.
@@ -67,9 +67,9 @@ public interface SimJob
    */
   public SimEventAction<SimJob>  getQueueArriveAction ();
 
-  /** The job-supplied action upon revokation from a queue.
+  /** The job-supplied action upon revocation from a queue.
    *
-   * @return The job-supplied action upon revokation from a queue, or {@code null}.
+   * @return The job-supplied action upon revocation from a queue, or {@code null}.
    *
    * @see SimQueue#revoke
    *

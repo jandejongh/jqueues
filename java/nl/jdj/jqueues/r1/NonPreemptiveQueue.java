@@ -1,52 +1,52 @@
-package nl.jdj.jsimulation.v1.jobqueue;
+package nl.jdj.jqueues.r1;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.Vector;
-import nl.jdj.jsimulation.v1.SimEvent;
-import nl.jdj.jsimulation.v1.SimEventAction;
-import nl.jdj.jsimulation.v1.SimEventQueue;
+import nl.jdj.jsimulation.r2.SimEvent;
+import nl.jdj.jsimulation.r2.SimEventAction;
+import nl.jdj.jsimulation.r2.SimEventList;
 
 /** An abstract base class for non-preemptive queueing disciplines
  * for {@link SimJob}s.
  *
- * The class and all implementations support job revokations.
+ * The class and all implementations support job revocations.
  *
  */
 public abstract class NonPreemptiveQueue
   implements SimQueue
 {
 
-  /** The underlying event queue for {@link SimQueue} operations
+  /** The underlying event list for {@link SimQueue} operations
    *  (to be supplied and fixed in the constructor).
    *
    */
-  protected final SimEventQueue eventQueue;
+  protected final SimEventList eventList;
 
   /** Jobs currently in queue.
    *
    */
-  protected final List<SimJob> jobQueue = new Vector<SimJob> ();
+  protected final List<SimJob> jobQueue = new ArrayList<> ();
 
   /** Jobs currently being executed by the server.
    *
    */
   protected final Set<SimJob> jobsExecuting
-    = new HashSet<SimJob> ();
+    = new HashSet<> ();
 
   /** Events scheduled on behalf of this {@link SimQueue}.
    *
    */
   protected final Set<SimEvent<SimJob>> eventsScheduled
-    = new HashSet<SimEvent<SimJob>> ();
+    = new HashSet<> ();
 
   protected double lastEventTime = Double.NEGATIVE_INFINITY;
 
   protected final List<SimEventAction> arrivalActions
-    = new Vector<SimEventAction> ();
+    = new ArrayList<> ();
 
   @Override
   public void addArrivalAction (final SimEventAction action)
@@ -69,7 +69,7 @@ public abstract class NonPreemptiveQueue
   }
 
   protected final List<SimEventAction> startActions
-    = new Vector<SimEventAction> ();
+    = new ArrayList<> ();
 
   @Override
   public void addStartAction (final SimEventAction action)
@@ -92,7 +92,7 @@ public abstract class NonPreemptiveQueue
   }
 
   protected final List<SimEventAction> departureActions
-    = new Vector<SimEventAction> ();
+    = new ArrayList<> ();
 
   @Override
   public void addDepartureAction (final SimEventAction action)
@@ -176,12 +176,12 @@ public abstract class NonPreemptiveQueue
 
   /** Create a non-preemptive queue given an event queue.
    *
-   * @param eventQueue The event queue to use.
+   * @param eventList The event list to use.
    *
    */
-  protected NonPreemptiveQueue (final SimEventQueue eventQueue)
+  protected NonPreemptiveQueue (final SimEventList eventList)
   {
-    this.eventQueue = eventQueue;
+    this.eventList = eventList;
   }
 
   /** The {@link NONE} queue has unlimited waiting capacity, but does not provide
@@ -230,7 +230,7 @@ public abstract class NonPreemptiveQueue
       final SimEventAction<SimJob> rAction = job.getQueueRevokeAction ();
       if (rAction !=  null)
       {
-        rAction.action (new SimEvent<SimJob> (time, job, rAction));
+        rAction.action (new SimEvent<> (time, job, rAction));
       }
       return true;
     }
@@ -241,9 +241,9 @@ public abstract class NonPreemptiveQueue
     {
     }
 
-    public NONE (final SimEventQueue eventQueue)
+    public NONE (final SimEventList eventList)
     {
-      super (eventQueue);
+      super (eventList);
     }
 
 
@@ -288,7 +288,7 @@ public abstract class NonPreemptiveQueue
         final SimEvent<SimJob> event
           = new NonPreemptiveQueue.DepartureEvent
           (time + job.getServiceTime (this), job);
-        this.eventQueue.add (event);
+        this.eventList.add (event);
         assert this.eventsScheduled.isEmpty ();
         this.eventsScheduled.add (event);
         assert this.jobsExecuting.isEmpty ();
@@ -330,7 +330,7 @@ public abstract class NonPreemptiveQueue
             = this.eventsScheduled.iterator ().next ();
           found = this.eventsScheduled.remove (event);
           assert found;
-          found = this.eventQueue.remove (event);
+          found = this.eventList.remove (event);
           assert found;
           rescheduleNeeded = true;
         }
@@ -345,7 +345,7 @@ public abstract class NonPreemptiveQueue
       final SimEventAction<SimJob> rAction = job.getQueueRevokeAction ();
       if (rAction !=  null)
       {
-        rAction.action (new SimEvent<SimJob> (time, job, rAction));
+        rAction.action (new SimEvent<> (time, job, rAction));
       }
       return true;
     }
@@ -360,7 +360,7 @@ public abstract class NonPreemptiveQueue
         final SimEvent<SimJob> event =
           new NonPreemptiveQueue.DepartureEvent
           (time + job.getServiceTime (this), job);
-        this.eventQueue.add (event);
+        this.eventList.add (event);
         assert this.eventsScheduled.isEmpty ();
         this.eventsScheduled.add (event);
         assert this.jobsExecuting.isEmpty ();
@@ -377,9 +377,9 @@ public abstract class NonPreemptiveQueue
       }
     }
 
-    public FIFO (final SimEventQueue eventQueue)
+    public FIFO (final SimEventList eventList)
     {
-      super (eventQueue);
+      super (eventList);
     }
 
   }
@@ -387,9 +387,9 @@ public abstract class NonPreemptiveQueue
   public static class LIFO extends FIFO
   {
 
-    public LIFO (final SimEventQueue eventQueue)
+    public LIFO (final SimEventList eventList)
     {
-      super (eventQueue);
+      super (eventList);
     }
 
   }
@@ -399,14 +399,14 @@ public abstract class NonPreemptiveQueue
 
     protected final Random RNG;
 
-    public RANDOM (final SimEventQueue eventQueue)
+    public RANDOM (final SimEventList eventList)
     {
-      this (eventQueue, null);
+      this (eventList, null);
     }
 
-    public RANDOM (final SimEventQueue eventQueue, final Random RNG)
+    public RANDOM (final SimEventList eventList, final Random RNG)
     {
-      super (eventQueue);
+      super (eventList);
       this.RNG = ((RNG == null) ? new Random () : RNG);
     }
 
@@ -427,7 +427,7 @@ public abstract class NonPreemptiveQueue
       job.setQueue (this);
       final SimEvent<SimJob> event = new NonPreemptiveQueue.DepartureEvent
         (time + job.getServiceTime (this), job);
-      this.eventQueue.add (event);
+      this.eventList.add (event);
       this.eventsScheduled.add (event);
       this.jobsExecuting.add (job);
       for (SimEventAction<SimJob> action: this.arrivalActions)
@@ -481,7 +481,7 @@ public abstract class NonPreemptiveQueue
         }
         found = this.eventsScheduled.remove (event);
         assert found;
-        found = this.eventQueue.remove (event);
+        found = this.eventList.remove (event);
         assert found;
       }
       job.setQueue (null);
@@ -490,7 +490,7 @@ public abstract class NonPreemptiveQueue
       final SimEventAction<SimJob> rAction = job.getQueueRevokeAction ();
       if (rAction !=  null)
       {
-        rAction.action (new SimEvent<SimJob> (time, job, rAction));
+        rAction.action (new SimEvent<> (time, job, rAction));
       }
       return true;
     }
@@ -501,9 +501,9 @@ public abstract class NonPreemptiveQueue
     {
     }
 
-    public IS (final SimEventQueue eventQueue)
+    public IS (final SimEventList eventList)
     {
-      super (eventQueue);
+      super (eventList);
     }
 
   }
