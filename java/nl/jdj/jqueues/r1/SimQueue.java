@@ -24,7 +24,7 @@ import nl.jdj.jsimulation.r2.SimEventAction;
  *
  * <p>
  * A {@link SimQueue} supports registration and un-registration of
- * queue-specific {@link SimAction}s to be invoked for specific events,
+ * queue-specific {@link SimEventAction}s to be invoked for specific events,
  * in particular job arrivals ({@link #addArrivalAction} and {@link #removeArrivalAction}),
  * job service start events ({@link #addStartAction} and {@link #removeStartAction}),
  * and job departures ({@link #addDepartureAction} and {@link #removeDepartureAction}).
@@ -38,7 +38,7 @@ import nl.jdj.jsimulation.r2.SimEventAction;
  * {@link SimJob#getQueueDepartAction}.
  *
  * <p>
- * All {@link SimAction}s described above are called only <i>after</i> the
+ * All {@link SimEventAction}s described above are called only <i>after</i> the
  * {@link SimQueue} has updated all relevant fields in the
  * {@link SimQueue} and {@link SimJob} objects,
  * i.e., <i>after</i> both objects truly reflect the new state of the queue

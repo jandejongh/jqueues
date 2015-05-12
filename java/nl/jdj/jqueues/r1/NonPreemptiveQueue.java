@@ -188,7 +188,7 @@ public abstract class NonPreemptiveQueue
    *  any service.
    *
    * Obviously, the {@link NONE} queue does not schedule any events on the
-   * {@link #eventQueue} and never invokes actions in
+   * {@link #eventList} and never invokes actions in
    * {@link #startActions} or {@link #departureActions}.
    *
    */
