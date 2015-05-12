@@ -134,7 +134,6 @@ public final class Main
     final List<TestJob> jobList = new ArrayList<>  ();
     for (int n = 1; n <= 10; n++)
       jobList.add (new TestJob (true, n));
-    System.out.println ("-> Creating actions...");
     System.out.println ("-> Creating event list...");
     final SimEventList<SimEvent> el = new SimEventList<> ();
     System.out.println ("-> Creating FCFS queue...");
