@@ -8,8 +8,11 @@ import nl.jdj.jsimulation.r2.SimEventAction;
  * At any point in time, a {@link SimJob} can be visiting at most one
  * {@link SimQueue}.
  *
+ * @param <J>
+ * @param <Q>
+ * 
  */
-public interface SimJob
+public interface SimJob<J extends SimJob, Q extends SimQueue>
 {
 
   /** The queue this job is currently visiting.
@@ -17,7 +20,7 @@ public interface SimJob
    * @return The {@link SimQueue} this {@link SimJob} is currently visiting or
    *         {@code null}.
    */
-  public SimQueue getQueue ();
+  public Q getQueue ();
 
   /** The requested service time at given queue.
    *
@@ -38,7 +41,7 @@ public interface SimJob
    * @see #getQueue
    *
    */
-  public double getServiceTime (SimQueue queue)
+  public double getServiceTime (Q queue)
     throws IllegalArgumentException;
 
   /** Set the queue being visited.
@@ -55,7 +58,7 @@ public interface SimJob
    *                               and the supplied argument is not {@code null}.
    *
    */
-  public void setQueue (SimQueue queue)
+  public void setQueue (Q queue)
     throws IllegalStateException;
 
   /** The job-supplied action upon arrival at a queue.
@@ -65,7 +68,7 @@ public interface SimJob
    * @see SimQueue#arrive
    *
    */
-  public SimEventAction<SimJob>  getQueueArriveAction ();
+  public SimEventAction<J>  getQueueArriveAction ();
 
   /** The job-supplied action upon revocation from a queue.
    *
@@ -74,20 +77,20 @@ public interface SimJob
    * @see SimQueue#revoke
    *
    */
-  public SimEventAction<SimJob>  getQueueRevokeAction ();
+  public SimEventAction<J>  getQueueRevokeAction ();
 
   /** The job-supplied action upon starting service at a queue.
    *
    * @return The job-supplied action upon starting service at a queue, or {@code null}.
    *
    */
-  public SimEventAction<SimJob>  getQueueStartAction ();
+  public SimEventAction<J>  getQueueStartAction ();
 
   /** The job-supplied action upon departure from a queue.
    *
    * @return The job-supplied action upon departure from a queue, or {@code null}.
    *
    */
-  public SimEventAction<SimJob>  getQueueDepartAction ();
+  public SimEventAction<J>  getQueueDepartAction ();
 
 }

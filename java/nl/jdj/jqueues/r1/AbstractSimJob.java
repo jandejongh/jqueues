@@ -9,12 +9,15 @@ import nl.jdj.jsimulation.r2.SimEventAction;
  * The method {@link #getServiceTime} is kept abstract on purpose, as forgetting to override a default implementation is
  * considered too risky.
  * 
+ * @param <J>
+ * @param <Q>
+ * 
  */
-public abstract class AbstractSimJob
-implements SimJob
+public abstract class AbstractSimJob<J extends SimJob, Q extends SimQueue>
+implements SimJob<J, Q>
 {
 
-  private SimQueue queue = null;
+  private Q queue = null;
   
   /** Returns the internally stored {@link SimQueue} visiting.
    * 
@@ -22,7 +25,7 @@ implements SimJob
    * 
    */
   @Override
-  public SimQueue getQueue ()
+  public Q getQueue ()
   {
     return this.queue;
   }
@@ -33,13 +36,13 @@ implements SimJob
    * 
    */
   @Override
-  public void setQueue (SimQueue queue) throws IllegalStateException
+  public void setQueue (Q queue) throws IllegalStateException
   {
     this.queue = queue;
   }
 
   @Override
-  public abstract double getServiceTime (SimQueue queue) throws IllegalArgumentException;
+  public abstract double getServiceTime (Q queue) throws IllegalArgumentException;
   
   /** Returns <code>null</code>.
    * 
@@ -47,7 +50,7 @@ implements SimJob
    * 
    */
   @Override
-  public SimEventAction<SimJob> getQueueArriveAction ()
+  public SimEventAction<J> getQueueArriveAction ()
   {
     return null;
   }
@@ -58,7 +61,7 @@ implements SimJob
    * 
    */
   @Override
-  public SimEventAction<SimJob> getQueueRevokeAction ()
+  public SimEventAction<J> getQueueRevokeAction ()
   {
     return null;
   }
@@ -69,7 +72,7 @@ implements SimJob
    * 
    */
   @Override
-  public SimEventAction<SimJob> getQueueStartAction ()
+  public SimEventAction<J> getQueueStartAction ()
   {
     return null;
   }
@@ -80,7 +83,7 @@ implements SimJob
    * 
    */
   @Override
-  public SimEventAction<SimJob> getQueueDepartAction ()
+  public SimEventAction<J> getQueueDepartAction ()
   {
     return null;
   }

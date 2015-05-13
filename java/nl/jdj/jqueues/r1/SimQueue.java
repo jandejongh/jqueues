@@ -57,11 +57,14 @@ import nl.jdj.jsimulation.r2.SimEventAction;
  * A basic implementation of the most important non-preemptive
  * queueing disciplines is provided in {@link NonPreemptiveQueue}.
  *
+ * @param <J>
+ * @param <Q>
+ * 
  * @see SimJob
  * @see NonPreemptiveQueue
  *
  */
-public interface SimQueue
+public interface SimQueue<J extends SimJob, Q extends SimQueue>
 {
 
   /** Arrival of a job at the queue.
@@ -70,7 +73,7 @@ public interface SimQueue
    * @param time The time at which the job arrives.
    *
    */
-  public void arrive (SimJob job, double time);
+  public void arrive (J job, double time);
 
   /** Revocation of a job at a queue.
    *
@@ -85,7 +88,7 @@ public interface SimQueue
    * @return True if revocation succeeded.
    *
    */
-  public boolean revoke (SimJob job, double time, boolean interruptService);
+  public boolean revoke (J job, double time, boolean interruptService);
 
   /** Add an action to be invoked upon job arrivals.
    *
