@@ -9,8 +9,8 @@ import nl.jdj.jsimulation.r2.SimEventAction;
  * The method {@link #getServiceTime} is kept abstract on purpose, as forgetting to override a default implementation is
  * considered too risky.
  * 
- * @param <J>
- * @param <Q>
+ * @param <J> The type of {@link SimJobs}s supported.
+ * @param <Q> The type of {@link SimQueues}s supported.
  * 
  */
 public abstract class AbstractSimJob<J extends SimJob, Q extends SimQueue>
@@ -61,7 +61,7 @@ implements SimJob<J, Q>
    * 
    */
   @Override
-  public SimEventAction<J> getQueueRevokeAction ()
+  public SimEventAction<J> getQueueStartAction ()
   {
     return null;
   }
@@ -72,7 +72,18 @@ implements SimJob<J, Q>
    * 
    */
   @Override
-  public SimEventAction<J> getQueueStartAction ()
+  public SimEventAction<J> getQueueDropAction ()
+  {
+    return null;
+  }
+
+  /** Returns <code>null</code>.
+   * 
+   * @return <code>null</code>.
+   * 
+   */
+  @Override
+  public SimEventAction<J> getQueueRevokeAction ()
   {
     return null;
   }

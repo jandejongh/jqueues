@@ -238,6 +238,45 @@ public final class Main
     }
     System.out.println ("-> Executing event list...");
     el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Creating SJF queue...");
+    final SimQueue sjfQueue = new NonPreemptiveQueue.SJF (el);
+    System.out.println ("-> Submitting jobs to SJF queue...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = jobList.size () - i;
+      el.add (new SimEvent ("ARRIVAL_" + i + 1, arrTime, null, new SimEventAction ()
+      {
+        @Override
+        public void action (final SimEvent event)
+        {
+          sjfQueue.arrive (j, arrTime);
+        }
+      }));
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    el.reset ();
+    System.out.println ("-> Creating LJF queue...");
+    final SimQueue ljfQueue = new NonPreemptiveQueue.LJF (el);
+    System.out.println ("-> Submitting jobs to LJF queue...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + 1;
+      el.add (new SimEvent ("ARRIVAL_" + i + 1, arrTime, null, new SimEventAction ()
+      {
+        @Override
+        public void action (final SimEvent event)
+        {
+          ljfQueue.arrive (j, arrTime);
+        }
+      }));
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
     System.out.println ("=== FINISHED ===");
   }
   

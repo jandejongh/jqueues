@@ -8,8 +8,8 @@ import nl.jdj.jsimulation.r2.SimEventAction;
  * At any point in time, a {@link SimJob} can be visiting at most one
  * {@link SimQueue}.
  *
- * @param <J>
- * @param <Q>
+ * @param <J> The type of {@link SimJobs}s supported.
+ * @param <Q> The type of {@link SimQueues}s supported.
  * 
  */
 public interface SimJob<J extends SimJob, Q extends SimQueue>
@@ -70,6 +70,20 @@ public interface SimJob<J extends SimJob, Q extends SimQueue>
    */
   public SimEventAction<J>  getQueueArriveAction ();
 
+  /** The job-supplied action upon starting service at a queue.
+   *
+   * @return The job-supplied action upon starting service at a queue, or {@code null}.
+   *
+   */
+  public SimEventAction<J>  getQueueStartAction ();
+
+  /** The job-supplied action upon dropping from a queue.
+   *
+   * @return The job-supplied action upon dropping from a queue, or {@code null}.
+   *
+   */
+  public SimEventAction<J>  getQueueDropAction ();
+
   /** The job-supplied action upon revocation from a queue.
    *
    * @return The job-supplied action upon revocation from a queue, or {@code null}.
@@ -78,13 +92,6 @@ public interface SimJob<J extends SimJob, Q extends SimQueue>
    *
    */
   public SimEventAction<J>  getQueueRevokeAction ();
-
-  /** The job-supplied action upon starting service at a queue.
-   *
-   * @return The job-supplied action upon starting service at a queue, or {@code null}.
-   *
-   */
-  public SimEventAction<J>  getQueueStartAction ();
 
   /** The job-supplied action upon departure from a queue.
    *

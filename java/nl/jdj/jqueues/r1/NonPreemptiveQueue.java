@@ -1,190 +1,41 @@
 package nl.jdj.jqueues.r1;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import nl.jdj.jsimulation.r2.SimEvent;
-import nl.jdj.jsimulation.r2.SimEventAction;
 import nl.jdj.jsimulation.r2.SimEventList;
 
 /** An abstract base class for non-preemptive queueing disciplines
  * for {@link SimJob}s.
  *
- * The class and all implementations support job revocations.
+ * The class and all implementations support job revocations, but not drops (infinite queue length).
+ * 
+ * <p>This abstract relies heavily on the partial {@link SimQueue} implementation of {@link AbstractSimQueue}.
+ * 
+ * <p>All concrete subclasses of {@link NonPreemptiveQueue} take
+ * the {@link SimEventList} used for event scheduling and processing as one of their arguments upon construction.
+ * It is up to the caller to properly start processing the event list.
  *
  * @param <J> The type of {@link SimJobs}s supported.
  * @param <Q> The type of {@link SimQueues}s supported.
  * 
+ * @see SimEventList
+ * @see SimEventList#run
+ * 
  */
 public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreemptiveQueue>
+  extends AbstractSimQueue<J, Q>
   implements SimQueue<J, Q>
 {
 
-  /** The underlying event list for {@link SimQueue} operations
-   *  (to be supplied and fixed in the constructor).
-   *
-   */
-  protected final SimEventList eventList;
-
-  /** Jobs currently in queue.
-   *
-   */
-  protected final List<J> jobQueue = new ArrayList<> ();
-
-  /** Jobs currently being executed by the server.
-   *
-   */
-  protected final Set<J> jobsExecuting
-    = new HashSet<> ();
-
-  /** Events scheduled on behalf of this {@link SimQueue}.
-   *
-   */
-  protected final Set<SimEvent<J>> eventsScheduled
-    = new HashSet<> ();
-
-  protected double lastEventTime = Double.NEGATIVE_INFINITY;
-
-  protected final List<SimEventAction> arrivalActions
-    = new ArrayList<> ();
-
-  @Override
-  public void addArrivalAction (final SimEventAction action)
-  {
-    if (action == null)
-    {
-      return;
-    }
-    if (this.arrivalActions.contains (action))
-    {
-      return;
-    }
-    this.arrivalActions.add (action);
-  }
-
-  @Override
-  public void removeArrivalAction (final SimEventAction action)
-  {
-    this.arrivalActions.remove (action);
-  }
-
-  protected final List<SimEventAction> startActions
-    = new ArrayList<> ();
-
-  @Override
-  public void addStartAction (final SimEventAction action)
-  {
-    if (action == null)
-    {
-      return;
-    }
-    if (this.startActions.contains (action))
-    {
-      return;
-    }
-    this.startActions.add (action);
-  }
-
-  @Override
-  public void removeStartAction (final SimEventAction action)
-  {
-    this.startActions.remove (action);
-  }
-
-  protected final List<SimEventAction> departureActions
-    = new ArrayList<> ();
-
-  @Override
-  public void addDepartureAction (final SimEventAction action)
-  {
-    if (action == null)
-    {
-      return;
-    }
-    if (this.departureActions.contains (action))
-    {
-      return;
-    }
-    this.departureActions.add (action);
-  }
-
-  @Override
-  public void removeDepartureAction (final SimEventAction action)
-  {
-    this.departureActions.remove (action);
-  }
-
-  protected abstract void rescheduleAfterDeparture
-    (J departedJob, double time);
-
-  protected class DepartureEvent extends SimEvent<J>
-  {
-    public DepartureEvent
-      (final double time,
-      final J job)
-    {
-      super (time, job, NonPreemptiveQueue.this.DEPARTURE_ACTION);
-    }
-  }
-
-  /** A {@link SimEventAction} that is invoked when a job departs from the queue.
-   *
-   * This action takes care of administration of the internal data, i.e.,
-   * clearing the job's queue {@link SimJob#setQueue},
-   * removing it from the {@link #jobQueue}
-   * and the {@link #jobsExecuting} lists,
-   * and updating {@link #eventsScheduled}.
-   * It then invokes the discipline-specific {@link #rescheduleAfterDeparture}
-   * method, the job's departure action {@link SimJob#getQueueDepartAction}
-   * (if present) and the queue's departure actions {@link #departureActions},
-   * in that order.
-   * 
-   */
-  protected final SimEventAction<J> DEPARTURE_ACTION
-    = new SimEventAction<J> ()
-          {
-            @Override
-            public void action
-              (final SimEvent<J> event)
-            {
-              final double time = event.getTime ();
-              // System.out.println ("Departure from queue @" + time);
-              final J job = event.getObject ();
-              assert job.getQueue () == NonPreemptiveQueue.this;
-              assert time >= NonPreemptiveQueue.this.lastEventTime;
-              NonPreemptiveQueue.this.lastEventTime = time;
-              job.setQueue (null);
-              boolean found;
-              found = NonPreemptiveQueue.this.jobQueue.remove (job);
-              assert found;
-              found = NonPreemptiveQueue.this.jobsExecuting.remove (job);
-              assert found;
-              found = NonPreemptiveQueue.this.eventsScheduled.remove (event);
-              assert found;
-              NonPreemptiveQueue.this.rescheduleAfterDeparture (job, time);
-              for (SimEventAction<J> action: NonPreemptiveQueue.this.departureActions)
-              {
-                action.action (event);
-              }
-              final SimEventAction<J> dAction = job.getQueueDepartAction ();
-              if (dAction != null)
-              {
-                dAction.action (event);
-              }
-            }
-          };
-
-  /** Create a non-preemptive queue given an event list.
+  /** Creates a non-preemptive queue given an event list.
    *
    * @param eventList The event list to use.
    *
    */
   protected NonPreemptiveQueue (final SimEventList eventList)
   {
-    this.eventList = eventList;
+    super (eventList);
   }
 
   /** The {@link NONE} queue has unlimited waiting capacity, but does not provide
@@ -193,6 +44,7 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * Obviously, the {@link NONE} queue does not schedule any events on the
    * {@link #eventList} and never invokes actions in
    * {@link #startActions} or {@link #departureActions}.
+   * It does support job revocations though.
    *
    * @param <J> The type of {@link SimJobs}s supported.
    * @param <Q> The type of {@link SimQueues}s supported.
@@ -206,19 +58,10 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
     {
       assert job.getQueue () == null;
       assert ! this.jobQueue.contains (job);
-      assert time >= this.lastEventTime;
-      this.lastEventTime = time;
+      update (time);
       this.jobQueue.add (job);
       job.setQueue (this);
-      for (SimEventAction<J> action: this.arrivalActions)
-      {
-        action.action (new SimEvent (time, job, action));
-      }
-      final SimEventAction<J> aAction = job.getQueueArriveAction ();
-      if (aAction != null)
-      {
-        aAction.action (new SimEvent (time, job, aAction));
-      }
+      notifyArrival (time, job);
     }
 
     @Override
@@ -228,16 +71,11 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
       final boolean interruptService)
     {
       assert job.getQueue () == this;
-      assert time >= this.lastEventTime;
-      this.lastEventTime = time;
+      update (time);
       job.setQueue (null);
       boolean found = this.jobQueue.remove (job);
       assert found;
-      final SimEventAction<J> rAction = job.getQueueRevokeAction ();
-      if (rAction !=  null)
-      {
-        rAction.action (new SimEvent<> (time, job, rAction));
-      }
+      notifyRevocation (time, job);
       return true;
     }
 
@@ -251,7 +89,6 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
     {
       super (eventList);
     }
-
 
   }
   
@@ -271,32 +108,35 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
     {
       assert job.getQueue () == null;
       assert ! this.jobQueue.contains (job);
-      assert time >= this.lastEventTime;
-      this.lastEventTime = time;
+      update (time);
       if (this instanceof LIFO)
-      {
         this.jobQueue.add (0, job);
-      }
       else if (this instanceof RANDOM)
       {
         final int newPosition
           = ((RANDOM) this).RNG.nextInt (this.jobQueue.size () + 1);
         this.jobQueue.add (newPosition, job);
       }
+      else if (this instanceof SJF)
+      {
+        int newPosition = 0;
+        while (newPosition < this.jobQueue.size ()
+          && this.jobQueue.get (newPosition).getServiceTime (this) <= job.getServiceTime (this))
+          newPosition++;
+        this.jobQueue.add (newPosition, job);   
+      }
+      else if (this instanceof LJF)
+      {
+        int newPosition = 0;
+        while (newPosition < this.jobQueue.size ()
+          && this.jobQueue.get (newPosition).getServiceTime (this) >= job.getServiceTime (this))
+          newPosition++;
+        this.jobQueue.add (newPosition, job);   
+      }
       else
-      {
         this.jobQueue.add (job);
-      }
       job.setQueue (this);
-      for (SimEventAction<J> action: this.arrivalActions)
-      {
-        action.action (new SimEvent (time, job, action));
-      }
-      final SimEventAction<J> aAction = job.getQueueArriveAction ();
-      if (aAction != null)
-      {
-        aAction.action (new SimEvent (time, job, aAction));
-      }
+      notifyArrival (time, job);
       if (this.jobQueue.size () == 1)
       {
         final SimEvent<J> event
@@ -307,15 +147,7 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
         this.eventsScheduled.add (event);
         assert this.jobsExecuting.isEmpty ();
         this.jobsExecuting.add (job);
-        for (SimEventAction<J> action: this.startActions)
-        {
-          action.action (new SimEvent (time, job, action));
-        }
-        final SimEventAction<J> sAction = job.getQueueStartAction ();
-        if (sAction != null)
-        {
-          sAction.action (new SimEvent (time, job, sAction));
-        }
+        notifyStart (time, job);
       }
     }
 
@@ -326,15 +158,12 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
       final boolean interruptService)
     {
       assert job.getQueue () == this;
-      assert time >= this.lastEventTime;
-      this.lastEventTime = time;
+      update (time);
       boolean rescheduleNeeded = false;
       if (this.jobsExecuting.contains (job))
       {
         if (! interruptService)
-        {
           return false;
-        }
         else
         {
           boolean found = this.jobsExecuting.remove (job);
@@ -353,14 +182,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
       final boolean found = this.jobQueue.remove (job);
       assert found;
       if (rescheduleNeeded)
-      {
         rescheduleAfterDeparture (job, time);
-      }
-      final SimEventAction<J> rAction = job.getQueueRevokeAction ();
-      if (rAction !=  null)
-      {
-        rAction.action (new SimEvent<> (time, job, rAction));
-      }
+      notifyRevocation (time, job);
       return true;
     }
 
@@ -379,19 +202,31 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
         this.eventsScheduled.add (event);
         assert this.jobsExecuting.isEmpty ();
         this.jobsExecuting.add (job);
-        for (SimEventAction<J> action: this.startActions)
-        {
-          action.action (new SimEvent (time, job, action));
-        }
-        final SimEventAction<J> sAction = job.getQueueStartAction ();
-        if (sAction != null)
-        {
-          sAction.action (new SimEvent (time, job, sAction));
-        }
+        notifyStart (time, job);
       }
     }
 
     public FIFO (final SimEventList eventList)
+    {
+      super (eventList);
+    }
+
+  }
+  
+  /** An alias for {@link FIFO}.
+   * 
+   * First-Come, First Served.
+   * 
+   * @param <J> The type of {@link SimJobs}s supported.
+   * @param <Q> The type of {@link SimQueues}s supported.
+   * 
+   * @see {@link FIFO}.
+   * 
+   */
+  public static class FCFS <J extends SimJob, Q extends FCFS> extends FIFO<J, Q>
+  {
+    
+    public FCFS (final SimEventList eventList)
     {
       super (eventList);
     }
@@ -412,6 +247,26 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
   {
 
     public LIFO (final SimEventList eventList)
+    {
+      super (eventList);
+    }
+
+  }
+
+  /** An alias for {@link LIFO}.
+   * 
+   * Last-Come, First Served.
+   * 
+   * @param <J> The type of {@link SimJobs}s supported.
+   * @param <Q> The type of {@link SimQueues}s supported.
+   * 
+   * @see {@link LIFO}.
+   * 
+   */
+  public static class LCFS <J extends SimJob, Q extends LCFS> extends LIFO<J, Q>
+  {
+    
+    public LCFS (final SimEventList eventList)
     {
       super (eventList);
     }
@@ -442,6 +297,46 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
 
   }
 
+  /** The {@link SJF} queue serves jobs in order of ascending requested service times.
+   * 
+   * Shortest-Job First.
+   * 
+   * @param <J> The type of {@link SimJobs}s supported.
+   * @param <Q> The type of {@link SimQueues}s supported.
+   * 
+   * @see SimJob#getServiceTime
+   * 
+   */
+  public static class SJF<J extends SimJob, Q extends SJF> extends FIFO<J, Q>
+  {
+
+    public SJF (final SimEventList eventList)
+    {
+      super (eventList);
+    }
+
+  }
+
+  /** The {@link LJF} queue serves jobs in order of descending requested service times.
+   * 
+   * Longest-Job First.
+   * 
+   * @param <J> The type of {@link SimJobs}s supported.
+   * @param <Q> The type of {@link SimQueues}s supported.
+   * 
+   * @see SimJob#getServiceTime
+   * 
+   */
+  public static class LJF<J extends SimJob, Q extends LJF> extends FIFO<J, Q>
+  {
+
+    public LJF (final SimEventList eventList)
+    {
+      super (eventList);
+    }
+
+  }
+
   /** The {@link IS} queue serves all jobs simultaneously.
    * 
    * Infinite Server.
@@ -460,8 +355,7 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
       // System.out.println ("Arrival at IS-queue @" + time);
       assert job.getQueue () == null;
       assert ! this.jobQueue.contains (job);
-      assert time >= this.lastEventTime;
-      this.lastEventTime = time;
+      update (time);
       this.jobQueue.add (job);
       job.setQueue (this);
       final SimEvent<J> event = new NonPreemptiveQueue.DepartureEvent
@@ -469,24 +363,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
       this.eventList.add (event);
       this.eventsScheduled.add (event);
       this.jobsExecuting.add (job);
-      for (SimEventAction<J> action: this.arrivalActions)
-      {
-        action.action (new SimEvent (time, job, action));
-      }
-      final SimEventAction<J> aAction = job.getQueueArriveAction ();
-      if (aAction != null)
-      {
-        aAction.action (new SimEvent (time, job, aAction));
-      }
-      for (SimEventAction<J> action: this.startActions)
-      {
-        action.action (new SimEvent (time, job, action));
-      }
-      final SimEventAction<J> sAction = job.getQueueStartAction ();
-      if (sAction != null)
-      {
-        sAction.action (new SimEvent (time, job, sAction));
-      }
+      notifyArrival (time, job);
+      notifyStart (time, job);
    }
 
     @Override
@@ -496,12 +374,9 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
       final boolean interruptService)
     {
       assert job.getQueue () == this;
-      assert time >= this.lastEventTime;
-      this.lastEventTime = time;
+      update (time);
       if (! interruptService)
-      {
         return false;
-      }
       else
       {
         boolean found = this.jobsExecuting.remove (job);
@@ -526,11 +401,7 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
       job.setQueue (null);
       final boolean found = this.jobQueue.remove (job);
       assert found;
-      final SimEventAction<J> rAction = job.getQueueRevokeAction ();
-      if (rAction !=  null)
-      {
-        rAction.action (new SimEvent<> (time, job, rAction));
-      }
+      notifyRevocation (time, job);
       return true;
     }
 
