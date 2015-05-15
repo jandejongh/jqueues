@@ -1,5 +1,7 @@
 package nl.jdj.jqueues.r2;
 
+// Forcibly import SimEventList in order to keep javadoc happy...
+import nl.jdj.jsimulation.r3.SimEventList;
 import nl.jdj.jsimulation.r3.SimEventAction;
 import nl.jdj.jsimulation.r3.SimEventListListener;
 
@@ -47,7 +49,7 @@ import nl.jdj.jsimulation.r3.SimEventListListener;
  * in particular job arrivals ({@link #addArrivalAction} and {@link #removeArrivalAction}),
  * job service start events ({@link #addStartAction} and {@link #removeStartAction}),
  * job drop events ({@link #addDropAction} and {@link #removeDropAction}),
- * job revocation events ({@link #addRevocationAction} and {@link #removeRevokationAction})
+ * job revocation events ({@link #addRevocationAction} and {@link #removeRevocationAction})
  * and job departures ({@link #addDepartureAction} and {@link #removeDepartureAction}).
  *
  * <p>
@@ -88,7 +90,7 @@ import nl.jdj.jsimulation.r3.SimEventListListener;
  *
  * <p>Although not explicitly enforced by this interface, typical {@link SimQueue}s should probably rely
  * on an underlying {@link SimEventList} for scheduling events in time and invoking the actions.
- * Implementations should clearly state how the interaction with a {@link SimEvenList} works, for instance, whether or not the
+ * Implementations should clearly state how the interaction with a {@link SimEventList} works, for instance, whether or not the
  * caller is responsible for starting the processing of the event list.
  * 
  * <p>
