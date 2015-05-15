@@ -10,7 +10,7 @@ import nl.jdj.jsimulation.r3.SimEventList;
 
 /** A partial implementation of a {@link SimQueue}.
  * 
- * <p>All concrete subclasses of {@link AbstractQueue} take
+ * <p>All concrete subclasses of {@link AbstractSimQueue} take
  * the {@link SimEventList} used for event scheduling and processing as one of their arguments upon construction.
  * It is up to the caller to properly start processing the event list.
  * 

@@ -10,7 +10,7 @@ import nl.jdj.jsimulation.r3.SimEvent;
 import nl.jdj.jsimulation.r3.SimEventAction;
 import nl.jdj.jsimulation.r3.SimEventList;
 
-/** Example code for {@link nl.jdj.jqueues.r1}.
+/** Example code for {@link nl.jdj.jqueues}.
  * 
  */
 public final class Main
