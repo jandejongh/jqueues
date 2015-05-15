@@ -1,6 +1,6 @@
 package nl.jdj.jqueues.r1;
 
-import nl.jdj.jsimulation.r2.SimEventAction;
+import nl.jdj.jsimulation.r3.SimEventAction;
 
 /** A {@link SimJob} represents an amount (finite) of work to be carried out by one
  *  or more {@link SimQueue}s.

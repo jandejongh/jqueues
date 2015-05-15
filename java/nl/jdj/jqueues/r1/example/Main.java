@@ -6,9 +6,9 @@ import nl.jdj.jqueues.r1.AbstractSimJob;
 import nl.jdj.jqueues.r1.NonPreemptiveQueue;
 import nl.jdj.jqueues.r1.SimJob;
 import nl.jdj.jqueues.r1.SimQueue;
-import nl.jdj.jsimulation.r2.SimEvent;
-import nl.jdj.jsimulation.r2.SimEventAction;
-import nl.jdj.jsimulation.r2.SimEventList;
+import nl.jdj.jsimulation.r3.SimEvent;
+import nl.jdj.jsimulation.r3.SimEventAction;
+import nl.jdj.jsimulation.r3.SimEventList;
 
 /** Example code for {@link nl.jdj.jqueues.r1}.
  * 

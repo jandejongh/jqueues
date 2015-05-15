@@ -2,8 +2,8 @@ package nl.jdj.jqueues.r1;
 
 import java.util.Iterator;
 import java.util.Random;
-import nl.jdj.jsimulation.r2.SimEvent;
-import nl.jdj.jsimulation.r2.SimEventList;
+import nl.jdj.jsimulation.r3.SimEvent;
+import nl.jdj.jsimulation.r3.SimEventList;
 
 /** An abstract base class for non-preemptive queueing disciplines
  * for {@link SimJob}s.

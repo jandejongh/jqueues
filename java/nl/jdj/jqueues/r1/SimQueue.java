@@ -1,7 +1,7 @@
 package nl.jdj.jqueues.r1;
 
-import nl.jdj.jsimulation.r2.SimEventAction;
-import nl.jdj.jsimulation.r2.SimEventListListener;
+import nl.jdj.jsimulation.r3.SimEventAction;
+import nl.jdj.jsimulation.r3.SimEventListListener;
 
 /** A queue has one or more waiting lines for {@link SimJob}s
  *  and zero or more servers to serve them.

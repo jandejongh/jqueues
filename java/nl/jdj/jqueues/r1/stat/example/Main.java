@@ -10,9 +10,9 @@ import nl.jdj.jqueues.r1.stat.AutoSimQueueStat;
 import nl.jdj.jqueues.r1.stat.AutoSimQueueStatEntry;
 import nl.jdj.jqueues.r1.stat.SimQueueProbe;
 import nl.jdj.jqueues.r1.stat.SimpleSimQueueStat;
-import nl.jdj.jsimulation.r2.SimEvent;
-import nl.jdj.jsimulation.r2.SimEventAction;
-import nl.jdj.jsimulation.r2.SimEventList;
+import nl.jdj.jsimulation.r3.SimEvent;
+import nl.jdj.jsimulation.r3.SimEventAction;
+import nl.jdj.jsimulation.r3.SimEventList;
 
 /** Example code for {@link nl.jdj.jqueues.r1}.
  * 
