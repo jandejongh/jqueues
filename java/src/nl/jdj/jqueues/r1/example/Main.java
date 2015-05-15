@@ -2,10 +2,10 @@ package nl.jdj.jqueues.r1.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r1.AbstractSimJob;
-import nl.jdj.jqueues.r1.NonPreemptiveQueue;
-import nl.jdj.jqueues.r1.SimJob;
-import nl.jdj.jqueues.r1.SimQueue;
+import nl.jdj.jqueues.r2.AbstractSimJob;
+import nl.jdj.jqueues.r2.NonPreemptiveQueue;
+import nl.jdj.jqueues.r2.SimJob;
+import nl.jdj.jqueues.r2.SimQueue;
 import nl.jdj.jsimulation.r3.SimEvent;
 import nl.jdj.jsimulation.r3.SimEventAction;
 import nl.jdj.jsimulation.r3.SimEventList;

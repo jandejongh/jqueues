@@ -1,8 +1,8 @@
 package nl.jdj.jqueues.r1.stat;
 
-import nl.jdj.jqueues.r1.SimJob;
-import nl.jdj.jqueues.r1.SimQueue;
-import nl.jdj.jqueues.r1.SimQueueListener;
+import nl.jdj.jqueues.r2.SimJob;
+import nl.jdj.jqueues.r2.SimQueue;
+import nl.jdj.jqueues.r2.SimQueueListener;
 
 /** An abstract base class for automatically gathering statistics on a {@link SimQueue}.
  *

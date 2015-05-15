@@ -6,9 +6,9 @@
 
 package nl.jdj.jqueues.r1.stat;
 
-import nl.jdj.jqueues.r1.NonPreemptiveQueue;
+import nl.jdj.jqueues.r2.NonPreemptiveQueue;
 import nl.jdj.jqueues.r1.NonPreemptiveQueueTest;
-import nl.jdj.jqueues.r1.SimQueue;
+import nl.jdj.jqueues.r2.SimQueue;
 import nl.jdj.jsimulation.r3.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;

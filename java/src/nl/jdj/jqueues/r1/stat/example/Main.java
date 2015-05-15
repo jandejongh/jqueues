@@ -2,9 +2,9 @@ package nl.jdj.jqueues.r1.stat.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r1.NonPreemptiveQueue;
-import nl.jdj.jqueues.r1.SimJob;
-import nl.jdj.jqueues.r1.SimQueue;
+import nl.jdj.jqueues.r2.NonPreemptiveQueue;
+import nl.jdj.jqueues.r2.SimJob;
+import nl.jdj.jqueues.r2.SimQueue;
 import nl.jdj.jqueues.r1.example.Main.TestJob;
 import nl.jdj.jqueues.r1.stat.AutoSimQueueStat;
 import nl.jdj.jqueues.r1.stat.AutoSimQueueStatEntry;

@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r1;
+package nl.jdj.jqueues.r2;
 
 import java.util.Iterator;
 import java.util.Random;
