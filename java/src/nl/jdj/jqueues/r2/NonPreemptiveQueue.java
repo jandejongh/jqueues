@@ -220,7 +220,7 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * @param <J> The type of {@link SimJob}s supported.
    * @param <Q> The type of {@link SimQueue}s supported.
    * 
-   * @see {@link FIFO}.
+   * @see FIFO.
    * 
    */
   public static class FCFS <J extends SimJob, Q extends FCFS> extends FIFO<J, Q>
@@ -260,7 +260,7 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * @param <J> The type of {@link SimJob}s supported.
    * @param <Q> The type of {@link SimQueue}s supported.
    * 
-   * @see {@link LIFO}.
+   * @see LIFO.
    * 
    */
   public static class LCFS <J extends SimJob, Q extends LCFS> extends LIFO<J, Q>
