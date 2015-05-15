@@ -9,7 +9,7 @@ import nl.jdj.jqueues.r2.SimQueueListener;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
- * @see #SimQueueListener
+ * @see SimQueueListener
  * 
  */
 public abstract class AbstractSimQueueStat<J extends SimJob, Q extends SimQueue>
@@ -274,7 +274,7 @@ implements SimQueueListener<J, Q>
    * @return The time of the last update.
    * 
    * @see #update(double)
-   * @see #update(double, nl.jdj.jqueues.r1.SimQueue)
+   * @see #update(double, nl.jdj.jqueues.r2.SimQueue)
    * 
    */
   public final double getLastUpdateTime ()
