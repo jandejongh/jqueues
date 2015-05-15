@@ -25,7 +25,7 @@ import nl.jdj.jsimulation.r3.SimEventListListener;
  * If a job is neither dropped nor revoked, receive sufficient service from the queue and depart from it (a departure).
  *
  * <p>
- * Despite the large number of freedom degrees for {@link SimQueue}, there is also a number of restrictions on the behavior of
+ * Despite the large number of freedom degrees for {@link SimQueue}s, there is also a number of restrictions on the behavior of
  * a queue. For instance, a job cannot depart from a queue before it has been started, and it cannot start, be dropped or be revoked
  * before having arrived.
  * 
