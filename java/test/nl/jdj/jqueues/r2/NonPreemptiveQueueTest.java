@@ -1,9 +1,5 @@
 package nl.jdj.jqueues.r2;
 
-import nl.jdj.jqueues.r2.SimQueue;
-import nl.jdj.jqueues.r2.SimJob;
-import nl.jdj.jqueues.r2.AbstractSimJob;
-import nl.jdj.jqueues.r2.NonPreemptiveQueue;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -474,7 +470,7 @@ public class NonPreemptiveQueueTest
           queue.arrive (j, startTime);
         }
       }));
-    };
+    }
     jobList.add (0, j1);
     return jobList;
   }
