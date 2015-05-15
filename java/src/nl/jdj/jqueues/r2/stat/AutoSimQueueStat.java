@@ -9,8 +9,8 @@ import nl.jdj.jqueues.r2.SimQueue;
  *
  * The statistics observed are under full user control by supplying a list of {@link AutoSimQueueStatEntry}s upon construction.
  * 
- * @param <J> The type of {@link SimJobs}s supported.
- * @param <Q> The type of {@link SimQueues}s supported.
+ * @param <J> The type of {@link SimJob}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
 public class AutoSimQueueStat<J extends SimJob, Q extends SimQueue>

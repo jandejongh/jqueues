@@ -4,7 +4,7 @@ import nl.jdj.jqueues.r2.SimQueue;
 
 /** Object capable of obtaining a value (<code>double</code>) from a {@link SimQueue}.
  * 
- * @param <Q> The type of {@link SimQueues}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
 public interface SimQueueProbe<Q extends SimQueue>

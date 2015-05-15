@@ -5,8 +5,8 @@ import nl.jdj.jqueues.r2.SimQueue;
 
 /** An concrete class for gathering the most basic statistics on a {@link SimQueue}.
  *
- * @param <J> The type of {@link SimJobs}s supported.
- * @param <Q> The type of {@link SimQueues}s supported.
+ * @param <J> The type of {@link SimJob}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
 public class SimpleSimQueueStat<J extends SimJob, Q extends SimQueue>

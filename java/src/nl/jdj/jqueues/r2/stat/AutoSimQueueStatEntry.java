@@ -4,7 +4,7 @@ import nl.jdj.jqueues.r2.SimQueue;
 
 /** A description of an entry for automatic statistics management.
  * 
- * @param <Q> The type of {@link SimQueues}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
 public class AutoSimQueueStatEntry<Q extends SimQueue>

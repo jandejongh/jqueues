@@ -8,8 +8,8 @@ import nl.jdj.jsimulation.r3.SimEventAction;
  * At any point in time, a {@link SimJob} can be visiting at most one
  * {@link SimQueue}.
  *
- * @param <J> The type of {@link SimJobs}s supported.
- * @param <Q> The type of {@link SimQueues}s supported.
+ * @param <J> The type of {@link SimJob}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
 public interface SimJob<J extends SimJob, Q extends SimQueue>

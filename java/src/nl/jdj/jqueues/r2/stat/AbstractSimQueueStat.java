@@ -6,8 +6,8 @@ import nl.jdj.jqueues.r2.SimQueueListener;
 
 /** An abstract base class for automatically gathering statistics on a {@link SimQueue}.
  *
- * @param <J> The type of {@link SimJobs}s supported.
- * @param <Q> The type of {@link SimQueues}s supported.
+ * @param <J> The type of {@link SimJob}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
  * 
  * @see #SimQueueListener
  * 

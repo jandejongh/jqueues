@@ -16,8 +16,8 @@ import nl.jdj.jsimulation.r3.SimEventList;
  * the {@link SimEventList} used for event scheduling and processing as one of their arguments upon construction.
  * It is up to the caller to properly start processing the event list.
  *
- * @param <J> The type of {@link SimJobs}s supported.
- * @param <Q> The type of {@link SimQueues}s supported.
+ * @param <J> The type of {@link SimJob}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
  * 
  * @see SimEventList
  * @see SimEventList#run
@@ -46,8 +46,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * {@link #startActions} or {@link #departureActions}.
    * It does support job revocations though.
    *
-   * @param <J> The type of {@link SimJobs}s supported.
-   * @param <Q> The type of {@link SimQueues}s supported.
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
    * 
    */
   public static class NONE<J extends SimJob, Q extends NONE> extends NonPreemptiveQueue<J, Q>
@@ -96,8 +96,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * 
    * First In First Out, also known as First Come First Served (FCFS).
    * 
-   * @param <J> The type of {@link SimJobs}s supported.
-   * @param <Q> The type of {@link SimQueues}s supported.
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
    * 
    */
   public static class FIFO <J extends SimJob, Q extends FIFO> extends NonPreemptiveQueue<J, Q>
@@ -217,8 +217,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * 
    * First-Come, First Served.
    * 
-   * @param <J> The type of {@link SimJobs}s supported.
-   * @param <Q> The type of {@link SimQueues}s supported.
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
    * 
    * @see {@link FIFO}.
    * 
@@ -239,8 +239,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * Note that this is the non-preemptive version of the queueing discipline:
    * Once a job is taken into service, it is not preempted in favor of a new arrival.
    * 
-   * @param <J> The type of {@link SimJobs}s supported.
-   * @param <Q> The type of {@link SimQueues}s supported.
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
    * 
    */
   public static class LIFO<J extends SimJob, Q extends LIFO> extends FIFO<J, Q>
@@ -257,8 +257,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * 
    * Last-Come, First Served.
    * 
-   * @param <J> The type of {@link SimJobs}s supported.
-   * @param <Q> The type of {@link SimQueues}s supported.
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
    * 
    * @see {@link LIFO}.
    * 
@@ -275,8 +275,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
 
   /** The {@link RANDOM} queue serves jobs in random order.
    * 
-   * @param <J> The type of {@link SimJobs}s supported.
-   * @param <Q> The type of {@link SimQueues}s supported.
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
    * 
    */
   public static class RANDOM<J extends SimJob, Q extends RANDOM> extends FIFO<J, Q>
@@ -301,8 +301,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * 
    * Shortest-Job First.
    * 
-   * @param <J> The type of {@link SimJobs}s supported.
-   * @param <Q> The type of {@link SimQueues}s supported.
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
    * 
    * @see SimJob#getServiceTime
    * 
@@ -321,8 +321,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * 
    * Longest-Job First.
    * 
-   * @param <J> The type of {@link SimJobs}s supported.
-   * @param <Q> The type of {@link SimQueues}s supported.
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
    * 
    * @see SimJob#getServiceTime
    * 
@@ -342,8 +342,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * Infinite Server.
    * This queueing discipline, unlike e.g., {@link FIFO}, has multiple (actually infinite) servers.
    * 
-   * @param <J> The type of {@link SimJobs}s supported.
-   * @param <Q> The type of {@link SimQueues}s supported.
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
    * 
    */
   public static class IS<J extends SimJob, Q extends IS> extends NonPreemptiveQueue<J, Q> 

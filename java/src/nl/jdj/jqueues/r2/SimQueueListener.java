@@ -8,8 +8,8 @@ import nl.jdj.jqueues.r2.stat.AbstractSimQueueStat;
  * More sophisticated queue types will require an extension to this interface in order to capture all relevant state-changing
  * events.
  * 
- * @param <J> The type of {@link SimJobs}s supported.
- * @param <Q> The type of {@link SimQueues}s supported.
+ * @param <J> The type of {@link SimJob}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
 public interface SimQueueListener<J extends SimJob, Q extends SimQueue>

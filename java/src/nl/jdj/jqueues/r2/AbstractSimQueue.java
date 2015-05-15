@@ -14,8 +14,8 @@ import nl.jdj.jsimulation.r3.SimEventList;
  * the {@link SimEventList} used for event scheduling and processing as one of their arguments upon construction.
  * It is up to the caller to properly start processing the event list.
  * 
- * @param <J> The type of {@link SimJobs}s supported.
- * @param <Q> The type of {@link SimQueues}s supported.
+ * @param <J> The type of {@link SimJob}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
 public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQueue>
