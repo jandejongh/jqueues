@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r2;
+package nl.jdj.jqueues.r3;
 
 import nl.jdj.jqueues.r2.stat.AbstractSimQueueStat;
 

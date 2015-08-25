@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r2;
+package nl.jdj.jqueues.r3;
 
 // Forcibly import SimEventList in order to keep javadoc happy...
 import nl.jdj.jsimulation.r3.SimEventList;
