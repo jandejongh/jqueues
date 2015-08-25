@@ -1,6 +1,6 @@
 package nl.jdj.jqueues.r3;
 
-import nl.jdj.jqueues.r2.stat.AbstractSimQueueStat;
+import nl.jdj.jqueues.r3.stat.AbstractSimQueueStat;
 
 /** A listener to state changes of one or multiple {@link SimQueue}s.
  *
