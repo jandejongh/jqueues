@@ -1,9 +1,9 @@
-package nl.jdj.jqueues.r2.stat;
+package nl.jdj.jqueues.r3.stat;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r2.SimJob;
-import nl.jdj.jqueues.r2.SimQueue;
+import nl.jdj.jqueues.r3.SimJob;
+import nl.jdj.jqueues.r3.SimQueue;
 
 /** An concrete class for flexible statistics gathering on a {@link SimQueue}.
  *
