@@ -1,5 +1,9 @@
-package nl.jdj.jqueues.r2;
+package nl.jdj.jqueues.r3;
 
+import nl.jdj.jqueues.r3.AbstractSimJob;
+import nl.jdj.jqueues.r3.SimQueue;
+import nl.jdj.jqueues.r3.NonPreemptiveQueue;
+import nl.jdj.jqueues.r3.SimJob;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
