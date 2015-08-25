@@ -10,7 +10,7 @@ import nl.jdj.jsimulation.r3.SimEventList;
  *
  * The class and all implementations support job revocations, but not drops (infinite queue length).
  * 
- * <p>This abstract relies heavily on the partial {@link SimQueue} implementation of {@link AbstractSimQueue}.
+ * <p>This abstract class relies heavily on the partial {@link SimQueue} implementation of {@link AbstractSimQueue}.
  * 
  * <p>All concrete subclasses of {@link NonPreemptiveQueue} take
  * the {@link SimEventList} used for event scheduling and processing as one of their arguments upon construction.
