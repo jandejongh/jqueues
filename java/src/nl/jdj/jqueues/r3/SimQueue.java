@@ -20,6 +20,7 @@ import nl.jdj.jsimulation.r3.SimEventListListener;
  * The lifetime of a queue visit of a job is as follows.
  * {@link SimJob}s are offered for service through {@link #arrive}.
  * Depending on the queueing discipline, the job may be taking into service, in other words, start.
+ * Between arrival and start, a job is said to be <i>waiting</i>.
  * Once a job has been offered, {@link #revoke} tries to revoke the job,
  * if (still) possible and if supported by the queue discipline at all.
  * A queue may also choose to drop a job, whether in service or not.
@@ -27,9 +28,11 @@ import nl.jdj.jsimulation.r3.SimEventListListener;
  * If a job is neither dropped nor revoked, receive sufficient service from the queue and depart from it (a departure).
  *
  * <p>
- * Despite the large number of freedom degrees for {@link SimQueue}s, there is also a number of restrictions on the behavior of
- * a queue. For instance, a job cannot depart from a queue before it has been started, and it cannot start, be dropped or be revoked
+ * Despite the large number of freedom degrees for {@link SimQueue}s, there is also a number of (obvious) restrictions
+ * on the behavior of a queue.
+ * For instance, a job cannot depart from a queue before it has been started, and it cannot start, be dropped or be revoked
  * before having arrived.
+ * It can only start once during a queue visit.
  * 
  * <p>
  * The required service time of the job during a queue visit
@@ -43,6 +46,19 @@ import nl.jdj.jsimulation.r3.SimEventListListener;
  * Although queues are not allowed to increase the requested service time of a job (e.g., to compensate overhead), they are allowed
  * to serve jobs at a rate lower than their capacity, or to take vacation periods.
  *
+ * <p>
+ * From release 3 onwards, a {@link SimQueue} supports various types of <i>vacations</i>:
+ * <ul>
+ * <li>During a <i>queue-access vacation</i>, all jobs are dropped immediately upon arrival,
+ *     see {@link #startQueueAccessVacation()}, {@link #startQueueAccessVacation(double)},
+ *         {@link #stopQueueAccessVacation} and {@link #isQueueAccessVacation}.
+ *     A queue-access vacation <i>only</i> affects the queue's behavior upon arrivals.
+ * <li>
+ * <li>
+ * </ul>
+ * Note that all types of vacation may be for a given duration, or for undetermined time until explicitly stopped.
+ * 
+ * 
  * <p>
  * A {@link SimQueue} supports registration and un-registration of
  * queue-specific {@link SimEventAction}s to be invoked for specific events,
@@ -142,10 +158,16 @@ extends SimEventListListener
    *
    * This methods should be called from the {@link SimEventList} as a result of scheduling the job arrival.
    * Implementations can rely on the fact that the time argument supplied is actually the current time in the simulation.
-   * Do not use this method to schedule job arrival on the event list!
+   * 
+   * <p>
+   * Do not use this method to schedule job arrivals on the event list!
+   * 
+   * Note that during a <i>queue-access vacation</i>, all jobs will be dropped upon arrival.
    * 
    * @param job  The job.
    * @param time The time at which the job arrives, i.c., the current time.
+   * 
+   * @see #isQueueAccessVacation
    *
    */
   public void arrive (J job, double time);
@@ -165,6 +187,57 @@ extends SimEventListListener
    */
   public boolean revoke (J job, double time, boolean interruptService);
 
+  /** Start a queue-access vacation of undetermined duration (i.e., until explicit ending the vacation).
+   * 
+   * During a queue-access vacation, all {@link SimJob}s will be dropped immediately upon arrival.
+   * 
+   * If the queue is already on queue-access vacation, this method makes the vacation period undetermined (if not so already).
+   * 
+   * @see #arrive
+   * @see #startQueueAccessVacation(double)
+   * @see #stopQueueAccessVacation
+   * @see #isQueueAccessVacation
+   * 
+   */
+  public void startQueueAccessVacation ();
+  
+  /** Start a queue-access vacation of given duration.
+   * 
+   * If the queue is already on queue-access vacation, this method will overrule previous 
+   * settings as to the (remaining) duration of the vacation.
+   * 
+   * @see #arrive
+   * @see #startQueueAccessVacation()
+   * @see #stopQueueAccessVacation
+   * @see #isQueueAccessVacation
+   * 
+   */
+  public void startQueueAccessVacation (double duration);
+  
+  /** Immediately stops a queue-access vacation.
+   * 
+   * This method does nothing if the queue is not on queue-access vacation.
+   * and overrules all settings as to the (remaining) duration of the vacation.
+   * 
+   * @see #startQueueAccessVacation()
+   * @see #startQueueAccessVacation(double)
+   * @see #isQueueAccessVacation
+   * 
+   */
+  public void stopQueueAccessVacation ();
+  
+  /** Returns whether or not the queue is on queue-access vacation.
+   * 
+   * This method does nothing if the queue is not on queue-access vacation.
+   * and overrules all settings as to the (remaining) duration of the vacation.
+   * 
+   * @see #startQueueAccessVacation()
+   * @see #startQueueAccessVacation(double)
+   * @see #stopQueueAccessVacation
+   * 
+   */
+  public boolean isQueueAccessVacation ();
+  
   /** Add an action to be invoked upon job arrivals.
    *
    * This method silently ignores actions that have already been registered.
