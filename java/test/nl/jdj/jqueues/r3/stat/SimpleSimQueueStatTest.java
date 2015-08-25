@@ -6,7 +6,6 @@
 
 package nl.jdj.jqueues.r3.stat;
 
-import nl.jdj.jqueues.r3.stat.SimpleSimQueueStat;
 import nl.jdj.jqueues.r3.NonPreemptiveQueue;
 import nl.jdj.jqueues.r3.NonPreemptiveQueueTest;
 import nl.jdj.jqueues.r3.SimQueue;

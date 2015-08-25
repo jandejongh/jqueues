@@ -1,9 +1,5 @@
 package nl.jdj.jqueues.r3;
 
-import nl.jdj.jqueues.r3.AbstractSimJob;
-import nl.jdj.jqueues.r3.SimQueue;
-import nl.jdj.jqueues.r3.NonPreemptiveQueue;
-import nl.jdj.jqueues.r3.SimJob;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -68,11 +64,15 @@ public class NonPreemptiveQueueTest
     
     public boolean started = false;
     
+    public boolean dropped = false;
+    
     public boolean departed = false;
     
     public double arrivalTime = 0.0;
     
     public double startTime = 0.0;
+    
+    public double dropTime = 0.0;
     
     public double departureTime = 0.0;
     
@@ -116,6 +116,10 @@ public class NonPreemptiveQueueTest
           fail ("Already started!");
         if (! TestJob.this.arrived)
           fail ("Starting before arrival!");
+        if (TestJob.this.departed)
+          fail ("Starting after departure!");
+        if (TestJob.this.dropped)
+          fail ("Starting after drop!");
         TestJob.this.started = true;
         TestJob.this.startTime = event.getTime ();
       }
@@ -125,6 +129,28 @@ public class NonPreemptiveQueueTest
     public SimEventAction<SimJob> getQueueStartAction ()
     {
       return this.QUEUE_START_ACTION;
+    }
+
+    public final SimEventAction<SimJob> QUEUE_DROP_ACTION = new SimEventAction<SimJob> ()
+    {
+      @Override
+      public void action (final SimEvent event)
+      {
+        if (TestJob.this.reported)
+          System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " dropped.");      
+        if (! TestJob.this.arrived)
+          fail ("Dropped before arrival!");
+        if (TestJob.this.departed)
+          fail ("Dropped after departure!");
+        TestJob.this.dropped = true;
+        TestJob.this.dropTime = event.getTime ();
+      }
+    };
+    
+    @Override
+    public SimEventAction<SimJob> getQueueDropAction ()
+    {
+      return this.QUEUE_DROP_ACTION;
     }
 
     public final SimEventAction<SimJob> QUEUE_DEPART_ACTION = new SimEventAction<SimJob> ()
@@ -615,4 +641,93 @@ public class NonPreemptiveQueueTest
     }
   }
 
+  private void scheduleQueueAccessVacation (SimEventList el, final SimQueue queue, double startTime, final double duration)
+  {
+    el.add (new SimEvent (startTime, null, new SimEventAction ()
+    {
+
+      @Override
+      public void action (SimEvent event)
+      {
+        queue.startQueueAccessVacation (duration);
+      }
+    }));
+  }
+  
+  /**
+   * Test of server-access vacation.
+   * 
+   */
+  @Test
+  public void testServerAccessVacation ()
+  {
+    System.out.println ("=======================");
+    System.out.println ("Server Access Vacation ");
+    System.out.println ("=======================");
+    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final NonPreemptiveQueue.FCFS queue = new NonPreemptiveQueue.FCFS (el);
+    queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
+    {
+
+      @Override
+      public void notifyStartQueueAccessVacation (double t, SimQueue queue)
+      {
+        System.out.println ("t = " + t + ": Queue " + queue + " STARTS queue-access vacation!");
+      }
+      
+      @Override
+      public void notifyStopQueueAccessVacation (double t, SimQueue queue)
+      {
+        System.out.println ("t = " + t + ": Queue " + queue + " ENDS queue-access vacation!");
+      }
+
+    });
+    for (int i = 0; i <= 1; i++)
+    {
+      System.out.println ("===== PASS " + i + " =====");
+      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      // Schedule vacation from 1.5 to 5.5.
+      // Jobs 2, 3, 4, and 5 should be dropped.
+      // Job 1 should depart at t = 2.
+      // Job 6 starts at t = 6.
+      //     7               12
+      //     8               19
+      //     9               27
+      //     10              36
+      // Job 10 ends at t = 46.
+      scheduleQueueAccessVacation (el, queue, 1.5, 4.0);
+      el.run ();
+      assert el.isEmpty ();
+      assertEquals (46.0, el.getTime (), 0.0);
+      for (TestJob j : jobs)
+      {
+        assert j.arrived;
+        assertEquals ((double) j.n, j.arrivalTime, 0.0);
+        if (j.n == 1)
+        {
+          assert ! j.dropped;
+          assert j.started;
+          assert j.departed;          
+          assertEquals (j.departureTime, j.arrivalTime + (double) j.n, 0.0);
+        }
+        else if (j.n >= 2 && j.n <= 5)
+        {
+          assert j.dropped;
+          assert ! j.started;
+          assert ! j.departed;
+          assertEquals (j.dropTime, j.arrivalTime, 0.0);
+        }
+        else
+        {
+          assert ! j.dropped;
+          assert j.started;
+          assert j.departed;
+        }
+      }
+      // Test reset on the fly...
+      el.reset ();
+    }
+  }
+
+  
 }

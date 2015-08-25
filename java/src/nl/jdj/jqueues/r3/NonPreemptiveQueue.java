@@ -6,7 +6,7 @@ import nl.jdj.jsimulation.r3.SimEvent;
 import nl.jdj.jsimulation.r3.SimEventList;
 
 /** An abstract base class for non-preemptive queueing disciplines
- * for {@link SimJob}s.
+ *  for {@link SimJob}s.
  *
  * The class and all implementations support job revocations, but not drops (infinite queue length).
  * 
@@ -54,35 +54,53 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
   {
 
     @Override
-    public void arrive (final J job, final double time)
+    protected void insertJobInQueueUponArrival (J job, double time)
     {
-      assert job.getQueue () == null;
-      assert ! this.jobQueue.contains (job);
-      update (time);
-      this.jobQueue.add (job);
-      job.setQueue (this);
-      notifyArrival (time, job);
+      this.jobQueue.add (job);      
     }
 
     @Override
-    public boolean revoke
-      (final J job,
-      final double time,
-      final boolean interruptService)
+    protected void rescheduleAfterArrival (J job, double time)
     {
-      assert job.getQueue () == this;
-      update (time);
-      job.setQueue (null);
-      boolean found = this.jobQueue.remove (job);
-      assert found;
-      notifyRevocation (time, job);
+      /* EMPTY */
+    }
+
+    @Override
+    protected void removeJobFromQueueUponDrop (J job, double time)
+    {
+      this.jobQueue.remove (job);
+    }
+
+    @Override
+    protected void rescheduleAfterDrop (J job, double time)
+    {
+      /* EMPTY */
+    }
+    
+    @Override
+    public boolean removeJobFromQueueUponRevokation (J job, double time, boolean interruptService)
+    {
+      this.jobQueue.remove (job);
       return true;
     }
 
     @Override
+    protected void rescheduleAfterRevokation (J job, double time)
+    {
+      /* EMPTY */
+    }
+
+    @Override
+    protected void removeJobFromQueueUponDeparture (J departingJob, double time)
+    {
+      throw new IllegalStateException ();
+    }
+    
+    @Override
     protected void rescheduleAfterDeparture
       (final J departedJob, final double time)
     {
+      throw new IllegalStateException ();
     }
 
     public NONE (final SimEventList eventList)
@@ -104,11 +122,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
   {
 
     @Override
-    public void arrive (final J job, final double time)
+    protected void insertJobInQueueUponArrival (J job, double time)
     {
-      assert job.getQueue () == null;
-      assert ! this.jobQueue.contains (job);
-      update (time);
       if (this instanceof LIFO)
         this.jobQueue.add (0, job);
       else if (this instanceof RANDOM)
@@ -135,62 +150,90 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
       }
       else
         this.jobQueue.add (job);
-      job.setQueue (this);
-      notifyArrival (time, job);
+    }
+
+    @Override
+    protected void rescheduleAfterArrival (J job, double time)
+    {
       if (this.jobQueue.size () == 1)
       {
+        if (! this.jobQueue.contains (job))
+          throw new IllegalStateException ();
         final SimEvent<J> event
           = new NonPreemptiveQueue.DepartureEvent
           (time + job.getServiceTime (this), job);
         this.eventList.add (event);
-        assert this.eventsScheduled.isEmpty ();
+        if (! this.eventsScheduled.isEmpty ())
+          throw new IllegalStateException ();
         this.eventsScheduled.add (event);
-        assert this.jobsExecuting.isEmpty ();
+        if (! this.jobsExecuting.isEmpty ())
+          throw new IllegalStateException ();
         this.jobsExecuting.add (job);
         notifyStart (time, job);
       }
     }
 
     @Override
-    public boolean revoke
-      (final J job,
-      final double time,
-      final boolean interruptService)
+    protected void removeJobFromQueueUponDrop (J job, double time)
     {
-      assert job.getQueue () == this;
-      update (time);
-      boolean rescheduleNeeded = false;
+      removeJobFromQueueUponRevokation (job, time, true);
+    }
+
+    @Override
+    protected void rescheduleAfterDrop (J job, double time)
+    {
+      rescheduleAfterRevokation (job, time);
+    }
+
+    @Override
+    protected boolean removeJobFromQueueUponRevokation (J job, double time, boolean interruptService)
+    {
+      if (! this.jobQueue.contains (job))
+        throw new IllegalStateException ();
       if (this.jobsExecuting.contains (job))
       {
         if (! interruptService)
           return false;
         else
         {
-          boolean found = this.jobsExecuting.remove (job);
-          assert found;
-          assert this.eventsScheduled.size () == 1;
+          this.jobsExecuting.remove (job);
+          if (this.eventsScheduled.size () != 1)
+            throw new IllegalStateException ();
           final SimEvent<J> event
             = this.eventsScheduled.iterator ().next ();
-          found = this.eventsScheduled.remove (event);
-          assert found;
-          found = this.eventList.remove (event);
-          assert found;
-          rescheduleNeeded = true;
+          this.eventsScheduled.remove (event);
+          if (! this.eventList.remove (event))
+            throw new IllegalStateException ();
         }
       }
-      job.setQueue (null);
-      final boolean found = this.jobQueue.remove (job);
-      assert found;
-      if (rescheduleNeeded)
-        rescheduleAfterDeparture (job, time);
-      notifyRevocation (time, job);
+      this.jobQueue.remove (job);
       return true;
     }
 
     @Override
+    protected void rescheduleAfterRevokation (J job, double time)
+    {
+      if (this.jobsExecuting.isEmpty ())
+        rescheduleAfterDeparture (job, time);
+    }
+
+    @Override
+    protected void removeJobFromQueueUponDeparture (J departingJob, double time)
+    {
+      if (! this.jobQueue.contains (departingJob))
+        throw new IllegalStateException ();
+      if (! this.jobsExecuting.contains (departingJob))
+        throw new IllegalStateException ();
+      this.jobQueue.remove (departingJob);
+      this.jobsExecuting.remove (departingJob);
+    }
+    
+    @Override
     protected void rescheduleAfterDeparture
       (final SimJob departedJob, final double time)
     {
+      if (! (this.eventsScheduled.isEmpty () && this.jobsExecuting.isEmpty ()))
+        throw new IllegalStateException ();
       if (! this.jobQueue.isEmpty ())
       {
         final J job = this.jobQueue.get (0);
@@ -198,9 +241,7 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
           new NonPreemptiveQueue.DepartureEvent
           (time + job.getServiceTime (this), job);
         this.eventList.add (event);
-        assert this.eventsScheduled.isEmpty ();
         this.eventsScheduled.add (event);
-        assert this.jobsExecuting.isEmpty ();
         this.jobsExecuting.add (job);
         notifyStart (time, job);
       }
@@ -350,65 +391,87 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
   {
 
     @Override
-    public void arrive (final J job, final double time)
+    protected void insertJobInQueueUponArrival (J job, double time)
     {
-      // System.out.println ("Arrival at IS-queue @" + time);
-      assert job.getQueue () == null;
-      assert ! this.jobQueue.contains (job);
-      update (time);
       this.jobQueue.add (job);
       job.setQueue (this);
+    }
+
+    @Override
+    protected void rescheduleAfterArrival (J job, double time)
+    {
       final SimEvent<J> event = new NonPreemptiveQueue.DepartureEvent
         (time + job.getServiceTime (this), job);
       this.eventList.add (event);
       this.eventsScheduled.add (event);
       this.jobsExecuting.add (job);
-      notifyArrival (time, job);
       notifyStart (time, job);
-   }
+    }
 
     @Override
-    public boolean revoke
-      (final J job,
-      final double time,
-      final boolean interruptService)
+    protected void removeJobFromQueueUponDrop (J job, double time)
     {
-      assert job.getQueue () == this;
-      update (time);
+      // Be carefull here; job may not have started yet due to queue-access vacation.
+      if (this.jobsExecuting.contains (job))
+        removeJobFromQueueUponRevokation (job, time, true);
+    }
+
+    @Override
+    protected void rescheduleAfterDrop (J job, double time)
+    {
+    }
+
+    @Override
+    protected boolean removeJobFromQueueUponRevokation (J job, double time, boolean interruptService)
+    {
       if (! interruptService)
         return false;
-      else
+      if (! this.jobsExecuting.contains (job))
+        throw new IllegalStateException ();
+      this.jobsExecuting.remove (job);
+      SimEvent<J> event = null;
+      final Iterator<SimEvent<J>> i
+        = this.eventsScheduled.iterator ();
+      while (i.hasNext ())
       {
-        boolean found = this.jobsExecuting.remove (job);
-        assert found;
-        SimEvent<J> event = null;
-        final Iterator<SimEvent<J>> i
-          = this.eventsScheduled.iterator ();
-        while (i.hasNext ())
+        final SimEvent<J> e = i.next ();
+        if (e.getObject () == job)
         {
-          final SimEvent<J> e = i.next ();
-          if (e.getObject () == job)
-          {
-            event = e;
-            break;
-          }
+          event = e;
+          break;
         }
-        found = this.eventsScheduled.remove (event);
-        assert found;
-        found = this.eventList.remove (event);
-        assert found;
       }
-      job.setQueue (null);
-      final boolean found = this.jobQueue.remove (job);
-      assert found;
-      notifyRevocation (time, job);
+      if (event == null)
+        throw new IllegalStateException ();
+      this.eventsScheduled.remove (event);
+      if (! this.eventList.remove (event))
+        throw new IllegalStateException ();
+      this.jobQueue.remove (job);
       return true;
     }
 
     @Override
+    protected void rescheduleAfterRevokation (J job, double time)
+    {
+      /* EMPTY */
+    }
+    
+    @Override
+    protected void removeJobFromQueueUponDeparture (J departingJob, double time)
+    {
+      if (! this.jobQueue.contains (departingJob))
+        throw new IllegalStateException ();
+      if (! this.jobsExecuting.contains (departingJob))
+        throw new IllegalStateException ();
+      this.jobQueue.remove (departingJob);
+      this.jobsExecuting.remove (departingJob);
+    }
+    
+    @Override
     protected void rescheduleAfterDeparture
       (final J departedJob, final double time)
     {
+      /* EMPTY */
     }
 
     public IS (final SimEventList eventList)
