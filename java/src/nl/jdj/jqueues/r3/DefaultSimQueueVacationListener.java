@@ -17,5 +17,15 @@ implements SimQueueVacationListener<J, Q>
   public void notifyStopQueueAccessVacation (double t, Q queue)
   {
   }
+
+  @Override
+  public void notifyOutOfServerAccessCredits (double t, Q queue)
+  {
+  }
+
+  @Override
+  public void notifyRegainedServerAccessCredits (double t, Q queue)
+  {
+  }
   
 }

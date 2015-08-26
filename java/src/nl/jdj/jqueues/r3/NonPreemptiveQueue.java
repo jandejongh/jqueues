@@ -66,6 +66,12 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
     }
 
     @Override
+    protected void rescheduleForNewServerAccessCredits (double time)
+    {
+      /* EMPTY */
+    }
+
+    @Override
     protected void removeJobFromQueueUponDrop (J job, double time)
     {
       this.jobQueue.remove (job);
@@ -155,10 +161,13 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
     @Override
     protected void rescheduleAfterArrival (J job, double time)
     {
-      if (this.jobQueue.size () == 1)
+      if (! this.jobQueue.contains (job))
+        throw new IllegalStateException ();
+      if (this.jobQueue.size () < 1)
+        throw new IllegalStateException ();
+      if (this.jobQueue.size () == 1 && hasServerAcccessCredits ())
       {
-        if (! this.jobQueue.contains (job))
-          throw new IllegalStateException ();
+        takeServerAccessCredit ();
         final SimEvent<J> event
           = new NonPreemptiveQueue.DepartureEvent
           (time + job.getServiceTime (this), job);
@@ -169,8 +178,15 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
         if (! this.jobsExecuting.isEmpty ())
           throw new IllegalStateException ();
         this.jobsExecuting.add (job);
-        notifyStart (time, job);
+        fireStart (time, job);
       }
+    }
+    
+    @Override
+    protected void rescheduleForNewServerAccessCredits (double time)
+    {
+      if (this.jobsExecuting.isEmpty () && ! this.jobQueue.isEmpty ())
+        rescheduleAfterDeparture (null, time);
     }
 
     @Override
@@ -234,8 +250,9 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
     {
       if (! (this.eventsScheduled.isEmpty () && this.jobsExecuting.isEmpty ()))
         throw new IllegalStateException ();
-      if (! this.jobQueue.isEmpty ())
+      if ((! this.jobQueue.isEmpty ()) && hasServerAcccessCredits ())
       {
+        takeServerAccessCredit ();
         final J job = this.jobQueue.get (0);
         final SimEvent<J> event =
           new NonPreemptiveQueue.DepartureEvent
@@ -243,7 +260,7 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
         this.eventList.add (event);
         this.eventsScheduled.add (event);
         this.jobsExecuting.add (job);
-        notifyStart (time, job);
+        fireStart (time, job);
       }
     }
 
@@ -400,12 +417,23 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
     @Override
     protected void rescheduleAfterArrival (J job, double time)
     {
-      final SimEvent<J> event = new NonPreemptiveQueue.DepartureEvent
-        (time + job.getServiceTime (this), job);
-      this.eventList.add (event);
-      this.eventsScheduled.add (event);
-      this.jobsExecuting.add (job);
-      notifyStart (time, job);
+      if (hasServerAcccessCredits ())
+      {
+        takeServerAccessCredit ();
+        final SimEvent<J> event = new NonPreemptiveQueue.DepartureEvent
+          (time + job.getServiceTime (this), job);
+        this.eventList.add (event);
+        this.eventsScheduled.add (event);
+        this.jobsExecuting.add (job);
+        fireStart (time, job);
+      }
+    }
+
+    @Override
+    protected void rescheduleForNewServerAccessCredits (double time)
+    {
+      while (this.jobsExecuting.size () < this.jobQueue.size () && hasServerAcccessCredits ())
+        rescheduleAfterArrival (this.jobQueue.get (0), time);
     }
 
     @Override

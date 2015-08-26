@@ -42,6 +42,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   /** The underlying event list for {@link SimQueue} operations
    *  (to be supplied and fixed in the constructor).
    *
+   * Non-<code>null</code>.
+   * 
    */
   protected final SimEventList eventList;
 
@@ -82,9 +84,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
 
   private double lastUpdateTime = Double.NEGATIVE_INFINITY;
 
-  /** Resets the last update time to negative infinity, and removes all jobs without notifications.
-   * 
-   * End any vacation.
+  /** Resets the last update time to negative infinity, removes all jobs without notifications,
+   * and ends all vacations.
    * 
    */
   @Override
@@ -99,6 +100,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     this.eventsScheduled.clear ();
     this.eventList.remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
     this.isQueueAccessVacation = false;
+    this.serverAccessCredits = Integer.MAX_VALUE;
   }
   
   /** Gets the time of the last update of this queue.
@@ -130,13 +132,13 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param time The time of the update (i.c., the current time).
    * 
    * @see SimQueueListener#update
-   * @see #notifyUpdate
+   * @see #fireUpdate
    * 
    */
   public void update (double time)
   {
     assert time >= this.lastUpdateTime;
-    notifyUpdate (time);
+    fireUpdate (time);
     this.lastUpdateTime = time;
   }
   
@@ -177,7 +179,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
               if (! AbstractSimQueue.this.isQueueAccessVacation)
                 throw new IllegalStateException ();
               AbstractSimQueue.this.isQueueAccessVacation = false;
-              AbstractSimQueue.this.notifyStopQueueAccessVacation (event.getTime ());
+              AbstractSimQueue.this.fireStopQueueAccessVacation (event.getTime ());
             }
           };
 
@@ -191,10 +193,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   public void startQueueAccessVacation ()
   {
     boolean notify = ! this.isQueueAccessVacation;
+    if (notify)
+      update (this.eventList.getTime ());
     this.eventList.remove (END_QUEUE_ACCESS_VACATION_EVENT);
     this.isQueueAccessVacation = true;
     if (notify)
-      notifyStartQueueAccessVacation (this.eventList.getTime ());
+      fireStartQueueAccessVacation (this.eventList.getTime ());
   }
 
   @Override
@@ -203,22 +207,26 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     boolean notify = ! this.isQueueAccessVacation;
     if (duration < 0)
       throw new IllegalArgumentException ();
+    if (notify)
+      update (this.eventList.getTime ());
     this.eventList.remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
     this.END_QUEUE_ACCESS_VACATION_EVENT.setTime (this.eventList.getTime () + duration);
     this.eventList.add (this.END_QUEUE_ACCESS_VACATION_EVENT);
     this.isQueueAccessVacation = true;
     if (notify)
-      notifyStartQueueAccessVacation (this.eventList.getTime ());
+      fireStartQueueAccessVacation (this.eventList.getTime ());
   }
 
   @Override
   public void stopQueueAccessVacation ()
   {
     boolean notify = this.isQueueAccessVacation;
+    if (notify)
+      update (this.eventList.getTime ());
     this.eventList.remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
     this.isQueueAccessVacation = false;
     if (notify)
-      notifyStopQueueAccessVacation (this.eventList.getTime ());
+      fireStopQueueAccessVacation (this.eventList.getTime ());
   }
 
   @Override
@@ -227,9 +235,55 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     return this.isQueueAccessVacation;
   }
   
+  private int serverAccessCredits = Integer.MAX_VALUE;
+  
+  @Override
+  public final int getServerAccessCredits ()
+  {
+    return this.serverAccessCredits;
+  }
+  
+  @Override
+  public final void setServerAccessCredits (final int credits)
+  {
+    if (credits < 0)
+      throw new IllegalArgumentException ();
+    final int oldCredits = this.serverAccessCredits;
+    if (oldCredits != credits)
+      update (this.eventList.getTime ()); 
+    this.serverAccessCredits = credits;
+    if (oldCredits == 0 && credits > 0)
+      fireRegainedServerAccessCredits (this.lastUpdateTime);
+    else if (oldCredits > 0 && credits == 0)
+      fireOutOfServerAccessCredits (this.lastUpdateTime);
+    if (oldCredits == 0 && credits > 0)
+      rescheduleForNewServerAccessCredits (this.lastUpdateTime);
+  }
+  
+  protected final boolean hasServerAcccessCredits ()
+  {
+    return this.serverAccessCredits > 0;
+  }
+  
+  protected final void takeServerAccessCredit ()
+  {
+    if (this.serverAccessCredits <= 0)
+      throw new IllegalStateException ();
+    // Integer.MAX_VALUE is treated as infinity.
+    if (this.serverAccessCredits < Integer.MAX_VALUE)
+    {
+      update (this.eventList.getTime ());      
+      this.serverAccessCredits--;
+      if (this.serverAccessCredits == 0)
+        fireOutOfServerAccessCredits (this.lastUpdateTime);
+    }
+  }
+  
   protected abstract void insertJobInQueueUponArrival (J job, double time);
   
   protected abstract void rescheduleAfterArrival (J job, double time);
+
+  protected abstract void rescheduleForNewServerAccessCredits (double time);
   
   protected abstract void removeJobFromQueueUponDrop (J job, double time);
   
@@ -261,11 +315,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    */
   protected abstract void rescheduleAfterDeparture (J departedJob, double time);
 
-  /**
-   * 
-   * {@inheritDoc}
-   * 
-   */
   @Override
   public final void arrive (J job, double time)
   {
@@ -278,7 +327,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     update (time);
     insertJobInQueueUponArrival (job, time);
     job.setQueue (this);
-    notifyArrival (time, job);
+    fireArrival (time, job);
     if (this.isQueueAccessVacation)
       drop (job, time);
     else
@@ -292,7 +341,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     update (time);
     removeJobFromQueueUponDrop (job, time);
     job.setQueue (null);
-    notifyDrop (time, job);
+    fireDrop (time, job);
     rescheduleAfterDrop (job, time);
   }
 
@@ -309,7 +358,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     if (! revoked)
       return false;
     job.setQueue (null);
-    notifyRevocation (time, job);
+    fireRevocation (time, job);
     rescheduleAfterRevokation (job, time);
     return true;
   }
@@ -321,7 +370,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * removing it from the {@link #jobQueue}
    * and the {@link #jobsExecuting} lists,
    * and updating {@link #eventsScheduled}.
-   * It then invokes {@link #notifyDeparture} and thereafter
+   * It then invokes {@link #fireDeparture} and thereafter
    * the discipline-specific {@link #rescheduleAfterDeparture} method.
    * 
    */
@@ -335,7 +384,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
               if (! AbstractSimQueue.this.eventsScheduled.contains (event))
                 throw new IllegalStateException ();
               final double time = event.getTime ();
-              // System.out.println ("Departure from queue @" + time);
               final J job = event.getObject ();
               if (job.getQueue () != AbstractSimQueue.this)
                 throw new IllegalStateException ();
@@ -343,7 +391,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
               job.setQueue (null);
               AbstractSimQueue.this.removeJobFromQueueUponDeparture (job, time);
               AbstractSimQueue.this.eventsScheduled.remove (event);
-              AbstractSimQueue.this.notifyDeparture (job, event);
+              AbstractSimQueue.this.fireDeparture (job, event);
               AbstractSimQueue.this.rescheduleAfterDeparture (job, time);
             }
           };
@@ -352,9 +400,13 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    *
    * @param eventList The event list to use.
    *
+   * @throws IllegalArgumentException If the event list is <code>null</code>.
+   * 
    */
   protected AbstractSimQueue (final SimEventList eventList)
   {
+    if (eventList == null)
+      throw new IllegalArgumentException ();
     this.eventList = eventList;
     this.eventList.addListener (this);
   }
@@ -459,7 +511,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param time The current time, which has not been set on this queue.
    *
    */
-  protected final void notifyUpdate (double time)
+  protected final void fireUpdate (double time)
   {
     for (SimQueueListener<J, Q> l : this.queueListeners)
       l.update (time, (Q) this);
@@ -474,7 +526,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job The job.
    *
    */
-  protected final void notifyArrival (double time, J job)
+  protected final void fireArrival (double time, J job)
   {
     for (SimEventAction<J> action: this.arrivalActions)
       action.action (new SimEvent (time, job, action));
@@ -494,7 +546,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job The job.
    *
    */
-  protected final void notifyStart (double time, J job)
+  protected final void fireStart (double time, J job)
   {
     for (SimEventAction<J> action: this.startActions)
       action.action (new SimEvent (time, job, action));
@@ -514,7 +566,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job The job.
    *
    */
-  protected final void notifyDrop (double time, J job)
+  protected final void fireDrop (double time, J job)
   {
     for (SimEventAction<J> action: this.dropActions)
       action.action (new SimEvent (time, job, action));
@@ -534,7 +586,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job The job.
    *
    */
-  protected final void notifyRevocation (double time, J job)
+  protected final void fireRevocation (double time, J job)
   {
     for (SimEventAction<J> action: this.revocationActions)
       action.action (new SimEvent (time, job, action));
@@ -554,7 +606,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param event The event causing the departure.
    *
    */
-  protected final void notifyDeparture (J job, SimEvent event)
+  protected final void fireDeparture (J job, SimEvent event)
   {
     for (SimEventAction<J> action: this.departureActions)
       action.action (event);
@@ -565,20 +617,39 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       dAction.action (event);
   }
 
-  protected final void notifyStartQueueAccessVacation (double time)
+  protected final void fireStartQueueAccessVacation (double time)
   {
     for (SimQueueListener<J, Q> l : this.queueListeners)
       if (l instanceof SimQueueVacationListener)
         ((SimQueueVacationListener) l).notifyStartQueueAccessVacation (time, this);
   }
   
-  protected final void notifyStopQueueAccessVacation (double time)
+  protected final void fireStopQueueAccessVacation (double time)
   {
     for (SimQueueListener<J, Q> l : this.queueListeners)
       if (l instanceof SimQueueVacationListener)
         ((SimQueueVacationListener) l).notifyStopQueueAccessVacation (time, this);
   }
   
+  protected final void fireOutOfServerAccessCredits (double time)
+  {
+    for (SimQueueListener<J, Q> l : this.queueListeners)
+      if (l instanceof SimQueueVacationListener)
+        ((SimQueueVacationListener) l).notifyOutOfServerAccessCredits (time, this);    
+  }
+  
+  public void fireRegainedServerAccessCredits (double time)
+  {
+    for (SimQueueListener<J, Q> l : this.queueListeners)
+      if (l instanceof SimQueueVacationListener)
+        ((SimQueueVacationListener) l).notifyRegainedServerAccessCredits (time, this);    
+  }
+
+  /** Calls {@link #reset}.
+   * 
+   * {@inheritDoc}
+   *
+   */
   @Override
   public void notifyEventListReset (SimEventList eventList)
   {

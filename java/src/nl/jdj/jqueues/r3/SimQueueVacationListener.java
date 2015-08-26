@@ -28,4 +28,22 @@ extends SimQueueListener<J, Q>
    */
   public void notifyStopQueueAccessVacation (double t, Q queue);
 
+  /** Notification that a {@link SimQueue} has run out of server-access credits.
+   * 
+   * @param t The (current) time.
+   * @param queue The queue.
+   * 
+   * @see SimQueue#setServerAccessCredits
+   * 
+   */
+  public void notifyOutOfServerAccessCredits (double t, Q queue);
+  
+  /** Notification that a {@link SimQueue} has regained server-access credits.
+   * 
+   * @param t The (current) time.
+   * @param queue The queue.
+   * 
+   */
+  public void notifyRegainedServerAccessCredits (double t, Q queue);
+  
 }

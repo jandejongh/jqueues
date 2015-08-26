@@ -655,15 +655,15 @@ public class NonPreemptiveQueueTest
   }
   
   /**
-   * Test of server-access vacation.
+   * Test of queue-access vacation.
    * 
    */
   @Test
-  public void testServerAccessVacation ()
+  public void testQueueAccessVacation ()
   {
-    System.out.println ("=======================");
-    System.out.println ("Server Access Vacation ");
-    System.out.println ("=======================");
+    System.out.println ("======================");
+    System.out.println ("Queue Access Vacation ");
+    System.out.println ("======================");
     final SimEventList<SimEvent> el = new SimEventList<> ();
     final NonPreemptiveQueue.FCFS queue = new NonPreemptiveQueue.FCFS (el);
     queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
@@ -723,6 +723,100 @@ public class NonPreemptiveQueueTest
           assert j.started;
           assert j.departed;
         }
+      }
+      // Test reset on the fly...
+      el.reset ();
+    }
+  }
+
+  private void scheduleServerAccessCredits (SimEventList el, final SimQueue queue, double time, final int credits)
+  {
+    el.add (new SimEvent (time, null, new SimEventAction ()
+    {
+
+      @Override
+      public void action (SimEvent event)
+      {
+        queue.setServerAccessCredits (credits);
+      }
+    }));
+  }
+  
+  /**
+   * Test of server-access credits
+   * 
+   */
+  @Test
+  public void testServerAccessCredits ()
+  {
+    System.out.println ("======================");
+    System.out.println ("Server Access Credits ");
+    System.out.println ("======================");
+    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final NonPreemptiveQueue.FCFS queue = new NonPreemptiveQueue.FCFS (el);
+    queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
+    {
+
+      @Override
+      public void notifyRegainedServerAccessCredits (double t, SimQueue queue)
+      {
+        System.out.println ("t = " + t + ": Queue " + queue + " REGAINED server-access credits!");
+      }
+
+      @Override
+      public void notifyOutOfServerAccessCredits (double t, SimQueue queue)
+      {
+        System.out.println ("t = " + t + ": Queue " + queue + " OUT OF server-access credits!");
+      }
+
+    });
+    for (int i = 0; i <= 1; i++)
+    {
+      System.out.println ("===== PASS " + i + " =====");
+      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      // At t = 1.5, set remaining credits to 2.
+      // Job 1 starts at t=1, leaves at t=2.
+      // Job 2             2              4
+      // Job 3             4              7
+      // No more server credits until t=10.5 -> 4 additional credits.
+      // Job 4            10.5            14.5
+      // Job 5            14.5            19.5
+      // Job 6            19.5            25.5
+      // Job 7            25.5            32.5
+      // No more credits until t=100 -> 2 more credits.
+      // Job 8            100             108
+      // Job 9            108             117
+      // No credits for job 10 -> does not start/depart.
+      scheduleServerAccessCredits (el, queue, 1.5, 2);
+      scheduleServerAccessCredits (el, queue, 10.5, 4);
+      scheduleServerAccessCredits (el, queue, 100, 2);      
+      el.run ();
+      assert el.isEmpty ();
+      assertEquals (117.0, el.getTime (), 0.0);
+      for (TestJob j : jobs)
+      {
+        assert j.arrived;
+        assert ! j.dropped;
+        assertEquals ((double) j.n, j.arrivalTime, 0.0);
+        if (j.n != 10)
+        {
+          assert j.started;
+          assert j.departed;
+        }
+        else
+        {
+          assert ! j.started;
+          assert ! j.departed;
+        }
+        if (j.n == 1) assertEquals (j.departureTime, 2.0, 0.0);
+        else if (j.n == 2) assertEquals (j.departureTime, 4.0, 0.0);
+        else if (j.n == 3) assertEquals (j.departureTime, 7.0, 0.0);
+        else if (j.n == 4) assertEquals (j.departureTime, 14.5, 0.0);
+        else if (j.n == 5) assertEquals (j.departureTime, 19.5, 0.0);
+        else if (j.n == 6) assertEquals (j.departureTime, 25.5, 0.0);
+        else if (j.n == 7) assertEquals (j.departureTime, 32.5, 0.0);
+        else if (j.n == 8) assertEquals (j.departureTime, 108.0, 0.0);
+        else if (j.n == 9) assertEquals (j.departureTime, 117.0, 0.0);
       }
       // Test reset on the fly...
       el.reset ();

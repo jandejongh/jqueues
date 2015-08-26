@@ -238,6 +238,23 @@ extends SimEventListListener
    */
   public boolean isQueueAccessVacation ();
   
+  /** Gets the (remaining) server-access credits.
+   *
+   * The value {@link Integer#MAX_VALUE} is treated as infinity.
+   * 
+   * @return The remaining server-access credits, non-negative, with {@link Integer#MAX_VALUE} treated as infinity.
+   */
+  public int getServerAccessCredits ();
+  
+  /** Sets the server-access credits.
+   * 
+   * @param credits The new remaining server-access credits, non-negative, with {@link Integer#MAX_VALUE} treated as infinity.
+   * 
+   * @throws IllegalArgumentException If credits is (strictly) negative.
+   * 
+   */
+  public void setServerAccessCredits (int credits);
+  
   /** Add an action to be invoked upon job arrivals.
    *
    * This method silently ignores actions that have already been registered.
