@@ -22,10 +22,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   implements SimQueue<J, Q>
 {
   
-  protected final List<SimQueueListener<J, Q>> queueListeners = new ArrayList<> ();
+  private final List<SimQueueListener<J, Q>> queueListeners = new ArrayList<> ();
 
   @Override
-  public void registerQueueListener (SimQueueListener<J, Q> listener)
+  public final void registerQueueListener (SimQueueListener<J, Q> listener)
   {
     if (listener == null)
       return;
@@ -34,7 +34,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   }
 
   @Override
-  public void unregisterQueueListener (SimQueueListener<J, Q> listener)
+  public final void unregisterQueueListener (SimQueueListener<J, Q> listener)
   {
     this.queueListeners.remove (listener);
   }  
@@ -82,8 +82,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   protected final Set<SimEvent<J>> eventsScheduled
     = new HashSet<> ();
 
-  private double lastUpdateTime = Double.NEGATIVE_INFINITY;
-
   /** Resets the last update time to negative infinity, removes all jobs without notifications,
    * and ends all vacations.
    * 
@@ -103,6 +101,11 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     this.serverAccessCredits = Integer.MAX_VALUE;
   }
   
+  /** The last update time of this queue.
+   * 
+   */
+  private double lastUpdateTime = Double.NEGATIVE_INFINITY;
+
   /** Gets the time of the last update of this queue.
    * 
    * @return The time of the last update of this queue.
