@@ -179,7 +179,8 @@ public class NonPreemptiveQueueTest
 
   }
   
-  public static List<TestJob> scheduleJobArrivals (final boolean reported, final int n, final SimEventList eventList, final SimQueue queue)
+  public static List<TestJob> scheduleJobArrivals
+  (final boolean reported, final int n, final SimEventList eventList, final SimQueue queue)
   {
     final List<TestJob> jobList = new ArrayList<>  ();
     for (int i = 1; i <= n; i++)
@@ -638,6 +639,33 @@ public class NonPreemptiveQueueTest
       assertEquals ((double) j.n, j.startTime, 0.0);
       assert j.departed;
       assertEquals (j.startTime + (double) j.n, j.departureTime, 0.0);
+    }
+  }
+
+  /**
+   * Test of NonPreemptiveQueue.IC.
+   * 
+   */
+  @Test
+  public void testNonPreemptiveQueueIC ()
+  {
+    System.out.println ("=====================");
+    System.out.println ("NonPreemptiveQueue.IC");
+    System.out.println ("=====================");
+    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final NonPreemptiveQueue.IC queue = new NonPreemptiveQueue.IC (el);
+    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+    el.run ();
+    assert el.isEmpty ();
+    assertEquals (10.0, el.getTime (), 0.0);
+    for (TestJob j : jobs)
+    {
+      assert j.arrived;
+      assertEquals ((double) j.n, j.arrivalTime, 0.0);
+      assert j.started;
+      assertEquals (j.startTime, j.arrivalTime, 0.0);
+      assert j.departed;
+      assertEquals (j.departureTime, j.startTime, 0.0);
     }
   }
 
