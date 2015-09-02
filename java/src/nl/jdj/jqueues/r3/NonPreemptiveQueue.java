@@ -531,7 +531,7 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * 
    * <p>
    * For jobs with identical arrival times, it is <i>not</i> guaranteed that they will depart in order of arrival.
-   * In that case, a job may even depart before the arrival of another job (should the underlying event list not
+   * In that case, a job may even depart before the arrival of another job (should the underlying {@link SimEventList} not
    * respect insertion order).
    * 
    * @param <J> The type of {@link SimJob}s supported.
