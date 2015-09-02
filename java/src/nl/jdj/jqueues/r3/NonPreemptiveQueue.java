@@ -402,6 +402,10 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * <p>
    * This queueing discipline, unlike e.g., {@link FIFO}, has multiple (actually infinite) servers.
    * 
+   * <p>
+   * In the presence of vacations, i.e., jobs are not immediately admitted to the servers,
+   * this implementation respects the arrival order of jobs.
+   * 
    * @param <J> The type of {@link SimJob}s supported.
    * @param <Q> The type of {@link SimQueue}s supported.
    * 
@@ -520,6 +524,10 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
    * 
    * <p>
    * This queueing discipline guarantees that it will never invoke {@link SimJob#getServiceTime}.
+   * 
+   * <p>
+   * In the presence of vacations, i.e., jobs are not immediately admitted to service,
+   * this implementation respects the arrival order of jobs.
    * 
    * <p>
    * For jobs with identical arrival times, it is <i>not</i> guaranteed that they will depart in order of arrival.
