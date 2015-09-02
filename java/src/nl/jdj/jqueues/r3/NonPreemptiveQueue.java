@@ -398,6 +398,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
   /** The {@link IS} queue serves all jobs simultaneously.
    * 
    * Infinite Server.
+   * 
+   * <p>
    * This queueing discipline, unlike e.g., {@link FIFO}, has multiple (actually infinite) servers.
    * 
    * @param <J> The type of {@link SimJob}s supported.
@@ -420,8 +422,11 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
       if (hasServerAcccessCredits ())
       {
         takeServerAccessCredit ();
-        final SimEvent<J> event = new NonPreemptiveQueue.DepartureEvent
-          (time + job.getServiceTime (this), job);
+        final SimEvent<J> event;
+        if (this instanceof IC)
+          event = new NonPreemptiveQueue.DepartureEvent (time, job);
+        else
+          event = new NonPreemptiveQueue.DepartureEvent (time + job.getServiceTime (this), job);
         this.eventList.add (event);
         this.eventsScheduled.add (event);
         this.jobsExecuting.add (job);
@@ -509,4 +514,30 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
 
   }
 
+  /** The {@link IC} queue serves all jobs in zero time.
+   * 
+   * Infinite Capacity.
+   * 
+   * <p>
+   * This queueing discipline guarantees that it will never invoke {@link SimJob#getServiceTime}.
+   * 
+   * <p>
+   * For jobs with identical arrival times, it is <i>not</i> guaranteed that they will depart in order of arrival.
+   * In that case, a job may even depart before the arrival of another job (should the underlying event list not
+   * respect insertion order).
+   * 
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
+   * 
+   */
+  public static class IC<J extends SimJob, Q extends IS> extends IS<J, Q> 
+  {
+    
+    public IC (final SimEventList eventList)
+    {
+      super (eventList);
+    }
+    
+  }
+  
 }

@@ -129,7 +129,7 @@ public final class Main
    */
   public static void main (String[] args)
   {
-    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.r1 PACKAGE ===");
+    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues PACKAGE ===");
     System.out.println ("-> Creating jobs...");
     final List<TestJob> jobList = new ArrayList<>  ();
     for (int n = 1; n <= 10; n++)
@@ -193,6 +193,26 @@ public final class Main
         public void action (final SimEvent event)
         {
           isQueue.arrive (j, arrTime);
+        }
+      }));
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Creating IC queue...");
+    final SimQueue icQueue = new NonPreemptiveQueue.IC (el);
+    System.out.println ("-> Submitting jobs to IC queue...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + 1;
+      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      {
+        @Override
+        public void action (final SimEvent event)
+        {
+          icQueue.arrive (j, arrTime);
         }
       }));
     }
