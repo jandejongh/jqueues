@@ -379,9 +379,12 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * 
    * {@inheritDoc}
    *
+   * <p>
+   * This method is <code>final</code>; use {@link #reset} to override/augment behavior.
+   * 
    */
   @Override
-  public void notifyEventListReset (SimEventList eventList)
+  public final void notifyEventListReset (SimEventList eventList)
   {
     reset ();
   }
