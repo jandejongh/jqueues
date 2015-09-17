@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r3;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import nl.jdj.jsimulation.r3.SimEvent;
@@ -19,34 +20,20 @@ import nl.jdj.jsimulation.r3.SimEventList;
  * 
  */
 public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQueue>
+  extends AbstractSimQueueBase<J, Q>
   implements SimQueue<J, Q>
 {
   
-  private final List<SimQueueListener<J, Q>> queueListeners = new ArrayList<> ();
-
-  @Override
-  public final void registerQueueListener (SimQueueListener<J, Q> listener)
-  {
-    if (listener == null)
-      return;
-    if (! this.queueListeners.contains (listener))
-      this.queueListeners.add (listener);
-  }
-
-  @Override
-  public final void unregisterQueueListener (SimQueueListener<J, Q> listener)
-  {
-    this.queueListeners.remove (listener);
-  }  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // INTERNAL STORAGE OF JOBS IN SYSTEM AND JOBS EXECUTING
+  // - jobQueue
+  // - jobsExecuting (subset of jobQueue)
+  //
+  // TO BE MAINTAINED BY CONCRETE SUBCLASSES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** The underlying event list for {@link SimQueue} operations
-   *  (to be supplied and fixed in the constructor).
-   *
-   * Non-<code>null</code>.
-   * 
-   */
-  protected final SimEventList eventList;
-
   /** Jobs currently in queue.
    * 
    * Note: this includes jobs in service (executing).
@@ -82,6 +69,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   protected final Set<SimEvent<J>> eventsScheduled
     = new HashSet<> ();
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
   /** Resets the last update time to negative infinity, removes all jobs without notifications,
    * and ends all vacations.
    * 
@@ -96,11 +89,17 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     this.jobsExecuting.clear ();
     // XXX Shouldn't we remove events from the event list?
     this.eventsScheduled.clear ();
-    this.eventList.remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
+    getEventList ().remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
     this.isQueueAccessVacation = false;
     this.serverAccessCredits = Integer.MAX_VALUE;
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // UPDATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
   /** The last update time of this queue.
    * 
    */
@@ -111,6 +110,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @return The time of the last update of this queue.
    * 
    * @see #update
+   * @see SimQueueListener#update
    * 
    */
   public final double getLastUpdateTime ()
@@ -144,180 +144,32 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     fireUpdate (time);
     this.lastUpdateTime = time;
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ARRIVAL
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** The {@link SimEvent} used internally for scheduling {@link SimJob} departures.
+  /**
+   * {@inheritDoc}
    * 
-   * Simplifying, a {@link NonPreemptiveQueue}, and several other classes of queues, only need to consider job arrivals and
-   * job departures. In between such events, basically nothing changes from the viewpoint of the queue.
-   * Therefore, a natural approach towards simulating a queue is to schedule the first departure event and just sit and wait
-   * (really, that's all there is to it...).
+   * The final implementation makes sanity checks (e.g., job not already present),
+   * and invokes {@link #update}.
+   * It then invokes the subclass {@link #insertJobInQueueUponArrival},
+   * and checks the presence of the job in {@link #jobQueue}
+   * (throwing an {@link IllegalStateException} if not).
+   * It sets the visited queue on the job (with {@link SimJob#setQueue}),
+   * and notifies the arrival to listeners and actions
+   * ({@link #fireArrival}.
+   * Finally, if the queue is on queue-access vacation
+   * ({@link #isQueueAccessVacation}), it drops the job immediately,
+   * through {@link #drop}.
+   * Otherwise, it invokes the queue-discipline specific {@link #rescheduleAfterArrival}.
    * 
-   * <p>The {@link DepartureEvent}, once activated, simply calls {@link NonPreemptiveQueue#DEPARTURE_ACTION} with the {@link SimJob}
-   * leaving as the event argument. Implementations are encouraged to avoid creation of {@link DepartureEvent}s for each departure,
-   * but instead reuse a single instance.
+   * @see #isQueueAccessVacation()
    * 
    */
-  protected class DepartureEvent extends SimEvent<J>
-  {
-    public DepartureEvent
-      (final double time,
-      final J job)
-    {
-      super (time, job, AbstractSimQueue.this.DEPARTURE_ACTION);
-    }
-  }
-
-  private boolean isQueueAccessVacation = false;
-  
-  /** The single {@link SimEventAction} used to wakeup the queue from queue-access vacations.
-   * 
-   */
-  protected final SimEventAction END_QUEUE_ACCESS_VACATION_ACTION
-    = new SimEventAction<J> ()
-          {
-            @Override
-            public void action
-              (final SimEvent<J> event)
-            {
-              if (! AbstractSimQueue.this.isQueueAccessVacation)
-                throw new IllegalStateException ();
-              AbstractSimQueue.this.isQueueAccessVacation = false;
-              AbstractSimQueue.this.fireStopQueueAccessVacation (event.getTime ());
-            }
-          };
-
-  /** The single {@link SimEvent} used to wakeup the queue from queue-access vacations.
-   * 
-   */
-  protected final SimEvent END_QUEUE_ACCESS_VACATION_EVENT
-    = new SimEvent (0.0, null, END_QUEUE_ACCESS_VACATION_ACTION);
-
-  @Override
-  public void startQueueAccessVacation ()
-  {
-    boolean notify = ! this.isQueueAccessVacation;
-    if (notify)
-      update (this.eventList.getTime ());
-    this.eventList.remove (END_QUEUE_ACCESS_VACATION_EVENT);
-    this.isQueueAccessVacation = true;
-    if (notify)
-      fireStartQueueAccessVacation (this.eventList.getTime ());
-  }
-
-  @Override
-  public void startQueueAccessVacation (double duration)
-  {
-    boolean notify = ! this.isQueueAccessVacation;
-    if (duration < 0)
-      throw new IllegalArgumentException ();
-    if (notify)
-      update (this.eventList.getTime ());
-    this.eventList.remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
-    this.END_QUEUE_ACCESS_VACATION_EVENT.setTime (this.eventList.getTime () + duration);
-    this.eventList.add (this.END_QUEUE_ACCESS_VACATION_EVENT);
-    this.isQueueAccessVacation = true;
-    if (notify)
-      fireStartQueueAccessVacation (this.eventList.getTime ());
-  }
-
-  @Override
-  public void stopQueueAccessVacation ()
-  {
-    boolean notify = this.isQueueAccessVacation;
-    if (notify)
-      update (this.eventList.getTime ());
-    this.eventList.remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
-    this.isQueueAccessVacation = false;
-    if (notify)
-      fireStopQueueAccessVacation (this.eventList.getTime ());
-  }
-
-  @Override
-  public final boolean isQueueAccessVacation ()
-  {
-    return this.isQueueAccessVacation;
-  }
-  
-  private int serverAccessCredits = Integer.MAX_VALUE;
-  
-  @Override
-  public final int getServerAccessCredits ()
-  {
-    return this.serverAccessCredits;
-  }
-  
-  @Override
-  public final void setServerAccessCredits (final int credits)
-  {
-    if (credits < 0)
-      throw new IllegalArgumentException ();
-    final int oldCredits = this.serverAccessCredits;
-    if (oldCredits != credits)
-      update (this.eventList.getTime ()); 
-    this.serverAccessCredits = credits;
-    if (oldCredits == 0 && credits > 0)
-      fireRegainedServerAccessCredits (this.lastUpdateTime);
-    else if (oldCredits > 0 && credits == 0)
-      fireOutOfServerAccessCredits (this.lastUpdateTime);
-    if (oldCredits == 0 && credits > 0)
-      rescheduleForNewServerAccessCredits (this.lastUpdateTime);
-  }
-  
-  protected final boolean hasServerAcccessCredits ()
-  {
-    return this.serverAccessCredits > 0;
-  }
-  
-  protected final void takeServerAccessCredit ()
-  {
-    if (this.serverAccessCredits <= 0)
-      throw new IllegalStateException ();
-    // Integer.MAX_VALUE is treated as infinity.
-    if (this.serverAccessCredits < Integer.MAX_VALUE)
-    {
-      update (this.eventList.getTime ());      
-      this.serverAccessCredits--;
-      if (this.serverAccessCredits == 0)
-        fireOutOfServerAccessCredits (this.lastUpdateTime);
-    }
-  }
-  
-  protected abstract void insertJobInQueueUponArrival (J job, double time);
-  
-  protected abstract void rescheduleAfterArrival (J job, double time);
-
-  protected abstract void rescheduleForNewServerAccessCredits (double time);
-  
-  protected abstract void removeJobFromQueueUponDrop (J job, double time);
-  
-  protected abstract void rescheduleAfterDrop (J job, double time);
-  
-  protected abstract boolean removeJobFromQueueUponRevokation (J job, double time, boolean interruptService);
-  
-  protected abstract void rescheduleAfterRevokation (J job, double time);
-  
-  protected abstract void removeJobFromQueueUponDeparture (J departingJob, double time);
-  
-  /** Reschedules an event after a job departure.
-   * 
-   * Must be implemented by concrete subclasses.
-   * All known subclasses of {@link NonPreemptiveQueue} schedule one or more departure events on the event list, see
-   * {@link DepartureEvent}, which in turn invoke {@link #DEPARTURE_ACTION} for each departure.
-   * The purpose of this method is to schedule a new {@link DepartureEvent} if needed.
-   * Note that internal bookkeeping has already been done upon calling this method (i.e.,de facto, the job has already left the
-   * queue). Also, there is no need to notify listeners or invoke registered job/queue actions of the departure event, as this
-   * has already been done in {@link #DEPARTURE_ACTION}, just before this method is invoked.
-   * 
-   * <p>Subclasses are obviously free to use a different approach in terms of scheduling on the event list (i.e., they don't have
-   * to schedule {@link #DEPARTURE_ACTION}s. They then need to make an empty implementation of this method, and mimic the
-   * internal bookkeeping and notification policies in {@link #DEPARTURE_ACTION} upon job departures.
-   * 
-   * @param departedJob The departed job.
-   * @param time The departure (current) time.
-   * 
-   */
-  protected abstract void rescheduleAfterDeparture (J departedJob, double time);
-
   @Override
   public final void arrive (J job, double time)
   {
@@ -329,6 +181,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new RuntimeException ();
     update (time);
     insertJobInQueueUponArrival (job, time);
+    if (! this.jobQueue.contains (job))
+      throw new IllegalStateException ();
     job.setQueue (this);
     fireArrival (time, job);
     if (this.isQueueAccessVacation)
@@ -337,17 +191,304 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       rescheduleAfterArrival (job, time);
   }
 
+  /** Inserts a job that just arrived (at given time) into the internal queue(s).
+   * 
+   * <p>To be implemented by concrete queue types.
+   * Implementations <i>must</i> (at least) add the job to {@link #jobQueue} (this is actually checked).
+   * 
+   * <p>
+   * Implementations must ignore any queue-access vacation as this is taken care of by the base class.
+   * 
+   * <p>
+   * Implementations must <i>not</i>reschedule on the event list, or make changes to {@link #jobsExecuting},
+   * but instead wait for the imminent invocation of
+   * {@link #rescheduleAfterArrival} for that.
+   * 
+   * <p>
+   * Implementations should not set the queue on the job, as this is done by the base class.
+   * See {@link SimJob#setQueue}.
+   * 
+   * @param job The job that arrived.
+   * @param time The current time (i.e., arrival time of the job).
+   * 
+   * @see #rescheduleAfterArrival
+   * 
+   */
+  protected abstract void insertJobInQueueUponArrival (J job, double time);
+  
+  /** Reschedules after a job arrival.
+   * 
+   * The job has already been put into the internal data structures, and listeners/actions have already been notified of the
+   * arrival. Also, it is guaranteed that there are no queue-access vacations, as these are being dealt with by the
+   * base class.
+   * 
+   * <p>
+   * {@link #update} should not be called.
+   * 
+   * <p>This method should maintain the {@link #jobsExecuting} data.
+   * It should, however, <i>not</i>mangle the {@link #jobQueue} members, as the job set cannot change as a result of this
+   * method.
+   * 
+   * @param job The job that arrived.
+   * @param time  The current time (i.e., the arrival time of the job).
+   * 
+   * @see #insertJobInQueueUponArrival
+   * 
+   */
+  protected abstract void rescheduleAfterArrival (J job, double time);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // QUEUE-ACCESS VACATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private boolean isQueueAccessVacation = false;
+  
+  /**
+   * {@inheritDoc}
+   * 
+   * <p>
+   * Note that queue-access vacations are entirely dealt with by the base class {@link AbstractSimQueue}; there is
+   * no interaction (needed) with concrete subclasses.
+   * 
+   */
+  @Override
+  public final boolean isQueueAccessVacation ()
+  {
+    return this.isQueueAccessVacation;
+  }
+  
+  /** The single {@link SimEventAction} used to wakeup the queue from queue-access vacations.
+   * 
+   * The class implements {@link SimEventAction#action} by calling {@link AbstractSimQueue#stopQueueAccessVacationFromEventList},
+   * with time argument taken from the event passed in {@link SimEventAction#action}.
+   * 
+   */
+  protected final SimEventAction END_QUEUE_ACCESS_VACATION_ACTION
+    = new SimEventAction<J> ()
+          {
+            @Override
+            public void action
+              (final SimEvent<J> event)
+            {
+              AbstractSimQueue.this.stopQueueAccessVacationFromEventList (event.getTime ());
+            }
+          };
+
+  /** The single {@link SimEvent} used to wakeup the queue from queue-access vacations.
+   * 
+   * The event has {@link #END_QUEUE_ACCESS_VACATION_ACTION} as its immutable {@link SimEventAction}.
+   * 
+   */
+  protected final SimEvent END_QUEUE_ACCESS_VACATION_EVENT
+    = new SimEvent (0.0, null, this.END_QUEUE_ACCESS_VACATION_ACTION);
+
+  /**
+   * {@inheritDoc}
+   * 
+   * <p>
+   * This final implementation just removes any scheduled {@link #END_QUEUE_ACCESS_VACATION_EVENT} from the event list,
+   * and sets the internal flag indicating a queue-access vacation.
+   * The a-priori call to {@link #update} and the a-posteriori call to {@link #fireStartQueueAccessVacation} are only
+   * effectuated if the queue was not already in queue-access vacation.
+   * 
+   * <p>
+   * Note that queue-access vacations are entirely dealt with by the base class {@link AbstractSimQueue}; there is
+   * no interaction (needed) with concrete subclasses.
+   * 
+   */
+  @Override
+  public final void startQueueAccessVacation ()
+  {
+    boolean notify = ! this.isQueueAccessVacation;
+    if (notify)
+      update (getEventList ().getTime ());
+    getEventList ().remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
+    this.isQueueAccessVacation = true;
+    if (notify)
+      fireStartQueueAccessVacation (getEventList ().getTime ());
+  }
+
+  /**
+   * {@inheritDoc}
+   * 
+   * <p>
+   * This final implementation just (re)schedules {@link #END_QUEUE_ACCESS_VACATION_EVENT} on the event list,
+   * and sets the internal flag indicating a queue-access vacation.
+   * The a-priori call to {@link #update} and the a-posteriori call to {@link #fireStartQueueAccessVacation} are only
+   * effectuated if the queue was not already in queue-access vacation.
+   * 
+   * <p>
+   * Note that queue-access vacations are entirely dealt with by the base class {@link AbstractSimQueue}; there is
+   * no interaction (needed) with concrete subclasses.
+   * 
+   */
+  @Override
+  public final void startQueueAccessVacation (double duration)
+  {
+    boolean notify = ! this.isQueueAccessVacation;
+    if (duration < 0)
+      throw new IllegalArgumentException ();
+    if (notify)
+      update (getEventList ().getTime ());
+    getEventList ().remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
+    this.END_QUEUE_ACCESS_VACATION_EVENT.setTime (getEventList ().getTime () + duration);
+    getEventList ().add (this.END_QUEUE_ACCESS_VACATION_EVENT);
+    this.isQueueAccessVacation = true;
+    if (notify)
+      fireStartQueueAccessVacation (getEventList ().getTime ());
+  }
+
+  /**
+   * {@inheritDoc}
+   * 
+   * <p>
+   * This final implementation just removes {@link #END_QUEUE_ACCESS_VACATION_EVENT} from the event list,
+   * and resets the internal flag indicating queue-access vacation.
+   * The a-priori call to {@link #update} and the a-posteriori call to {@link #fireStartQueueAccessVacation} are only
+   * effectuated if the queue was not already in queue-access vacation.
+   * 
+   * <p>
+   * Note that queue-access vacations are entirely dealt with by the base class {@link AbstractSimQueue}; there is
+   * no interaction (needed) with concrete subclasses.
+   * 
+   */
+  @Override
+  public final void stopQueueAccessVacation ()
+  {
+    boolean notify = this.isQueueAccessVacation;
+    if (notify)
+      update (getEventList ().getTime ());
+    getEventList ().remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
+    this.isQueueAccessVacation = false;
+    if (notify)
+      fireStopQueueAccessVacation (getEventList ().getTime ());
+  }
+  
+  /** Stops an ongoing queue-access vacation as a result of an expiration event on the event list.
+   * 
+   * Invokes {@link #update}, resets the internal queue-access vacation flag, and notifies listeners of the change.
+   * 
+   * <p>
+   * Note that queue-access vacations are entirely dealt with by the base class {@link AbstractSimQueue}; there is
+   * no interaction (needed) with concrete subclasses.
+   * 
+   * @param time The time of the queue-access vacation expiration.
+   * 
+   * @throws IllegalStateException If the internal administration indicates that there is no queue-access vacation ongoing.
+   * 
+   * @see #update
+   * @see #fireStopQueueAccessVacation
+   * 
+   */
+  protected final void stopQueueAccessVacationFromEventList (final double time)
+  {
+    if (! this.isQueueAccessVacation)
+      throw new IllegalStateException ();
+    update (time);
+    this.isQueueAccessVacation = false;
+    fireStopQueueAccessVacation (time);    
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DROP
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /**
+   * {@inheritDoc}
+   * 
+   * The final implementation makes sanity checks (e.g., job present),
+   * and invokes {@link #update}.
+   * It then invokes the subclass {@link #removeJobFromQueueUponDrop},
+   * and checks the absence of the job in {@link #jobQueue} and {@link #jobsExecuting}
+   * (throwing an {@link IllegalStateException} if not).
+   * It sets the visited queue on the job (with {@link SimJob#setQueue}) to <code>null</code>,
+   * and notifies the drop to listeners and actions
+   * ({@link #fireDrop}.
+   * Finally, it invokes the queue-discipline specific {@link #rescheduleAfterDrop}.
+   * 
+   */
   protected final void drop (J job, double time)
   {
     if (job == null || job.getQueue () != this || ! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
     update (time);
     removeJobFromQueueUponDrop (job, time);
+    if (this.jobQueue.contains (job) || this.jobsExecuting.contains (job))
+      throw new IllegalStateException ();
     job.setQueue (null);
     fireDrop (time, job);
     rescheduleAfterDrop (job, time);
   }
 
+  /** Removes a job from the internal queue(s) because it is to be dropped.
+   * 
+   * <p>To be implemented by concrete queue types.
+   * Implementations <i>must</i> (at least) remove the job from {@link #jobQueue} (this is actually checked).
+   * They should also remove any job-specific events (like a departure event) from the event-list and remove the
+   * job (if needed) from the {@link #jobsExecuting} set (this is also checked).
+   * 
+   * <p>
+   * Implementations must <i>not</i>reschedule events for <i>other</i> jobs on the event list,
+   * but instead wait for the imminent invocation of
+   * {@link #rescheduleAfterDrop} for that.
+   * 
+   * <p>
+   * Implementations must not fire drop events. This is done by the base class {@link AbstractSimQueue}.
+   * 
+   * @param job The job that is to be dropped.
+   * @param time The current time (i.e., drop time of the job).
+   * 
+   * @see #rescheduleAfterDrop
+   * 
+   */
+  protected abstract void removeJobFromQueueUponDrop (J job, double time);
+  
+  /** Reschedules if needed after a job has been dropped from this queue.
+   * 
+   * <p>
+   * Implementations can rely on the fact that the job is no longer present in the internal data structures,
+   * that it has no pending events on the event list,
+   * and that this method is invoked immediately after {@link #removeJobFromQueueUponDrop}.
+   * 
+   * <p>
+   * Implementations must not fire drop events. This is done by the base class {@link AbstractSimQueue}.
+   * They must, however, fire appropriate events for jobs that start in this method,
+   * and update {@link #jobsExecuting} accordingly.
+   * 
+   * @param job  The jobs that was dropped.
+   * @param time The current time (i.e., drop time of the job).
+   * 
+   * @see #removeJobFromQueueUponDrop
+   * 
+   */
+  protected abstract void rescheduleAfterDrop (J job, double time);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // REVOKE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /**
+   * {@inheritDoc}
+   * 
+   * The final implementation makes sanity checks (e.g., job present),
+   * and invokes {@link #update}.
+   * It then invokes the subclass {@link #removeJobFromQueueUponRevokation},
+   * and returns from this method with return value <code>false</code>
+   * if the subclass refuses the revocation (i.e., returns <code>false</code> from {@link #removeJobFromQueueUponRevokation}).
+   * Otherwise, it checks the absence of the job in {@link #jobQueue} and {@link #jobsExecuting}
+   * (throwing an {@link IllegalStateException} if not).
+   * It sets the visited queue on the job (with {@link SimJob#setQueue}) to <code>null</code>,
+   * and notifies the drop to listeners and actions
+   * ({@link #fireRevocation}.
+   * Finally, it invokes the queue-discipline specific {@link #rescheduleAfterRevokation}.
+   * 
+   */
   @Override
   public final boolean revoke
     (final J job,
@@ -360,45 +501,428 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     final boolean revoked = removeJobFromQueueUponRevokation (job, time, interruptService);
     if (! revoked)
       return false;
+    if (this.jobQueue.contains (job) || this.jobsExecuting.contains (job))
+      throw new IllegalStateException ();    
     job.setQueue (null);
     fireRevocation (time, job);
     rescheduleAfterRevokation (job, time);
     return true;
   }
-
-  /** A {@link SimEventAction} that is invoked when a job departs from the queue.
+    
+  /** Removes a job from the internal queue(s) if it can be revoked.
+   * 
+   * <p>To be implemented by concrete queue types.
+   * Implementation may refuse the revocation, in which case they must return <code>false</code>.
    *
-   * This action takes care of administration of the internal data, i.e.,
-   * clearing the job's queue {@link SimJob#setQueue},
-   * removing it from the {@link #jobQueue}
-   * and the {@link #jobsExecuting} lists,
-   * and updating {@link #eventsScheduled}.
-   * It then invokes {@link #fireDeparture} and thereafter
-   * the discipline-specific {@link #rescheduleAfterDeparture} method.
+   * <p>
+   * Otherwise, implementations <i>must</i> (at least) remove the job from {@link #jobQueue} (this is actually checked).
+   * They should also remove any job-specific events (like a departure event) from the event-list and remove the
+   * job (if needed) from the {@link #jobsExecuting} set (this is also checked).
+   * 
+   * <p>
+   * Implementations must <i>not</i>reschedule events for <i>other</i> jobs on the event list,
+   * but instead wait for the imminent invocation of
+   * {@link #rescheduleAfterRevokation} for that.
+   * 
+   * <p>
+   * Implementations must not fire revocation events. This is done by the base class {@link AbstractSimQueue}.
+   * 
+   * @param job The job that is to be revoked.
+   * @param time The current time (i.e., revocation time of the job).
+   * 
+   * @see #rescheduleAfterRevokation
    * 
    */
-  protected final SimEventAction<J> DEPARTURE_ACTION
-    = new SimEventAction<J> ()
+  protected abstract boolean removeJobFromQueueUponRevokation (J job, double time, boolean interruptService);
+  
+  /** Reschedules if needed after a job has been revoked from this queue.
+   * 
+   * <p>
+   * Implementations can rely on the fact that the job is no longer present in the internal data structures,
+   * that it has no pending events on the event list,
+   * and that this method is invoked immediately after a successful {@link #removeJobFromQueueUponRevokation}.
+   * 
+   * <p>
+   * Implementations must not fire revocation events. This is done by the base class {@link AbstractSimQueue}.
+   * They must, however, fire appropriate events for jobs that start in this method,
+   * and update {@link #jobsExecuting} accordingly.
+   * 
+   * @param job  The jobs that was successfully revoked.
+   * @param time The current time (i.e., revocation time of the job).
+   * 
+   * @see #removeJobFromQueueUponRevokation
+   * 
+   */
+  protected abstract void rescheduleAfterRevokation (J job, double time);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVER-ACCESS CREDITS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private int serverAccessCredits = Integer.MAX_VALUE;
+  
+  @Override
+  public final int getServerAccessCredits ()
+  {
+    return this.serverAccessCredits;
+  }
+  
+  /**
+   * {@inheritDoc}
+   * 
+   * This final implementation invokes {@link #update} if the number of credits passed in the argument differs from the
+   * current number of credits, to serve statistics on the number of server-access credits.
+   * Then, it updates the internal administration of the number of server-access credits.
+   * Subsequently, it invokes {@link #fireOutOfServerAccessCredits} or {@link #fireRegainedServerAccessCredits} if appropriate.
+   * In the latter case, it also invokes {@link #rescheduleForNewServerAccessCredits}.
+   * 
+   * @see #getServerAccessCredits
+   * 
+   */
+  @Override
+  public final void setServerAccessCredits (final int credits)
+  {
+    if (credits < 0)
+      throw new IllegalArgumentException ();
+    final int oldCredits = this.serverAccessCredits;
+    if (oldCredits != credits)
+      update (getEventList ().getTime ()); 
+    this.serverAccessCredits = credits;
+    if (oldCredits > 0 && credits == 0)
+      fireOutOfServerAccessCredits (this.lastUpdateTime);
+    else if (oldCredits == 0 && credits > 0)
+    {
+      fireRegainedServerAccessCredits (this.lastUpdateTime);
+      rescheduleForNewServerAccessCredits (this.lastUpdateTime);
+    }
+  }
+  
+  /** Returns <code>true</code> if this queue has server-access credits left.
+   * 
+   * @return <code>True</code> if this queue has server-access credits left.
+   * 
+   */
+  protected final boolean hasServerAcccessCredits ()
+  {
+    return this.serverAccessCredits > 0;
+  }
+  
+  /** Takes a single server-access credit, which must be  available.
+   * 
+   * Throws an {@link IllegalStateException} if there are no server-access credits, in other words,
+   * caller must check this first.
+   * 
+   * <p>
+   * This method has no effect (and does not fire notifications) if the number of
+   * server-access credits is {@link Integer#MAX_VALUE}, which is treated as infinity.
+   * Otherwise, it invokes {@link #update} to serve statistics on the number of server-access credits.
+   * 
+   * <p>
+   * If the last server-access credit is granted in an invocation, {@link #fireOutOfServerAccessCredits} is fired.
+   * 
+   * @throws IllegalStateException If there are no server-access credits left.
+   * 
+   * @see #hasServerAcccessCredits
+   * 
+   */
+  protected final void takeServerAccessCredit ()
+  {
+    if (this.serverAccessCredits <= 0)
+      throw new IllegalStateException ();
+    // Integer.MAX_VALUE is treated as infinity.
+    if (this.serverAccessCredits < Integer.MAX_VALUE)
+    {
+      update (getEventList ().getTime ());      
+      this.serverAccessCredits--;
+      if (this.serverAccessCredits == 0)
+        fireOutOfServerAccessCredits (this.lastUpdateTime);
+    }
+  }
+  
+  /** Reschedules if needed due to the (new) availability of server-access credits.
+   * 
+   * <p>
+   * Implementations can rely on the availability of server-access credits previously (conform the current schedule) unavailable.
+   * 
+   * <p>
+   * Implementations must not fire server-access-credits events. This is done by the base class {@link AbstractSimQueue}.
+   * They must, however, fire appropriate events for jobs that start in this method,
+   * and update {@link #jobsExecuting} accordingly.
+   * 
+   * @param time The current time (i.e., the time at which new server-access credits became available).
+   * 
+   * @see #hasServerAcccessCredits
+   * 
+   */
+  protected abstract void rescheduleForNewServerAccessCredits (double time);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DEPARTURE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The default {@link SimEvent} used internally for scheduling {@link SimJob} departures.
+   * 
+   * <p>The {@link DefaultDepartureEvent} (actually, its {@link SimEventAction}), once activated,
+   * calls {@link AbstractSimQueue#departureFromEventList}.
+   * The event puts the jobs passed in the constructor in its user object
+   * {{@link SimEvent#getObject}).
+   * 
+   * <p>
+   * Implementations are encouraged to avoid creation of {@link DefaultDepartureEvent}s
+   * for each departure, but instead reuse instances.
+   * 
+   */
+  protected class DefaultDepartureEvent extends SimEvent<J>
+  {
+    public DefaultDepartureEvent
+      (final double time,
+      final J job)
+    {
+      super (time, job,
+        new SimEventAction<J> ()
           {
             @Override
             public void action
               (final SimEvent<J> event)
             {
-              if (! AbstractSimQueue.this.eventsScheduled.contains (event))
-                throw new IllegalStateException ();
-              final double time = event.getTime ();
-              final J job = event.getObject ();
-              if (job.getQueue () != AbstractSimQueue.this)
-                throw new IllegalStateException ();
-              AbstractSimQueue.this.update (time);
-              job.setQueue (null);
-              AbstractSimQueue.this.removeJobFromQueueUponDeparture (job, time);
-              AbstractSimQueue.this.eventsScheduled.remove (event);
-              AbstractSimQueue.this.fireDeparture (job, event);
-              AbstractSimQueue.this.rescheduleAfterDeparture (job, time);
+              AbstractSimQueue.this.departureFromEventList (event);
             }
-          };
+          }
+      );
+    }
+  }
 
+  /** Schedules a suitable {@link SimEvent} for a job's future departure on the event list.
+   * 
+   * The (default) implementation requires passing several rigorous sanity checks,
+   * after which it creates a new {@link DefaultDepartureEvent},
+   * adds it to {@link #eventsScheduled} and schedules the new event on the event list.
+   * Effectively, this ensures that unless the event is canceled,
+   * the method {@link #departureFromEventList} is invoked upon reaching the departure event.
+   * 
+   * <p>
+   * The base class {@link AbstractSimQueue} does not use this method; it is provided as a service to subclasses.
+   * Subclasses are free to override this method, but they <i>must</i> return a new (possibly extended)
+   * {@link DefaultDepartureEvent} with the {@link SimJob} as user object,
+   * insert the event into {@link #eventsScheduled}, and schedule it on the event list.
+   * 
+   * @param time The departure time.
+   * @param job  The job to depart.
+   * 
+   * @return The event created and scheduled on the event list.
+   * 
+   * @see #getEventList
+   * 
+   */
+  protected DefaultDepartureEvent scheduleDepartureEvent (final double time, final J job)
+  {
+    if (time < this.lastUpdateTime || job == null || job.getQueue () != this)
+      throw new IllegalArgumentException ();
+    if (! this.jobQueue.contains (job))
+      throw new IllegalArgumentException ();
+    if (! this.jobsExecuting.contains (job))
+      throw new IllegalArgumentException ();
+    final DefaultDepartureEvent event = new DefaultDepartureEvent (time, job);
+    this.eventsScheduled.add (event);
+    getEventList ().add (event);
+    return event;
+  }
+  
+  /** Cancels a pending departure event on the event list.
+   * 
+   * After several rigorous sanity checks, this default implementation
+   * removes the event from the event list and from {@link #eventsScheduled}.
+   * 
+   * <p>
+   * The base class {@link AbstractSimQueue} does not use this method; it is provided as a service to subclasses.
+   * Subclasses are free to override this method, but they <i>must</i> remove the event from {@link #eventsScheduled}
+   * and from the event list.
+   * 
+   * @param event The departure event to cancel.
+   * 
+   * @see #eventsScheduled
+   * @see #getEventList
+   * 
+   */
+  protected void cancelDepartureEvent (DefaultDepartureEvent event)
+  {
+    if (event == null)
+      throw new IllegalArgumentException ();
+    if (! getEventList ().contains (event))
+      throw new IllegalArgumentException ();
+    if (! this.eventsScheduled.contains (event))
+      throw new IllegalArgumentException ();
+    if (! this.jobQueue.contains (event.getObject ()))
+      throw new IllegalArgumentException ();
+    if (! this.jobsExecuting.contains (event.getObject ()))
+      throw new IllegalArgumentException ();
+    this.eventsScheduled.remove (event);
+    getEventList ().remove (event);
+  }
+  
+  /** Cancels a pending departure event for given job on the event list.
+   * 
+   * After several rigorous sanity checks, this default implementation
+   * removes the event from the event list and from {@link #eventsScheduled}.
+   * Note that a unique {@link DefaultDepartureEvent} must be found in {@link #eventsScheduled} for the job supplied,
+   * otherwise a {@link IllegalArgumentException} is thrown.
+   * 
+   * <p>
+   * The base class {@link AbstractSimQueue} does not use this method; it is provided as a service to subclasses.
+   * Subclasses are free to override this method, but they <i>must</i> remove the event from {@link #eventsScheduled}
+   * and from the event list.
+   * 
+   * @param job The job for which the unique departure event to cancel.
+   * 
+   * @throws IllegalArgumentException If zero or multiple {@link DefaultDepartureEvent}s
+   *                                  were found for the job in {@link #eventsScheduled}.
+   * 
+   * @see #eventsScheduled
+   * @see #getEventList
+   * @see #getDepartureEvents
+   * 
+   */
+  protected void cancelDepartureEvent (final J job)
+  {
+    if (job == null)
+      throw new IllegalArgumentException ();
+    final Set<DefaultDepartureEvent> set = getDepartureEvents (job);
+    if (set == null || set.size () != 1)
+      throw new IllegalArgumentException ();
+    cancelDepartureEvent (set.iterator ().next ());
+  }
+  
+  /** Gets all (should be at most one) departure event for given job.
+   * 
+   * The (final) implementation returns all {@link DefaultDepartureEvent}s in {@link #eventsScheduled}.
+   * 
+   * @param job The job.
+   * 
+   * @return A non-<code>null</code> {@link Set} holding all future departure events for the job.
+   * 
+   */
+  protected final Set<DefaultDepartureEvent> getDepartureEvents (final J job)
+  {
+    if (job == null)
+      throw new IllegalArgumentException ();
+    if (! this.jobQueue.contains (job))
+      throw new IllegalArgumentException ();
+    if (! this.jobsExecuting.contains (job))
+      throw new IllegalArgumentException ();
+    final Set<DefaultDepartureEvent> set = new LinkedHashSet<> ();
+    for (SimEvent<J> e : this.eventsScheduled)
+      if (e == null)
+        throw new IllegalStateException ();
+      // JdJ20150913: I have no clue why the next statement does not work...
+      // XXX TBD
+      // else if (! (e instanceof DefaultDepartureEvent))
+      //  continue;
+      else if (! DefaultDepartureEvent.class.isAssignableFrom (e.getClass ()))
+        continue;
+      else if (((DefaultDepartureEvent) e).getObject () != job)
+        continue;
+      else
+        set.add ((DefaultDepartureEvent) e);
+    return set;
+  }
+  
+  /** Deals with a departure event from the event list.
+   * 
+   * This method check the presence of the departure event in {@link #eventsScheduled},
+   * throwing an exception if absent,
+   * and removes the event from that collection.
+   * Then it invokes {@link #update},
+   * and takes care of administration of the internal data, i.e.,
+   * clearing the job's queue {@link SimJob#setQueue},
+   * invoking {@link #removeJobFromQueueUponDeparture}
+   * (which must remove the job from the {@link #jobQueue}
+   * and the {@link #jobsExecuting} lists).
+   * It then invokes {@link #fireDeparture} and thereafter
+   * the discipline-specific {@link #rescheduleAfterDeparture} method.
+   * 
+   * @param event The departure event; must be non-<code>null</code> and present in {@link #eventsScheduled}.
+   * 
+   * @see #eventsScheduled
+   * @see DefaultDepartureEvent
+   * @see #scheduleDepartureEvent
+   * 
+   */
+  protected final void departureFromEventList (final SimEvent<J> event)
+  {
+    if (event == null)
+      throw new RuntimeException ();
+    if (! this.eventsScheduled.contains (event))
+      throw new IllegalStateException ();
+    this.eventsScheduled.remove (event);
+    final double time = event.getTime ();
+    final J job = event.getObject ();
+    if (job.getQueue () != this)
+      throw new IllegalStateException ();
+    update (time);
+    job.setQueue (null);
+    removeJobFromQueueUponDeparture (job, time);
+    if (this.jobQueue.contains (job)
+      || this.jobsExecuting.contains (job))
+      throw new IllegalStateException ();
+    this.fireDeparture (job, event);
+    this.rescheduleAfterDeparture (job, time);
+    
+  }
+  
+  /** Removes a job from the internal queues upon departure.
+   * 
+   * <p>
+   * Implementations <i>must</i> (at least) remove the job from {@link #jobQueue} (this is actually checked).
+   * They should also remove any job-specific events (like a queue-specific departure event) from the event-list and remove the
+   * job (if needed) from the {@link #jobsExecuting} set (this is also checked).
+   * 
+   * <p>
+   * Implementations must <i>not</i>reschedule events for <i>other</i> jobs on the event list,
+   * but instead wait for the imminent invocation of
+   * {@link #rescheduleAfterDeparture} for that.
+   * 
+   * <p>
+   * Implementations must not fire departure events. This is done by the base class {@link AbstractSimQueue}.
+   * 
+   * 
+   * @param departingJob The job that departs.
+   * @param time The departure (current) time.
+   * 
+   * @see #rescheduleAfterDeparture
+   * 
+   */
+  protected abstract void removeJobFromQueueUponDeparture (J departingJob, double time);
+  
+  /** Reschedules if needed after a job departure has been effectuated by the base class.
+   * 
+   * <p>
+   * Implementations can rely on the fact that the job is no longer present in the internal data structures,
+   * that it has no pending events on the event list,
+   * and that this method is invoked immediately after {@link #removeJobFromQueueUponDeparture}.
+   * 
+   * <p>
+   * Implementations must not fire departure events. This is done by the base class {@link AbstractSimQueue}.
+   * They must, however, fire appropriate events for jobs that start in this method,
+   * and update {@link #jobsExecuting} accordingly.
+   * 
+   * @param departedJob The departed job.
+   * @param time The departure (current) time.
+   * 
+   * @see #removeJobFromQueueUponDeparture
+   * 
+   */
+  protected abstract void rescheduleAfterDeparture (J departedJob, double time);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTORS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
   /** Creates an abstract queue given an event list.
    *
    * @param eventList The event list to use.
@@ -408,275 +932,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    */
   protected AbstractSimQueue (final SimEventList eventList)
   {
-    if (eventList == null)
-      throw new IllegalArgumentException ();
-    this.eventList = eventList;
-    this.eventList.addListener (this);
+    super (eventList);
+    getEventList ().addListener (this);
   }
 
-  protected final List<SimEventAction> arrivalActions
-    = new ArrayList<> ();
-
-  @Override
-  public void addArrivalAction (final SimEventAction action)
-  {
-    if (action == null)
-      return;
-    if (this.arrivalActions.contains (action))
-      return;
-    this.arrivalActions.add (action);
-  }
-
-  @Override
-  public void removeArrivalAction (final SimEventAction action)
-  {
-    this.arrivalActions.remove (action);
-  }
-
-  protected final List<SimEventAction> startActions
-    = new ArrayList<> ();
-
-  @Override
-  public void addStartAction (final SimEventAction action)
-  {
-    if (action == null)
-      return;
-    if (this.startActions.contains (action))
-      return;
-    this.startActions.add (action);
-  }
-
-  @Override
-  public void removeStartAction (final SimEventAction action)
-  {
-    this.startActions.remove (action);
-  }
-
-  protected final List<SimEventAction> dropActions
-    = new ArrayList<> ();
-
-  @Override
-  public void addDropAction (final SimEventAction action)
-  {
-    if (action == null)
-      return;
-    if (this.dropActions.contains (action))
-      return;
-    this.dropActions.add (action);
-  }
-
-  @Override
-  public void removeDropAction (final SimEventAction action)
-  {
-    this.dropActions.remove (action);
-  }
-
-  protected final List<SimEventAction> revocationActions
-    = new ArrayList<> ();
-
-  @Override
-  public void addRevocationAction (final SimEventAction action)
-  {
-    if (action == null)
-      return;
-    if (this.revocationActions.contains (action))
-      return;
-    this.revocationActions.add (action);
-  }
-
-  @Override
-  public void removeRevocationAction (final SimEventAction action)
-  {
-    this.revocationActions.remove (action);
-  }
-
-  protected final List<SimEventAction> departureActions
-    = new ArrayList<> ();
-
-  @Override
-  public void addDepartureAction (final SimEventAction action)
-  {
-    if (action == null)
-      return;
-    if (this.departureActions.contains (action))
-      return;
-    this.departureActions.add (action);
-  }
-
-  @Override
-  public void removeDepartureAction (final SimEventAction action)
-  {
-    this.departureActions.remove (action);
-  }
-
-  /** Notifies all listeners upon an immediate upcoming update at this queue.
-   *
-   * @param time The current time, which has not been set on this queue.
-   *
-   */
-  protected final void fireUpdate (double time)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.update (time, (Q) this);
-  }
-  
-  /** Notifies all listeners and invoke all queue and job specific actions upon a job arrival at this queue.
-   *
-   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
-   * actions.
-   *
-   * @param time The current time.
-   * @param job The job.
-   *
-   */
-  protected final void fireArrival (double time, J job)
-  {
-    for (SimEventAction<J> action: this.arrivalActions)
-      action.action (new SimEvent (time, job, action));
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.arrival (time, job, (Q) this);
-    final SimEventAction<J> aAction = job.getQueueArriveAction ();
-    if (aAction != null)
-      aAction.action (new SimEvent (time, job, aAction));
-  }
-  
-  /** Notifies all listeners and invoke all queue and job specific actions upon a job starting at this queue.
-   *
-   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
-   * actions.
-   *
-   * @param time The current time.
-   * @param job The job.
-   *
-   */
-  protected final void fireStart (double time, J job)
-  {
-    for (SimEventAction<J> action: this.startActions)
-      action.action (new SimEvent (time, job, action));
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.start (time, job, (Q) this);
-    final SimEventAction<J> sAction = job.getQueueStartAction ();
-    if (sAction != null)
-      sAction.action (new SimEvent (time, job, sAction));
-  }
-  
-  /** Notifies all listeners and invoke all queue and job specific actions upon a job drop at this queue.
-   *
-   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
-   * actions.
-   *
-   * @param time The current time.
-   * @param job The job.
-   *
-   */
-  protected final void fireDrop (double time, J job)
-  {
-    for (SimEventAction<J> action: this.dropActions)
-      action.action (new SimEvent (time, job, action));
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.drop (time, job, (Q) this);
-    final SimEventAction<J> sAction = job.getQueueDropAction ();
-    if (sAction != null)
-      sAction.action (new SimEvent (time, job, sAction));    
-  }
-  
-  /** Notifies all listeners and invoke all queue and job specific actions upon a successful job revocation at this queue.
-   *
-   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
-   * actions.
-   *
-   * @param time The current time.
-   * @param job The job.
-   *
-   */
-  protected final void fireRevocation (double time, J job)
-  {
-    for (SimEventAction<J> action: this.revocationActions)
-      action.action (new SimEvent (time, job, action));
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.revocation (time, job, (Q) this);
-    final SimEventAction<J> rAction = job.getQueueRevokeAction ();
-    if (rAction != null)
-      rAction.action (new SimEvent<> (time, job, rAction));
-  }
-  
-  /** Notifies all listeners and invoke all queue and job specific actions of a job departure at this queue.
-   *
-   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
-   * actions.
-   *
-   * @param job The job.
-   * @param event The event causing the departure.
-   *
-   */
-  protected final void fireDeparture (J job, SimEvent event)
-  {
-    for (SimEventAction<J> action: this.departureActions)
-      action.action (event);
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.departure (event.getTime (), job, (Q) this);
-    final SimEventAction<J> dAction = job.getQueueDepartAction ();
-    if (dAction != null)
-      dAction.action (event);
-  }
-
-  protected final void fireStartQueueAccessVacation (double time)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      if (l instanceof SimQueueVacationListener)
-        ((SimQueueVacationListener) l).notifyStartQueueAccessVacation (time, this);
-  }
-  
-  protected final void fireStopQueueAccessVacation (double time)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      if (l instanceof SimQueueVacationListener)
-        ((SimQueueVacationListener) l).notifyStopQueueAccessVacation (time, this);
-  }
-  
-  protected final void fireOutOfServerAccessCredits (double time)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      if (l instanceof SimQueueVacationListener)
-        ((SimQueueVacationListener) l).notifyOutOfServerAccessCredits (time, this);    
-  }
-  
-  public void fireRegainedServerAccessCredits (double time)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      if (l instanceof SimQueueVacationListener)
-        ((SimQueueVacationListener) l).notifyRegainedServerAccessCredits (time, this);    
-  }
-
-  /** Calls {@link #reset}.
-   * 
-   * {@inheritDoc}
-   *
-   */
-  @Override
-  public void notifyEventListReset (SimEventList eventList)
-  {
-    reset ();
-  }
-
-  /** Does nothing.
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public void notifyEventListUpdate (SimEventList eventList, double time)
-  {
-  }
-
-  /** Does nothing.
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public void notifyEventListEmpty (SimEventList eventList, double time)
-  {
-  }
-  
 }
