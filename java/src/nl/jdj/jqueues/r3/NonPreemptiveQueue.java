@@ -1,8 +1,6 @@
 package nl.jdj.jqueues.r3;
 
-import java.util.Iterator;
 import java.util.Random;
-import nl.jdj.jsimulation.r3.SimEvent;
 import nl.jdj.jsimulation.r3.SimEventList;
 
 /** An abstract base class for non-preemptive queueing disciplines
@@ -163,22 +161,17 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
     {
       if (! this.jobQueue.contains (job))
         throw new IllegalStateException ();
-      if (this.jobQueue.size () < 1)
-        throw new IllegalStateException ();
-      if (this.jobQueue.size () == 1 && hasServerAcccessCredits ())
+      if (this.jobQueue.size () == 1)
       {
-        takeServerAccessCredit ();
-        final SimEvent<J> event
-          = new NonPreemptiveQueue.DepartureEvent
-          (time + job.getServiceTime (this), job);
-        this.eventList.add (event);
-        if (! this.eventsScheduled.isEmpty ())
-          throw new IllegalStateException ();
-        this.eventsScheduled.add (event);
         if (! this.jobsExecuting.isEmpty ())
           throw new IllegalStateException ();
-        this.jobsExecuting.add (job);
-        fireStart (time, job);
+        if (hasServerAcccessCredits ())
+        {
+          takeServerAccessCredit ();
+          this.jobsExecuting.add (job);
+          scheduleDepartureEvent (time + job.getServiceTime (this), job);
+          fireStart (time, job);
+        }
       }
     }
     
@@ -213,13 +206,7 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
         else
         {
           this.jobsExecuting.remove (job);
-          if (this.eventsScheduled.size () != 1)
-            throw new IllegalStateException ();
-          final SimEvent<J> event
-            = this.eventsScheduled.iterator ().next ();
-          this.eventsScheduled.remove (event);
-          if (! this.eventList.remove (event))
-            throw new IllegalStateException ();
+          cancelDepartureEvent (job);
         }
       }
       this.jobQueue.remove (job);
@@ -254,12 +241,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
       {
         takeServerAccessCredit ();
         final J job = this.jobQueue.get (0);
-        final SimEvent<J> event =
-          new NonPreemptiveQueue.DepartureEvent
-          (time + job.getServiceTime (this), job);
-        this.eventList.add (event);
-        this.eventsScheduled.add (event);
         this.jobsExecuting.add (job);
+        scheduleDepartureEvent (time + job.getServiceTime (this), job);
         fireStart (time, job);
       }
     }
@@ -417,7 +400,6 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
     protected void insertJobInQueueUponArrival (J job, double time)
     {
       this.jobQueue.add (job);
-      job.setQueue (this);
     }
 
     @Override
@@ -426,14 +408,11 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
       if (hasServerAcccessCredits ())
       {
         takeServerAccessCredit ();
-        final SimEvent<J> event;
-        if (this instanceof IC)
-          event = new NonPreemptiveQueue.DepartureEvent (time, job);
-        else
-          event = new NonPreemptiveQueue.DepartureEvent (time + job.getServiceTime (this), job);
-        this.eventList.add (event);
-        this.eventsScheduled.add (event);
         this.jobsExecuting.add (job);
+        if (this instanceof IC)
+          scheduleDepartureEvent (time, job);
+        else
+          scheduleDepartureEvent (time + job.getServiceTime (this), job);
         fireStart (time, job);
       }
     }
@@ -465,24 +444,8 @@ public abstract class NonPreemptiveQueue<J extends SimJob, Q extends NonPreempti
         return false;
       if (! this.jobsExecuting.contains (job))
         throw new IllegalStateException ();
+      cancelDepartureEvent (job);
       this.jobsExecuting.remove (job);
-      SimEvent<J> event = null;
-      final Iterator<SimEvent<J>> i
-        = this.eventsScheduled.iterator ();
-      while (i.hasNext ())
-      {
-        final SimEvent<J> e = i.next ();
-        if (e.getObject () == job)
-        {
-          event = e;
-          break;
-        }
-      }
-      if (event == null)
-        throw new IllegalStateException ();
-      this.eventsScheduled.remove (event);
-      if (! this.eventList.remove (event))
-        throw new IllegalStateException ();
       this.jobQueue.remove (job);
       return true;
     }
