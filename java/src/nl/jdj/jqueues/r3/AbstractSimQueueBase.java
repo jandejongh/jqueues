@@ -315,6 +315,30 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
       dAction.action (event);
   }
 
+  /** Notifies all listeners and invoke all queue and job specific actions of a job departure at this queue.
+   *
+   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
+   * actions.
+   *
+   * @param time The current time.
+   * @param job The job.
+   *
+   * @see #addDepartureAction
+   * @see SimQueueListener#departure
+   * @see SimJob#getQueueDepartureAction
+   * 
+   */
+  protected final void fireDeparture (double time, J job)
+  {
+    for (SimEventAction<J> action: this.departureActions)
+      action.action (new SimEvent (time, job, action));
+    for (SimQueueListener<J, Q> l : this.queueListeners)
+      l.departure (time, job, (Q) this);
+    final SimEventAction<J> dAction = job.getQueueDepartAction ();
+    if (dAction != null)
+      dAction.action (new SimEvent (time, job, dAction));
+  }
+
   /** Notifies all vacation listeners of the start of a queue-access vacation.
    * 
    * @param time The current time.
