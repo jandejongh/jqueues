@@ -130,7 +130,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * Because subclasses may present a more refined model of queue updates, this method is not <code>final</code>.
    * 
    * <p>
-   * This implementation only notifies the queues listeners, and updates its internal time.
+   * This implementation only notifies the queues listeners, and updates its internal time (in that order!).
    * 
    * @param time The time of the update (i.c., the current time).
    * 
@@ -140,9 +140,13 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    */
   public void update (double time)
   {
-    assert time >= this.lastUpdateTime;
-    fireUpdate (time);
-    this.lastUpdateTime = time;
+    if (time < this.lastUpdateTime)
+      throw new IllegalStateException ();
+    if (time > this.lastUpdateTime)
+    {
+      fireUpdate (time);
+      this.lastUpdateTime = time;
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,6 +241,37 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    */
   protected abstract void rescheduleAfterArrival (J job, double time);
 
+  /** Schedules a job arrival at this {@link AbstractSimQueue} on its {@link SimEventList}.
+   * 
+   * Convenience method.
+   * 
+   * @param time The arrival time of the job, which must be in the future.
+   * @param job The job to arrive.
+   * 
+   * @return The event created (and already scheduled).
+   * 
+   * @throws IllegalArgumentException If <code>time</code> is in the past, or <code>job</code> is <code>null</code>.
+   * 
+   * @see #getLastUpdateTime
+   * @see SimEventList#getTime
+   * 
+   */
+  public final SimEvent<J> scheduleJobArrival (final double time, final J job)
+  {
+    if (time < this.lastUpdateTime || time < getEventList ().getTime () || job == null)
+      throw new IllegalArgumentException ();
+    final SimEvent arrivalEvent = new SimEvent<> (time, null, new SimEventAction ()
+    {
+      @Override
+      public void action (SimEvent event)
+      {
+        AbstractSimQueue.this.arrive (job, time);
+      }
+    });
+    getEventList ().add (arrivalEvent);
+    return arrivalEvent;
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // QUEUE-ACCESS VACATION
