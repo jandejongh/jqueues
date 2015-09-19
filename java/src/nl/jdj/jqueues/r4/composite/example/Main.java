@@ -240,8 +240,15 @@ public final class Main
     el.run ();
     System.out.println ("-> Resetting event list...");
     el.reset ();
+    System.out.println ("-> Creating FCFS queue...");
+    final SimQueue fcfsQueue2 = new NonPreemptiveQueue.FIFO (el);
+    System.out.println ("-> Creating LCFS queue...");
+    final SimQueue lcfsQueue2 = new NonPreemptiveQueue.LIFO (el);
     System.out.println ("-> Creating Parallel queue...");
-    final SimQueue parallelQueue = new BlackParallelSimQueues (el, set, delegateSimJobFactory, new SimQueueSelector<SimJob, SimJob, SimQueue> ()
+    final Set<SimQueue> set2 = new LinkedHashSet<> ();
+    set2.add (fcfsQueue2);
+    set2.add (lcfsQueue2);
+    final SimQueue parallelQueue = new BlackParallelSimQueues (el, set2, delegateSimJobFactory, new SimQueueSelector<SimJob, SimJob, SimQueue> ()
     {
       boolean toSecond = false;
       @Override
@@ -249,9 +256,9 @@ public final class Main
       {
         final SimQueue dstQueue;
         if (toSecond)
-          dstQueue = lcfsQueue;
+          dstQueue = lcfsQueue2;
         else
-          dstQueue = fcfsQueue;
+          dstQueue = fcfsQueue2;
         toSecond = ! toSecond;
         return dstQueue;
       }
