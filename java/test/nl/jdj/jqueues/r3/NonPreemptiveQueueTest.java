@@ -3,9 +3,9 @@ package nl.jdj.jqueues.r3;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import nl.jdj.jsimulation.r3.SimEvent;
-import nl.jdj.jsimulation.r3.SimEventAction;
-import nl.jdj.jsimulation.r3.SimEventList;
+import nl.jdj.jsimulation.r4.SimEvent;
+import nl.jdj.jsimulation.r4.SimEventAction;
+import nl.jdj.jsimulation.r4.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
@@ -210,7 +210,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("=======================");
     System.out.println ("NonPreemptiveQueue.NONE");
     System.out.println ("=======================");
-    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final NonPreemptiveQueue.NONE queue = new NonPreemptiveQueue.NONE (el);
     for (int i = 0; i <= 1; i++)
     {
@@ -250,7 +250,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("=======================");
     System.out.println ("NonPreemptiveQueue.FIFO");
     System.out.println ("=======================");
-    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final NonPreemptiveQueue.FIFO queue = new NonPreemptiveQueue.FIFO (el);
     for (int i = 0; i <= 1; i++)
     {
@@ -283,7 +283,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("=======================");
     System.out.println ("NonPreemptiveQueue.LIFO");
     System.out.println ("=======================");
-    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final NonPreemptiveQueue.LIFO queue = new NonPreemptiveQueue.LIFO (el);
     final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
@@ -452,7 +452,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("=========================");
     System.out.println ("NonPreemptiveQueue.RANDOM");
     System.out.println ("=========================");
-    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final NonPreemptiveQueue.RANDOM queue = new NonPreemptiveQueue.RANDOM (el);
     final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
@@ -516,7 +516,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("======================");
     System.out.println ("NonPreemptiveQueue.SJF");
     System.out.println ("======================");
-    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final NonPreemptiveQueue.SJF queue = new NonPreemptiveQueue.SJF (el);
     final List<TestJob> jobs = scheduleJobArrivalsSJF (true, 10, el, queue);
     el.run ();
@@ -551,7 +551,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("======================");
     System.out.println ("NonPreemptiveQueue.LJF");
     System.out.println ("======================");
-    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final NonPreemptiveQueue.LJF queue = new NonPreemptiveQueue.LJF (el);
     final List<TestJob> jobs = scheduleJobArrivalsLJF (true, 10, el, queue);
     el.run ();
@@ -625,7 +625,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("=====================");
     System.out.println ("NonPreemptiveQueue.IS");
     System.out.println ("=====================");
-    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final NonPreemptiveQueue.IS queue = new NonPreemptiveQueue.IS (el);
     final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
@@ -652,7 +652,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("=====================");
     System.out.println ("NonPreemptiveQueue.IC");
     System.out.println ("=====================");
-    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final NonPreemptiveQueue.IC queue = new NonPreemptiveQueue.IC (el);
     final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
@@ -692,7 +692,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("======================");
     System.out.println ("Queue Access Vacation ");
     System.out.println ("======================");
-    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final NonPreemptiveQueue.FCFS queue = new NonPreemptiveQueue.FCFS (el);
     queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
     {
@@ -780,7 +780,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("======================");
     System.out.println ("Server Access Credits ");
     System.out.println ("======================");
-    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final NonPreemptiveQueue.FCFS queue = new NonPreemptiveQueue.FCFS (el);
     queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
     {
