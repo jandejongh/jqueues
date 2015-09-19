@@ -163,7 +163,11 @@ public final class Main
     dcfQueue.registerDCFStateListener (new StdOutDCFStateListener ());
     System.out.println ("-> Submitting job to DCF queue at t = 10.0...");
     dcfQueue.scheduleJobArrival (10.0, job);
+    System.out.println ("-> Submitting job to DCF queue at t = 100.0...");
     dcfQueue.scheduleJobArrival (100.0, job2);
+    System.out.println ("-> Submitting two jobs arriving simultaneously to DCF queue at t = 200.0...");
+    dcfQueue.scheduleJobArrival (200.0, job);
+    dcfQueue.scheduleJobArrival (200.0, job2);
     System.out.println ("-> Executing event list...");
     el.run ();
     //System.out.println ("-> Resetting event list...");
