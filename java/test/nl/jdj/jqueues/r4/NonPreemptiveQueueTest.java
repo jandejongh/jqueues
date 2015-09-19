@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r3;
+package nl.jdj.jqueues.r4;
 
 import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
 import nl.jdj.jqueues.r4.NonPreemptiveQueue;
