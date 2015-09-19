@@ -87,7 +87,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       j.setQueue (null);
     this.jobQueue.clear ();
     this.jobsExecuting.clear ();
-    // XXX Shouldn't we remove events from the event list?
+    for (SimEvent e : this.eventsScheduled)
+      getEventList ().remove (e);
     this.eventsScheduled.clear ();
     getEventList ().remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
     this.isQueueAccessVacation = false;

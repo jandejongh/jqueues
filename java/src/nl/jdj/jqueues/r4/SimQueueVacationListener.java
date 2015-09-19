@@ -2,6 +2,11 @@ package nl.jdj.jqueues.r4;
 
 /** A listener to various vacation types of a {@link SimQueue}.
  *
+ * @see SimQueueListener
+ * 
+ * @param <J> The type of {@link SimJob}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
+ * 
  */
 public interface SimQueueVacationListener<J extends SimJob, Q extends SimQueue>
 extends SimQueueListener<J, Q>

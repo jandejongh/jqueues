@@ -1,7 +1,12 @@
 package nl.jdj.jqueues.r4;
 
-/**
+/** A {@link SimQueueListener} logging events on <code>System.out</code>.
+ * 
+ * @see StdOutSimQueueVacationListener
  *
+ * @param <J> The type of {@link SimJob}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
+ * 
  */
 public class StdOutSimQueueListener<J extends SimJob, Q extends SimQueue>
 implements SimQueueListener<J, Q>
