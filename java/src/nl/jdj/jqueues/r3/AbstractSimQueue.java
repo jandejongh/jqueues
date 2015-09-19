@@ -5,9 +5,9 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import nl.jdj.jsimulation.r3.SimEvent;
-import nl.jdj.jsimulation.r3.SimEventAction;
-import nl.jdj.jsimulation.r3.SimEventList;
+import nl.jdj.jsimulation.r4.SimEvent;
+import nl.jdj.jsimulation.r4.SimEventAction;
+import nl.jdj.jsimulation.r4.SimEventList;
 
 /** A partial implementation of a {@link SimQueue}.
  * 

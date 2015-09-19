@@ -1,6 +1,6 @@
 package nl.jdj.jqueues.r3;
 
-import nl.jdj.jsimulation.r3.SimEventAction;
+import nl.jdj.jsimulation.r4.SimEventAction;
 
 /** Convenience class with a basic implementation of {@link SimJob}.
  *

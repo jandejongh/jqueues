@@ -1,9 +1,9 @@
 package nl.jdj.jqueues.r3;
 
 // Forcibly import SimEventList in order to keep javadoc happy...
-import nl.jdj.jsimulation.r3.SimEventList;
-import nl.jdj.jsimulation.r3.SimEventAction;
-import nl.jdj.jsimulation.r3.SimEventListListener;
+import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r4.SimEventAction;
+import nl.jdj.jsimulation.r4.SimEventListListener;
 
 /** A (generic) queueing system capable of serving jobs ({@link SimJob}s).
  *

@@ -2,10 +2,10 @@ package nl.jdj.jqueues.r3;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jsimulation.r3.SimEvent;
-import nl.jdj.jsimulation.r3.SimEventAction;
-import nl.jdj.jsimulation.r3.SimEventList;
-import nl.jdj.jsimulation.r3.SimEventListListener;
+import nl.jdj.jsimulation.r4.SimEvent;
+import nl.jdj.jsimulation.r4.SimEventAction;
+import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r4.SimEventListListener;
 
 /** A partial implementation of a {@link SimQueue}, taking listener and event-list management.
  * 
