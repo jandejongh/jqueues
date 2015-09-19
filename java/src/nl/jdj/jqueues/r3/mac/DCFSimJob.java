@@ -1,6 +1,6 @@
 package nl.jdj.jqueues.r3.mac;
 
-import nl.jdj.jqueues.r3.AbstractSimJob;
+import nl.jdj.jqueues.r4.AbstractSimJob;
 
 /**
  *

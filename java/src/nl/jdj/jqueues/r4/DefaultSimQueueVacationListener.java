@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r3;
+package nl.jdj.jqueues.r4;
 
 /** A convenience implementation (all methods are empty) of {@link SimQueueVacationListener}.
  *

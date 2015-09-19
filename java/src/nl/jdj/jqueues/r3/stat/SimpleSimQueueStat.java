@@ -1,7 +1,7 @@
 package nl.jdj.jqueues.r3.stat;
 
-import nl.jdj.jqueues.r3.SimJob;
-import nl.jdj.jqueues.r3.SimQueue;
+import nl.jdj.jqueues.r4.SimJob;
+import nl.jdj.jqueues.r4.SimQueue;
 
 /** An concrete class for gathering the most basic statistics on a {@link SimQueue}.
  *

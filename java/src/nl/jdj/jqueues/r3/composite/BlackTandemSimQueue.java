@@ -2,9 +2,9 @@ package nl.jdj.jqueues.r3.composite;
 
 import java.util.Iterator;
 import java.util.Set;
-import nl.jdj.jqueues.r3.AbstractSimJob;
-import nl.jdj.jqueues.r3.SimJob;
-import nl.jdj.jqueues.r3.SimQueue;
+import nl.jdj.jqueues.r4.AbstractSimJob;
+import nl.jdj.jqueues.r4.SimJob;
+import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /**

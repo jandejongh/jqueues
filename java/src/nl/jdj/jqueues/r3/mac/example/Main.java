@@ -1,8 +1,8 @@
 package nl.jdj.jqueues.r3.mac.example;
 
-import nl.jdj.jqueues.r3.SimQueue;
-import nl.jdj.jqueues.r3.StdOutSimQueueListener;
-import nl.jdj.jqueues.r3.StdOutSimQueueVacationListener;
+import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.StdOutSimQueueListener;
+import nl.jdj.jqueues.r4.StdOutSimQueueVacationListener;
 import nl.jdj.jqueues.r3.mac.DCF;
 import nl.jdj.jqueues.r3.mac.DCFSimJob;
 import nl.jdj.jqueues.r3.mac.MediumPhyState;

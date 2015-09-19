@@ -1,6 +1,6 @@
 package nl.jdj.jqueues.r3.stat;
 
-import nl.jdj.jqueues.r3.SimQueue;
+import nl.jdj.jqueues.r4.SimQueue;
 
 /** Object capable of obtaining a value (<code>double</code>) from a {@link SimQueue}.
  * 

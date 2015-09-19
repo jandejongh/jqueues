@@ -1,6 +1,6 @@
 package nl.jdj.jqueues.r3.stat;
 
-import nl.jdj.jqueues.r3.SimQueue;
+import nl.jdj.jqueues.r4.SimQueue;
 
 /** A description of an entry for automatic statistics management.
  * 
