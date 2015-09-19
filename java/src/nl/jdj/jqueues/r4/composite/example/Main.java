@@ -5,9 +5,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimJob;
+import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
 import nl.jdj.jqueues.r4.NonPreemptiveQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.StdOutSimQueueVacationListener;
 import nl.jdj.jqueues.r4.composite.BlackParallelSimQueues;
 import nl.jdj.jqueues.r4.composite.BlackTandemSimQueue;
 import nl.jdj.jqueues.r4.composite.DelegateSimJobFactory;
@@ -60,54 +62,12 @@ public final class Main
         return (double) n;
     }
     
-    public final SimEventAction<SimJob> QUEUE_ARRIVE_ACTION = new SimEventAction<SimJob> ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestJob.this.reported)
-          System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " arrives.");      
-      }
-    };
-    
     @Override
-    public SimEventAction<SimJob> getQueueArriveAction ()
+    public final String toString ()
     {
-      return this.QUEUE_ARRIVE_ACTION;
+      return "" + this.n;
     }
     
-    public final SimEventAction<SimJob> QUEUE_DEPART_ACTION = new SimEventAction<SimJob> ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestJob.this.reported)
-          System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " departs.");      
-      }
-    };
-    
-    @Override
-    public SimEventAction<SimJob> getQueueDepartAction ()
-    {
-      return this.QUEUE_DEPART_ACTION;
-    }
-
-    public final SimEventAction<SimJob> QUEUE_START_ACTION = new SimEventAction<SimJob> ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestJob.this.reported)
-          System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " starts.");      
-      }
-    };
-    
-    @Override
-    public SimEventAction<SimJob> getQueueStartAction ()
-    {
-      return this.QUEUE_START_ACTION;
-    }
-
   }
   
   /** DelegateSimJob implementation used in the examples.
@@ -140,54 +100,12 @@ public final class Main
         throw new IllegalStateException ();
     }
 
-    public final SimEventAction<SimJob> QUEUE_ARRIVE_ACTION = new SimEventAction<SimJob> ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestDelegateSimJob.this.reported)
-          System.out.println ("t = " + event.getTime () + ": DelegateJob " + TestDelegateSimJob.this.n + " arrives.");
-      }
-    };
-    
     @Override
-    public SimEventAction<SimJob> getQueueArriveAction ()
+    public final String toString ()
     {
-      return this.QUEUE_ARRIVE_ACTION;
+      return "DJ_" + this.n;
     }
     
-    public final SimEventAction<SimJob> QUEUE_DEPART_ACTION = new SimEventAction<SimJob> ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestDelegateSimJob.this.reported)
-          System.out.println ("t = " + event.getTime () + ": DelegateJob " + TestDelegateSimJob.this.n + " departs.");      
-      }
-    };
-    
-    @Override
-    public SimEventAction<SimJob> getQueueDepartAction ()
-    {
-      return this.QUEUE_DEPART_ACTION;
-    }
-
-    public final SimEventAction<SimJob> QUEUE_START_ACTION = new SimEventAction<SimJob> ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestDelegateSimJob.this.reported)
-          System.out.println ("t = " + event.getTime () + ": DelegateJob " + TestDelegateSimJob.this.n + " starts.");      
-      }
-    };
-    
-    @Override
-    public SimEventAction<SimJob> getQueueStartAction ()
-    {
-      return this.QUEUE_START_ACTION;
-    }
-
   }
   
   /** Main method.
@@ -206,8 +124,10 @@ public final class Main
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     System.out.println ("-> Creating FCFS queue...");
     final SimQueue fcfsQueue = new NonPreemptiveQueue.FIFO (el);
+    fcfsQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
     System.out.println ("-> Creating LCFS queue...");
     final SimQueue lcfsQueue = new NonPreemptiveQueue.LIFO (el);
+    lcfsQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
     System.out.println ("-> Creating Tandem queue...");
     final Set<SimQueue> set = new LinkedHashSet<> ();
     set.add (fcfsQueue);
@@ -222,6 +142,7 @@ public final class Main
         }
       };
     final SimQueue tandemQueue = new BlackTandemSimQueue (el, set, delegateSimJobFactory);
+    tandemQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
     System.out.println ("-> Submitting jobs to Tandem queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -242,8 +163,10 @@ public final class Main
     el.reset ();
     System.out.println ("-> Creating FCFS queue...");
     final SimQueue fcfsQueue2 = new NonPreemptiveQueue.FIFO (el);
+    fcfsQueue2.registerQueueListener (new StdOutSimQueueVacationListener ());
     System.out.println ("-> Creating LCFS queue...");
     final SimQueue lcfsQueue2 = new NonPreemptiveQueue.LIFO (el);
+    lcfsQueue2.registerQueueListener (new StdOutSimQueueVacationListener ());
     System.out.println ("-> Creating Parallel queue...");
     final Set<SimQueue> set2 = new LinkedHashSet<> ();
     set2.add (fcfsQueue2);
@@ -268,6 +191,7 @@ public final class Main
         return null;
       }
     });
+    parallelQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
     System.out.println ("-> Submitting jobs to Parallel queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
