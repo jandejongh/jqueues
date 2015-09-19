@@ -5,7 +5,7 @@ import java.util.List;
 import nl.jdj.jqueues.r4.NonPreemptiveQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r3.example.Main.TestJob;
+import nl.jdj.jqueues.r4.example.Main.TestJob;
 import nl.jdj.jqueues.r3.stat.AutoSimQueueStat;
 import nl.jdj.jqueues.r3.stat.AutoSimQueueStatEntry;
 import nl.jdj.jqueues.r3.stat.SimQueueProbe;
