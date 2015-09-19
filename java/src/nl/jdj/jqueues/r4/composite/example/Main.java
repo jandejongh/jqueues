@@ -211,6 +211,13 @@ public final class Main
     System.out.println ("-> Resetting event list...");
     el.reset ();
     System.out.println ("=== FINISHED ===");
+    try
+    {
+      Thread.sleep (5000l);    
+    }
+    catch (Exception e)
+    {
+    }
   }
   
 }
