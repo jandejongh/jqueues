@@ -6,8 +6,20 @@ import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-/**
+/** Parallel queues.
+ * 
+ * Under the hood, a delegate job for each {@link SimJob} visits one and only one of the
+ * embedded {@link SimQueue}s, as controlled by a {@link SimQueueSelector}.
+ * 
+ * <p>
+ * After the delegate job departs from its internal queue, the "real" job departs
+ * from the {@link BlackParallelSimQueues}.
  *
+ * @param <DJ> The delegate-job type.
+ * @param <DQ> The queue-type for delegate jobs.
+ * @param <J>  The job type.
+ * @param <Q>  The queue type for jobs.
+ * 
  */
 public class BlackParallelSimQueues
 <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackParallelSimQueues>
@@ -15,6 +27,9 @@ public class BlackParallelSimQueues
   implements BlackSimQueueNetwork<DJ, DQ, J, Q>
 {
   
+  /** The {@link SimQueueSelector} for selecting the internal queue to visit.
+   * 
+   */
   private final SimQueueSelector<J, DJ, DQ> simQueueSelector;
   
   /** Creates a black parallel queue given an event list and a list of queues to put in parallel.

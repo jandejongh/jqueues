@@ -7,8 +7,22 @@ import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-/**
+/** Tandem (serial) queue.
+ * 
+ * Under the hood, a delegate job for each {@link SimJob} visits each of the
+ * embedded {@link SimQueue}s in a predetermined sequence, as controlled
+ * by a the queues' order in the set in which they are offered upon construction
+ * of a {@link BlackTandemSimQueue}.
+ * 
+ * <p>
+ * After the delegate job departs from the last queue, the "real" job departs
+ * from the {@link BlackTandemSimQueue}.
  *
+ * @param <DJ> The delegate-job type.
+ * @param <DQ> The queue-type for delegate jobs.
+ * @param <J>  The job type.
+ * @param <Q>  The queue type for jobs.
+ * 
  */
 public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackTandemSimQueue>
   extends AbstractBlackSimQueueNetwork<DJ, DQ, J, Q>

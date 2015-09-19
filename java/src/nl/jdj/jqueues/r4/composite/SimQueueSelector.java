@@ -3,8 +3,12 @@ package nl.jdj.jqueues.r4.composite;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 
-/**
+/** An object capable of selecting the first and next {@link SimQueue}s for a delegate job.
  *
+ * @param <J>  The job type.
+ * @param <DJ> The delegate-job type.
+ * @param <DQ> The queue-type for delegate jobs.
+ * 
  */
 public interface SimQueueSelector<J extends SimJob, DJ extends SimJob, DQ extends SimQueue>
 {
