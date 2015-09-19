@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r3.composite;
+package nl.jdj.jqueues.r4.composite;
 
 import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.SimJob;

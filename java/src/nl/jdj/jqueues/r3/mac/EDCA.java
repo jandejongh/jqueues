@@ -6,8 +6,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r3.composite.BlackParallelSimQueues;
-import nl.jdj.jqueues.r3.composite.SimQueueSelector;
+import nl.jdj.jqueues.r4.composite.BlackParallelSimQueues;
+import nl.jdj.jqueues.r4.composite.SimQueueSelector;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /**
