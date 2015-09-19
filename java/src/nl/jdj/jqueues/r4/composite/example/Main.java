@@ -13,9 +13,8 @@ import nl.jdj.jqueues.r4.composite.DelegateSimJobFactory;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
-import sun.org.mozilla.javascript.NodeTransformer;
 
-/** Example code for {@link nl.jdj.jqueues.r3.composite}.
+/** Example code for <code>nl.jdj.jqueues.composite</code>.
  * 
  */
 public final class Main
@@ -214,7 +213,7 @@ public final class Main
    */
   public static void main (String[] args)
   {
-    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.r3.composite PACKAGE ===");
+    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.composite PACKAGE ===");
     System.out.println ("-> Creating jobs...");
     final List<TestJob> jobList = new ArrayList<>  ();
     for (int n = 1; n <= 10; n++)

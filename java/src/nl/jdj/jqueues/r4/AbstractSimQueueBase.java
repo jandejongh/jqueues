@@ -301,7 +301,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    *
    * @see #addDepartureAction
    * @see SimQueueListener#departure
-   * @see SimJob#getQueueDepartureAction
+   * @see SimJob#getQueueDepartAction
    * 
    */
   protected final void fireDeparture (J job, SimEvent event)
@@ -325,7 +325,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    *
    * @see #addDepartureAction
    * @see SimQueueListener#departure
-   * @see SimJob#getQueueDepartureAction
+   * @see SimJob#getQueueDepartAction
    * 
    */
   protected final void fireDeparture (double time, J job)

@@ -274,7 +274,7 @@ implements SimQueueListener<J, Q>
    * @return The time of the last update.
    * 
    * @see #update(double)
-   * @see #update(double, nl.jdj.jqueues.r2.SimQueue)
+   * @see #update(double, SimQueue)
    * 
    */
   public final double getLastUpdateTime ()

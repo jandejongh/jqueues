@@ -432,8 +432,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /**
-   * {@inheritDoc}
+  /** Drops a job from this queue, on the queue's initiative.
    * 
    * The final implementation makes sanity checks (e.g., job present),
    * and invokes {@link #update}.
@@ -444,6 +443,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * and notifies the drop to listeners and actions
    * ({@link #fireDrop}.
    * Finally, it invokes the queue-discipline specific {@link #rescheduleAfterDrop}.
+   * 
+   * @param job The job to be dropped.
+   * @param time The current time, i.e., the drop time of the job.
+   * 
+   * @throws IllegalArgumentException If the job is <code>null</code> or not found.
+   * @throws IllegalStateException    If the internal administration of this queue has become inconsistent. 
    * 
    */
   protected final void drop (J job, double time)

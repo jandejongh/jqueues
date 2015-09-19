@@ -7,7 +7,6 @@ import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.DefaultSimQueueListener;
 import nl.jdj.jqueues.r4.NonPreemptiveQueue;
-import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.composite.BlackTandemSimQueue;
 import nl.jdj.jsimulation.r4.SimEvent;
@@ -257,27 +256,27 @@ implements MediumPhyStateObserver
    * The terminology may be a bit misleading here.
    * The MAC is considered 'idle'
    * when it is not contending for the medium in any way.
-   * It has nothing to do with the state of the {@link Medium},
+   * It has nothing to do with the state of the medium,
    * i.e., whether or not the medium is sensed 'idle';
    * see {@link #isMediumMACIdle()} for that.
    * Note that even if the MAC is idle, it may still undergo state changes,
    * e.g., due to IFS and/or NAV expiration.
    * The MAC is idle only if it is in one of the following states:
-   * {@link State#IDLE_SHARP},
-   * {@link State#IDLE_IFS},
-   * {@link State#IDLE_BACKOFF},
-   * {@link State#IDLE_RX}, or
-   * {@link State#IDLE_NAV}.
+   * {@link DCFState#IDLE_SHARP},
+   * {@link DCFState#IDLE_IFS},
+   * {@link DCFState#IDLE_BACKOFF},
+   * {@link DCFState#IDLE_RX}, or
+   * {@link DCFState#IDLE_NAV}.
    *
    * @return True if the MAC is idle (i.e., has nothing to transmit).
    *
    * @see #isMediumMACIdle()
-   * @see State
+   * @see DCFState
    *
    */
   public final boolean isMACIdle ()
   {
-    switch (state)
+    switch (getState ())
     {
       case IDLE_SHARP:
       case IDLE_IFS:
@@ -302,7 +301,7 @@ implements MediumPhyStateObserver
     }
   }
 
-  /** Return true if the underlying {@link Medium} is idle,
+  /** Return true if the underlying medium is idle,
    *    both in the physical and the virtual (NAV) sense.
    *
    * <p> This function considers the medium idle if it is idle in the
@@ -310,35 +309,35 @@ implements MediumPhyStateObserver
    * available for transmission in the MAC sense,
    * i.e., considering IFS, NAV and back-off.
    *
-   * <p> The state of the medium is derived from the current MAC {@link State}.
-   * The {@link Medium} is idle only if it is in one of the following states:
-   * {@link State#IDLE_SHARP},
-   * {@link State#IDLE_BACKOFF}, or
-   * {@link State#BUSY_BACKOFF}.
+   * <p> The state of the medium is derived from the current MAC {@link DCFState}.
+   * The medium is idle only if it is in one of the following states:
+   * {@link DCFState#IDLE_SHARP},
+   * {@link DCFState#IDLE_BACKOFF}, or
+   * {@link DCFState#BUSY_BACKOFF}.
    * Note that while awaiting IFS expiration, i.e., in states
-   * {@link State#IDLE_IFS} and
-   * {@link State#BUSY_IFS},
+   * {@link DCFState#IDLE_IFS} and
+   * {@link DCFState#BUSY_IFS},
    * we consider the medium busy,
    * as it is unavailable for transmissions.
    *
    * <p> During back-offs, i.e., in states
-   * {@link State#IDLE_BACKOFF} and
-   * {@link State#BUSY_BACKOFF},
+   * {@link DCFState#IDLE_BACKOFF} and
+   * {@link DCFState#BUSY_BACKOFF},
    * the medium is considered idle,
    * since we are contending for the medium
    * (either because we have a frame to transmit,
-   * or because we want to reach the {@link State#IDLE_SHARP} state).
+   * or because we want to reach the {@link DCFState#IDLE_SHARP} state).
    *
    * @return True if the medium is idle (in physical and virtual sense).
    *
    * @see #isMACIdle()
    * @see #isMediumIdle()
-   * @see State
+   * @see DCFState
    *
    */
   public final boolean isMediumMACIdle ()
   {
-    switch (state)
+    switch (getState ())
     {
       case IDLE_SHARP:
       case IDLE_BACKOFF:
@@ -363,28 +362,28 @@ implements MediumPhyStateObserver
     }
   }
 
-  /** Return true if the underlying {@link Medium} is idle,
+  /** Return true if the underlying medium is idle,
    *    in the physical sense.
    *
    * In essence, the medium is considered idle if no
    * transmission is (physically) being sensed on it.
-   * The state of the medium is derived from the current MAC {@link State}.
-   * The {@link Medium} is idle only if it is not transmitting and not receiving,
-   * i.e., if is is not in
-   * {@link State#IDLE_RX},
-   * {@link State#BUSY_RX}, or
-   * {@link State#BUSY_TRANSMIT}.
+   * The state of the medium is derived from the current {@link DCFState}.
+   * The medium is idle only if it is not transmitting and not receiving,
+   * i.e., if it is not in
+   * {@link DCFState#IDLE_RX},
+   * {@link DCFState#BUSY_RX}, or
+   * {@link DCFState#BUSY_TX}.
    *
    * @return True if the medium is idle in physical sense.
    *
    * @see #isMACIdle()
    * @see #isMediumMACIdle()
-   * @see State
+   * @see DCFState
    *
    */
   public final boolean isMediumIdle ()
   {
-    switch (state)
+    switch (getState ())
     {
       case IDLE_IFS:
       case IDLE_NAV:
@@ -412,16 +411,12 @@ implements MediumPhyStateObserver
   /** Central state-changing method.
    *
    * This is the only place where we manipulate the DCF state.
-   * If applicable, the {@link #mediumMACStateChangedListener} is notified
-   * of channel-state changes, but only after all state administration
-   * and event scheduling have been updated.
    *
    * @param state The new state.
    * @param time  Time at which the state is entered (i.e., the current time).
    *
-   * @see #checkStateTransition(State)
-   * @see State
-   * @see #mediumMACStateChangedListener
+   * @see #checkStateTransition(DCFState)
+   * @see DCFState
    *
    */
   protected void setState (final DCFState state, final double time)
@@ -508,8 +503,8 @@ implements MediumPhyStateObserver
    *
    * @throws RuntimeException If the state transition is illegal.
    *
-   * @see #setState(State,double)
-   * @see State
+   * @see #setState(DCFState,double)
+   * @see DCFState
    *
    */
   protected void checkStateTransition (final DCFState state)

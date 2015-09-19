@@ -14,7 +14,7 @@ import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-/** Example code for {@link nl.jdj.jqueues}.
+/** Example code for <code>nl.jdj.jqueues</code>.
  * 
  */
 public final class Main
@@ -78,7 +78,7 @@ public final class Main
    */
   public static void main (String[] args)
   {
-    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.r1.stat PACKAGE ===");
+    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.stat PACKAGE ===");
     final int N = 100000;
     System.out.println ("-> Simulating queue with " + N + " jobs, arriving at 1, 2, 3, ...");
     System.out.println ("   Requesting service times 1, 2, 3, ...");
