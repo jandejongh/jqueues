@@ -502,7 +502,8 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    * Finds the next queue to visit by the delegate job.
    * If found, schedules the arrival of the delegate job at the next queue.
-   * Otherwise, removes both real and delegate jobs and fires a departure event.
+   * Otherwise, removes both real and delegate job,
+   * reset the queue on the real job and fires a departure event.
    * 
    * @see #getNextQueue
    * @see #fireDeparture
@@ -517,6 +518,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     if (nextQueue == null)
     {
       exitJobFromQueues (realJob, job);
+      realJob.setQueue (null);
       fireDeparture (t, realJob);  
     }
     else
