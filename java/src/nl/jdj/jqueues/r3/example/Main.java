@@ -6,9 +6,9 @@ import nl.jdj.jqueues.r3.AbstractSimJob;
 import nl.jdj.jqueues.r3.NonPreemptiveQueue;
 import nl.jdj.jqueues.r3.SimJob;
 import nl.jdj.jqueues.r3.SimQueue;
-import nl.jdj.jsimulation.r3.SimEvent;
-import nl.jdj.jsimulation.r3.SimEventAction;
-import nl.jdj.jsimulation.r3.SimEventList;
+import nl.jdj.jsimulation.r4.SimEvent;
+import nl.jdj.jsimulation.r4.SimEventAction;
+import nl.jdj.jsimulation.r4.SimEventList;
 
 /** Example code for {@link nl.jdj.jqueues}.
  * 
@@ -135,7 +135,7 @@ public final class Main
     for (int n = 1; n <= 10; n++)
       jobList.add (new TestJob (true, n));
     System.out.println ("-> Creating event list...");
-    final SimEventList<SimEvent> el = new SimEventList<> ();
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     System.out.println ("-> Creating FCFS queue...");
     final SimQueue fcfsQueue = new NonPreemptiveQueue.FIFO (el);
     System.out.println ("-> Submitting jobs to FCFS queue...");
