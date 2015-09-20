@@ -51,17 +51,21 @@ implements SimQueueSelector<EDCASimJob, DCFSimJob, DCF>
   }
 
   @Override
-  public SimQueue<DCFSimJob, DCF> selectFirstQueue (double time, EDCASimJob job)
+  public DCF selectFirstQueue (double time, EDCASimJob job)
   {
     if (job == null || job.acParameters == null || ! this.acMap.containsKey (job.acParameters))
       throw new IllegalArgumentException ();
-    return this.acMap.get (job.acParameters);
+    final DCF firstQueue = this.acMap.get (job.acParameters);
+    if (firstQueue == null || ! getQueues ().contains (firstQueue))
+      throw new IllegalArgumentException ();
+    return firstQueue;
   }
 
   @Override
-  public SimQueue<DCFSimJob, DCF> selectNextQueue (double time, EDCASimJob job, DCF previousQueue)
+  public DCF selectNextQueue (double time, EDCASimJob job, DCF previousQueue)
   {
-    if (job == null || job.acParameters == null || ! this.acMap.containsKey (job.acParameters))
+    if (job == null || job.acParameters == null || (! this.acMap.containsKey (job.acParameters))
+      || previousQueue == null || ! getQueues ().contains (previousQueue))
       throw new IllegalArgumentException ();
     return null;
   }
