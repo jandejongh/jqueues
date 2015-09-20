@@ -419,7 +419,7 @@ implements MediumPhyStateObserver
    * @see DCFState
    *
    */
-  protected void setState (final DCFState state, final double time)
+  protected final void setState (final DCFState state, final double time)
   {
     checkStateTransition (state);
     //
