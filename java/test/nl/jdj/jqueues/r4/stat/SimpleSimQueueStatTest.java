@@ -7,8 +7,8 @@
 package nl.jdj.jqueues.r4.stat;
 
 import nl.jdj.jqueues.r4.stat.SimpleSimQueueStat;
-import nl.jdj.jqueues.r4.NonPreemptiveQueue;
-import nl.jdj.jqueues.r4.NonPreemptiveQueueTest;
+import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueueTest;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventList;

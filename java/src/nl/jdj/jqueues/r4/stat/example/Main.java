@@ -2,10 +2,10 @@ package nl.jdj.jqueues.r4.stat.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r4.NonPreemptiveQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.example.Main.TestJob;
+import nl.jdj.jqueues.r4.nonpreemptive.example.Main.TestJob;
 import nl.jdj.jqueues.r4.stat.AutoSimQueueStat;
 import nl.jdj.jqueues.r4.stat.AutoSimQueueStatEntry;
 import nl.jdj.jqueues.r4.stat.SimQueueProbe;

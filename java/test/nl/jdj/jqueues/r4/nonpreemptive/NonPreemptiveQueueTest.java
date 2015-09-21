@@ -1,13 +1,17 @@
-package nl.jdj.jqueues.r4;
+package nl.jdj.jqueues.r4.nonpreemptive;
 
 import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
-import nl.jdj.jqueues.r4.NonPreemptiveQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueue;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.SimJob;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import nl.jdj.jqueues.r4.AbstractSimJob;
+import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
+import nl.jdj.jqueues.r4.SimJob;
+import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;

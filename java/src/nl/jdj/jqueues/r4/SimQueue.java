@@ -1,7 +1,7 @@
 package nl.jdj.jqueues.r4;
 
 // Forcibly import NonPreemptiveQueue.NONE in order to keep javadoc happy...
-import nl.jdj.jqueues.r4.NonPreemptiveQueue.NONE;
+import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueue.NONE;
 // Forcibly import SimEventList in order to keep javadoc happy...
 import nl.jdj.jsimulation.r4.SimEventList;
 import nl.jdj.jsimulation.r4.SimEventAction;

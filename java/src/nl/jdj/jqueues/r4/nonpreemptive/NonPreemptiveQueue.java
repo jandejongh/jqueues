@@ -1,6 +1,9 @@
-package nl.jdj.jqueues.r4;
+package nl.jdj.jqueues.r4.nonpreemptive;
 
 import java.util.Random;
+import nl.jdj.jqueues.r4.AbstractSimQueue;
+import nl.jdj.jqueues.r4.SimJob;
+import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** An abstract base class for non-preemptive queueing disciplines
