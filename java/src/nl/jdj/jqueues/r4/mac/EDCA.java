@@ -19,7 +19,9 @@ implements SimQueueSelector<EDCASimJob, DCFSimJob, DCF>
 
   private final Map<ACParameters, DCF> acMap = new HashMap<> ();
   
-  private static Set<DCF> createQueues (final SimEventList eventList, final Set<ACParameters> acParameters,
+  private static Set<DCF> createQueues (final SimEventList eventList,
+    final MediumPhyStateMonitor mediumPhyStateMonitor,
+    final Set<? extends ACParameters> acParameters,
     final double slotTime_s, final double difs_mus, final double eifs_mus)
   {
     if (acParameters == null || acParameters.contains (null) || acParameters.isEmpty ())
@@ -27,21 +29,29 @@ implements SimQueueSelector<EDCASimJob, DCFSimJob, DCF>
     final Set<DCF> set = new LinkedHashSet<>  ();
     for (ACParameters acp : acParameters)
     {
-      final DCF dcf = new DCF (eventList, null, slotTime_s, acp, difs_mus, eifs_mus);
+      final DCF dcf = new DCF (eventList, mediumPhyStateMonitor, slotTime_s, acp, difs_mus, eifs_mus);
       set.add (dcf);
     }
     return set;
   }
 
+  private static DCFSimJobForEDCAFactory createDelegateSimJobFactory ()
+  {
+    return new DCFSimJobForEDCAFactory ();
+  }
+  
   public EDCA
-  (SimEventList eventList,
-    MediumPhyStateMonitor mediumPhyStateMonitor,
+  (final SimEventList eventList,
+    final MediumPhyStateMonitor mediumPhyStateMonitor,
     final double slotTime_s,
     final double difs_mus,
     final double eifs_mus,
-    final Set<ACParameters> acps)
+    final Set<? extends ACParameters> acps)
   {
-    super (eventList, createQueues (eventList, acps, slotTime_s, difs_mus, eifs_mus), null, null);
+    super (eventList,
+      createQueues (eventList, mediumPhyStateMonitor, acps, slotTime_s, difs_mus, eifs_mus),
+      createDelegateSimJobFactory (),
+      null);
     if (getQueues ().size () != acps.size ())
       throw new RuntimeException ();
     final Iterator<DCF> queueIterator = getQueues ().iterator ();
