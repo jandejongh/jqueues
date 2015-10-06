@@ -1,8 +1,10 @@
 package nl.jdj.jqueues.r4;
 
-// Forcibly import NonPreemptiveQueue.NONE in order to keep javadoc happy...
-import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueue.NONE;
-// Forcibly import SimEventList in order to keep javadoc happy...
+// Forced import in order to keep javadoc happy...
+import nl.jdj.jqueues.r4.nonpreemptive.AbstractNonPreemptiveSimQueue;
+// Forced import in order to keep javadoc happy...
+import nl.jdj.jqueues.r4.nonpreemptive.NONE;
+// Forced import in order to keep javadoc happy...
 import nl.jdj.jsimulation.r4.SimEventList;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventListListener;
@@ -85,18 +87,27 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * <p>
  * In general, the required service ('execution') time of the job during a queue visit
  * must be provided by each job through {@link SimJob#getServiceTime}.
- * It must remain constant during a queue visit (may may be changed in between visits).
- * Not all {@link SimQueue} implementations use the notion of service time (e.g., {@link NonPreemptiveQueue.NONE}),
+ * It must remain constant during a queue visit (but may be changed in between visits).
+ * Not all {@link SimQueue} implementations use the notion of service time (e.g., {@link NONE}),
  * but if they do,
  * the service time is to be interpreted as follows:
  * If a queue spends unit capacity on serving this and only this job, it will
  * leave the queue exactly after the requested service time has elapsed since its start.
  * Unless explicitly specified by the implementation, the default capacity of a server (or each server in case of a 
- * multi-server queue) is assumed to be unity throughout. Since the notion of variable-capacity servers is not that common,
+ * multi-server queue) is assumed to be unity throughout.
+ * Since the notion of variable-capacity servers is not that common,
  * it has not been incorporated into this interface.
  * Although queues are not allowed to increase the requested service time of a job (e.g., to compensate overhead), they are allowed
  * to serve jobs at a rate lower than their capacity, or to take vacation periods.
  *
+ * <p>
+ * Some queueing systems override the requested service time as (would be) obtained through {@link SimJob#getServiceTime},
+ * and instead use a different source to obtain the service time.
+ * Implementations are strongly encouraged to document the source of the job's service time,
+ * if different from (default) requesting this at the job.
+ * In any case, the requested service time of a job, irrespective of its source, has to remain constant during a job's visit to
+ * a particular queue.
+ * 
  * <p>
  * From release 3 onwards, a {@link SimQueue} supports two types of <i>vacations</i>:
  * <ul>
@@ -172,21 +183,24 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * caller is responsible for starting the processing of the event list.
  * 
  * <p>
- * A basic implementation of the most important non-preemptive
- * queueing disciplines is provided in {@link NonPreemptiveQueue}.
- * All concrete subclasses of {@link NonPreemptiveQueue} take
- * the {@link SimEventList} as one of their arguments upon construction.
+ * Basic implementations of the most important non-preemptive
+ * queueing disciplines are provided in the {@link AbstractNonPreemptiveSimQueue} class
+ * and its concrete implementations in the same package.
  * 
  * <p>
  * Implementations must listen to the underlying event list for resets, see {@link SimEventListListener#notifyEventListReset}.
  *
+ * <p>
+ * A partial utility implementation of {@link SimQueue} is available in this package as {@link AbstractSimQueue}.
+ * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
  * @see SimJob
  * @see SimQueueListener
  * @see SimQueueVacationListener
- * @see NonPreemptiveQueue
+ * @see AbstractSimQueue
+ * @see AbstractNonPreemptiveSimQueue
  *
  */
 public interface SimQueue<J extends SimJob, Q extends SimQueue>
