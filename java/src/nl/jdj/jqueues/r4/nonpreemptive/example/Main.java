@@ -3,9 +3,18 @@ package nl.jdj.jqueues.r4.nonpreemptive.example;
 import java.util.ArrayList;
 import java.util.List;
 import nl.jdj.jqueues.r4.AbstractSimJob;
-import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.AbstractNonPreemptiveSimQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r4.nonpreemptive.IC;
+import nl.jdj.jqueues.r4.nonpreemptive.IS;
+import nl.jdj.jqueues.r4.nonpreemptive.IS_CST;
+import nl.jdj.jqueues.r4.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r4.nonpreemptive.LJF;
+import nl.jdj.jqueues.r4.nonpreemptive.NONE;
+import nl.jdj.jqueues.r4.nonpreemptive.RANDOM;
+import nl.jdj.jqueues.r4.nonpreemptive.SJF;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -111,7 +120,7 @@ public final class Main
    * 
    * <p>
    * In order to understand the generated output for the different queue types, we note that
-   * to each concrete {@link NonPreemptiveQueue}, exactly 10 jobs, numbered 1 through 10 inclusive are submitted.
+   * to each concrete {@link AbstractNonPreemptiveSimQueue}, exactly 10 jobs, numbered 1 through 10 inclusive are submitted.
    * The arrival time and the requested service time of each job are equal to the job index.
    * In other words, job 1 arrives at t=1 and requests S=1, job 2 arrives at t=2 and requests S=2, etc.
    * 
@@ -137,7 +146,7 @@ public final class Main
     System.out.println ("-> Creating event list...");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     System.out.println ("-> Creating FCFS queue...");
-    final SimQueue fcfsQueue = new NonPreemptiveQueue.FIFO (el);
+    final SimQueue fcfsQueue = new FCFS (el);
     System.out.println ("-> Submitting jobs to FCFS queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -161,7 +170,7 @@ public final class Main
     System.out.println ("-> Resetting event list...");
     el.reset ();
     System.out.println ("-> Creating LCFS queue...");
-    final SimQueue lcfsQueue = new NonPreemptiveQueue.LIFO (el);
+    final SimQueue lcfsQueue = new LCFS (el);
     System.out.println ("-> Submitting jobs to LCFS queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -181,7 +190,7 @@ public final class Main
     System.out.println ("-> Resetting event list...");
     el.reset ();
     System.out.println ("-> Creating IS queue...");
-    final SimQueue isQueue = new NonPreemptiveQueue.IS (el);
+    final SimQueue isQueue = new IS (el);
     System.out.println ("-> Submitting jobs to IS queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -200,8 +209,28 @@ public final class Main
     el.run ();
     System.out.println ("-> Resetting event list...");
     el.reset ();
+    System.out.println ("-> Creating IC_CST queue with service time 4...");
+    final SimQueue ic_cstQueue = new IS_CST (el, 4.0);
+    System.out.println ("-> Submitting jobs to IC_CST queue...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + 1;
+      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      {
+        @Override
+        public void action (final SimEvent event)
+        {
+          ic_cstQueue.arrive (j, arrTime);
+        }
+      }));
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
     System.out.println ("-> Creating IC queue...");
-    final SimQueue icQueue = new NonPreemptiveQueue.IC (el);
+    final SimQueue icQueue = new IC (el);
     System.out.println ("-> Submitting jobs to IC queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -221,7 +250,7 @@ public final class Main
     System.out.println ("-> Resetting event list...");
     el.reset ();
     System.out.println ("-> Creating NONE queue...");
-    final SimQueue noneQueue = new NonPreemptiveQueue.NONE (el);
+    final SimQueue noneQueue = new NONE (el);
     System.out.println ("-> Submitting jobs to NONE ('Hotel California') queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -241,7 +270,7 @@ public final class Main
     System.out.println ("-> Resetting event list...");
     el.reset ();
     System.out.println ("-> Creating RANDOM queue...");
-    final SimQueue randomQueue = new NonPreemptiveQueue.RANDOM (el);
+    final SimQueue randomQueue = new RANDOM (el);
     System.out.println ("-> Submitting jobs to RANDOM queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -261,7 +290,7 @@ public final class Main
     System.out.println ("-> Resetting event list...");
     el.reset ();
     System.out.println ("-> Creating SJF queue...");
-    final SimQueue sjfQueue = new NonPreemptiveQueue.SJF (el);
+    final SimQueue sjfQueue = new SJF (el);
     System.out.println ("-> Submitting jobs to SJF queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -280,7 +309,7 @@ public final class Main
     el.run ();
     el.reset ();
     System.out.println ("-> Creating LJF queue...");
-    final SimQueue ljfQueue = new NonPreemptiveQueue.LJF (el);
+    final SimQueue ljfQueue = new LJF (el);
     System.out.println ("-> Submitting jobs to LJF queue...");
     for (int i = 0; i < jobList.size (); i++)
     {

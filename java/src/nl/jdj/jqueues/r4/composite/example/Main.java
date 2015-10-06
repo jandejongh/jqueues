@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
-import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.AbstractNonPreemptiveSingleServerSimQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.StdOutSimQueueVacationListener;
@@ -14,6 +14,8 @@ import nl.jdj.jqueues.r4.composite.BlackParallelSimQueues;
 import nl.jdj.jqueues.r4.composite.BlackTandemSimQueue;
 import nl.jdj.jqueues.r4.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r4.composite.SimQueueSelector;
+import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r4.nonpreemptive.LCFS;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -92,9 +94,9 @@ public final class Main
     @Override
     public double getServiceTime (SimQueue queue) throws IllegalArgumentException
     {
-      if (queue instanceof NonPreemptiveQueue.LIFO)
+      if (queue instanceof LCFS)
         return 2 * this.n;
-      else if (queue instanceof NonPreemptiveQueue.FIFO)
+      else if (queue instanceof FCFS)
         return this.n;
       else
         throw new IllegalStateException ();
@@ -123,10 +125,10 @@ public final class Main
     System.out.println ("-> Creating event list...");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     System.out.println ("-> Creating FCFS queue...");
-    final SimQueue fcfsQueue = new NonPreemptiveQueue.FIFO (el);
+    final SimQueue fcfsQueue = new FCFS (el);
     fcfsQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
     System.out.println ("-> Creating LCFS queue...");
-    final SimQueue lcfsQueue = new NonPreemptiveQueue.LIFO (el);
+    final SimQueue lcfsQueue = new LCFS (el);
     lcfsQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
     System.out.println ("-> Creating Tandem queue...");
     final Set<SimQueue> set = new LinkedHashSet<> ();
@@ -162,10 +164,10 @@ public final class Main
     System.out.println ("-> Resetting event list...");
     el.reset ();
     System.out.println ("-> Creating FCFS queue...");
-    final SimQueue fcfsQueue2 = new NonPreemptiveQueue.FIFO (el);
+    final SimQueue fcfsQueue2 = new FCFS (el);
     fcfsQueue2.registerQueueListener (new StdOutSimQueueVacationListener ());
     System.out.println ("-> Creating LCFS queue...");
-    final SimQueue lcfsQueue2 = new NonPreemptiveQueue.LIFO (el);
+    final SimQueue lcfsQueue2 = new LCFS (el);
     lcfsQueue2.registerQueueListener (new StdOutSimQueueVacationListener ());
     System.out.println ("-> Creating Parallel queue...");
     final Set<SimQueue> set2 = new LinkedHashSet<> ();

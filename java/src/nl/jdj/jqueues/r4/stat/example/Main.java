@@ -2,9 +2,12 @@ package nl.jdj.jqueues.r4.stat.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.AbstractNonPreemptiveSingleServerSimQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r4.nonpreemptive.IS;
+import nl.jdj.jqueues.r4.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r4.nonpreemptive.example.Main.TestJob;
 import nl.jdj.jqueues.r4.stat.AutoSimQueueStat;
 import nl.jdj.jqueues.r4.stat.AutoSimQueueStatEntry;
@@ -64,9 +67,9 @@ public final class Main
   
   private static final SimEventList<SimEvent> EVENT_LIST = new SimEventList<> (SimEvent.class);
   
-  private static final SimQueue FCFS_QUEUE = new NonPreemptiveQueue.FIFO (EVENT_LIST);
-  private static final SimQueue LCFS_QUEUE = new NonPreemptiveQueue.LIFO (EVENT_LIST);
-  private static final SimQueue IS_QUEUE = new NonPreemptiveQueue.IS (EVENT_LIST);
+  private static final SimQueue FCFS_QUEUE = new FCFS (EVENT_LIST);
+  private static final SimQueue LCFS_QUEUE = new LCFS (EVENT_LIST);
+  private static final SimQueue IS_QUEUE = new IS (EVENT_LIST);
       
   /** Main method.
    * 

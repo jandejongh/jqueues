@@ -6,9 +6,10 @@ import java.util.Random;
 import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.DefaultSimQueueListener;
-import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.AbstractNonPreemptiveSingleServerSimQueue;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.composite.BlackTandemSimQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -17,7 +18,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  *
  */
 public class DCF
-extends BlackTandemSimQueue<AbstractSimJob, NonPreemptiveQueue.FCFS, DCFSimJob, DCF>
+extends BlackTandemSimQueue<AbstractSimJob, FCFS, DCFSimJob, DCF>
 implements MediumPhyStateObserver
 {
 
@@ -46,19 +47,19 @@ implements MediumPhyStateObserver
    */
   private final double eifs_mus;
   
-  private final NonPreemptiveQueue.FCFS waitQueue;
+  private final FCFS waitQueue;
   
-  private final NonPreemptiveQueue.FCFS contentionQueue;
+  private final FCFS contentionQueue;
   
   private final MediumPhyStateMonitor mediumPhyStateMonitor;
   
-  private static Set<NonPreemptiveQueue.FCFS> createQueues (final SimEventList eventList)
+  private static Set<FCFS> createQueues (final SimEventList eventList)
   {
-    final Set<NonPreemptiveQueue.FCFS> set = new LinkedHashSet<>  ();
-    final NonPreemptiveQueue.FCFS waitQueue = new NonPreemptiveQueue.FCFS (eventList);
+    final Set<FCFS> set = new LinkedHashSet<>  ();
+    final FCFS waitQueue = new FCFS (eventList);
     waitQueue.setServerAccessCredits (1);
     set.add (waitQueue);
-    final NonPreemptiveQueue.FCFS contentionQueue = new NonPreemptiveQueue.FCFS (eventList);
+    final FCFS contentionQueue = new FCFS (eventList);
     contentionQueue.setServerAccessCredits (0);
     set.add (contentionQueue);
     return set;
@@ -76,7 +77,7 @@ implements MediumPhyStateObserver
     super (eventList, createQueues (eventList), null);
     if (getQueues ().size () != 2)
       throw new IllegalStateException ();
-    final Iterator<NonPreemptiveQueue.FCFS> iterator = getQueues ().iterator ();
+    final Iterator<FCFS> iterator = getQueues ().iterator ();
     this.waitQueue = iterator.next ();
     this.contentionQueue = iterator.next ();
     this.contentionQueue.registerQueueListener (new DefaultSimQueueListener<AbstractSimJob, SimQueue> ()

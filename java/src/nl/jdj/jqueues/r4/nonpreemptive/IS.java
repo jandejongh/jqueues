@@ -1,0 +1,49 @@
+package nl.jdj.jqueues.r4.nonpreemptive;
+
+import nl.jdj.jqueues.r4.SimJob;
+import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jsimulation.r4.SimEventList;
+
+/** The {@link IS} queue serves all jobs simultaneously.
+ *
+ * Infinite Server.
+ *
+ * <p>
+ * This queueing discipline, unlike e.g., {@link FCFS}, has multiple (actually an infinite number of) servers.
+ *
+ * <p>
+ * In the presence of vacations, i.e., jobs are not immediately admitted to the servers,
+ * this implementation respects the arrival order of jobs.
+ *
+ * @param <J> The type of {@link SimJob}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
+ *
+ */
+public final class IS<J extends SimJob, Q extends IS>
+extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
+{
+
+  /** Returns the job-service time as obtained through {@link SimJob#getServiceTime} for this {@link IS}.
+   * 
+   * {@inheritDoc}
+   * 
+   * @return The job-service time as obtained through {@link SimJob#getServiceTime} for this {@link IS}.
+   * 
+   */
+  @Override
+  protected /* final */ double getServiceTime (final J job)
+  {
+    return job.getServiceTime (this);
+  }
+  
+  /** Creates a new {@link IS} queue with given {@link SimEventList}.
+   * 
+   * @param eventList The event list to use.
+   * 
+   */
+  public IS (final SimEventList eventList)
+  {
+    super (eventList);
+  }
+  
+}
