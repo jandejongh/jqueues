@@ -42,7 +42,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   protected final List<J> jobQueue = new ArrayList<> ();
 
   @Override
-  public int getNumberOfJobs ()
+  public final int getNumberOfJobs ()
   {
     return this.jobQueue.size ();
   }
@@ -56,7 +56,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     = new HashSet<> ();
 
   @Override
-  public int getNumberOfJobsExecuting ()
+  public final int getNumberOfJobsExecuting ()
   {
     return this.jobsExecuting.size ();
   }
@@ -139,7 +139,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see #fireUpdate
    * 
    */
-  public void update (double time)
+  public void update (final double time)
   {
     if (time < this.lastUpdateTime)
       throw new IllegalStateException ();
@@ -172,11 +172,11 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * through {@link #drop}.
    * Otherwise, it invokes the queue-discipline specific {@link #rescheduleAfterArrival}.
    * 
-   * @see #isQueueAccessVacation()
+   * @see #isQueueAccessVacation
    * 
    */
   @Override
-  public final void arrive (J job, double time)
+  public final void arrive (final J job, final double time)
   {
     if (job == null)
       throw new IllegalArgumentException ();
@@ -216,6 +216,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job The job that arrived.
    * @param time The current time (i.e., arrival time of the job).
    * 
+   * @see #arrive
    * @see #rescheduleAfterArrival
    * 
    */
@@ -237,6 +238,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job The job that arrived.
    * @param time  The current time (i.e., the arrival time of the job).
    * 
+   * @see #arrive
    * @see #insertJobInQueueUponArrival
    * 
    */
@@ -253,6 +255,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * @throws IllegalArgumentException If <code>time</code> is in the past, or <code>job</code> is <code>null</code>.
    * 
+   * @see #arrive
    * @see #getLastUpdateTime
    * @see SimEventList#getTime
    * 
@@ -361,7 +364,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    */
   @Override
-  public final void startQueueAccessVacation (double duration)
+  public final void startQueueAccessVacation (final double duration)
   {
     boolean notify = ! this.isQueueAccessVacation;
     if (duration < 0)
@@ -452,7 +455,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @throws IllegalStateException    If the internal administration of this queue has become inconsistent. 
    * 
    */
-  protected final void drop (J job, double time)
+  protected final void drop (final J job, final double time)
   {
     if (job == null || job.getQueue () != this || ! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
@@ -483,6 +486,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job The job that is to be dropped.
    * @param time The current time (i.e., drop time of the job).
    * 
+   * @see #drop
    * @see #rescheduleAfterDrop
    * 
    */
@@ -503,6 +507,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job  The jobs that was dropped.
    * @param time The current time (i.e., drop time of the job).
    * 
+   * @see #drop
    * @see #removeJobFromQueueUponDrop
    * 
    */
@@ -570,7 +575,14 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * @param job The job that is to be revoked.
    * @param time The current time (i.e., revocation time of the job).
+   * @param interruptService Whether to allow interruption of the job's
+   *                           service if already started.
+   *                         If false, revocation will only succeed if the
+   *                           job has not received any service yet.
    * 
+   * @return True if revocation succeeded, and the job was indeed removed from {@link #jobQueue}.
+   * 
+   * @see #revoke
    * @see #rescheduleAfterRevokation
    * 
    */
@@ -591,6 +603,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job  The jobs that was successfully revoked.
    * @param time The current time (i.e., revocation time of the job).
    * 
+   * @see #revoke
    * @see #removeJobFromQueueUponRevokation
    * 
    */
@@ -694,6 +707,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * @param time The current time (i.e., the time at which new server-access credits became available).
    * 
+   * @see #setServerAccessCredits
    * @see #hasServerAcccessCredits
    * 
    */
@@ -789,7 +803,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see #getEventList
    * 
    */
-  protected void cancelDepartureEvent (DefaultDepartureEvent event)
+  protected void cancelDepartureEvent (final DefaultDepartureEvent event)
   {
     if (event == null)
       throw new IllegalArgumentException ();
@@ -863,9 +877,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       // else if (! (e instanceof DefaultDepartureEvent))
       //  continue;
       else if (! DefaultDepartureEvent.class.isAssignableFrom (e.getClass ()))
-        continue;
+        /* continue */ ;
       else if (((DefaultDepartureEvent) e).getObject () != job)
-        continue;
+        /* continue */ ;
       else
         set.add ((DefaultDepartureEvent) e);
     return set;
