@@ -1,10 +1,5 @@
 package nl.jdj.jqueues.r4.nonpreemptive;
 
-import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
-import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueue;
-import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.AbstractSimJob;
-import nl.jdj.jqueues.r4.SimJob;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,10 +22,10 @@ import org.junit.Test;
  *
  *
  */
-public class NonPreemptiveQueueTest
+public class NonPreemptiveTest
 {
   
-  public NonPreemptiveQueueTest ()
+  public NonPreemptiveTest ()
   {
   }
   
@@ -210,17 +205,17 @@ public class NonPreemptiveQueueTest
   }
   
   /**
-   * Test of NonPreemptiveQueue.NONE.
+   * Test of NONE.
    * 
    */
   @Test
-  public void testNonPreemptiveQueueNONE ()
+  public void testNONE ()
   {
-    System.out.println ("=======================");
-    System.out.println ("NonPreemptiveQueue.NONE");
-    System.out.println ("=======================");
+    System.out.println ("====");
+    System.out.println ("NONE");
+    System.out.println ("====");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NonPreemptiveQueue.NONE queue = new NonPreemptiveQueue.NONE (el);
+    final NONE queue = new NONE (el);
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
@@ -250,17 +245,17 @@ public class NonPreemptiveQueueTest
   }
   
   /**
-   * Test of NonPreemptiveQueue.FIFO.
+   * Test of FCFS.
    * 
    */
   @Test
-  public void testNonPreemptiveQueueFIFO ()
+  public void testFCFS ()
   {
-    System.out.println ("=======================");
-    System.out.println ("NonPreemptiveQueue.FIFO");
-    System.out.println ("=======================");
+    System.out.println ("====");
+    System.out.println ("FCFS");
+    System.out.println ("====");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NonPreemptiveQueue.FIFO queue = new NonPreemptiveQueue.FIFO (el);
+    final FCFS queue = new FCFS (el);
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
@@ -283,17 +278,17 @@ public class NonPreemptiveQueueTest
   }
 
   /**
-   * Test of NonPreemptiveQueue.LIFO.
+   * Test of LCFS.
    * 
    */
   @Test
-  public void testNonPreemptiveQueueLIFO ()
+  public void testLCFS ()
   {
-    System.out.println ("=======================");
-    System.out.println ("NonPreemptiveQueue.LIFO");
-    System.out.println ("=======================");
+    System.out.println ("====");
+    System.out.println ("LCFS");
+    System.out.println ("====");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NonPreemptiveQueue.LIFO queue = new NonPreemptiveQueue.LIFO (el);
+    final LCFS queue = new LCFS (el);
     final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
@@ -452,17 +447,17 @@ public class NonPreemptiveQueueTest
   }
 
   /**
-   * Test of NonPreemptiveQueue.RANDOM.
+   * Test of RANDOM.
    * 
    */
   @Test
-  public void testNonPreemptiveQueueRANDOM ()
+  public void testRANDOM ()
   {
-    System.out.println ("=========================");
-    System.out.println ("NonPreemptiveQueue.RANDOM");
-    System.out.println ("=========================");
+    System.out.println ("======");
+    System.out.println ("RANDOM");
+    System.out.println ("======");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NonPreemptiveQueue.RANDOM queue = new NonPreemptiveQueue.RANDOM (el);
+    final RANDOM queue = new RANDOM (el);
     final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
@@ -479,7 +474,7 @@ public class NonPreemptiveQueueTest
     }
   }
 
-  private List<TestJob> scheduleJobArrivalsSJF (final boolean reported, final int n, final SimEventList eventList, final NonPreemptiveQueue queue)
+  private List<TestJob> scheduleJobArrivalsSJF (final boolean reported, final int n, final SimEventList eventList, final AbstractNonPreemptiveSingleServerSimQueue queue)
   {
     // Job 1 is scheduled at t = 1, req service time = 1.
     final TestJob j1 = new TestJob (reported, 1);
@@ -516,17 +511,17 @@ public class NonPreemptiveQueueTest
   }
   
   /**
-   * Test of NonPreemptiveQueue.SJF.
+   * Test of SJF.
    * 
    */
   @Test
-  public void testNonPreemptiveQueueSJF ()
+  public void testSJF ()
   {
-    System.out.println ("======================");
-    System.out.println ("NonPreemptiveQueue.SJF");
-    System.out.println ("======================");
+    System.out.println ("===");
+    System.out.println ("SJF");
+    System.out.println ("===");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NonPreemptiveQueue.SJF queue = new NonPreemptiveQueue.SJF (el);
+    final SJF queue = new SJF (el);
     final List<TestJob> jobs = scheduleJobArrivalsSJF (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
@@ -545,23 +540,23 @@ public class NonPreemptiveQueueTest
     }
   }
 
-  private List<TestJob> scheduleJobArrivalsLJF (final boolean reported, final int n, final SimEventList eventList, final NonPreemptiveQueue queue)
+  private List<TestJob> scheduleJobArrivalsLJF (final boolean reported, final int n, final SimEventList eventList, final AbstractNonPreemptiveSingleServerSimQueue queue)
   {
     return scheduleJobArrivalsSJF (reported, n, eventList, queue);
   }
   
   /**
-   * Test of NonPreemptiveQueue.LJF.
+   * Test of LJF.
    * 
    */
   @Test
-  public void testNonPreemptiveQueueLJF ()
+  public void testLJF ()
   {
-    System.out.println ("======================");
-    System.out.println ("NonPreemptiveQueue.LJF");
-    System.out.println ("======================");
+    System.out.println ("===");
+    System.out.println ("LJF");
+    System.out.println ("===");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NonPreemptiveQueue.LJF queue = new NonPreemptiveQueue.LJF (el);
+    final LJF queue = new LJF (el);
     final List<TestJob> jobs = scheduleJobArrivalsLJF (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
@@ -625,17 +620,17 @@ public class NonPreemptiveQueueTest
   }
 
   /**
-   * Test of NonPreemptiveQueue.IS.
+   * Test of IS.
    * 
    */
   @Test
-  public void testNonPreemptiveQueueIS ()
+  public void testIS ()
   {
-    System.out.println ("=====================");
-    System.out.println ("NonPreemptiveQueue.IS");
-    System.out.println ("=====================");
+    System.out.println ("==");
+    System.out.println ("IS");
+    System.out.println ("==");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NonPreemptiveQueue.IS queue = new NonPreemptiveQueue.IS (el);
+    final IS queue = new IS (el);
     final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
@@ -652,17 +647,44 @@ public class NonPreemptiveQueueTest
   }
 
   /**
-   * Test of NonPreemptiveQueue.IC.
+   * Test of IS_CST.
    * 
    */
   @Test
-  public void testNonPreemptiveQueueIC ()
+  public void testIS_CST ()
   {
-    System.out.println ("=====================");
-    System.out.println ("NonPreemptiveQueue.IC");
-    System.out.println ("=====================");
+    System.out.println ("======");
+    System.out.println ("IS_CST");
+    System.out.println ("======");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NonPreemptiveQueue.IC queue = new NonPreemptiveQueue.IC (el);
+    final IS_CST queue = new IS_CST (el, 4.0);
+    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+    el.run ();
+    assert el.isEmpty ();
+    assertEquals (14.0, el.getTime (), 0.0);
+    for (TestJob j : jobs)
+    {
+      assert j.arrived;
+      assertEquals ((double) j.n, j.arrivalTime, 0.0);
+      assert j.started;
+      assertEquals ((double) j.n, j.startTime, 0.0);
+      assert j.departed;
+      assertEquals (j.startTime + 4.0, j.departureTime, 0.0);
+    }
+  }
+
+  /**
+   * Test of IC.
+   * 
+   */
+  @Test
+  public void testIC ()
+  {
+    System.out.println ("==");
+    System.out.println ("IC");
+    System.out.println ("==");
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final IC queue = new IC (el);
     final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
@@ -702,7 +724,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("Queue Access Vacation ");
     System.out.println ("======================");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NonPreemptiveQueue.FCFS queue = new NonPreemptiveQueue.FCFS (el);
+    final FCFS queue = new FCFS (el);
     queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
     {
 
@@ -790,7 +812,7 @@ public class NonPreemptiveQueueTest
     System.out.println ("Server Access Credits ");
     System.out.println ("======================");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NonPreemptiveQueue.FCFS queue = new NonPreemptiveQueue.FCFS (el);
+    final FCFS queue = new FCFS (el);
     queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
     {
 

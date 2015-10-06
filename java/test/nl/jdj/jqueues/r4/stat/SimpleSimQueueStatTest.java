@@ -6,10 +6,12 @@
 
 package nl.jdj.jqueues.r4.stat;
 
-import nl.jdj.jqueues.r4.stat.SimpleSimQueueStat;
-import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueue;
-import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveQueueTest;
+import nl.jdj.jqueues.r4.nonpreemptive.NonPreemptiveTest;
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r4.nonpreemptive.IS;
+import nl.jdj.jqueues.r4.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r4.nonpreemptive.RANDOM;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventList;
 import org.junit.After;
@@ -62,14 +64,14 @@ public class SimpleSimQueueStatTest
     SimQueue result = instance.getQueue ();
     assertEquals (expResult, result);
     final SimEventList eventList = new SimEventList (SimEvent.class);
-    expResult = new NonPreemptiveQueue.LIFO<> (eventList);
+    expResult = new LCFS<> (eventList);
     instance.setQueue (expResult);
     result = instance.getQueue ();
     assertEquals (expResult, result);
     instance.setQueue (null);
     result = instance.getQueue ();
     assertEquals (null, result);
-    expResult = new NonPreemptiveQueue.IS<> (new SimEventList (SimEvent.class));
+    expResult = new IS<> (new SimEventList (SimEvent.class));
     instance = new SimpleSimQueueStat (expResult, 500.0);
     result = instance.getQueue ();
     assertEquals (expResult, result);
@@ -83,7 +85,7 @@ public class SimpleSimQueueStatTest
   {
     System.out.println ("StartTime");
     final SimEventList eventList = new SimEventList (SimEvent.class);
-    final SimQueue lifo  = new NonPreemptiveQueue.LIFO<> (eventList);
+    final SimQueue lifo  = new LCFS<> (eventList);
     SimpleSimQueueStat instance = new SimpleSimQueueStat (lifo, 400.5);
     Double expResult = 400.5;
     Double result = instance.getStartTime ();
@@ -92,7 +94,7 @@ public class SimpleSimQueueStatTest
     expResult = -123.87;
     result = instance.getStartTime ();
     assertEquals (expResult, result, 0.0);
-    NonPreemptiveQueueTest.scheduleJobArrivals (false, 10, eventList, lifo);
+    NonPreemptiveTest.scheduleJobArrivals (false, 10, eventList, lifo);
     eventList.run ();
     // Should not have changed...
     result = instance.getStartTime ();
@@ -116,7 +118,7 @@ public class SimpleSimQueueStatTest
   {
     System.out.println ("StatisticsValid");
     final SimEventList eventList = new SimEventList (SimEvent.class);
-    final SimQueue random  = new NonPreemptiveQueue.RANDOM<>(eventList);
+    final SimQueue random  = new RANDOM<>(eventList);
     SimpleSimQueueStat instance = new SimpleSimQueueStat (random, 400.5);
     Boolean expResult = false;
     Boolean result = instance.getStatisticsValid ();
@@ -135,12 +137,12 @@ public class SimpleSimQueueStatTest
   {
     System.out.println ("LastUpdateTime");
     final SimEventList eventList = new SimEventList (SimEvent.class);
-    final SimQueue lifo  = new NonPreemptiveQueue.LIFO<> (eventList);
+    final SimQueue lifo  = new LCFS<> (eventList);
     SimpleSimQueueStat instance = new SimpleSimQueueStat (lifo, -10.0);
     Double expResult = -10.0;
     Double result = instance.getLastUpdateTime ();
     assertEquals (expResult, result, 0.0);
-    NonPreemptiveQueueTest.scheduleJobArrivals (false, 10, eventList, lifo);
+    NonPreemptiveTest.scheduleJobArrivals (false, 10, eventList, lifo);
     eventList.run ();
     expResult = eventList.getTime ();
     result = instance.getLastUpdateTime ();
@@ -157,12 +159,12 @@ public class SimpleSimQueueStatTest
   {
     System.out.println ("Stats: AvgNumberOfJobs/AvgNumberOfJobsExecuting");
     final SimEventList eventList = new SimEventList (SimEvent.class);
-    SimQueue queue  = new NonPreemptiveQueue.LIFO<> (eventList);
+    SimQueue queue  = new LCFS<> (eventList);
     SimpleSimQueueStat instance = new SimpleSimQueueStat (queue, 0.0);
     // 1 Job arriving at t = 1, S = 1.
     // So: [0,1)->0 job, [1,2]->1 job.
     // Average expected: 0.5.
-    NonPreemptiveQueueTest.scheduleJobArrivals (false, 1, eventList, queue);
+    NonPreemptiveTest.scheduleJobArrivals (false, 1, eventList, queue);
     eventList.run ();
     Double expResult;
     Double result;
@@ -174,9 +176,9 @@ public class SimpleSimQueueStatTest
     // Compared to the first case: start at -2.
     // Average expected: 0.25.
     eventList.reset ();
-    queue = new NonPreemptiveQueue.FCFS<> (eventList);
+    queue = new FCFS<> (eventList);
     instance = new SimpleSimQueueStat (queue, -2.0);
-    NonPreemptiveQueueTest.scheduleJobArrivals (false, 1, eventList, queue);
+    NonPreemptiveTest.scheduleJobArrivals (false, 1, eventList, queue);
     eventList.run ();
     expResult = 0.25;
     result = instance.getAvgNrOfJobs ();
@@ -193,9 +195,9 @@ public class SimpleSimQueueStatTest
     // J =   0   1   1   2   2   2   2   1   1   1   1
     // AvgJ = 14/11.
     eventList.reset ();
-    queue = new NonPreemptiveQueue.FCFS<> (eventList);
+    queue = new FCFS<> (eventList);
     instance = new SimpleSimQueueStat (queue, 0.0);
-    NonPreemptiveQueueTest.scheduleJobArrivals (false, 4, eventList, queue);
+    NonPreemptiveTest.scheduleJobArrivals (false, 4, eventList, queue);
     eventList.run ();
     expResult = 14.0/11.0;
     result = instance.getAvgNrOfJobs ();
@@ -213,9 +215,9 @@ public class SimpleSimQueueStatTest
     // J =   0   1   1   2   2   2   1   1
     // AvgJ = 10/8.
     eventList.reset ();
-    queue = new NonPreemptiveQueue.IS<> (eventList);
+    queue = new IS<> (eventList);
     instance = new SimpleSimQueueStat (queue, 0.0);
-    NonPreemptiveQueueTest.scheduleJobArrivals (false, 4, eventList, queue);
+    NonPreemptiveTest.scheduleJobArrivals (false, 4, eventList, queue);
     eventList.run ();
     expResult = 10.0/8.0;
     result = instance.getAvgNrOfJobs ();
