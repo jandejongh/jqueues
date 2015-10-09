@@ -9,6 +9,11 @@ import nl.jdj.jsimulation.r4.SimEventList;
 
 /** A {@link BlackSimQueueNetwork} encapsulating a single {@link SimQueue}.
  *
+ * @param <DJ> The delegate-job type.
+ * @param <DQ> The queue-type for delegate jobs.
+ * @param <J>  The job type.
+ * @param <Q>  The queue type for jobs.
+ * 
  */
 public class BlackEncapsulatorSimQueue
   <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackEncapsulatorSimQueue>
