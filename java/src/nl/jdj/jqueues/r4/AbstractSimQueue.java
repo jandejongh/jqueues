@@ -739,7 +739,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * for each departure, but instead reuse instances.
    * 
    */
-  protected class DefaultDepartureEvent extends SimEvent<J>
+  protected final class DefaultDepartureEvent extends SimEvent<J>
   {
     public DefaultDepartureEvent
       (final double time,
@@ -761,7 +761,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
 
   /** Schedules a suitable {@link SimEvent} for a job's future departure on the event list.
    * 
-   * The (default) implementation requires passing several rigorous sanity checks,
+   * The implementation requires passing several rigorous sanity checks,
    * after which it creates a new {@link DefaultDepartureEvent},
    * adds it to {@link #eventsScheduled} and schedules the new event on the event list.
    * Effectively, this ensures that unless the event is canceled,
@@ -769,9 +769,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>
    * The base class {@link AbstractSimQueue} does not use this method; it is provided as a service to subclasses.
-   * Subclasses are free to override this method, but they <i>must</i> return a new (possibly extended)
-   * {@link DefaultDepartureEvent} with the {@link SimJob} as user object,
-   * insert the event into {@link #eventsScheduled}, and schedule it on the event list.
    * 
    * @param time The departure time.
    * @param job  The job to depart.
@@ -781,7 +778,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see #getEventList
    * 
    */
-  protected DefaultDepartureEvent scheduleDepartureEvent (final double time, final J job)
+  protected final DefaultDepartureEvent scheduleDepartureEvent (final double time, final J job)
   {
     if (time < this.lastUpdateTime || job == null || job.getQueue () != this)
       throw new IllegalArgumentException ();
@@ -803,8 +800,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>
    * The base class {@link AbstractSimQueue} does not use this method; it is provided as a service to subclasses.
-   * Subclasses are free to override this method, but they <i>must</i> remove the event from {@link #eventsScheduled}
-   * and from the event list.
    * 
    * @param event The departure event to cancel.
    * 
@@ -812,7 +807,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see #getEventList
    * 
    */
-  protected void cancelDepartureEvent (final DefaultDepartureEvent event)
+  protected final void cancelDepartureEvent (final DefaultDepartureEvent event)
   {
     if (event == null)
       throw new IllegalArgumentException ();
@@ -838,8 +833,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>
    * The base class {@link AbstractSimQueue} does not use this method; it is provided as a service to subclasses.
-   * Subclasses are free to override this method, but they <i>must</i> remove the event from {@link #eventsScheduled}
-   * and from the event list.
    * 
    * @param job The job for which the unique departure event to cancel.
    * 
@@ -851,7 +844,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see #getDepartureEvents
    * 
    */
-  protected void cancelDepartureEvent (final J job)
+  protected final void cancelDepartureEvent (final J job)
   {
     if (job == null)
       throw new IllegalArgumentException ();
