@@ -108,7 +108,6 @@ public class BlackCompressedTandem2SimQueue
         throw new RuntimeException ();
       getServeQueue ().arrive (job, time);
     }
-    
   }
 
 
