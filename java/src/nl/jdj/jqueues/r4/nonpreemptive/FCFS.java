@@ -1,7 +1,7 @@
 package nl.jdj.jqueues.r4.nonpreemptive;
 
 import nl.jdj.jqueues.r4.SimJob;
-import nl.jdj.jqueues.r4.SimQueue; /* Forced for javadoc. */
+import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** The {@link FCFS} queue serves jobs one at a time in order of arrival times.
@@ -38,11 +38,33 @@ public class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPreemptiv
    * 
    */
   @Override
-  protected void insertJobInQueueUponArrival (final J job, final double time)
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
     this.jobQueue.add (job);
   }
 
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void reset ()
+  {
+    super.reset ();
+  }  
+  
   /** Returns "FCFS".
    * 
    * @return "FCFS".

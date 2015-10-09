@@ -12,13 +12,13 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
-public final class FCFS_FB<J extends SimJob, Q extends FCFS_FB>
-extends FCFS<J, Q>
+public class FCFS_FB<J extends SimJob, Q extends FCFS_FB>
+extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
 {
   
   private final int bufferSize;
   
-  public /* final */ int getBufferSize ()
+  public final int getBufferSize ()
   {
     return this.bufferSize;
   }
@@ -31,12 +31,12 @@ extends FCFS<J, Q>
     this.bufferSize = bufferSize;
   }
   
-  public /* final */ int getNumberOfJobsWaiting ()
+  private int getNumberOfJobsWaiting ()
   {
     return getNumberOfJobs () - getNumberOfJobsExecuting ();
   }
   
-  /** Inserts the job at the tail of the job queue.
+  /** Inserts the job at the tail of the job queue, if there is still room available.
    * 
    * {@inheritDoc}
    * 
@@ -44,12 +44,34 @@ extends FCFS<J, Q>
    * 
    */
   @Override
-  protected /* final */ void insertJobInQueueUponArrival (final J job, final double time)
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
     if (getNumberOfJobsWaiting () < getBufferSize ())
-      this.jobQueue.add (job);      
+      this.jobQueue.add (job);
   }
 
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void reset ()
+  {
+    super.reset ();
+  }  
+  
   /** Returns "FCFS_FB[buffer size]".
    * 
    * @return "FCFS_FB[buffer size]".
