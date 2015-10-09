@@ -1,0 +1,65 @@
+package nl.jdj.jqueues.r4.composite;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
+import nl.jdj.jqueues.r4.AbstractSimJob;
+import nl.jdj.jqueues.r4.SimJob;
+import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jsimulation.r4.SimEventList;
+
+/** A {@link BlackSimQueueNetwork} encapsulating a single {@link SimQueue}.
+ *
+ */
+public class BlackEncapsulatorSimQueue
+  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackEncapsulatorSimQueue>
+  extends BlackTandemSimQueue<DJ, DQ, J, Q>
+{
+  
+  /** Auxiliary method to create the required {@link Set} of {@link SimQueue}s in the constructor.
+   * 
+   * @param queue  The queue.
+   * 
+   * @return A {@link LinkedHashSet} holding the {@link SimQueue}.
+   * 
+   */
+  private static Set<SimQueue> createQueuesSet (final SimQueue queue)
+  {
+    if (queue == null)
+      throw new IllegalArgumentException ();
+    final Set<SimQueue> set = new LinkedHashSet<> ();
+    set.add (queue);
+    return set;
+  }
+  
+  /** Creates a black compressed tandem queue given an event list, a wait queue and a serve queue.
+   *
+   * @param eventList The event list to use.
+   * @param queue     The encapsulated queue.
+   * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
+   *
+   * @throws IllegalArgumentException If the event list or the queue is <code>null</code>.
+   * 
+   * @see DelegateSimJobFactory
+   * @see DefaultDelegateSimJobFactory
+   * 
+   */
+  public BlackEncapsulatorSimQueue
+  (final SimEventList eventList,
+   final SimQueue<DJ, DQ> queue,
+   final DelegateSimJobFactory delegateSimJobFactory)
+  {
+    super (eventList, (Set<DQ>) createQueuesSet (queue), delegateSimJobFactory);
+  }
+  
+  /** Returns "Enc[encapsulated queue]".
+   * 
+   * @return "Enc[encapsulated queue]".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "Enc[" + getQueues ().iterator ().next () + "]";
+  }
+
+}
