@@ -47,5 +47,11 @@ implements SimQueueListener<J, Q>
   {
     System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": DEPARTURE of job " + job + ".");
   }
+
+  @Override
+  public void newNoWaitArmed (double t, Q queue, boolean noWaitArmed)
+  {
+    System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": NO_WAIT_ARMED -> " + noWaitArmed + ".");
+  }
   
 }

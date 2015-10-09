@@ -8,11 +8,16 @@ import nl.jdj.jsimulation.r4.SimEventList;
 /** A partial implementation of a non-preemptive queueing system with an infinite number of servers.
  *
  * <p>Concrete implementations only have to provide the service-time for a job at the moment it is taken into service,
- * by implementing {@link #getServiceTime}.
+ * by implementing {@link #getServiceTime}. It is not possible to bypass the service phase of a job visit in implementations.
  * 
  * <p>
  * In the presence of vacations, i.e., jobs are not immediately admitted to the servers,
  * this implementation respects the arrival order of jobs.
+ * 
+ * <p>In the absence of queue-access and server-access vacations,
+ * implementations must start serving an arriving job immediately,
+ * in other words, the implementation must assure that the queue is always in <code>noWaitArmed</code> state;
+ * see {@link SimQueue#isNoWaitArmed} and its final implementation in this class {@link #isNoWaitArmed}.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -46,6 +51,19 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
    * 
    */
   protected abstract double getServiceTime (J job);
+
+  /** Returns <code>true</code>.
+   * 
+   * {@inheritDoc}
+   * 
+   * @return True.
+   * 
+   */
+  @Override
+  public final boolean isNoWaitArmed ()
+  {
+    return true;
+  }
   
   /** Inserts the job at the tail of {@link #jobQueue}.
    * 

@@ -18,7 +18,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * see {@link #getFirstQueue} and {@link #getNextQueue}.
  * 
  * <p>
- * This allows for many types of queueing networks, even including "feedback"-type networks.
+ * This allows for many types of queueing networks, including "feedback"-type networks.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -65,6 +65,71 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    */
   private final Map<DJ, J> realSimJobMap = new HashMap<> ();
   
+  /** Returns the delegate job for given real job.
+   * 
+   * Performs various sanity checks on the argument and the internal administration consistency.
+   * 
+   * @param realJob The real job.
+   * 
+   * @return The delegate job.
+   * 
+   * @throws IllegalStateException If sanity checks fail.
+   * 
+   */
+  protected final DJ getDelegateJob (final J realJob)
+  {
+    if (realJob == null)
+      throw new IllegalStateException ();
+    if (! this.jobQueue.contains (realJob))
+      throw new IllegalStateException ();
+    final DJ delegateJob = this.delegateSimJobMap.get (realJob);
+    if (delegateJob == null)
+      throw new IllegalStateException ();
+    if (this.realSimJobMap.get (delegateJob) != realJob)
+      throw new IllegalStateException ();
+    return delegateJob;
+  }
+
+  /** Returns the real job for given delegate job.
+   * 
+   * Performs various sanity checks on the arguments and the internal administration consistency.
+   * 
+   * @param delegateJob The delegate job.
+   * @param queue The queue at which the delegate job currently resides.
+   * 
+   * @return The real job.
+   * 
+   * @throws IllegalStateException If sanity checks fail.
+   * 
+   */
+  private final J getRealJob (final DJ delegateJob, final DQ queue)
+  {
+    if (delegateJob == null || queue == null || ! getQueues ().contains (queue))
+      throw new IllegalStateException ();
+    final J realJob = this.realSimJobMap.get (delegateJob);
+    if (realJob == null)
+      throw new IllegalStateException ();
+    if (this.delegateSimJobMap.get (realJob) != delegateJob)
+      throw new IllegalStateException ();
+    if (! this.jobQueue.contains (realJob))
+      throw new IllegalStateException ();
+    return realJob;
+  }
+
+  /** Removes a real job and a delegate job from the internal data structures.
+   * 
+   * @param realJob The real job.
+   * @param delegateJob The delegate job.
+   * 
+   */
+  private /* final */ void exitJobFromQueues (final J realJob, final DJ delegateJob)
+  {
+    this.jobQueue.remove (realJob);
+    this.jobsExecuting.remove (realJob);
+    this.delegateSimJobMap.remove (realJob);
+    this.realSimJobMap.remove (delegateJob);    
+  }
+  
   /** Returns the first queue to visit for an arriving job.
    * 
    * @param time The time of arrival of the job.
@@ -99,7 +164,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   protected AbstractBlackSimQueueNetwork
-  (SimEventList eventList, Set<DQ> queues, DelegateSimJobFactory delegateSimJobFactory)
+  (final SimEventList eventList, final Set<DQ> queues, final DelegateSimJobFactory delegateSimJobFactory)
   {
     super (eventList);
     if (queues == null || queues.contains (null))
@@ -112,16 +177,93 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // SimQueue.isNoWaitArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Returns <code>true</code> if and only if all queues in {@link #getQueues} are in <code>noWaitArmed</code> state.
+   * 
+   * This is a default implementation, and may be overridden by subclasses.
+   * 
+   * {@inheritDoc}
+   * 
+   * @return True if and only if all queues in {@link #getQueues} are in <code>noWaitArmed</code> state.
+   * 
+   */
+  @Override
+  public boolean isNoWaitArmed ()
+  {
+    for (DQ q : getQueues ())
+      if (! q.isNoWaitArmed ())
+        return false;
+    return true;
+  }
+  
+  /** Auxiliary variable to {@link #reassessNoWaitArmed}
+   * indicating whether we have a previous value for the <code>noWaitArmed</code> state.
+   * 
+   * @see #isNoWaitArmed
+   * @see #reassessNoWaitArmed
+   * @see #previousNoWaitArmed
+   * 
+   */
+  private boolean previousNoWaitArmedSet = false;
+  
+  /** Auxiliary variable to {@link #reassessNoWaitArmed}
+   * being the previous value for the <code>noWaitArmed</code> state.
+   * 
+   * @see #isNoWaitArmed
+   * @see #reassessNoWaitArmed
+   * @see #previousNoWaitArmedSet
+   * 
+   */
+  private boolean previousNoWaitArmed = false;
+  
+  /** Reassess the <code>noWaitArmed</code> state and fire a notification if it has changed.
+   * 
+   * This method internally caches the previous value of the <code>noWaitArmed</code> state.
+   * 
+   * @param time The current time.
+   * 
+   * @return The current <code>noWaitArmed</code> state.
+   * 
+   * @see #isNoWaitArmed
+   * @see #fireNewNoWaitArmed
+   * @see #newNoWaitArmed
+   * 
+   */
+  protected final boolean reassessNoWaitArmed (final double time)
+  {
+    final boolean noWaitArmed = isNoWaitArmed ();
+    if (this.previousNoWaitArmedSet && noWaitArmed == this.previousNoWaitArmed)
+      return noWaitArmed;
+    this.previousNoWaitArmedSet = true;
+    this.previousNoWaitArmed = noWaitArmed;
+    fireNewNoWaitArmed (time, noWaitArmed);
+    return noWaitArmed;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // AbstractSimQueue.reset
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  /** Calls super method,
+   * clears the internal mapping between real and delegate {@link SimJob}s,
+   * and clears the internal cache of the <code>noWaitArmed</code> state.
+   * 
+   * {@inheritDoc}
+   * 
+   */
   @Override
   public void reset ()
   {
     super.reset ();
     this.delegateSimJobMap.clear ();
     this.realSimJobMap.clear ();
+    this.previousNoWaitArmedSet = false;
+    this.previousNoWaitArmed = false;
     // No need to reset the queues; they will be reset directly from the event list.
   }
 
@@ -138,7 +280,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected final void insertJobInQueueUponArrival (J job, double time)
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
     if (job == null)
       throw new IllegalArgumentException ();
@@ -167,7 +309,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void rescheduleAfterArrival (J job, double time)
+  protected void rescheduleAfterArrival (final J job, final double time)
   {
     if (job == null)
       throw new IllegalArgumentException ();
@@ -185,7 +327,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     {
       takeServerAccessCredit ();
       final SimQueue<DJ, DQ> firstQueue = getFirstQueue (time, job);
-      if (firstQueue != null && ! getQueues ().contains (firstQueue))
+      if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
         throw new IllegalArgumentException ();
       if (firstQueue != null)
         firstQueue.arrive (delegateJob, time);
@@ -206,7 +348,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void removeJobFromQueueUponDrop (J job, double time)
+  protected void removeJobFromQueueUponDrop (final J job, final double time)
   {
     final DJ delegateJob = getDelegateJob (job);
     exitJobFromQueues (job, delegateJob);
@@ -220,7 +362,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void rescheduleAfterDrop (J job, double time)
+  protected void rescheduleAfterDrop (final J job, final double time)
   {
     // EMPTY
   }
@@ -235,7 +377,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected boolean removeJobFromQueueUponRevokation (J job, double time, boolean interruptService)
+  protected boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
   {
     final DJ delegateJob = getDelegateJob (job);
     final SimQueue queue = delegateJob.getQueue ();
@@ -253,7 +395,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void rescheduleAfterRevokation (J job, double time)
+  protected void rescheduleAfterRevokation (final J job, final double time)
   {
     // EMPTY
   }
@@ -266,7 +408,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void rescheduleForNewServerAccessCredits (double time)
+  protected void rescheduleForNewServerAccessCredits (final double time)
   {
     update (time);
     while (hasServerAcccessCredits ())
@@ -279,7 +421,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
           // XXX (Almost) Verbatim copy from rescheduleAfterArrival...
           takeServerAccessCredit ();
           final SimQueue<DJ, DQ> firstQueue = getFirstQueue (time, realJob);
-          if (firstQueue != null && ! getQueues ().contains (firstQueue))
+          if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
             throw new IllegalArgumentException ();
           if (firstQueue != null)
             firstQueue.arrive (delegateJob, time);
@@ -305,7 +447,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void removeJobFromQueueUponDeparture (J departingJob, double time)
+  protected void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
     throw new IllegalStateException ();
   }
@@ -319,7 +461,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void rescheduleAfterDeparture (J departedJob, double time)
+  protected void rescheduleAfterDeparture (final J departedJob, final double time)
   {
     throw new IllegalStateException ();
   }
@@ -339,7 +481,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  public final void update (double t, DQ queue)
+  public final void update (final double t, final DQ queue)
   {
     if (queue == null || ! getQueues ().contains (queue))
       throw new IllegalStateException ();
@@ -353,7 +495,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  public final void arrival (double t, DJ job, DQ queue)
+  public final void arrival (final double t, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
     update (t);
@@ -394,71 +536,6 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     }
   }
 
-  /** Returns the delegate job for given real job.
-   * 
-   * Performs various sanity checks on the argument and the internal administration consistency.
-   * 
-   * @param realJob The real job.
-   * 
-   * @return The delegate job.
-   * 
-   * @throws IllegalStateException If sanity checks fail.
-   * 
-   */
-  protected final DJ getDelegateJob (J realJob)
-  {
-    if (realJob == null)
-      throw new IllegalStateException ();
-    if (! this.jobQueue.contains (realJob))
-      throw new IllegalStateException ();
-    final DJ delegateJob = this.delegateSimJobMap.get (realJob);
-    if (delegateJob == null)
-      throw new IllegalStateException ();
-    if (this.realSimJobMap.get (delegateJob) != realJob)
-      throw new IllegalStateException ();
-    return delegateJob;
-  }
-
-  /** Returns the real job for given delegate job.
-   * 
-   * Performs various sanity checks on the arguments and the internal administration consistency.
-   * 
-   * @param delegateJob The delegate job.
-   * @param queue The queue at which the delegate job currently resides.
-   * 
-   * @return The real job.
-   * 
-   * @throws IllegalStateException If sanity checks fail.
-   * 
-   */
-  private final J getRealJob (DJ delegateJob, DQ queue)
-  {
-    if (delegateJob == null || queue == null || ! getQueues ().contains (queue))
-      throw new IllegalStateException ();
-    final J realJob = this.realSimJobMap.get (delegateJob);
-    if (realJob == null)
-      throw new IllegalStateException ();
-    if (this.delegateSimJobMap.get (realJob) != delegateJob)
-      throw new IllegalStateException ();
-    if (! this.jobQueue.contains (realJob))
-      throw new IllegalStateException ();
-    return realJob;
-  }
-
-  /** Removes a real job and a delegate job from the internal data structures.
-   * 
-   * @param realJob The real job.
-   * @param delegateJob The delegate job.
-   * 
-   */
-  private final void exitJobFromQueues (J realJob, DJ delegateJob)
-  {
-    this.jobQueue.remove (realJob);
-    this.jobsExecuting.remove (realJob);
-    this.delegateSimJobMap.remove (realJob);
-    this.realSimJobMap.remove (delegateJob);    
-  }
-  
   /**
    * {@inheritDoc}
    * 
@@ -469,7 +546,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  public final void drop (double t, DJ job, DQ queue)
+  public final void drop (final double t, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
     update (t);
@@ -487,7 +564,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  public final void revocation (double t, DJ job, DQ queue)
+  public final void revocation (final double t, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
     update (t);
@@ -534,6 +611,24 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
         }
       }
       ));
+  }
+
+  /**
+   * {@inheritDoc}
+   * 
+   * Calls {@link #update} and {@link #reassessNoWaitArmed}.
+   * May be overridden.
+   *
+   * @see #update
+   * @see #reassessNoWaitArmed
+   * @see #isNoWaitArmed
+   * 
+   */
+  @Override
+  public void newNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  {
+    update (time);
+    reassessNoWaitArmed (time);
   }
 
 }

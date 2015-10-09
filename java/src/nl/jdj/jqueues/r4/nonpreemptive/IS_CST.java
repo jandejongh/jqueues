@@ -10,7 +10,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  *
  * <P>
  * Each job has the same queue-determined service time.
- * The job is <code>not</code> consulted for its service time through {@link SimJob#getServiceTime}.
+ * The job is <i>not</i> consulted for its service time through {@link SimJob#getServiceTime}.
  * 
  * <p>
  * In the presence of vacations, i.e., jobs are not immediately admitted to the servers,

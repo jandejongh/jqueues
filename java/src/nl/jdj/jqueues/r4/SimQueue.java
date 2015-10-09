@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r4;
 // Forced import in order to keep javadoc happy...
 import nl.jdj.jqueues.r4.nonpreemptive.AbstractNonPreemptiveSimQueue;
 // Forced import in order to keep javadoc happy...
-import nl.jdj.jqueues.r4.nonpreemptive.NONE;
+import nl.jdj.jqueues.r4.serverless.NONE;
 // Forced import in order to keep javadoc happy...
 import nl.jdj.jsimulation.r4.SimEventList;
 import nl.jdj.jsimulation.r4.SimEventAction;
@@ -52,22 +52,14 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * In our interface, it is (just) important to note that 'started jobs' do not necessarily have exclusive access to the server.
  * 
  * <p>
- * Note that with the current interface,
- * a {@link SimJob} <i>cannot</i> visit multiple {@link SimQueue}s simultaneously.
- * The {@link SimQueue} currently being visited by
- * a {@link SimJob} can be obtained from {@link SimJob#getQueue};
- * this must be maintained by {@link SimQueue} implementations of
- * {@link #arrive}.
- *
- * <p>
  * The life-cycle of a queue visit of a job thus is as follows.
  * {@link SimJob}s are offered for service through {@link #arrive}.
  * Depending on the queueing discipline, the job may be taking into service, in other words, start.
  * Between arrival and start, a job is said to be <i>waiting</i>.
  * After its start, a job is said to be <i>executing</i>.
- * Once the execution finishes, the job can eventually <i>depart</i> from the queue.
- * Note that this life-cycle is strict in the sense that only waiting jobs can start,
- * and only executing ('started') jobs can depart.
+ * Once the execution finishes, the job <i>departs</i> from the queue.
+ * Note, however, that a job may also depart from the {@link SimQueue} without having started!
+ * Note that this life-cycle is strict in the sense that only waiting jobs can start.
  * 
  * <p>
  * Once a job has been offered, {@link #revoke} tries to revoke the job,
@@ -80,10 +72,22 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * <p>
  * Despite the large number of freedom degrees for {@link SimQueue}s, there is also a number of (obvious) restrictions
  * on the behavior of a queue.
- * For instance, a job cannot depart from a queue before it has been started, and it cannot start, be dropped or be revoked
- * before having arrived.
- * It can only start once during a queue visit.
+ * For instance,
+ * <ul>
+ * <li>a job cannot start, be dropped or be revoked before having arrived;
+ * <li>a job can start at most once during a queue visit;
+ * <li>a job can only <i>leave</i> the queueing system through departure (with or without being served),
+ *     successful revocation or drop.
+ * </ul>
  * 
+ * <p>
+ * Note that with the current interface,
+ * a {@link SimJob} <i>cannot</i> visit multiple {@link SimQueue}s simultaneously.
+ * The {@link SimQueue} currently being visited by
+ * a {@link SimJob} can be obtained from {@link SimJob#getQueue};
+ * this must be maintained by implementations of
+ * {@link SimQueue#arrive}.
+ *
  * <p>
  * In general, the required service ('execution') time of the job during a queue visit
  * must be provided by each job through {@link SimJob#getServiceTime}.
@@ -128,22 +132,37 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * </ul>
  * 
  * <p>
+ * From release 5 onwards, each {@link SimQueue} maintains and reports changes to the state in which it <i>guarantees</i> that
+ * the next arriving job will
+ * <ul>
+ * <i>start service immediately without waiting, or,
+ * <i>departs immediately, without service and without waiting.
+ * </ul>
+ * If either condition is met, the queueing system is said to be in <i>noWaitArmed</i> state.
+ * Note that this state setting ignores queue and server-access vacations.
+ * 
+ * <p>
  * A {@link SimQueue} supports registration and un-registration of
  * queue-specific {@link SimEventAction}s to be invoked for specific events,
- * in particular job arrivals ({@link #addArrivalAction} and {@link #removeArrivalAction}),
- * job service start events ({@link #addStartAction} and {@link #removeStartAction}),
- * job drop events ({@link #addDropAction} and {@link #removeDropAction}),
- * job revocation events ({@link #addRevocationAction} and {@link #removeRevocationAction})
- * and job departures ({@link #addDepartureAction} and {@link #removeDepartureAction}).
- *
+ * in particular
+ * <ul>
+ * <li>job arrivals ({@link #addArrivalAction} and {@link #removeArrivalAction}),
+ * <li>job service start events ({@link #addStartAction} and {@link #removeStartAction}),
+ * <li>job drop events ({@link #addDropAction} and {@link #removeDropAction}),
+ * <li>job revocation events ({@link #addRevocationAction} and {@link #removeRevocationAction}),
+ * <li>job departures ({@link #addDepartureAction} and {@link #removeDepartureAction}).
+ * </ul>
+ * 
  * <p>
  * In addition, a {@link SimQueue} respects the various per job actions to be performed by
  * the queue as specified by
- * {@link SimJob#getQueueArriveAction},
- * {@link SimJob#getQueueStartAction},
- * {@link SimJob#getQueueDropAction},
- * {@link SimJob#getQueueRevokeAction}, and
- * {@link SimJob#getQueueDepartAction}.
+ * <ul>
+ * <li>{@link SimJob#getQueueArriveAction},
+ * <li>{@link SimJob#getQueueStartAction},
+ * <li>{@link SimJob#getQueueDropAction},
+ * <li>{@link SimJob#getQueueRevokeAction}, and
+ * <li>{@link SimJob#getQueueDepartAction}.
+ * </ul>
  *
  * <p>
  * All {@link SimEventAction}s described above are called only <i>after</i> the
@@ -191,7 +210,8 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * Implementations must listen to the underlying event list for resets, see {@link SimEventListListener#notifyEventListReset}.
  *
  * <p>
- * A partial utility implementation of {@link SimQueue} is available in this package as {@link AbstractSimQueue}.
+ * Partial utility implementations of {@link SimQueue} are available in this package through 
+ * {@link AbstractSimQueueBase} and its descendant {@link AbstractSimQueue}.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -333,6 +353,18 @@ extends SimEventListListener
    * 
    */
   public void setServerAccessCredits (int credits);
+  
+  /** Returns whether the next arriving is guaranteed to suffer zero-waiting time before starting service or departing.
+   * 
+   * The return value is <i>independent</i> of queue-access and server-access vacations.
+   * 
+   * @return True if the next arriving is guaranteed to suffer zero-waiting time before starting service or departing,
+   *         in the absence of queue-access and server-access vacations.
+   * 
+   * @see SimQueueListener#newNoWaitArmed
+   * 
+   */
+  public boolean isNoWaitArmed ();
   
   /** Add an action to be invoked upon job arrivals.
    *

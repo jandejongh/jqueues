@@ -77,5 +77,16 @@ implements SimQueueListener<J, Q>
   public void departure (double t, J job, Q queue)
   {
   }
+
+  /**
+   * {@inheritDoc}
+   * 
+   * Does nothing.
+   * 
+   */
+  @Override
+  public void newNoWaitArmed (double t, Q queue, boolean noWaitArmed)
+  {
+  }
   
 }

@@ -90,4 +90,22 @@ public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue,
     return (iterator.hasNext () ? iterator.next () : null);
   }
   
+  /** Returns <code>true</code> if there are no queues in {@link #getQueues}
+   * or if the first queue in that list is in <code>noWaitArmed</code> state.
+   * 
+   * This overrides the default implementation {@link AbstractBlackSimQueueNetwork#isNoWaitArmed} which demands <i>all</i> queues
+   * to be in <code>noWaitArmed</code> state.
+   * 
+   * {@inheritDoc}
+   * 
+   * @return True if there are no queues in {@link #getQueues}
+   *           or if the first queue in that list is in <code>noWaitArmed</code> state.
+   * 
+   */
+  @Override
+  public final boolean isNoWaitArmed ()
+  {
+    return getQueues ().isEmpty () ? true : getQueues ().iterator ().next ().isNoWaitArmed ();
+  }
+  
 }

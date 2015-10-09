@@ -5,8 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimJob;
-import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
-import nl.jdj.jqueues.r4.nonpreemptive.AbstractNonPreemptiveSingleServerSimQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.StdOutSimQueueVacationListener;

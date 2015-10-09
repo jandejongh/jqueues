@@ -204,37 +204,6 @@ public class NonPreemptiveTest
     return jobList;
   }
   
-  /**
-   * Test of NONE.
-   * 
-   */
-  @Test
-  public void testNONE ()
-  {
-    System.out.println ("====");
-    System.out.println ("NONE");
-    System.out.println ("====");
-    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NONE queue = new NONE (el);
-    for (int i = 0; i <= 1; i++)
-    {
-      System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
-      el.run ();
-      assert el.isEmpty ();
-      assertEquals (10.0, el.getTime (), 0.0);
-      for (TestJob j : jobs)
-      {
-        assert j.arrived;
-        assertEquals ((double) j.n, j.arrivalTime, 0.0);
-        assert ! j.started;
-        assert ! j.departed;
-      }
-      // Test reset on the fly...
-      el.reset ();
-    }
-  }
-
   private int triangular (int n)
   {
     if (n < 0)

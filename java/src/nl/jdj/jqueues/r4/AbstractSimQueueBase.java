@@ -381,6 +381,21 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
     if (dAction != null)
       dAction.action (new SimEvent (time, job, dAction));
   }
+  
+  /** Notifies all listeners of a change in the <code>noWaitArmed</code> property.
+   * 
+   * @param t The current time.
+   * @param noWaitArmed The new value of the <code>noWaitArmed</code> property.
+   * 
+   * @see SimQueue#isNoWaitArmed
+   * @see SimQueueListener#newNoWaitArmed
+   * 
+   */
+  protected final void fireNewNoWaitArmed (final double t, final boolean noWaitArmed)
+  {
+    for (SimQueueListener<J, Q> l : this.queueListeners)
+      l.newNoWaitArmed (t, (Q) this, noWaitArmed);
+  }
 
   /** Notifies all vacation listeners of the start of a queue-access vacation.
    * 

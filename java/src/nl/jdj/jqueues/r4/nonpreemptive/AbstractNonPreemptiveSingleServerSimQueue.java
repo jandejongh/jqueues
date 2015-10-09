@@ -28,6 +28,10 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * the {@link SimEventList} used for event scheduling and processing as one of their arguments upon construction.
  * It is up to the caller to properly start processing the event list.
  *
+ * <p>
+ * The <code>noWaitArmed<i> state to any implementation is / must be equivalent to no jobs being present in the system,
+ * see {@link SimQueue#isNoWaitArmed} and its final implementation in this class {@link #isNoWaitArmed}.
+ * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
@@ -51,12 +55,28 @@ public abstract class AbstractNonPreemptiveSingleServerSimQueue
     super (eventList);
   }
 
+  /** Returns true if there are no jobs present in the system.
+   * 
+   * {@inheritDoc}
+   * 
+   * @return True if there are no jobs present in the system.
+   * 
+   * @see #getNumberOfJobs
+   * 
+   */
+  @Override
+  public final boolean isNoWaitArmed ()
+  {
+    return getNumberOfJobs () == 0;
+  }
+
   /** Takes the arrived job into service if the server is currently idle and provided there are server-access credits.
    * 
    * {@inheritDoc}
    * 
    * <p>
-   * If conditions above are met, one credit is taken and the job's service time is requested through
+   * If conditions above are met, one credit is taken,
+   * the <code>noWaitArmed</code> state is set to false, and the job's service time is requested through
    * {@link SimJob#getServiceTime}; throwing a {@link RuntimeException} if a negative service time is returned.
    * Subsequently, an appropriate departure event is scheduled through {@link #scheduleDepartureEvent},
    * and listeners are notified through {@link #fireStart}.
@@ -68,6 +88,7 @@ public abstract class AbstractNonPreemptiveSingleServerSimQueue
    * @see #hasServerAcccessCredits
    * @see #takeServerAccessCredit
    * @see #jobsExecuting
+   * @see #fireNewNoWaitArmed
    * @see SimJob#getServiceTime
    * @see #scheduleDepartureEvent
    * @see #fireStart
@@ -82,6 +103,7 @@ public abstract class AbstractNonPreemptiveSingleServerSimQueue
     {
       if (! this.jobsExecuting.isEmpty ())
         throw new IllegalStateException ();
+      fireNewNoWaitArmed (time, false);
       if (hasServerAcccessCredits ())
       {
         takeServerAccessCredit ();
@@ -143,8 +165,14 @@ public abstract class AbstractNonPreemptiveSingleServerSimQueue
    * 
    * <p>
    * If server-access credits are absent or if there are no waiting jobs,
-   * this method does nothing, relying on {@link #rescheduleForNewServerAccessCredits}
+   * this method does nothing (but see below on <code>noWaitArmed</code>),
+   * relying on {@link #rescheduleForNewServerAccessCredits}
    * and {@link #rescheduleAfterArrival} to eventually take a job into service.
+   * 
+   * <p>
+   * Subsequently, if a job really left the queueing system (i.e., <code>departedJob != null</code>),
+   * and the systems {@link #jobQueue} is left empty,
+   * the (new) <code>noWaitArmed</code> is fired (being <code>true</code>).
    * 
    * @see #eventsScheduled
    * @see #jobQueue
@@ -154,6 +182,7 @@ public abstract class AbstractNonPreemptiveSingleServerSimQueue
    * @see SimJob#getServiceTime
    * @see #scheduleDepartureEvent
    * @see #fireStart
+   * @see #fireNewNoWaitArmed
    * 
    */
   @Override
@@ -173,6 +202,8 @@ public abstract class AbstractNonPreemptiveSingleServerSimQueue
       scheduleDepartureEvent (time + jobServiceTime, job);
       fireStart (time, job);
     }
+    if (departedJob != null && this.jobQueue.isEmpty ())
+      fireNewNoWaitArmed (time, true);
   }
     
 }

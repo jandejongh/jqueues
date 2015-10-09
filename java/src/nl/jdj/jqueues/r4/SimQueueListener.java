@@ -8,6 +8,9 @@ import nl.jdj.jqueues.r4.stat.AbstractSimQueueStat;
  * More sophisticated queue types will require an extension to this interface in order to capture all relevant state-changing
  * events.
  * 
+ * <p>
+ * As of r5, a {@link SimQueueListener} is informed about changes in the <code>noWaitArmed</code> state of a {@link SimQueue}.
+ * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
@@ -79,5 +82,16 @@ public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
    * 
    */
   public void departure (double t, J job, Q queue);
+  
+  /** Notification of a change of a {@link SimQueue} <code>noWaitArmed</code> state.
+   * 
+   * @param t The (current) time.
+   * @param queue The queue.
+   * @param noWaitArmed The new <code>noWaitArmed</code> state.
+   * 
+   * @see SimQueue#isNoWaitArmed
+   * 
+   */
+  public void newNoWaitArmed (double t, Q queue, boolean noWaitArmed);
   
 }

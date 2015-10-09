@@ -375,6 +375,16 @@ implements SimQueueListener<J, Q>
   {
   }
   
+  /** Does nothing.
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public void newNoWaitArmed (double t, Q queue, boolean noWaitArmed)
+  {
+  }
+
   //
   // END: CONNECTION WITH THE QUEUE / IMPLEMENTATION OF SimQueueListener.
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

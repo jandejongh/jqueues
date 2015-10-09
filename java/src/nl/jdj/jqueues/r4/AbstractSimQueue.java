@@ -779,8 +779,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalArgumentException ();
     if (! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
-    if (! this.jobsExecuting.contains (job))
-      throw new IllegalArgumentException ();
+    // The following check is an error; jobs may depart without receiving any service at all!
+    // if (! this.jobsExecuting.contains (job))
+    //   throw new IllegalArgumentException ();
     final DefaultDepartureEvent event = new DefaultDepartureEvent (time, job);
     this.eventsScheduled.add (event);
     getEventList ().add (event);
@@ -813,8 +814,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalArgumentException ();
     if (! this.jobQueue.contains (event.getObject ()))
       throw new IllegalArgumentException ();
-    if (! this.jobsExecuting.contains (event.getObject ()))
-      throw new IllegalArgumentException ();
+    // The following check is an error; jobs may depart without receiving any service at all!
+    // if (! this.jobsExecuting.contains (event.getObject ()))
+    //   throw new IllegalArgumentException ();
     this.eventsScheduled.remove (event);
     getEventList ().remove (event);
   }
@@ -866,8 +868,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalArgumentException ();
     if (! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
-    if (! this.jobsExecuting.contains (job))
-      throw new IllegalArgumentException ();
+    // The following check is an error; jobs may depart without receiving any service at all!
+    // if (! this.jobsExecuting.contains (job))
+    //   throw new IllegalArgumentException ();
     final Set<DefaultDepartureEvent> set = new LinkedHashSet<> ();
     for (SimEvent<J> e : this.eventsScheduled)
       if (e == null)
