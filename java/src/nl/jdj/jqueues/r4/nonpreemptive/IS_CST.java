@@ -23,7 +23,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public final class IS_CST<J extends SimJob, Q extends IS_CST>
+public class IS_CST<J extends SimJob, Q extends IS_CST>
 extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
 {
 
@@ -34,7 +34,7 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
    * @return The service time for all jobs, non-negative.
    * 
    */
-  public /* final */ double getServiceTime ()
+  public final double getServiceTime ()
   {
     return this.serviceTime;
   }
@@ -47,7 +47,7 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
    * 
    */
   @Override
-  protected /* final */ double getServiceTime (final J job)
+  protected final double getServiceTime (final J job)
   {
     return getServiceTime ();
   }
@@ -67,6 +67,28 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
       throw new IllegalArgumentException ();
     this.serviceTime = serviceTime;
   }
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void reset ()
+  {
+    super.reset ();
+  }  
   
   /** Returns "IS_CST[service time]".
    * 
