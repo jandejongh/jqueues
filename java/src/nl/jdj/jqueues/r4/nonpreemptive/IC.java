@@ -50,4 +50,15 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     return 0;
   }
   
+  /** Returns "IC".
+   * 
+   * @return "IC".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "IC";
+  }
+
 }

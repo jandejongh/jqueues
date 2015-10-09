@@ -67,4 +67,15 @@ public final class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNo
     this.jobQueue.add (newPosition, job);
   }  
   
+  /** Returns "RANDOM".
+   * 
+   * @return "RANDOM".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "RANDOM";
+  }
+
 }

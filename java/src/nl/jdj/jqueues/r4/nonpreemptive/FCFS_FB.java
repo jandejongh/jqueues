@@ -50,4 +50,15 @@ extends FCFS<J, Q>
       this.jobQueue.add (job);      
   }
 
+  /** Returns "FCFS_FB[buffer size]".
+   * 
+   * @return "FCFS_FB[buffer size]".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "FCFS_FB[" + getBufferSize () + "]";
+  }
+
 }

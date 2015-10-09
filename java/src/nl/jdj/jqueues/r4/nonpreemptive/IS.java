@@ -46,4 +46,15 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     super (eventList);
   }
   
+  /** Returns "IS".
+   * 
+   * @return "IS".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "IS";
+  }
+
 }

@@ -42,4 +42,15 @@ public final class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPre
     this.jobQueue.add (0, job);
   }
   
+  /** Returns "LCFS".
+   * 
+   * @return "LCFS".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "LCFS";
+  }
+
 }

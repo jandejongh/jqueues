@@ -46,4 +46,16 @@ public final class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreem
       newPosition++;
     this.jobQueue.add (newPosition, job);
   }
+
+  /** Returns "LJF".
+   * 
+   * @return "LJF".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "LJF";
+  }
+
 }

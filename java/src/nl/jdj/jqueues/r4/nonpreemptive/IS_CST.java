@@ -68,4 +68,15 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     this.serviceTime = serviceTime;
   }
   
+  /** Returns "IS_CST[service time]".
+   * 
+   * @return "IS_CST[service time]".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "IS_CST[" + getServiceTime () + "]";
+  }
+
 }

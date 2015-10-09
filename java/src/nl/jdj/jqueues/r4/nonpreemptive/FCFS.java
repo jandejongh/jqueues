@@ -43,4 +43,15 @@ public class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPreemptiv
     this.jobQueue.add (job);
   }
 
+  /** Returns "FCFS".
+   * 
+   * @return "FCFS".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "FCFS";
+  }
+
 }
