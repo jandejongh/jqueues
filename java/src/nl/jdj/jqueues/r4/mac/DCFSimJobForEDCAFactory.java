@@ -20,7 +20,7 @@ implements DelegateSimJobFactory<DCFSimJobForEDCA, DQ, J, Q>
    * 
    */
   @Override
-  public DCFSimJobForEDCA newInstance (final double time, final J job)
+  public DCFSimJobForEDCA newInstance (final double time, final J job, final Q queue)
   {
     return new DCFSimJobForEDCA (job);
   }

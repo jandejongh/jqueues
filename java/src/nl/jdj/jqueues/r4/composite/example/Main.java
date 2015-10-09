@@ -136,7 +136,7 @@ public final class Main
       new DelegateSimJobFactory<TestDelegateSimJob, SimQueue, TestJob, SimQueue> ()
       {
         @Override
-        public TestDelegateSimJob newInstance (double time, TestJob job)
+        public TestDelegateSimJob newInstance (double time, TestJob job, SimQueue queue)
         {
           return new TestDelegateSimJob (job, true);
         }

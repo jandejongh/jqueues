@@ -86,8 +86,30 @@ public class BlackCompressedTandem2SimQueue
    final DelegateSimJobFactory delegateSimJobFactory)
   {
     super (eventList, (Set<DQ>) createQueuesSet (waitQueue, serveQueue), delegateSimJobFactory);
-    // XXX Still need to implement this class!
-    throw new UnsupportedOperationException ();
   }
+
+  @Override
+  public final void newNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  {
+    super.newNoWaitArmed (time, queue, noWaitArmed);
+    if (! getQueues ().contains (queue))
+      throw new IllegalArgumentException ();
+    if (queue == getServeQueue ())
+      getWaitQueue ().setServerAccessCredits (noWaitArmed ? 1 : 0);
+  }
+
+  @Override
+  protected void startForSubClass (final double time, final DJ job, final DQ queue)
+  {
+    super.startForSubClass (time, job, queue);
+    if (queue == getWaitQueue ())
+    {
+      if (! getWaitQueue ().revoke (job, time, true))
+        throw new RuntimeException ();
+      getServeQueue ().arrive (job, time);
+    }
+    
+  }
+
 
 }

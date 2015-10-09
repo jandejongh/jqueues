@@ -7,12 +7,17 @@ import nl.jdj.jsimulation.r4.SimEventList;
 /** The {@link FCFS} queue serves jobs one at a time in order of arrival times.
  *
  * First Come First Served.
+ * 
+ * <p>
+ * This implementation has infinite buffer size.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
+ * @see FCFS_FB
+ * 
  */
-public final class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
+public class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
 {
 
   /** Creates a FCFS queue given an event list.
@@ -33,7 +38,7 @@ public final class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPre
    * 
    */
   @Override
-  protected /* final */ void insertJobInQueueUponArrival (final J job, final double time)
+  protected void insertJobInQueueUponArrival (final J job, final double time)
   {
     this.jobQueue.add (job);
   }

@@ -16,7 +16,7 @@ public class DefaultDelegateSimJobFactory
 implements DelegateSimJobFactory<AbstractSimJob, DQ, J, Q>
 {
 
-  /** Returns a new {@link AbstractSimJob} with zero requested service time.
+  /** Returns a new {@link AbstractSimJob} requesting the service time from the real job.
    * 
    * {@inheritDoc}
    * 
@@ -24,14 +24,15 @@ implements DelegateSimJobFactory<AbstractSimJob, DQ, J, Q>
    * 
    */
   @Override
-  public AbstractSimJob newInstance (final double time, final J job)
+  public AbstractSimJob newInstance (final double time, final J job, final Q queue)
   {
     return new AbstractSimJob ()
     {
       @Override
-      public final double getServiceTime (final SimQueue queue) throws IllegalArgumentException
+      public final double getServiceTime (final SimQueue delegateQueue) throws IllegalArgumentException
       {
-        return 0.0;
+        // return 0.0;
+        return job.getServiceTime (queue);
       }
     };
   }

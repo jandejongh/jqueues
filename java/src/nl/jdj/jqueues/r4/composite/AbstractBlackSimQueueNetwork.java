@@ -27,7 +27,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * 
  */
 public abstract class AbstractBlackSimQueueNetwork
-<DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends AbstractSimQueue>
+<DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends AbstractBlackSimQueueNetwork>
 extends AbstractSimQueue<J, Q>
 implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   SimQueueListener<DJ, DQ>
@@ -291,7 +291,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     if (this.realSimJobMap.containsValue (job))
       throw new IllegalStateException ();
     update (time);
-    final DJ delegateSimJob = this.delegateSimJobFactory.newInstance (time, job);
+    final DJ delegateSimJob = this.delegateSimJobFactory.newInstance (time, job, (Q) this);
     if (delegateSimJob == null)
       throw new IllegalArgumentException ();
     this.delegateSimJobMap.put (job, delegateSimJob);
@@ -502,6 +502,13 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     // NOTHING MORE TO DO.
   }
   
+  /** Does nothing, called from {@link #start} for special treatment by subclasses.
+   * 
+   */
+  protected void startForSubClass (final double t, final DJ job, final DQ queue)
+  {
+  }
+  
   /**
    * {@inheritDoc}
    * 
@@ -522,16 +529,18 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
       this.jobsExecuting.add (realJob);
       // Use a separate event for start notifications,
       // because the start at the delegate queue hasn't completed yet (e.g., in terms of notifications).
-      // fireStart (t, realJob);
-      getEventList ().add (new SimEvent (t, null, new SimEventAction ()
-      {
-        @Override
-        public void action (SimEvent event)
-        {
-          fireStart (t, realJob);
-        }
-      }
-      ));
+      fireStart (t, realJob);
+      AbstractBlackSimQueueNetwork.this.startForSubClass (t, job, queue);
+      //getEventList ().add (new SimEvent (t, null, new SimEventAction ()
+      //{
+      //  @Override
+      //  public void action (SimEvent event)
+      //  {
+      //    fireStart (t, realJob);
+      //    AbstractBlackSimQueueNetwork.this.startForSubClass (t, job, queue);
+      //  }
+      //}
+      //));
       
     }
   }
@@ -554,13 +563,9 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     fireDrop (t, realJob);
   }
 
-  /**
+  /** Checks if the job is a known delegate job, and calls {@link #update}.
+   * 
    * {@inheritDoc}
-   * 
-   * Calls {@link #update}.
-   * Gets the real job and revokes it as well.
-   * 
-   * @see #fireRevocation
    * 
    */
   @Override
@@ -568,8 +573,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   {
     final J realJob = getRealJob (job, queue);
     update (t);
-    exitJobFromQueues (realJob, job);
-    fireRevocation (t, realJob);
+    // NOTHING MORE TO DO.
   }
 
   /**

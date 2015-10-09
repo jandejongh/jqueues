@@ -162,13 +162,14 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * The final implementation makes sanity checks (e.g., job not already present),
    * and invokes {@link #update}.
    * It then invokes the subclass {@link #insertJobInQueueUponArrival},
-   * and checks the presence of the job in {@link #jobQueue}
-   * (throwing an {@link IllegalStateException} if not).
-   * It sets the visited queue on the job (with {@link SimJob#setQueue}),
+   * and checks the presence of the job in {@link #jobQueue}.
+   * If not present, it adds the job anyway, but marks it for drop later on.
+   * It then sets the visited queue on the job (with {@link SimJob#setQueue}),
    * and notifies the arrival to listeners and actions
    * ({@link #fireArrival}.
    * Finally, if the queue is on queue-access vacation
-   * ({@link #isQueueAccessVacation}), it drops the job immediately,
+   * ({@link #isQueueAccessVacation}), or job was marked from drop,
+   * it drops the job immediately,
    * through {@link #drop}.
    * Otherwise, it invokes the queue-discipline specific {@link #rescheduleAfterArrival}.
    * 
@@ -186,11 +187,15 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new RuntimeException ();
     update (time);
     insertJobInQueueUponArrival (job, time);
+    boolean dropped = false;
     if (! this.jobQueue.contains (job))
-      throw new IllegalStateException ();
+    {
+      this.jobQueue.add (job);
+      dropped = true;
+    }
     job.setQueue (this);
     fireArrival (time, job);
-    if (this.isQueueAccessVacation)
+    if (dropped || this.isQueueAccessVacation)
       drop (job, time);
     else
       rescheduleAfterArrival (job, time);
@@ -199,7 +204,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   /** Inserts a job that just arrived (at given time) into the internal queue(s).
    * 
    * <p>To be implemented by concrete queue types.
-   * Implementations <i>must</i> (at least) add the job to {@link #jobQueue} (this is actually checked).
+   * 
+   * <p>
+   * Implementations <i>must</i> (at least) add the job to {@link #jobQueue}. If not, the job is immediately marked for dropping,
+   * and {@link #rescheduleAfterArrival} is not invoked!
    * 
    * <p>
    * Implementations must ignore any queue-access vacation as this is taken care of by the base class.

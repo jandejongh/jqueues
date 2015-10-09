@@ -16,14 +16,15 @@ public interface DelegateSimJobFactory<DJ extends SimJob, DQ extends SimQueue, J
   
   /** Creates a new delegate {@link SimJob} for given {@link SimJob}.
    * 
-   * @param time The current time.
-   * @param job  The job for which a delegate job is to be created.
+   * @param time  The current time.
+   * @param job   The job for which a delegate job is to be created.
+   * @param queue The queue the job is visiting and for which creation of a delegate job is required.
    * 
    * @return The delegate job.
    * 
-   * @throws IllegalArgumentException If (e.g.) time is in the past, or if a <code>null</code> job is passed.
+   * @throws IllegalArgumentException If (e.g.) time is in the past, or if a <code>null</code> job or queue is passed.
    * 
    */
-  public DJ newInstance (final double time, final J job);
+  public DJ newInstance (double time, J job, Q queue);
   
 }
