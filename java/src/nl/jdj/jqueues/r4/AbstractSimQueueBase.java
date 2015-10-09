@@ -483,7 +483,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * 
    */
   @Override
-  public void notifyEventListUpdate (final SimEventList eventList, final double time)
+  public final void notifyEventListUpdate (final SimEventList eventList, final double time)
   {
   }
 
@@ -493,7 +493,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * 
    */
   @Override
-  public void notifyEventListEmpty (final SimEventList eventList, final double time)
+  public final void notifyEventListEmpty (final SimEventList eventList, final double time)
   {
   }
   
