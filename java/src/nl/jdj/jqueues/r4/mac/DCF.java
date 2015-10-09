@@ -6,7 +6,6 @@ import java.util.Random;
 import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.DefaultSimQueueListener;
-import nl.jdj.jqueues.r4.nonpreemptive.AbstractNonPreemptiveSingleServerSimQueue;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.composite.BlackTandemSimQueue;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
