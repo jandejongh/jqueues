@@ -110,5 +110,16 @@ public class BlackCompressedTandem2SimQueue
     }
   }
 
+  /** Returns "ComprTandem2[waitQueue,serveQueue]".
+   * 
+   * @return "ComprTandem2[waitQueue,serveQueue]".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "ComprTandem2[" + getWaitQueue () + "," + getServeQueue () + "]";
+  }
+
 
 }

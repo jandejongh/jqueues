@@ -108,4 +108,26 @@ public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue,
     return getQueues ().isEmpty () ? true : getQueues ().iterator ().next ().isNoWaitArmed ();
   }
   
+  /** Returns "Tandem[queue list]".
+   * 
+   * @return "Tandem[queue list]".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    String string = "Tandem[";
+    boolean first = true;
+    for (DQ dq : getQueues ())
+    {
+      if (! first)
+        string += ",";
+      else
+        first = false;
+      string += dq;
+    }
+    string += "]";
+    return string;
+  }
+
 }

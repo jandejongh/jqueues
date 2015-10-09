@@ -102,4 +102,26 @@ public class BlackParallelSimQueues
     return null;
   }
 
+  /** Returns "Par[queue list]".
+   * 
+   * @return "Par[queue list]".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    String string = "Par[";
+    boolean first = true;
+    for (DQ dq : getQueues ())
+    {
+      if (! first)
+        string += ",";
+      else
+        first = false;
+      string += dq;
+    }
+    string += "]";
+    return string;
+  }
+
 }
