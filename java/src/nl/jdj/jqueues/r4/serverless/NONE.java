@@ -20,7 +20,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public final class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, Q>
+public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, Q>
 {
 
   /** Creates a NONE queue given an event list.
@@ -41,7 +41,7 @@ public final class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQue
    * 
    */
   @Override
-  public /* final */ boolean isNoWaitArmed ()
+  public final boolean isNoWaitArmed ()
   {
     return false;
   }
@@ -52,7 +52,7 @@ public final class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQue
    * 
    */
   @Override
-  protected /* final */ void insertJobInQueueUponArrival (final J job, final double time)
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
     this.jobQueue.add (job);
   }
@@ -63,7 +63,7 @@ public final class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQue
    * 
    */
   @Override
-  protected /* final */ void rescheduleAfterArrival (final J job, final double time)
+  protected final void rescheduleAfterArrival (final J job, final double time)
   {
     /* EMPTY */
   }
@@ -85,7 +85,7 @@ public final class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQue
    * 
    */
   @Override
-  protected /* final */ void rescheduleAfterDrop (final J job, final double time)
+  protected final void rescheduleAfterDrop (final J job, final double time)
   {
     /* EMPTY */
   }
@@ -98,7 +98,7 @@ public final class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQue
    * 
    */
   @Override
-  protected /* final */ boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
   {
     if (job == null || ! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
@@ -114,7 +114,7 @@ public final class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQue
    * 
    */
   @Override
-  protected /* final */ void rescheduleAfterRevokation (final J job, final double time)
+  protected final void rescheduleAfterRevokation (final J job, final double time)
   {
     /* EMPTY */
   }
@@ -127,7 +127,7 @@ public final class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQue
    * 
    */
   @Override
-  protected /* final */ void removeJobFromQueueUponDeparture (final J departingJob, final double time)
+  protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
     throw new IllegalStateException ();
   }
@@ -140,7 +140,7 @@ public final class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQue
    * 
    */
   @Override
-  protected /* final */ void rescheduleAfterDeparture (final J departedJob, final double time)
+  protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
     throw new IllegalStateException ();
   }
@@ -151,11 +151,33 @@ public final class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQue
    * 
    */
   @Override
-  protected /* final */ void rescheduleForNewServerAccessCredits (final double time)
+  protected final void rescheduleForNewServerAccessCredits (final double time)
   {
     /* EMPTY */
   }
 
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void reset ()
+  {
+    super.reset ();
+  }  
+  
   /** Returns "NONE".
    * 
    * @return "NONE".
