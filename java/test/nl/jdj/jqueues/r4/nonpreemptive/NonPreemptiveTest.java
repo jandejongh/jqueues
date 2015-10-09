@@ -204,6 +204,27 @@ public class NonPreemptiveTest
     return jobList;
   }
   
+  public static List<TestJob> scheduleJobArrivals2
+  (final boolean reported, final int n, final SimEventList eventList, final SimQueue queue)
+  {
+    final List<TestJob> jobList = new ArrayList<>  ();
+    for (int i = 1; i <= n; i++)
+    {
+      final TestJob j = new TestJob (reported, i);
+      jobList.add (j);
+      final double arrTime = i + i*0.1;
+      eventList.add (new SimEvent ("ARRIVAL_" + i, arrTime, null, new SimEventAction ()
+      {
+        @Override
+        public void action (final SimEvent event)
+        {
+          queue.arrive (j, arrTime);
+        }
+      }));
+    }
+    return jobList;
+  }
+  
   private int triangular (int n)
   {
     if (n < 0)
@@ -256,8 +277,71 @@ public class NonPreemptiveTest
     System.out.println ("=======");
     System.out.println ("FCFS_FB");
     System.out.println ("=======");
-    // XXX Not implemented...
-    assert false;
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final FCFS_FB queue = new FCFS_FB (el, 2);
+    for (int i = 0; i <= 1; i++)
+    {
+      System.out.println ("===== PASS " + i + " =====");
+      final List<TestJob> jobs = scheduleJobArrivals2 (true, 10, el, queue);
+      // Arrival times:     Service   Waiting upon arrival
+      //  1:  1.1           1.1-2.1   0
+      //                    2.1: 1 departs
+      //  2:  2.2           2.2-4.2   0
+      //  3:  3.3           4.2-7.2   0
+      //                    4.2: 2 departs
+      //  4:  4.4           7.2-11.2  0
+      //  5:  5.5           11.2-16.2 1
+      //  6:  6.6           DROPPED   2
+      //                    7.2: 3 departs
+      //  7:  7.7           16.2-23.2 1
+      //  8:  8.8           DROPPED   2
+      //  9:  9.9           DROPPED   2
+      // 10: 11.0           DROPPED   2
+      //                    11.2: 4 departs
+      //                    16.2  5 departs
+      //                    23.2  7 departs
+      //              
+      el.run ();
+      assert el.isEmpty ();
+      assertEquals (23.2, el.getTime (), 0.0);
+      for (TestJob j : jobs)
+      {
+        assert j.arrived;
+        assertEquals ((double) j.n + j.n * 0.1, j.arrivalTime, 0.0);
+        boolean dropped = j.n == 6 || j.n == 8 || j.n == 9 || j.n == 10;
+        if (dropped)
+        {
+          assert j.dropped;
+          assertEquals (j.arrivalTime, j.dropTime, 0.0);
+          assert ! j.started;
+          assert ! j.departed;
+        }
+        else
+        {
+          assert ! j.dropped;
+          assert j.started;
+          if (j.n == 1)
+            assertEquals (1.1, j.startTime, 0.0);
+          else if (j.n == 2)
+            assertEquals (2.2, j.startTime, 0.0);
+          else if (j.n == 3)
+            assertEquals (4.2, j.startTime, 0.0);
+          else if (j.n == 4)
+            assertEquals (7.2, j.startTime, 0.0);
+          else if (j.n == 5)
+            assertEquals (11.2, j.startTime, 0.0);
+          else if (j.n == 7)
+            assertEquals (16.2, j.startTime, 0.0);
+          else
+            // Should not reach...
+            assert false;
+          assert j.departed;
+          assertEquals (j.startTime + (double) j.n, j.departureTime, 0.0);
+        }
+      }
+      // Test reset on the fly...
+      el.reset ();
+    }
   }
 
   /**
