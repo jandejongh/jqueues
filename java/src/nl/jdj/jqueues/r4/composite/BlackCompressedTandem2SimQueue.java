@@ -99,7 +99,7 @@ public class BlackCompressedTandem2SimQueue
   }
 
   @Override
-  protected void startForSubClass (final double time, final DJ job, final DQ queue)
+  protected final void startForSubClass (final double time, final DJ job, final DQ queue)
   {
     super.startForSubClass (time, job, queue);
     if (queue == getWaitQueue ())
