@@ -155,4 +155,15 @@ public final class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQue
     /* EMPTY */
   }
 
+  /** Returns "ZERO".
+   * 
+   * @return "ZERO".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "ZERO";
+  }
+
 }

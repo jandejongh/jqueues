@@ -174,4 +174,15 @@ public final class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQ
     /* EMPTY */
   }
 
+  /** Returns "DELAY[wait time]".
+   * 
+   * @return "DELAY[wait time]".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "DELAY[" + getWaitTime () + "]";
+  }
+
 }

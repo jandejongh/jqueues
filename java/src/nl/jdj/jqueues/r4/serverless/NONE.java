@@ -156,4 +156,15 @@ public final class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQue
     /* EMPTY */
   }
 
+  /** Returns "NONE".
+   * 
+   * @return "NONE".
+   * 
+   */
+  @Override
+  public String toString ()
+  {
+    return "NONE";
+  }
+
 }
