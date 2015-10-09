@@ -1,7 +1,7 @@
 package nl.jdj.jqueues.r4.nonpreemptive;
 
 import nl.jdj.jqueues.r4.SimJob;
-import nl.jdj.jqueues.r4.SimQueue; /* Forced for javadoc. */
+import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** The {@link LJF} queue serves jobs one at a time in order of descending requested service times.
@@ -14,7 +14,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @see SimJob#getServiceTime
  *
  */
-public final class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
+public class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
 {
 
   /** Creates a LJF queue given an event list.
@@ -38,7 +38,7 @@ public final class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreem
    * 
    */
   @Override
-  protected /* final */ void insertJobInQueueUponArrival (final J job, final double time)
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
     int newPosition = 0;
     while (newPosition < this.jobQueue.size ()
@@ -47,6 +47,28 @@ public final class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreem
     this.jobQueue.add (newPosition, job);
   }
 
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void reset ()
+  {
+    super.reset ();
+  }  
+  
   /** Returns "LJF".
    * 
    * @return "LJF".
