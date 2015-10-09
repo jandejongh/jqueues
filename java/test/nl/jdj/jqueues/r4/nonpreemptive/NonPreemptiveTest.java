@@ -247,6 +247,20 @@ public class NonPreemptiveTest
   }
 
   /**
+   * Test of FCFS_FB.
+   * 
+   */
+  @Test
+  public void testFCFS_FB ()
+  {
+    System.out.println ("=======");
+    System.out.println ("FCFS_FB");
+    System.out.println ("=======");
+    // XXX Not implemented...
+    assert false;
+  }
+
+  /**
    * Test of LCFS.
    * 
    */
