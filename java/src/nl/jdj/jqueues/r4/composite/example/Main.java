@@ -10,11 +10,13 @@ import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.StdOutSimQueueVacationListener;
 import nl.jdj.jqueues.r4.composite.BlackNumVisitsFeedbackSimQueue;
 import nl.jdj.jqueues.r4.composite.BlackParallelSimQueues;
+import nl.jdj.jqueues.r4.composite.BlackProbabilisticFeedbackSimQueue;
 import nl.jdj.jqueues.r4.composite.BlackTandemSimQueue;
 import nl.jdj.jqueues.r4.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r4.composite.SimQueueSelector;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r4.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r4.nonpreemptive.RANDOM;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -96,6 +98,8 @@ public final class Main
       if (queue instanceof LCFS)
         return 2 * this.n;
       else if (queue instanceof FCFS)
+        return this.n;
+      else if (queue instanceof RANDOM)
         return this.n;
       else
         throw new IllegalStateException ();
@@ -228,6 +232,30 @@ public final class Main
         public void action (final SimEvent event)
         {
           numVisitsFBQueue.arrive (j, arrTime);
+        }
+      }));
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Creating RANDOM queue...");
+    final SimQueue randomQueue = new RANDOM (el);
+    randomQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    System.out.println ("-> Creating probabilistic feedback queue (p=50%)...");
+    final SimQueue pFBQueue = new BlackProbabilisticFeedbackSimQueue (el, randomQueue, 0.5, null, delegateSimJobFactory);
+    pFBQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    System.out.println ("-> Submitting jobs to probabilistic feedback queue...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + 1;
+      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      {
+        @Override
+        public void action (final SimEvent event)
+        {
+          pFBQueue.arrive (j, arrTime);
         }
       }));
     }
