@@ -8,6 +8,7 @@ import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.StdOutSimQueueVacationListener;
+import nl.jdj.jqueues.r4.composite.BlackNumVisitsFeedbackSimQueue;
 import nl.jdj.jqueues.r4.composite.BlackParallelSimQueues;
 import nl.jdj.jqueues.r4.composite.BlackTandemSimQueue;
 import nl.jdj.jqueues.r4.composite.DelegateSimJobFactory;
@@ -203,6 +204,30 @@ public final class Main
         public void action (final SimEvent event)
         {
           parallelQueue.arrive (j, arrTime);
+        }
+      }));
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Creating FCFS queue...");
+    final SimQueue fcfsQueue3 = new FCFS (el);
+    fcfsQueue3.registerQueueListener (new StdOutSimQueueVacationListener ());
+    System.out.println ("-> Creating NumVisits feedback queue (5 visits)...");
+    final SimQueue numVisitsFBQueue = new BlackNumVisitsFeedbackSimQueue (el, fcfsQueue3, 5, delegateSimJobFactory);
+    numVisitsFBQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    System.out.println ("-> Submitting jobs to NumVisitsFB queue...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + 1;
+      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      {
+        @Override
+        public void action (final SimEvent event)
+        {
+          numVisitsFBQueue.arrive (j, arrTime);
         }
       }));
     }
