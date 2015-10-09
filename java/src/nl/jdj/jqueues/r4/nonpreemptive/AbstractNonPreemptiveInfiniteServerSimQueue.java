@@ -67,21 +67,11 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
   
   /** Inserts the job at the tail of {@link #jobQueue}.
    * 
-   * <p>
-   * This method is left non-<code>final</code>.
-   * 
-   * <p>
-   * Overriding methods are free to insert the job in a different location in order to impose a non-FCFS job ordering
-   * in presence of server-access vacations.
-   * However, care is needed.
-   * Implementations <i>must</i> insert the job in {@link #jobQueue}, yet must be aware that this collection contains
-   * both jobs "waiting" and jobs "in service".
-   * 
    * {@inheritDoc}
    * 
    */
   @Override
-  protected void insertJobInQueueUponArrival (final J job, final double time)
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
     this.jobQueue.add (job);
   }
@@ -174,7 +164,7 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
    * 
    */
   @Override
-  protected void rescheduleAfterDeparture (final J departedJob, final double time)
+  protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
     /* EMPTY */
   }

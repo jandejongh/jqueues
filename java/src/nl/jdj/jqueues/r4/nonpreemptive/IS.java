@@ -19,7 +19,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public final class IS<J extends SimJob, Q extends IS>
+public class IS<J extends SimJob, Q extends IS>
 extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
 {
 
@@ -31,7 +31,7 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
    * 
    */
   @Override
-  protected /* final */ double getServiceTime (final J job)
+  protected final double getServiceTime (final J job)
   {
     return job.getServiceTime (this);
   }
