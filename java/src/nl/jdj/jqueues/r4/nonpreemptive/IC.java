@@ -37,6 +37,28 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
   {
     super (eventList);
   }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void reset ()
+  {
+    super.reset ();
+  }  
   
   /**
    * {@inheritDoc}
