@@ -56,6 +56,28 @@ public class BlackEncapsulatorSimQueue
     super (eventList, (Set<DQ>) createQueuesSet (queue), delegateSimJobFactory);
   }
   
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void newNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  {
+    super.newNoWaitArmed (time, queue, noWaitArmed);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  protected final void startForSubClass (final double t, final DJ job, final DQ queue)
+  {
+    super.startForSubClass (t, job, queue);
+  }
+
   /** Returns "Enc[encapsulated queue]".
    * 
    * @return "Enc[encapsulated queue]".

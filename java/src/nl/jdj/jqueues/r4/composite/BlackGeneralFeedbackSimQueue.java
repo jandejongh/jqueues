@@ -130,6 +130,17 @@ public class BlackGeneralFeedbackSimQueue
       return null;
     }
   }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final boolean isNoWaitArmed ()
+  {
+    return super.isNoWaitArmed ();
+  }
   
   /** Returns "GenFB[embedded queue]".
    * 

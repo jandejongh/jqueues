@@ -309,7 +309,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void rescheduleAfterArrival (final J job, final double time)
+  protected final void rescheduleAfterArrival (final J job, final double time)
   {
     if (job == null)
       throw new IllegalArgumentException ();
@@ -348,7 +348,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void removeJobFromQueueUponDrop (final J job, final double time)
+  protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
     final DJ delegateJob = getDelegateJob (job);
     exitJobFromQueues (job, delegateJob);
@@ -362,7 +362,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void rescheduleAfterDrop (final J job, final double time)
+  protected final void rescheduleAfterDrop (final J job, final double time)
   {
     // EMPTY
   }
@@ -377,7 +377,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
   {
     final DJ delegateJob = getDelegateJob (job);
     final SimQueue queue = delegateJob.getQueue ();
@@ -395,7 +395,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void rescheduleAfterRevokation (final J job, final double time)
+  protected final void rescheduleAfterRevokation (final J job, final double time)
   {
     // EMPTY
   }
@@ -408,7 +408,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void rescheduleForNewServerAccessCredits (final double time)
+  protected final void rescheduleForNewServerAccessCredits (final double time)
   {
     update (time);
     while (hasServerAcccessCredits ())
@@ -447,7 +447,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void removeJobFromQueueUponDeparture (final J departingJob, final double time)
+  protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
     throw new IllegalStateException ();
   }
@@ -461,7 +461,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected void rescheduleAfterDeparture (final J departedJob, final double time)
+  protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
     throw new IllegalStateException ();
   }

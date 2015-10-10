@@ -74,6 +74,39 @@ public class BlackProbabilisticFeedbackSimQueue
     this.p_feedback = p_feedback;
   }
   
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void newNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  {
+    super.newNoWaitArmed (time, queue, noWaitArmed);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  protected final void startForSubClass (final double t, final DJ job, final DQ queue)
+  {
+    super.startForSubClass (t, job, queue);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
   /** Returns "FB_p_feedback*100%[embedded queue]".
    * 
    * @return "FB_p_feedback*100%[embedded queue]".

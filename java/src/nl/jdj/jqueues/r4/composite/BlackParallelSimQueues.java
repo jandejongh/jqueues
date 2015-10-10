@@ -102,6 +102,61 @@ public class BlackParallelSimQueues
     return null;
   }
 
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void newNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  {
+    super.newNoWaitArmed (time, queue, noWaitArmed);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  protected final void startForSubClass (final double t, final DJ job, final DQ queue)
+  {
+    super.startForSubClass (t, job, queue);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void reset ()
+  {
+    super.reset ();
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final boolean isNoWaitArmed ()
+  {
+    return super.isNoWaitArmed ();
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
   /** Returns "Par[queue list]".
    * 
    * @return "Par[queue list]".

@@ -108,6 +108,50 @@ public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue,
     return getQueues ().isEmpty () ? true : getQueues ().iterator ().next ().isNoWaitArmed ();
   }
   
+//  /** Calls super method (in order to make implementation final).
+//   * 
+//   * {@inheritDoc}
+//   * 
+//   */
+//  @Override
+//  public final void newNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+//  {
+//    super.newNoWaitArmed (time, queue, noWaitArmed);
+//  }
+//
+//  /** Calls super method (in order to make implementation final).
+//   * 
+//   * {@inheritDoc}
+//   * 
+//   */
+//  @Override
+//  protected final void startForSubClass (final double t, final DJ job, final DQ queue)
+//  {
+//    super.startForSubClass (t, job, queue);
+//  }
+//
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void reset ()
+  {
+    super.reset ();
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
   /** Returns "Tandem[queue list]".
    * 
    * @return "Tandem[queue list]".
