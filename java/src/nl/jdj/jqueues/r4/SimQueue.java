@@ -115,7 +115,7 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * <p>
  * From release 3 onwards, a {@link SimQueue} supports two types of <i>vacations</i>:
  * <ul>
- * <li>During a <i>queue-access vacation</i>, access to the <code>SimQueue</i> is prohibited and
+ * <li>During a <i>queue-access vacation</i>, access to the <i>SimQueue</i> is prohibited and
  *     all jobs are dropped immediately upon arrival,
  *     see {@link #startQueueAccessVacation()}, {@link #startQueueAccessVacation(double)},
  *         {@link #stopQueueAccessVacation} and {@link #isQueueAccessVacation}.
@@ -135,8 +135,8 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * From release 5 onwards, each {@link SimQueue} maintains and reports changes to the state in which it <i>guarantees</i> that
  * the next arriving job will
  * <ul>
- * <i>start service immediately without waiting, or,
- * <i>departs immediately, without service and without waiting.
+ * <li>start service immediately without waiting, or,
+ * <li>departs immediately, without service and without waiting.
  * </ul>
  * If either condition is met, the queueing system is said to be in <i>noWaitArmed</i> state.
  * Note that this state setting ignores queue and server-access vacations.
@@ -165,7 +165,7 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * </ul>
  *
  * <p>
- * All {@link SimEventAction}s described above are called only <i>after</i> the
+ * Except for arrival notifications, all {@link SimEventAction}s described above are called only <i>after</i> the
  * {@link SimQueue} has updated all relevant fields in the
  * {@link SimQueue} and {@link SimJob} objects,
  * i.e., <i>after</i> both objects truly reflect the new state of the queue
@@ -175,6 +175,11 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * before the latter.
  * However, we think it is bad practice to depend upon this behavior.
  *
+ * <p>
+ * Arrival-related notifications are always issued immediately at the time a job arrives at a queue,
+ * in other words, at a point where the queue does not even know yet about the existence of the job
+ * (and vice versa, for that matter).
+ * 
  * <p>
  * A more convenient way to be notified of {@link SimQueue} events is by registering as a {@link SimQueueListener} through
  * {@link #registerQueueListener}. The relevant methods of a {@link SimQueueListener} are invoked immediately after invocation of
@@ -261,6 +266,7 @@ extends SimEventListListener
    * <p>
    * Do not use this method to schedule job arrivals on the event list!
    * 
+   * <p>
    * Note that during a <i>queue-access vacation</i>, all jobs will be dropped upon arrival.
    * 
    * @param job  The job.

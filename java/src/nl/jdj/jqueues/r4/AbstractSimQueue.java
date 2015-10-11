@@ -159,21 +159,42 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   /**
    * {@inheritDoc}
    * 
-   * The final implementation makes sanity checks (e.g., job not already present),
-   * and invokes {@link #update}.
-   * It then invokes the subclass {@link #insertJobInQueueUponArrival},
-   * and checks the presence of the job in {@link #jobQueue}.
-   * If not present, it adds the job anyway, but marks it for drop later on.
-   * It then sets the visited queue on the job (with {@link SimJob#setQueue}),
-   * and notifies the arrival to listeners and actions
-   * ({@link #fireArrival}.
-   * Finally, if the queue is on queue-access vacation
-   * ({@link #isQueueAccessVacation}), or job was marked from drop,
-   * it drops the job immediately,
-   * through {@link #drop}.
-   * Otherwise, it invokes the queue-discipline specific {@link #rescheduleAfterArrival}.
+   * <ul>
    * 
+   * <li>
+   * The final implementation first
+   * <ul>
+   * <li>makes sanity checks (e.g., job not already present),
+   * <li>invokes {@link #update},
+   * <li>invokes {@link #fireArrival} (notifying listeners of the arrival).
+   * </ul>
+   * 
+   * <li>
+   * Subsequently, if the queue is on queue-access vacation ({@link #isQueueAccessVacation}),
+   * this method invokes {@link #fireDrop} and returns immediately;  bypassing {@link #drop}
+   * since subclasses have no knowledge of the job yet (and they do not need to have).
+   * 
+   * <li>
+   * Otherwise, it then invokes the subclass {@link #insertJobInQueueUponArrival},
+   * and checks the presence of the job in {@link #jobQueue}:
+   * <ul>
+   * <li>If <i>not</i> present, sets the jobs queue to <code>null</code> and invokes {@link #fireDrop},
+   *     again bypassing {@link #drop} because the job is not present in the system at this point.
+   *     Also, in this case, there is no call to {@link #rescheduleAfterArrival}, since
+   *     {@link #insertJobInQueueUponArrival} has denied immediately the queue visit.
+   * <li>If present, sets this queue to be the visited queue on the job (with {@link SimJob#setQueue}),
+   *     and invokes the queue-discipline specific {@link #rescheduleAfterArrival}.
+   * </ul>
+   * 
+   * </ul>
+   * 
+   * @see #update
+   * @see #fireArrival
    * @see #isQueueAccessVacation
+   * @see #fireDrop
+   * @see #insertJobInQueueUponArrival
+   * @see SimJob#setQueue
+   * @see #rescheduleAfterArrival
    * 
    */
   @Override
@@ -183,22 +204,30 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalArgumentException ();
     if (job.getQueue () != null)
       throw new IllegalArgumentException ();
-    if (this.jobQueue.contains (job))
+    if (this.jobQueue.contains (job) || this.jobsExecuting.contains (job))
       throw new RuntimeException ();
     update (time);
-    insertJobInQueueUponArrival (job, time);
-    boolean dropped = false;
-    if (! this.jobQueue.contains (job))
-    {
-      this.jobQueue.add (job);
-      dropped = true;
-    }
-    job.setQueue (this);
     fireArrival (time, job);
-    if (dropped || this.isQueueAccessVacation)
-      drop (job, time);
+    if (this.isQueueAccessVacation)
+      fireDrop (time, job);
     else
-      rescheduleAfterArrival (job, time);
+    {
+      insertJobInQueueUponArrival (job, time);
+      if (! this.jobQueue.contains (job))
+      {
+        if (this.jobsExecuting.contains (job))
+          throw new IllegalStateException ();
+        job.setQueue (null);  // Just in case it was erroneously set by our subclass...
+        fireDrop (time, job);
+      }
+      else
+      {
+        if (this.jobsExecuting.contains (job))
+          throw new IllegalStateException ();
+        job.setQueue (this);
+        rescheduleAfterArrival (job, time);
+      }
+    }
   }
 
   /** Inserts a job that just arrived (at given time) into the internal queue(s).
@@ -210,7 +239,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * and {@link #rescheduleAfterArrival} is not invoked!
    * 
    * <p>
-   * Implementations must ignore any queue-access vacation as this is taken care of by the base class.
+   * Implementations must ignore any queue-access vacation as this is taken care of already by the base class.
    * 
    * <p>
    * Implementations must <i>not</i>reschedule on the event list, or make changes to {@link #jobsExecuting},

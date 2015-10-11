@@ -40,9 +40,15 @@ public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
   
   /** Notification of the arrival of a job at a queue.
    * 
+   * The notification is issued immediately at the time a job arrives at a queue,
+   * in other words, at a point where the queue does not even know yet about the existence of the job
+   * (and vice versa, for that matter).
+   * 
    * @param t The (current) time.
    * @param job The job.
    * @param queue The queue.
+   * 
+   * @see SimQueue#arrive
    * 
    */
   public void arrival (double t, J job, Q queue);
