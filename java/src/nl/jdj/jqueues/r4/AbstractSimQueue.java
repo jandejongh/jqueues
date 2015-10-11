@@ -159,10 +159,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   /**
    * {@inheritDoc}
    * 
+   * <p>
+   * This (final) implementation is as follows:
    * <ul>
-   * 
-   * <li>
-   * The final implementation first
+   * <li> It first
    * <ul>
    * <li>makes sanity checks (e.g., job not already present),
    * <li>invokes {@link #update},
