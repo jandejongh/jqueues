@@ -8,6 +8,7 @@ import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.StdOutSimQueueVacationListener;
+import nl.jdj.jqueues.r4.composite.BlackJacksonSimQueueNetwork;
 import nl.jdj.jqueues.r4.composite.BlackNumVisitsFeedbackSimQueue;
 import nl.jdj.jqueues.r4.composite.BlackParallelSimQueues;
 import nl.jdj.jqueues.r4.composite.BlackProbabilisticFeedbackSimQueue;
@@ -256,6 +257,76 @@ public final class Main
         public void action (final SimEvent event)
         {
           pFBQueue.arrive (j, arrTime);
+        }
+      }));
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Creating 4 FCFS queues and putting them into a LinkedHashSet...");
+    final SimQueue jFcfsQueue1 = new FCFS (el)
+    {
+      @Override
+      public String toString ()
+      {
+        return super.toString () + "1";
+      }
+    };
+    jFcfsQueue1.registerQueueListener (new StdOutSimQueueVacationListener ());
+    final SimQueue jFcfsQueue2 = new FCFS (el)
+    {
+      @Override
+      public String toString ()
+      {
+        return super.toString () + "2";
+      }
+    };
+    jFcfsQueue2.registerQueueListener (new StdOutSimQueueVacationListener ());
+    final SimQueue jFcfsQueue3 = new FCFS (el)
+    {
+      @Override
+      public String toString ()
+      {
+        return super.toString () + "3";
+      }
+    };
+    jFcfsQueue3.registerQueueListener (new StdOutSimQueueVacationListener ());
+    final SimQueue jFcfsQueue4 = new FCFS (el)
+    {
+      @Override
+      public String toString ()
+      {
+        return super.toString () + "4";
+      }
+    };
+    jFcfsQueue4.registerQueueListener (new StdOutSimQueueVacationListener ());
+    final Set<SimQueue> jacksonQueues = new LinkedHashSet<> ();
+    jacksonQueues.add (jFcfsQueue1);
+    jacksonQueues.add (jFcfsQueue2);
+    jacksonQueues.add (jFcfsQueue3);
+    jacksonQueues.add (jFcfsQueue4);
+    System.out.println ("-> Creating Arrival and Transition probabilities...");
+    final double[] pdfArrival = new double[] { 0.4, 0.4, 0, 0 };
+    final double[][] pdfTransition = new double[][] { { 0.2, 0.2, 0.2, 0.2 },
+                                                      { 0.2, 0.2, 0.2, 0.2 },
+                                                      { 0.0, 0.0, 0.4, 0.4 },
+                                                      { 0.0, 0.0, 0.4, 0.4 }};
+    System.out.println ("-> Creating Jackson queueing network...");
+    final SimQueue jacksonQueue =
+      new BlackJacksonSimQueueNetwork (el, jacksonQueues, pdfArrival, pdfTransition, null, delegateSimJobFactory);
+    jacksonQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    System.out.println ("-> Submitting jobs to Jackson queueing network...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + 1;
+      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      {
+        @Override
+        public void action (final SimEvent event)
+        {
+          jacksonQueue.arrive (j, arrTime);
         }
       }));
     }
