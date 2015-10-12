@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r4.composite;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimQueue;
@@ -33,6 +34,12 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   SimQueueListener<DJ, DQ>
 {
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // (SUB)QUEUES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** The queues, all non-null.
    * 
    * Set is also non-null and final.
@@ -46,6 +53,56 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     return this.queues;
   }
 
+  /** Returns the index of given sub-queue.
+   * 
+   * @param queue The sub-queue; must be present in {@link #getQueues}.
+   * 
+   * @return The index of the sub-queue in {@link #getQueues}.
+   * 
+   * @throws IllegalArgumentException If the <code>queue</code> is <code>null</code> or not present in {@link #getQueues}.
+   * 
+   */
+  protected final int getIndex (final DQ queue)
+  {
+    if (queue == null || getQueues () == null || ! getQueues ().contains (queue))
+      throw new IllegalArgumentException ();
+    final Iterator<DQ> iterator = getQueues ().iterator ();
+    for (int q = 0; q < getQueues ().size (); q++)
+      if (iterator.next () == queue)
+        return q;
+    throw new RuntimeException ();
+  }
+  
+  /** Returns a sub-queue by its index.
+   * 
+   * @param q The index.
+   * 
+   * @return The (sub-)queue in {@link #getQueues} with given index.
+   * 
+   * @throws IllegalArgumentException If the index is (strictly) negative or larger or equal than the size of {@link #getQueues}.
+   * 
+   */
+  protected final DQ getQueue (final int q)
+  {
+    if (q < 0 || q >= getQueues ().size ())
+      throw new IllegalArgumentException ();
+    final Iterator<DQ> iterator = getQueues ().iterator ();
+    int i = 0;
+    DQ dq = iterator.next ();
+    while (i < q)
+    {
+      i++;
+      dq = iterator.next ();
+    }
+    return dq;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DELEGATE SIMJOBS AND REAL/DELEGATE SIMJOB MAPPINGS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** The factory to create delegate {@link SimJob}s, non-<code>null</code>.
    * 
    */
@@ -102,7 +159,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * @throws IllegalStateException If sanity checks fail.
    * 
    */
-  private final J getRealJob (final DJ delegateJob, final DQ queue)
+  protected final J getRealJob (final DJ delegateJob, final DQ queue)
   {
     if (delegateJob == null || queue == null || ! getQueues ().contains (queue))
       throw new IllegalStateException ();
@@ -130,6 +187,12 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     this.realSimJobMap.remove (delegateJob);    
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ABSTRACT METHODS FOR (SUB-)QUEUE SELECTION IN SUBCLASSES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Returns the first queue to visit for an arriving job.
    * 
    * @param time The time of arrival of the job.
@@ -150,6 +213,12 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   protected abstract SimQueue<DJ, DQ> getNextQueue (double time, J job, DQ previousQueue);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Creates an abstract black network of queues.
    * 
