@@ -1,6 +1,5 @@
 package nl.jdj.jqueues.r4.composite;
 
-import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimJob;
@@ -27,20 +26,47 @@ public class BlackJacksonSimQueueNetwork
   implements BlackSimQueueNetwork<DJ, DQ, J, Q>
 {
   
-  // XXX The internals in this class could use some further documentation...
+  /** The arrival probabilities (as cumulative distribution function).
+   * 
+   */
+  private final double[] cdfArrival;
   
-  private final double[] pArrivalCum;
+  /** The transition probabilities for each (source) queue in turn (as cumulative distribution function).
+   * 
+   */
+  private final double[][] cdfTransition;
   
-  private final double[][] pTransitionCum;
-  
+  /** The Random Number Generator used for arrivals and transitions.
+   * 
+   */
   private final Random rng;
   
-  private static void checkPArray (final double [] pArray, final int requiredSize)
+  /** Returns the Random Number Generator used for arrivals and transitions.
+   * 
+   * @return The Random Number Generator used for arrivals and transitions (non-<code>null</code>).
+   * 
+   */
+  public final Random getRNG ()
   {
-    if (pArray == null || pArray.length != requiredSize)
+    return this.rng;
+  }
+  
+  /** Checks a probability-distribution array for dimension and values.
+   * 
+   * @param pdfArray The pdf array.
+   * @param requiredSize The required size of the array.
+   * 
+   * @throws IllegalArgumentException If the array is <code>null</code> or not of the required size,
+   *                                  or any of its members is strictly negative or exceeds unity,
+   *                                  or the sum of its members exceeds unity.
+   * 
+   */
+  protected static void checkPdfArray (final double [] pdfArray, final int requiredSize)
+  {
+    if (pdfArray == null || pdfArray.length != requiredSize)
       throw new IllegalArgumentException ();
     int pArraySum = 0;
-    for (final double p : pArray)
+    for (final double p : pdfArray)
       if (p < 0 || p > 1)
         throw new IllegalArgumentException ();
       else
@@ -49,51 +75,43 @@ public class BlackJacksonSimQueueNetwork
       throw new IllegalArgumentException ();
   }
 
-  private static void checkPMatrix (final double[][] pMatrix, final int requiredSize)
+  /** Checks a probability-distribution matrix for dimension and values.
+   * 
+   * @param pdfMatrix The pdf matrix.
+   * @param requiredSize The required (one-dimensional) size of the array.
+   * 
+   * @throws IllegalArgumentException If the matrix is <code>null</code> or not square with the required size,
+   *                                  or any of its members is strictly negative or exceeds unity,
+   *                                  or one or more of its row sums exceeds unity.
+   * 
+   */
+  protected static void checkPdfMatrix (final double[][] pdfMatrix, final int requiredSize)
   {
-    if (pMatrix == null || pMatrix.length != requiredSize)
+    if (pdfMatrix == null || pdfMatrix.length != requiredSize)
       throw new IllegalArgumentException ();
-    for (final double[] p_row : pMatrix)
-      checkPArray (p_row, requiredSize);    
+    for (final double[] p_row : pdfMatrix)
+      checkPdfArray (p_row, requiredSize);    
   }
   
-  private int getIndex (final DQ queue)
+  /** Selects a (sub-)queue by drawing from {@link #getRNG} and respecting the given cumulative distribution function,
+   * with an entry for each (sub-)queue.
+   * 
+   * @param cdfArray The cumulative distribution function for queue selection, with an entry for each (sub-)queue.
+   * 
+   * @return The selected queue, may be <code>null</code>.
+   * 
+   * @see #getRNG
+   * 
+   */
+  private DQ draw (final double[] cdfArray)
   {
-    // XXX Should be in parent class.
-    if (queue == null || getQueues () == null || ! getQueues ().contains (queue))
-      throw new IllegalArgumentException ();
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    for (int q = 0; q < getQueues ().size (); q++)
-      if (iterator.next () == queue)
-        return q;
-    throw new RuntimeException ();
-  }
-  
-  private DQ getQueue (final int q)
-  {
-    // XXX Should be in parent class.
-    if (q < 0 || q >= getQueues ().size ())
-      throw new IllegalArgumentException ();
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    int i = 0;
-    DQ dq = iterator.next ();
-    while (i < q)
-    {
-      i++;
-      dq = iterator.next ();
-    }
-    return dq;
-  }
-  
-  private DQ draw (final double[] pArrayCum)
-  {
-    if (pArrayCum == null || pArrayCum.length != getQueues ().size ())
+    if (cdfArray == null || cdfArray.length != getQueues ().size ())
       throw new IllegalArgumentException ();
     final double sample = this.rng.nextDouble ();
     if (sample < 0 || sample >= 1)
       throw new RuntimeException ();
     for (int q = 0; q < getQueues ().size (); q++)
-      if (sample < pArrayCum[q])
+      if (sample < cdfArray[q])
         return getQueue (q);
     return null;
   }
@@ -106,10 +124,15 @@ public class BlackJacksonSimQueueNetwork
    * @param queues                The queues, an iteration over the set must return (deterministically)
    *                                the non-<code>null</code> queues
    *                                as indexed in the probability arguments.
-   * @param pArrival              The arrival probabilities for each queue;
+   * @param pdfArrival            The arrival probabilities for each queue (pdf);
    *                                must be array of size <code>|Q|</code>.
-   * @param pTransition           The transition probabilities from/to each queue;
+   *                              Entries must be between zero and unity and their sum should not exceed unity.
+   *                              The "remainder" denotes the probability that a job departs immediately upon arrival.
+   * @param pdfTransition         The transition probabilities from/to each queue (pdf for each (source) queue);
    *                                must be square matrix of size <code>|Q|x|Q|</code>.
+   *                              Entries must be between zero and unity and each row sum should not exceed unity.
+   *                              The "remainder" in a row denotes the probability that a job departs after a visit to the
+   *                                corresponding queue.
    * @param userRNG               An optional user-supplied random-number generator
    *                                (if absent, a new one is created for local use).
    * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
@@ -127,56 +150,61 @@ public class BlackJacksonSimQueueNetwork
   public BlackJacksonSimQueueNetwork
   (final SimEventList eventList,
     final Set<DQ> queues,
-    final double[] pArrival,
-    final double[][] pTransition,
+    final double[] pdfArrival,
+    final double[][] pdfTransition,
     final Random userRNG,
     final DelegateSimJobFactory delegateSimJobFactory)
   {
     super (eventList, queues, delegateSimJobFactory);
-    checkPArray (pArrival, queues.size ());
-    this.pArrivalCum = new double[queues.size ()];
+    checkPdfArray (pdfArrival, queues.size ());
+    this.cdfArrival = new double[queues.size ()];
     for (int e = 0; e < queues.size (); e++)
-      this.pArrivalCum[e] = pArrival[e] + ((e > 0) ? this.pArrivalCum[e-1] : 0);
-    checkPMatrix (pTransition, queues.size ());
-    this.pTransitionCum = new double[queues.size ()][queues.size ()];
+      this.cdfArrival[e] = pdfArrival[e] + ((e > 0) ? this.cdfArrival[e-1] : 0);
+    checkPdfMatrix (pdfTransition, queues.size ());
+    this.cdfTransition = new double[queues.size ()][queues.size ()];
     for (int r = 0; r < queues.size (); r++)
       for (int c = 0; c < queues.size (); c++)
-        this.pTransitionCum[r][c] = pTransition[r][c] + ((c > 0) ? this.pTransitionCum[r][c-1] : 0);
+        this.cdfTransition[r][c] = pdfTransition[r][c] + ((c > 0) ? this.cdfTransition[r][c-1] : 0);
     this.rng = ((userRNG != null) ? userRNG : new Random ());
   }
 
   /** Returns the queue selected (or <code>null</code> implying an immediate departure)
-   * from a probabilistic experiment governed by the <code>pArrival</code>
+   * from a probabilistic experiment governed by the <code>pdfArrival</code>
    * array passed in the constructor.
    * 
+   * <p>
    * {@inheritDoc}
    * 
+   * @see #draw
    * 
    */
   @Override
   protected final SimQueue<DJ, DQ> getFirstQueue (final double time, final J job)
   {
-    return draw (this.pArrivalCum);
+    return draw (this.cdfArrival);
   }
 
   /** Returns the queue selected (or <code>null</code> implying a departure)
-   * from a probabilistic experiment governed by the <code>pTransition</code>
+   * from a probabilistic experiment governed by the <code>pdfTransition</code>
    * matrix passed in the constructor.
    * 
+   * <p>
    * {@inheritDoc}
    * 
-   * 
    * @throws IllegalStateException If the previous queue argument is <code>null</code> or not a member of {@link #getQueues}.
+   * 
+   * @see #draw
    * 
    */
   @Override
   protected final SimQueue<DJ, DQ> getNextQueue (final double time, final J job, final DQ previousQueue)
   {
-    return draw (this.pTransitionCum[getIndex (previousQueue)]);
+    return draw (this.cdfTransition[getIndex (previousQueue)]);
   }
   
   /** Calls super method (in order to make implementation final).
    * 
+   * <p>
    * {@inheritDoc}
    * 
    */
@@ -188,6 +216,7 @@ public class BlackJacksonSimQueueNetwork
 
   /** Calls super method (in order to make implementation final).
    * 
+   * <p>
    * {@inheritDoc}
    * 
    */
@@ -199,6 +228,7 @@ public class BlackJacksonSimQueueNetwork
 
   /** Calls super method (in order to make implementation final).
    * 
+   * <p>
    * {@inheritDoc}
    * 
    */
@@ -210,6 +240,7 @@ public class BlackJacksonSimQueueNetwork
 
   /** Calls super method (in order to make implementation final).
    * 
+   * <p>
    * {@inheritDoc}
    * 
    */
@@ -221,6 +252,7 @@ public class BlackJacksonSimQueueNetwork
 
   /** Calls super method (in order to make implementation final).
    * 
+   * <p>
    * {@inheritDoc}
    * 
    */
