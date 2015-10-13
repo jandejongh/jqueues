@@ -274,7 +274,7 @@ implements SimQueueListener<J, Q>
    * @return The time of the last update.
    * 
    * @see #update(double)
-   * @see #update(double, SimQueue)
+   * @see #notifyUpdate(double, SimQueue)
    * 
    */
   public final double getLastUpdateTime ()
@@ -308,6 +308,17 @@ implements SimQueueListener<J, Q>
   // BEGIN: CONNECTION WITH THE QUEUE / IMPLEMENTATION OF SimQueueListener.
   //
   
+  /** Invokes {@link #reset}.
+   *
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  public void notifyReset (double oldTime, Q queue)
+  {
+    reset ();
+  }
+  
   /** Checks the queue argument and invokes {@link #update(double)}.
    * 
    * {@inheritDoc}
@@ -318,7 +329,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void update (double t, Q queue)
+  public void notifyUpdate (double t, Q queue)
   {
     if (queue == null || queue != getQueue ())
       throw new IllegalArgumentException ();
@@ -331,7 +342,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void arrival (double t, J job, Q queue)
+  public void notifyArrival (double t, J job, Q queue)
   {
   }
 
@@ -341,7 +352,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void start (double t, J job, Q queue)
+  public void notifyStart (double t, J job, Q queue)
   {
   }
 
@@ -351,7 +362,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void drop (double t, J job, Q queue)
+  public void notifyDrop (double t, J job, Q queue)
   {
   }
 
@@ -361,7 +372,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void revocation (double t, J job, Q queue)
+  public void notifyRevocation (double t, J job, Q queue)
   {
   }
 
@@ -371,7 +382,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void departure (double t, J job, Q queue)
+  public void notifyDeparture (double t, J job, Q queue)
   {
   }
   
@@ -381,7 +392,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void newNoWaitArmed (double t, Q queue, boolean noWaitArmed)
+  public void notifyNewNoWaitArmed (double t, Q queue, boolean noWaitArmed)
   {
   }
 

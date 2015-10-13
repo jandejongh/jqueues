@@ -89,9 +89,9 @@ public class BlackCompressedTandem2SimQueue
   }
 
   @Override
-  public final void newNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
   {
-    super.newNoWaitArmed (time, queue, noWaitArmed);
+    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
     if (! getQueues ().contains (queue))
       throw new IllegalArgumentException ();
     if (queue == getServeQueue ())

@@ -75,9 +75,9 @@ public class BlackNumVisitsFeedbackSimQueue
    * 
    */
   @Override
-  public final void newNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
   {
-    super.newNoWaitArmed (time, queue, noWaitArmed);
+    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
   }
 
   /** Calls super method (in order to make implementation final).

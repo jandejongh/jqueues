@@ -82,7 +82,7 @@ implements MediumPhyStateObserver
     this.contentionQueue.registerQueueListener (new DefaultSimQueueListener<AbstractSimJob, SimQueue> ()
     {
       @Override
-      public void arrival (double t, AbstractSimJob job, SimQueue queue)
+      public void notifyArrival (double t, AbstractSimJob job, SimQueue queue)
       {
         DCF.this.contentionQueueArrival (t);
       }
@@ -90,7 +90,7 @@ implements MediumPhyStateObserver
     this.registerQueueListener (new DefaultSimQueueListener<DCFSimJob, DCF> ()
     {
       @Override
-      public void departure (double t, DCFSimJob job, DCF queue)
+      public void notifyDeparture (double t, DCFSimJob job, DCF queue)
       {
         DCF.this.uponQueueDeparture (t, job);
       }      

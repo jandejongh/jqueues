@@ -298,7 +298,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    * @see #isNoWaitArmed
    * @see #fireNewNoWaitArmed
-   * @see #newNoWaitArmed
+   * @see #notifyNewNoWaitArmed
    * 
    */
   protected final boolean reassessNoWaitArmed (final double time)
@@ -546,11 +546,22 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   /**
    * {@inheritDoc}
    * 
+   * Does nothing; assumes will have been reset or will soon be reset as well.
+   * 
+   */
+  @Override
+  public final void notifyReset (final double oldTime, final DQ queue)
+  {
+  }
+  
+  /**
+   * {@inheritDoc}
+   * 
    * Calls super method.
    * 
    */
   @Override
-  public final void update (final double t, final DQ queue)
+  public final void notifyUpdate (final double t, final DQ queue)
   {
     if (queue == null || ! getQueues ().contains (queue))
       throw new IllegalStateException ();
@@ -560,18 +571,18 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   /**
    * {@inheritDoc}
    * 
-   * Checks if the job is a known delegate job, and calls {@link #update}.
+   * Checks if the job is a known delegate job, and calls {@link #notifyUpdate}.
    * 
    */
   @Override
-  public final void arrival (final double t, final DJ job, final DQ queue)
+  public final void notifyArrival (final double t, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
     update (t);
     // NOTHING MORE TO DO.
   }
   
-  /** Does nothing, called from {@link #start} for special treatment by subclasses.
+  /** *  Does nothing, called from {@link #notifyStart} for special treatment by subclasses.
    * 
    */
   protected void startForSubClass (final double t, final DJ job, final DQ queue)
@@ -581,7 +592,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   /**
    * {@inheritDoc}
    * 
-   * Calls {@link #update}.
+   * Calls {@link #notifyUpdate}.
    * If needed, fires a start event for the real job, and
    * puts that job in {@link #jobsExecuting}.
    * 
@@ -589,7 +600,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  public final void start (final double t, final DJ job, final DQ queue)
+  public final void notifyStart (final double t, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
     update (t);
@@ -617,14 +628,14 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   /**
    * {@inheritDoc}
    * 
-   * Calls {@link #update}.
+   * Calls {@link #notifyUpdate}.
    * Gets the real job and drops it as well.
    * 
    * @see #fireDrop
    * 
    */
   @Override
-  public final void drop (final double t, final DJ job, final DQ queue)
+  public final void notifyDrop (final double t, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
     update (t);
@@ -632,13 +643,13 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     fireDrop (t, realJob);
   }
 
-  /** Checks if the job is a known delegate job, and calls {@link #update}.
+  /** *  Checks if the job is a known delegate job, and calls {@link #notifyUpdate}.
    * 
    * {@inheritDoc}
    * 
    */
   @Override
-  public final void revocation (final double t, final DJ job, final DQ queue)
+  public final void notifyRevocation (final double t, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
     update (t);
@@ -648,7 +659,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   /**
    * {@inheritDoc}
    * 
-   * Calls {@link #update}.
+   * Calls {@link #notifyUpdate}.
    * 
    * Finds the next queue to visit by the delegate job.
    * If found, schedules the arrival of the delegate job at the next queue.
@@ -660,7 +671,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  public final void departure (final double t, final DJ job, final DQ queue)
+  public final void notifyDeparture (final double t, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
     update (t);
@@ -689,16 +700,16 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   /**
    * {@inheritDoc}
    * 
-   * Calls {@link #update} and {@link #reassessNoWaitArmed}.
+   * Calls {@link #notifyUpdate} and {@link #reassessNoWaitArmed}.
    * May be overridden.
    *
-   * @see #update
+   * @see #notifyUpdate
    * @see #reassessNoWaitArmed
    * @see #isNoWaitArmed
    * 
    */
   @Override
-  public void newNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  public void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
   {
     update (time);
     reassessNoWaitArmed (time);
