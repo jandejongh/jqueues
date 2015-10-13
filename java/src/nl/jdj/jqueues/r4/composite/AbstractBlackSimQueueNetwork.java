@@ -683,18 +683,25 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
       fireDeparture (t, realJob);  
     }
     else
+      // OLD CODE FRAGMENT:
       // Use a separate event for arrival at nextQueue,
       // because the departure at the current queue hasn't completed yet (e.g., in terms of notifications).
-      // nextQueue.arrive (job, t);
-      getEventList ().add (new SimEvent (t, null, new SimEventAction ()
-      {
-        @Override
-        public void action (SimEvent event)
-        {
-          nextQueue.arrive (job, t);
-        }
-      }
-      ));
+      // getEventList ().add (new SimEvent (t, null, new SimEventAction ()
+      // {
+      //   @Override
+      //   public void action (SimEvent event)
+      //   {
+      //     nextQueue.arrive (job, t);
+      //   }
+      // }
+      // ));
+      // END OLD CODE FRAGMENT.
+      // Directly invoke arrive on the destination queue instead of event-list scheduling,
+      // otherwise we may expose an inconsistent queue state in which the job has departed from DQ,
+      // but is not yet at nextQueue.
+      // We must accept possible out-of-sequence notifications from the sub-queues here;
+      // there seems to be no ideal solution.
+      nextQueue.arrive (job, t);
   }
 
   /**
