@@ -113,7 +113,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @return The time of the last update of this queue.
    * 
    * @see #update
-   * @see SimQueueListener#update
+   * @see SimQueueListener#notifyUpdate
    * 
    */
   public final double getLastUpdateTime ()
@@ -123,7 +123,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   /** Updates this queue (primarily for internal use).
    * 
-   * For a precise definition of an update of a queue, refer to {@link SimQueueListener#update}.
+   * For a precise definition of an update of a queue, refer to {@link SimQueueListener#notifyUpdate}.
    * 
    * <p>
    * This method can be safely called by external parties at any time, at the expense of listener notifications.
@@ -137,7 +137,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * @param time The time of the update (i.c., the current time).
    * 
-   * @see SimQueueListener#update
+   * @see SimQueueListener#notifyUpdate
    * @see #fireUpdate
    * 
    */

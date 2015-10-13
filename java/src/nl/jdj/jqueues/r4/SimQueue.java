@@ -191,7 +191,7 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * <p>
  * Unlike the notification mechanisms for queue and job specific action, a {@link SimQueueListener} also get notifications
  * right <i>before</i> a state change in the queue occurs, e.g., right before a job departure.
- * Such notifications are named <i>updates</i>, see {@link SimQueueListener#update}.
+ * Such notifications are named <i>updates</i>, see {@link SimQueueListener#notifyUpdate}.
  * 
  * <p>
  * If a job is successfully revoked, or if it is dropped, none of the departure actions are
@@ -364,7 +364,7 @@ extends SimEventListListener
    * @return True if the next arriving is guaranteed to suffer zero-waiting time before starting service or departing,
    *         in the absence of queue-access and server-access vacations.
    * 
-   * @see SimQueueListener#newNoWaitArmed
+   * @see SimQueueListener#notifyNewNoWaitArmed
    * 
    */
   public boolean isNoWaitArmed ();
