@@ -29,7 +29,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * It is up to the caller to properly start processing the event list.
  *
  * <p>
- * The <code>noWaitArmed<i> state to any implementation is / must be equivalent to no jobs being present in the system,
+ * The <code>noWaitArmed</code> state to any implementation is / must be equivalent to no jobs being present in the system,
  * see {@link SimQueue#isNoWaitArmed} and its final implementation in this class {@link #isNoWaitArmed}.
  * 
  * @param <J> The type of {@link SimJob}s supported.
