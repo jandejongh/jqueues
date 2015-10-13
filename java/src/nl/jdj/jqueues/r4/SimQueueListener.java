@@ -18,6 +18,16 @@ import nl.jdj.jqueues.r4.stat.AbstractSimQueueStat;
 public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
 {
  
+  /** Notification of a reset at a queue.
+   * 
+   * @param oldTime The (old!) time of the reset.
+   * @param queue   The queue that has been reset.
+   * 
+   * @see SimQueue#reset
+   * 
+   */
+  public void notifyReset (double oldTime, Q queue);
+  
   /** Notification of an immediate upcoming update at a queue.
    * 
    * An update at a queue is defined as a moment in time at which the queue is about to change its state.
@@ -36,7 +46,7 @@ public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
    * @see AbstractSimQueueStat
    * 
    */
-  public void update (double t, Q queue);
+  public void notifyUpdate (double t, Q queue);
   
   /** Notification of the arrival of a job at a queue.
    * 
@@ -51,7 +61,7 @@ public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
    * @see SimQueue#arrive
    * 
    */
-  public void arrival (double t, J job, Q queue);
+  public void notifyArrival (double t, J job, Q queue);
   
   /** Notification of the start of a job at a queue.
    * 
@@ -60,7 +70,7 @@ public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
    * @param queue The queue.
    * 
    */
-  public void start (double t, J job, Q queue);
+  public void notifyStart (double t, J job, Q queue);
   
   /** Notification of the drop of a job at a queue.
    * 
@@ -69,7 +79,7 @@ public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
    * @param queue The queue.
    * 
    */
-  public void drop (double t, J job, Q queue);
+  public void notifyDrop (double t, J job, Q queue);
   
   /** Notification of the revocation of a job at a queue.
    * 
@@ -77,8 +87,10 @@ public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
    * @param job The job.
    * @param queue The queue.
    * 
+   * @see SimQueue#revoke
+   * 
    */
-  public void revocation (double t, J job, Q queue);
+  public void notifyRevocation (double t, J job, Q queue);
   
   /** Notification of the departure of a job at a queue.
    * 
@@ -87,7 +99,7 @@ public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
    * @param queue The queue.
    * 
    */
-  public void departure (double t, J job, Q queue);
+  public void notifyDeparture (double t, J job, Q queue);
   
   /** Notification of a change of a {@link SimQueue} <code>noWaitArmed</code> state.
    * 
@@ -98,6 +110,6 @@ public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
    * @see SimQueue#isNoWaitArmed
    * 
    */
-  public void newNoWaitArmed (double t, Q queue, boolean noWaitArmed);
+  public void notifyNewNoWaitArmed (double t, Q queue, boolean noWaitArmed);
   
 }

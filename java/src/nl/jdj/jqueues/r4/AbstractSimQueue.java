@@ -82,6 +82,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   @Override
   public void reset ()
   {
+    final double oldTime = this.lastUpdateTime;
     this.lastUpdateTime = Double.NEGATIVE_INFINITY;
     for (SimJob j : this.jobQueue)
       j.setQueue (null);
@@ -93,6 +94,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     getEventList ().remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
     this.isQueueAccessVacation = false;
     this.serverAccessCredits = Integer.MAX_VALUE;
+    fireReset (oldTime);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

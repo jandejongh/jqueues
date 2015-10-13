@@ -19,7 +19,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void update (double t, Q queue)
+  public void notifyReset (final double oldTime, final Q queue)
   {
   }
 
@@ -30,7 +30,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void arrival (double t, J job, Q queue)
+  public void notifyUpdate (double t, Q queue)
   {
   }
 
@@ -41,7 +41,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void start (double t, J job, Q queue)
+  public void notifyArrival (double t, J job, Q queue)
   {
   }
 
@@ -52,7 +52,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void drop (double t, J job, Q queue)
+  public void notifyStart (double t, J job, Q queue)
   {
   }
 
@@ -63,7 +63,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void revocation (double t, J job, Q queue)
+  public void notifyDrop (double t, J job, Q queue)
   {
   }
 
@@ -74,7 +74,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void departure (double t, J job, Q queue)
+  public void notifyRevocation (double t, J job, Q queue)
   {
   }
 
@@ -85,7 +85,18 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void newNoWaitArmed (double t, Q queue, boolean noWaitArmed)
+  public void notifyDeparture (double t, J job, Q queue)
+  {
+  }
+
+  /**
+   * {@inheritDoc}
+   * 
+   * Does nothing.
+   * 
+   */
+  @Override
+  public void notifyNewNoWaitArmed (double t, Q queue, boolean noWaitArmed)
   {
   }
   

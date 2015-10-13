@@ -13,43 +13,49 @@ implements SimQueueListener<J, Q>
 {
 
   @Override
-  public void update (double t, Q queue)
+  public void notifyReset (double oldTime, Q queue)
+  {
+    System.out.println ("[StdOutSimQueueListener] t=" + oldTime + ", queue=" + queue + ": RESET.");
+  }
+
+  @Override
+  public void notifyUpdate (double t, Q queue)
   {
     System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": UPDATE.");
   }
 
   @Override
-  public void arrival (double t, J job, Q queue)
+  public void notifyArrival (double t, J job, Q queue)
   {
     System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": ARRIVAL of job " + job + ".");
   }
 
   @Override
-  public void start (double t, J job, Q queue)
+  public void notifyStart (double t, J job, Q queue)
   {
     System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": START of job " + job + ".");
   }
 
   @Override
-  public void drop (double t, J job, Q queue)
+  public void notifyDrop (double t, J job, Q queue)
   {
     System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": DROP of job " + job + ".");
   }
 
   @Override
-  public void revocation (double t, J job, Q queue)
+  public void notifyRevocation (double t, J job, Q queue)
   {
     System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": REVOCATION of job " + job + ".");
   }
 
   @Override
-  public void departure (double t, J job, Q queue)
+  public void notifyDeparture (double t, J job, Q queue)
   {
     System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": DEPARTURE of job " + job + ".");
   }
 
   @Override
-  public void newNoWaitArmed (double t, Q queue, boolean noWaitArmed)
+  public void notifyNewNoWaitArmed (double t, Q queue, boolean noWaitArmed)
   {
     System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": NO_WAIT_ARMED -> " + noWaitArmed + ".");
   }

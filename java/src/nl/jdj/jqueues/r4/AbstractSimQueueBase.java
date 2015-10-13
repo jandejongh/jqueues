@@ -212,6 +212,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // EVENT NOTIFICATIONS
+  //  - reset
   //  - update
   //  - arrival
   //  - start
@@ -223,17 +224,30 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  /** Notifies all listeners of a reset.
+   *
+   * @param oldTime The (old) time of the reset.
+   *
+   * @see SimQueueListener#notifyReset
+   * 
+   */
+  protected final void fireReset (final double oldTime)
+  {
+    for (SimQueueListener<J, Q> l : this.queueListeners)
+      l.notifyReset (oldTime, (Q) this);
+  }
+  
   /** Notifies all listeners upon an immediate upcoming update at this queue.
    *
    * @param time The current time, which has not been set yet on this queue.
    *
-   * @see SimQueueListener#update
+   * @see SimQueueListener#notifyUpdate
    * 
    */
   protected final void fireUpdate (final double time)
   {
     for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.update (time, (Q) this);
+      l.notifyUpdate (time, (Q) this);
   }
   
   /** Notifies all listeners and invoke all queue and job specific actions upon a job arrival at this queue.
@@ -246,7 +260,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * 
    * @see SimQueue#arrive
    * @see #addArrivalAction
-   * @see SimQueueListener#arrival
+   * @see SimQueueListener#notifyArrival
    * @see SimJob#getQueueArriveAction
    *
    */
@@ -255,7 +269,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
     for (SimEventAction<J> action: this.arrivalActions)
       action.action (new SimEvent (time, job, action));
     for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.arrival (time, job, (Q) this);
+      l.notifyArrival (time, job, (Q) this);
     final SimEventAction<J> aAction = job.getQueueArriveAction ();
     if (aAction != null)
       aAction.action (new SimEvent (time, job, aAction));
@@ -270,7 +284,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * @param job The job.
    *
    * @see #addStartAction
-   * @see SimQueueListener#start
+   * @see SimQueueListener#notifyStart
    * @see SimJob#getQueueStartAction
    * 
    */
@@ -279,7 +293,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
     for (SimEventAction<J> action: this.startActions)
       action.action (new SimEvent (time, job, action));
     for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.start (time, job, (Q) this);
+      l.notifyStart (time, job, (Q) this);
     final SimEventAction<J> sAction = job.getQueueStartAction ();
     if (sAction != null)
       sAction.action (new SimEvent (time, job, sAction));
@@ -294,7 +308,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * @param job The job.
    *
    * @see #addDropAction
-   * @see SimQueueListener#drop
+   * @see SimQueueListener#notifyDrop
    * @see SimJob#getQueueDropAction
    * 
    */
@@ -303,7 +317,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
     for (SimEventAction<J> action: this.dropActions)
       action.action (new SimEvent (time, job, action));
     for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.drop (time, job, (Q) this);
+      l.notifyDrop (time, job, (Q) this);
     final SimEventAction<J> sAction = job.getQueueDropAction ();
     if (sAction != null)
       sAction.action (new SimEvent (time, job, sAction));    
@@ -319,7 +333,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    *
    * @see SimQueue#revoke
    * @see #addRevocationAction
-   * @see SimQueueListener#revocation
+   * @see SimQueueListener#notifyRevocation
    * @see SimJob#getQueueRevokeAction
    * 
    */
@@ -328,7 +342,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
     for (SimEventAction<J> action: this.revocationActions)
       action.action (new SimEvent (time, job, action));
     for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.revocation (time, job, (Q) this);
+      l.notifyRevocation (time, job, (Q) this);
     final SimEventAction<J> rAction = job.getQueueRevokeAction ();
     if (rAction != null)
       rAction.action (new SimEvent<> (time, job, rAction));
@@ -343,7 +357,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * @param event The event causing the departure.
    *
    * @see #addDepartureAction
-   * @see SimQueueListener#departure
+   * @see SimQueueListener#notifyDeparture
    * @see SimJob#getQueueDepartAction
    * 
    */
@@ -352,7 +366,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
     for (SimEventAction<J> action: this.departureActions)
       action.action (event);
     for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.departure (event.getTime (), job, (Q) this);
+      l.notifyDeparture (event.getTime (), job, (Q) this);
     final SimEventAction<J> dAction = job.getQueueDepartAction ();
     if (dAction != null)
       dAction.action (event);
@@ -367,7 +381,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * @param job The job.
    *
    * @see #addDepartureAction
-   * @see SimQueueListener#departure
+   * @see SimQueueListener#notifyDeparture
    * @see SimJob#getQueueDepartAction
    * 
    */
@@ -376,7 +390,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
     for (SimEventAction<J> action: this.departureActions)
       action.action (new SimEvent (time, job, action));
     for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.departure (time, job, (Q) this);
+      l.notifyDeparture (time, job, (Q) this);
     final SimEventAction<J> dAction = job.getQueueDepartAction ();
     if (dAction != null)
       dAction.action (new SimEvent (time, job, dAction));
@@ -388,13 +402,13 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * @param noWaitArmed The new value of the <code>noWaitArmed</code> property.
    * 
    * @see SimQueue#isNoWaitArmed
-   * @see SimQueueListener#newNoWaitArmed
+   * @see SimQueueListener#notifyNewNoWaitArmed
    * 
    */
   protected final void fireNewNoWaitArmed (final double t, final boolean noWaitArmed)
   {
     for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.newNoWaitArmed (t, (Q) this, noWaitArmed);
+      l.notifyNewNoWaitArmed (t, (Q) this, noWaitArmed);
   }
 
   /** Notifies all vacation listeners of the start of a queue-access vacation.
