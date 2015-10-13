@@ -81,6 +81,7 @@ public final class Main
                   return 10.0;
                 }
               }, eventList.getTime ());
+              jSimEventList.eventListChangedNotification ();              
             }
           }));
           buttonPanel.add (new JButton (new AbstractAction ("Arr[Sched]")
