@@ -103,7 +103,8 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
   {
     if (hasServerAcccessCredits ())
     {
-      takeServerAccessCredit ();
+      // XXX
+      takeServerAccessCredit (true);
       this.jobsExecuting.add (job);
       final double jobServiceTime = getServiceTime (job);
       if (jobServiceTime < 0)
