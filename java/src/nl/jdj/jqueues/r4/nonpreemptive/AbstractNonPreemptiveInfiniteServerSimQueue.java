@@ -33,7 +33,7 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
    * @param eventList The event list to use.
    * 
    */
-  public AbstractNonPreemptiveInfiniteServerSimQueue (final SimEventList eventList)
+  protected AbstractNonPreemptiveInfiniteServerSimQueue (final SimEventList eventList)
   {
     super (eventList);
   }

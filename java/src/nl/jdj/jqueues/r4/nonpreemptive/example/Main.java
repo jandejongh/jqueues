@@ -7,6 +7,7 @@ import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS_FB;
+import nl.jdj.jqueues.r4.nonpreemptive.FCFS_c;
 import nl.jdj.jqueues.r4.nonpreemptive.IC;
 import nl.jdj.jqueues.r4.nonpreemptive.IS;
 import nl.jdj.jqueues.r4.nonpreemptive.IS_CST;
@@ -196,6 +197,26 @@ public final class Main
         public void action (final SimEvent event)
         {
           fcfs_fbQueue.arrive (j, arrTime);
+        }
+      }));
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Creating FCFS_c queue with 3 servers...");
+    final SimQueue fcfs_cQueue = new FCFS_c (el, 3);
+    System.out.println ("-> Submitting jobs to FCFS_c queue...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + 1;
+      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      {
+        @Override
+        public void action (final SimEvent event)
+        {
+          fcfs_cQueue.arrive (j, arrTime);
         }
       }));
     }

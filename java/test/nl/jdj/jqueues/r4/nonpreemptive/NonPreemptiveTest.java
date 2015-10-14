@@ -345,6 +345,60 @@ public class NonPreemptiveTest
   }
 
   /**
+   * Test of FCFS_c.
+   * 
+   */
+  @Test
+  public void testFCFS_c ()
+  {
+    System.out.println ("======");
+    System.out.println ("FCFS_c");
+    System.out.println ("======");
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final FCFS_c queue = new FCFS_c (el, 3);
+    for (int i = 0; i <= 1; i++)
+    {
+      System.out.println ("===== PASS " + i + " =====");
+      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      // Arrival times:     Service   Serving upon arrival
+      //  1:  1             1-2       0
+      //  2:  2             2-4       0
+      //  3:  3             3-6       1
+      //  4:  4             4-8       1
+      //  5:  5             5-10      2
+      //  6:  6             6-12      2
+      //  7:  7           * 8-15      3
+      //  8:  8           * 10-18     3
+      //  9:  9           * 12-21     3
+      // 10: 10           * 15-25     3
+      //
+      el.run ();
+      assert el.isEmpty ();
+      assertEquals (25.0, el.getTime (), 0.0);
+      for (TestJob j : jobs)
+      {
+        assert j.arrived;
+        assertEquals ((double) j.n, j.arrivalTime, 0.0);
+        assert j.started;
+        if (j.n <= 6)
+          assertEquals (j.arrivalTime, j.startTime, 0.0);
+        else if (j.n == 7)
+          assertEquals (8.0, j.startTime, 0.0);
+        else if (j.n == 8)
+          assertEquals (10.0, j.startTime, 0.0);
+        else if (j.n == 9)
+          assertEquals (12.0, j.startTime, 0.0);
+        else if (j.n == 10)
+          assertEquals (15.0, j.startTime, 0.0);
+        else
+          assert false;
+      }
+      // Test reset on the fly...
+      el.reset ();
+    }
+  }
+
+  /**
    * Test of LCFS.
    * 
    */
