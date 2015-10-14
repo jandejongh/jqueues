@@ -31,11 +31,6 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
     this.bufferSize = bufferSize;
   }
   
-  private int getNumberOfJobsWaiting ()
-  {
-    return getNumberOfJobs () - getNumberOfJobsExecuting ();
-  }
-  
   /** Inserts the job at the tail of the job queue, if there is still room available.
    * 
    * {@inheritDoc}
