@@ -78,6 +78,28 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     return set;
   }
 
+  /** Returns the number of jobs waiting.
+   * 
+   * @return The number of jobs waiting.
+   * 
+   */
+  public final int getNumberOfJobsWaiting ()
+  {
+    return this.jobQueue.size () - this.jobsExecuting.size ();
+  }
+  
+  /** Returns whether or not this queue has at least one job waiting.
+   * 
+   * @return True if there are jobs waiting.
+   * 
+   * @see #getNumberOfJobsWaiting
+   * 
+   */
+  protected final boolean hasJobsWaiting ()
+  {
+    return getNumberOfJobsWaiting () > 0;
+  }
+  
   /** Returns the first job waiting found in {@link #jobQueue}.
    * 
    * @return The first job waiting found in {@link #jobQueue}, <code>null</code> if there is no waiting job.
@@ -92,17 +114,13 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
         return j;
     throw new IllegalStateException ();
   }
-  
-  /** Returns the number of jobs waiting.
-   * 
-   * @return The number of jobs waiting.
-   * 
-   */
-  public final int getNumberOfJobsWaiting ()
-  {
-    return this.jobQueue.size () - this.jobsExecuting.size ();
-  }
-  
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // EVENTS SCHEDULED
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
   /** Events scheduled on behalf of this {@link SimQueue}.
    * 
    * Any events in this set must also be in the {@link #eventList}.
@@ -755,14 +773,18 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * Otherwise, it invokes {@link #update} to serve statistics on the number of server-access credits.
    * 
    * <p>
-   * If the last server-access credit is granted in an invocation, {@link #fireOutOfServerAccessCredits} is fired.
+   * If the boolean argument is <code>true</code>
+   * and if the last server-access credit is granted in an invocation,
+   * {@link #fireOutOfServerAccessCredits} is fired.
    * 
-   * @throws IllegalStateException If there are no server-access credits left.
+   * @param fireIfOut If <code>true</code>, fires a notification if there are no server-access credits left after taking one.
+   * 
+   * @throws IllegalStateException If there are no server-access credits left upon entry.
    * 
    * @see #hasServerAcccessCredits
    * 
    */
-  protected final void takeServerAccessCredit ()
+  protected final void takeServerAccessCredit (final boolean fireIfOut)
   {
     if (this.serverAccessCredits <= 0)
       throw new IllegalStateException ();
@@ -771,7 +793,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     {
       update (getEventList ().getTime ());      
       this.serverAccessCredits--;
-      if (this.serverAccessCredits == 0)
+      if (fireIfOut && this.serverAccessCredits == 0)
         fireOutOfServerAccessCredits (this.lastUpdateTime);
     }
   }
