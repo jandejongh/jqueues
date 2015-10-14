@@ -301,6 +301,39 @@ public class ServerlessTest
     }
   }
   
+  /**
+   * Test of DROP.
+   * 
+   */
+  @Test
+  public void testDROP ()
+  {
+    System.out.println ("====");
+    System.out.println ("DROP");
+    System.out.println ("====");
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final DROP queue = new DROP (el);
+    for (int i = 0; i <= 1; i++)
+    {
+      System.out.println ("===== PASS " + i + " =====");
+      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      el.run ();
+      assert el.isEmpty ();
+      assertEquals (10.0, el.getTime (), 0.0);
+      for (TestJob j : jobs)
+      {
+        assert j.arrived;
+        assertEquals ((double) j.n, j.arrivalTime, 0.0);
+        assert j.dropped;
+        assertEquals (j.arrivalTime, j.dropTime, 0.0);
+        assert ! j.started;
+        assert ! j.departed;
+      }
+      // Test reset on the fly...
+      el.reset ();
+    }
+  }
+  
   private void scheduleQueueAccessVacation (SimEventList el, final SimQueue queue, double startTime, final double duration)
   {
     el.add (new SimEvent (startTime, null, new SimEventAction ()
