@@ -399,6 +399,69 @@ public class NonPreemptiveTest
   }
 
   /**
+   * Test of NoBuffer_c.
+   * 
+   */
+  @Test
+  public void testNoBuffer_c ()
+  {
+    System.out.println ("==========");
+    System.out.println ("NoBuffer_c");
+    System.out.println ("==========");
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final NoBuffer_c queue = new NoBuffer_c (el, 2);
+    for (int i = 0; i <= 1; i++)
+    {
+      System.out.println ("===== PASS " + i + " =====");
+      final List<TestJob> jobs = scheduleJobArrivals2 (true, 10, el, queue);
+      // Arrival times:     Service   Present upon arrival
+      //  1:  1.1           1.1-2.1   0
+      //                    2.1: 1 departs
+      //  2:  2.2           2.2-4.2   0
+      //  3:  3.3           3.3-6.3   1
+      //                    4.2: 2 departs
+      //  4:  4.4           4.4-8.4   1
+      //  5:  5.5           DROPPED   2
+      //                    6.3: 3 departs
+      //  6:  6.6           6.6-12.6  1
+      //  7:  7.7           DROPPED   2
+      //                    8.4: 4 departs
+      //  8:  8.8           8.8-16.8  1
+      //  9:  9.9           DROPPED   2
+      // 10: 11.0           DROPPED   2
+      //                    12.6: 6 departs
+      //                    16.8  8 departs
+      //              
+      el.run ();
+      assert el.isEmpty ();
+      assertEquals (16.8, el.getTime (), 0.0);
+      for (TestJob j : jobs)
+      {
+        assert j.arrived;
+        assertEquals ((double) j.n + j.n * 0.1, j.arrivalTime, 0.0);
+        boolean dropped = j.n == 5 || j.n == 7 || j.n == 9 || j.n == 10;
+        if (dropped)
+        {
+          assert j.dropped;
+          assertEquals (j.arrivalTime, j.dropTime, 0.0);
+          assert ! j.started;
+          assert ! j.departed;
+        }
+        else
+        {
+          assert ! j.dropped;
+          assert j.started;
+          assertEquals (j.arrivalTime, j.startTime, 0.0);
+          assert j.departed;
+          assertEquals (j.startTime + (double) j.n, j.departureTime, 0.0);
+        }
+      }
+      // Test reset on the fly...
+      el.reset ();
+    }
+  }
+
+  /**
    * Test of LCFS.
    * 
    */
