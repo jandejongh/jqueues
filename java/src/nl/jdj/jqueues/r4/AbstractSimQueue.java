@@ -728,7 +728,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * This final implementation invokes {@link #update} if the number of credits passed in the argument differs from the
    * current number of credits, to serve statistics on the number of server-access credits.
    * Then, it updates the internal administration of the number of server-access credits.
-   * Subsequently, it invokes {@link #fireOutOfServerAccessCredits} or {@link #fireRegainedServerAccessCredits} if appropriate.
+   * Subsequently, it invokes {@link #fireIfOutOfServerAccessCredits} or {@link #fireRegainedServerAccessCredits} if appropriate.
    * In the latter case, it also invokes {@link #rescheduleForNewServerAccessCredits}.
    * 
    * @see #getServerAccessCredits
@@ -744,7 +744,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       update (getEventList ().getTime ()); 
     this.serverAccessCredits = credits;
     if (oldCredits > 0 && credits == 0)
-      fireOutOfServerAccessCredits (this.lastUpdateTime);
+      fireIfOutOfServerAccessCredits (this.lastUpdateTime);
     else if (oldCredits == 0 && credits > 0)
     {
       fireRegainedServerAccessCredits (this.lastUpdateTime);
@@ -775,7 +775,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * <p>
    * If the boolean argument is <code>true</code>
    * and if the last server-access credit is granted in an invocation,
-   * {@link #fireOutOfServerAccessCredits} is fired.
+   * {@link #fireIfOutOfServerAccessCredits} is fired.
    * 
    * @param fireIfOut If <code>true</code>, fires a notification if there are no server-access credits left after taking one.
    * 
@@ -794,7 +794,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       update (getEventList ().getTime ());      
       this.serverAccessCredits--;
       if (fireIfOut && this.serverAccessCredits == 0)
-        fireOutOfServerAccessCredits (this.lastUpdateTime);
+        fireIfOutOfServerAccessCredits (this.lastUpdateTime);
     }
   }
   
