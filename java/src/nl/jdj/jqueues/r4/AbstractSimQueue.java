@@ -77,6 +77,21 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     set.removeAll (this.jobsExecuting);
     return set;
   }
+
+  /** Returns the first job waiting found in {@link #jobQueue}.
+   * 
+   * @return The first job waiting found in {@link #jobQueue}, <code>null</code> if there is no waiting job.
+   * 
+   */
+  protected final J getFirstJobWaiting ()
+  {
+    if (getNumberOfJobsWaiting () == 0)
+      return null;
+    for (J j : this.jobQueue)
+      if (! this.jobsExecuting.contains (j))
+        return j;
+    throw new IllegalStateException ();
+  }
   
   /** Returns the number of jobs waiting.
    * 
