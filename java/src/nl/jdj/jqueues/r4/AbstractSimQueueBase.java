@@ -441,19 +441,23 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
         ((SimQueueVacationListener) l).notifyStopQueueAccessVacation (time, this);
   }
   
-  /** Notifies all vacation listeners that this queue has run out of server-access credits.
+  /** Notifies all vacation listeners if this queue has run out of server-access credits.
+   * 
+   * This method actually checks first to see if indeed {@link #getServerAccessCredits} returns zero.
    * 
    * @param time The current time.
    * 
+   * @see #getServerAccessCredits
    * @see SimQueue#setServerAccessCredits
    * @see SimQueueVacationListener#notifyOutOfServerAccessCredits
    * 
    */
-  protected final void fireOutOfServerAccessCredits (final double time)
+  protected final void fireIfOutOfServerAccessCredits (final double time)
   {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      if (l instanceof SimQueueVacationListener)
-        ((SimQueueVacationListener) l).notifyOutOfServerAccessCredits (time, this);    
+    if (getServerAccessCredits () == 0)
+      for (SimQueueListener<J, Q> l : this.queueListeners)
+        if (l instanceof SimQueueVacationListener)
+          ((SimQueueVacationListener) l).notifyOutOfServerAccessCredits (time, this);    
   }
   
   /** Notifies all vacation listeners that this queue has regained server-access credits.
