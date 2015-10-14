@@ -4,7 +4,7 @@ import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-/** The {@link FCFS_c} queueing serves jobs in order of arrival times with multiple servers.
+/** The {@link FCFS_c} queueing system serves jobs in order of arrival times with multiple servers.
  *
  * First Come First Served with c servers and infinite buffer size.
  *
