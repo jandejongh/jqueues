@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r4.nonpreemptive;
 
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.serverless.DROP;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** The {@link NoBuffer_c} queueing system serves jobs with multiple servers but has no buffer space (i.c., no wait queue).
