@@ -106,7 +106,8 @@ public abstract class AbstractNonPreemptiveSingleServerSimQueue
       fireNewNoWaitArmed (time, false);
       if (hasServerAcccessCredits ())
       {
-        takeServerAccessCredit ();
+        // XXX
+        takeServerAccessCredit (true);
         this.jobsExecuting.add (job);
         final double jobServiceTime = job.getServiceTime (this);
         if (jobServiceTime < 0)
@@ -193,7 +194,8 @@ public abstract class AbstractNonPreemptiveSingleServerSimQueue
       throw new IllegalStateException ();
     if ((! this.jobQueue.isEmpty ()) && hasServerAcccessCredits ())
     {
-      takeServerAccessCredit ();
+      // XXX
+      takeServerAccessCredit (true);
       final J job = this.jobQueue.get (0);
       this.jobsExecuting.add (job);
       final double jobServiceTime = job.getServiceTime (this);
