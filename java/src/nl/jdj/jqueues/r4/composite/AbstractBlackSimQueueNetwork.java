@@ -8,8 +8,6 @@ import nl.jdj.jqueues.r4.AbstractSimQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.SimQueueListener;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** A partial implementation of a {@link BlackSimQueueNetwork}.
@@ -394,7 +392,8 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     update (time);
     if (hasServerAcccessCredits ())
     {
-      takeServerAccessCredit ();
+      // XXX
+      takeServerAccessCredit (true);
       final SimQueue<DJ, DQ> firstQueue = getFirstQueue (time, job);
       if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
         throw new IllegalArgumentException ();
@@ -488,7 +487,8 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
         if (delegateJob.getQueue () == null)
         {
           // XXX (Almost) Verbatim copy from rescheduleAfterArrival...
-          takeServerAccessCredit ();
+          // XXX
+          takeServerAccessCredit (true);
           final SimQueue<DJ, DQ> firstQueue = getFirstQueue (time, realJob);
           if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
             throw new IllegalArgumentException ();
