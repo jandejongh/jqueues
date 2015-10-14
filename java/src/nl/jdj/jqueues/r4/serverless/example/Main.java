@@ -6,6 +6,7 @@ import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.serverless.DELAY;
+import nl.jdj.jqueues.r4.serverless.DROP;
 import nl.jdj.jqueues.r4.serverless.NONE;
 import nl.jdj.jqueues.r4.serverless.ZERO;
 import nl.jdj.jsimulation.r4.SimEvent;
@@ -79,6 +80,22 @@ public final class Main
       {
         if (TestJob.this.reported)
           System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " departs.");      
+      }
+    };
+    
+    @Override
+    public SimEventAction<SimJob> getQueueDropAction ()
+    {
+      return this.QUEUE_DROP_ACTION;
+    }
+    
+    public final SimEventAction<SimJob> QUEUE_DROP_ACTION = new SimEventAction<SimJob> ()
+    {
+      @Override
+      public void action (final SimEvent event)
+      {
+        if (TestJob.this.reported)
+          System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " dropped!");      
       }
     };
     
@@ -202,6 +219,26 @@ public final class Main
         public void action (final SimEvent event)
         {
           zeroQueue.arrive (j, arrTime);
+        }
+      }));
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Creating DROP queue...");
+    final SimQueue dropQueue = new DROP (el);
+    System.out.println ("-> Submitting jobs to DROP queue...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + 1;
+      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      {
+        @Override
+        public void action (final SimEvent event)
+        {
+          dropQueue.arrive (j, arrTime);
         }
       }));
     }
