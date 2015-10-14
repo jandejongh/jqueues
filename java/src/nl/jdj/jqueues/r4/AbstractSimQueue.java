@@ -61,6 +61,33 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     return this.jobsExecuting.size ();
   }
   
+  /** Returns a {@link LinkedHashSet} holding the jobs waiting.
+   * 
+   * In case there are no jobs waiting, an empty set is returned.
+   * 
+   * <p>
+   * The jobs are inserted into the return set in order of appearance in {@link #jobQueue}.
+   * 
+   * @return A new {@link LinkedHashSet} holding the jobs waiting.
+   * 
+   */
+  public final Set<J> getJobsWaiting ()
+  {
+    final Set<J> set = new LinkedHashSet<> (this.jobQueue);
+    set.removeAll (this.jobsExecuting);
+    return set;
+  }
+  
+  /** Returns the number of jobs waiting.
+   * 
+   * @return The number of jobs waiting.
+   * 
+   */
+  public final int getNumberOfJobsWaiting ()
+  {
+    return this.jobQueue.size () - this.jobsExecuting.size ();
+  }
+  
   /** Events scheduled on behalf of this {@link SimQueue}.
    * 
    * Any events in this set must also be in the {@link #eventList}.
