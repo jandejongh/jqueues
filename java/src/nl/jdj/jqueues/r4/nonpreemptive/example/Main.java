@@ -6,7 +6,7 @@ import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
-import nl.jdj.jqueues.r4.nonpreemptive.FCFS_FB;
+import nl.jdj.jqueues.r4.nonpreemptive.FCFS_B;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS_c;
 import nl.jdj.jqueues.r4.nonpreemptive.IC;
 import nl.jdj.jqueues.r4.nonpreemptive.IS;
@@ -177,9 +177,9 @@ public final class Main
     el.run ();
     System.out.println ("-> Resetting event list...");
     el.reset ();
-    System.out.println ("-> Creating FCFS_FB queue with buffer size 2...");
-    final SimQueue fcfs_fbQueue = new FCFS_FB (el, 2);
-    System.out.println ("-> Submitting jobs to FCFS_FB queue...");
+    System.out.println ("-> Creating FCFS_B queue with buffer size 2...");
+    final SimQueue fcfs_bQueue = new FCFS_B (el, 2);
+    System.out.println ("-> Submitting jobs to FCFS_B queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
       final SimJob j = jobList.get (i);
@@ -189,7 +189,7 @@ public final class Main
         @Override
         public void action (final SimEvent event)
         {
-          fcfs_fbQueue.arrive (j, arrTime);
+          fcfs_bQueue.arrive (j, arrTime);
         }
       }));
     }

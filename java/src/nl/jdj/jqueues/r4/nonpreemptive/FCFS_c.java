@@ -17,7 +17,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  * @see FCFS
- * @see FCFS_FB
+ * @see FCFS_B
  * @see SINK
  * 
  */

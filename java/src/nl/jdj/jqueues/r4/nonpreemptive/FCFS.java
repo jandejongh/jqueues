@@ -14,7 +14,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
- * @see FCFS_FB
+ * @see FCFS_B
  * 
  */
 public class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>

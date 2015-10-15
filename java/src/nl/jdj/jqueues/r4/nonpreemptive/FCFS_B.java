@@ -12,7 +12,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
-public class FCFS_FB<J extends SimJob, Q extends FCFS_FB>
+public class FCFS_B<J extends SimJob, Q extends FCFS_B>
 extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
 {
   
@@ -23,7 +23,7 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
     return this.bufferSize;
   }
 
-  public FCFS_FB (final SimEventList eventList, final int bufferSize)
+  public FCFS_B (final SimEventList eventList, final int bufferSize)
   {
     super (eventList);
     if (bufferSize < 0)
@@ -67,15 +67,15 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
     super.reset ();
   }  
   
-  /** Returns "FCFS_FB[buffer size]".
+  /** Returns "FCFS_B[buffer size]".
    * 
-   * @return "FCFS_FB[buffer size]".
+   * @return "FCFS_B[buffer size]".
    * 
    */
   @Override
   public String toString ()
   {
-    return "FCFS_FB[" + getBufferSize () + "]";
+    return "FCFS_B[" + getBufferSize () + "]";
   }
 
 }

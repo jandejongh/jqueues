@@ -27,7 +27,7 @@ public enum KnownSimQueue
   // nonpreemptive
   NO_BUFFER_c ("NoBuffer_c", false, nl.jdj.jqueues.r4.nonpreemptive.NoBuffer_c.class, GeneratorProfile.SE_c),
   FCFS        ("FCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.FCFS.class,       GeneratorProfile.SE),
-  FCFS_FB     ("FCFS_FB",    false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_FB.class,    GeneratorProfile.SE_BS),
+  FCFS_B      ("FCFS_B",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_B.class,     GeneratorProfile.SE_B),
   FCFS_c      ("FCFS_c",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_c.class,     GeneratorProfile.SE_c),
   LCFS        ("LCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.LCFS.class,       GeneratorProfile.SE),
   RANDOM      ("RANDOM",     false, nl.jdj.jqueues.r4.nonpreemptive.RANDOM.class,     GeneratorProfile.SE),
@@ -114,7 +114,7 @@ public enum KnownSimQueue
     SE       (true,  true,  false, false, false),
     SE_WST   (true,  true,  true,  false, false),
     SE_c     (true,  true,  false, true,  false),
-    SE_BS    (true,  true,  false, false, true),
+    SE_B     (true,  true,  false, false, true),
     UNKNOWN  (false, false, false, false, false);
     
     private final boolean canInstantiate;
@@ -180,7 +180,7 @@ public enum KnownSimQueue
           final Constructor constructor = queueClass.getConstructor (SimEventList.class, Integer.TYPE);
           return (SimQueue) constructor.newInstance (parameters.eventList, parameters.numberOfServers);
         }
-        else if (this == SE_BS)
+        else if (this == SE_B)
         {
           final Constructor constructor = queueClass.getConstructor (SimEventList.class, Integer.TYPE);
           return (SimQueue) constructor.newInstance (parameters.eventList, parameters.bufferSize);

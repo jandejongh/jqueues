@@ -268,17 +268,17 @@ public class NonPreemptiveTest
   }
 
   /**
-   * Test of FCFS_FB.
+   * Test of FCFS_B.
    * 
    */
   @Test
-  public void testFCFS_FB ()
+  public void testFCFS_B ()
   {
-    System.out.println ("=======");
-    System.out.println ("FCFS_FB");
-    System.out.println ("=======");
+    System.out.println ("======");
+    System.out.println ("FCFS_B");
+    System.out.println ("======");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final FCFS_FB queue = new FCFS_FB (el, 2);
+    final FCFS_B queue = new FCFS_B (el, 2);
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
@@ -1051,7 +1051,7 @@ public class NonPreemptiveTest
           assert ! j.started;
           assert ! j.departed;
         }
-        if (j.n == 1) assertEquals (j.departureTime, 2.0, 0.0);
+        if (j.n == 1)      assertEquals (j.departureTime, 2.0, 0.0);
         else if (j.n == 2) assertEquals (j.departureTime, 4.0, 0.0);
         else if (j.n == 3) assertEquals (j.departureTime, 7.0, 0.0);
         else if (j.n == 4) assertEquals (j.departureTime, 14.5, 0.0);
