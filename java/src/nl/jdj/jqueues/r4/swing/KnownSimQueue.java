@@ -27,7 +27,7 @@ public enum KnownSimQueue
   // nonpreemptive
   NO_BUFFER_c ("NoBuffer_c", false, nl.jdj.jqueues.r4.nonpreemptive.NoBuffer_c.class, GeneratorProfile.SE_c),
   FCFS        ("FCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.FCFS.class,       GeneratorProfile.SE),
-  FCFS_FB     ("FCFS_FB",    false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_FB.class,    GeneratorProfile.UNKNOWN),
+  FCFS_FB     ("FCFS_FB",    false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_FB.class,    GeneratorProfile.SE_BS),
   FCFS_c      ("FCFS_c",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_c.class,     GeneratorProfile.SE_c),
   LCFS        ("LCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.LCFS.class,       GeneratorProfile.SE),
   RANDOM      ("RANDOM",     false, nl.jdj.jqueues.r4.nonpreemptive.RANDOM.class,     GeneratorProfile.SE),
@@ -111,10 +111,11 @@ public enum KnownSimQueue
   public enum GeneratorProfile
   {
     
-    SE       (true,  true,  false, false),
-    SE_WST   (true,  true,  true,  false),
-    SE_c     (true,  true,  false, true),
-    UNKNOWN  (false, false, false, false);
+    SE       (true,  true,  false, false, false),
+    SE_WST   (true,  true,  true,  false, false),
+    SE_c     (true,  true,  false, true,  false),
+    SE_BS    (true,  true,  false, false, true),
+    UNKNOWN  (false, false, false, false, false);
     
     private final boolean canInstantiate;
     
@@ -124,16 +125,20 @@ public enum KnownSimQueue
     
     private final boolean requiresNumberOfServers;
     
+    private final boolean requiresBufferSize;
+    
     private GeneratorProfile
       (final boolean canInstatiate,
        final boolean requiresSimEventList,
        final boolean requiresWaitServiceTime,
-       final boolean requiresNumberOfServers)
+       final boolean requiresNumberOfServers,
+       final boolean requiresBufferSize)
     {
       this.canInstantiate = canInstatiate;
       this.requiresSimEventList = requiresSimEventList;
       this.requiresWaitServiceTime = requiresWaitServiceTime;
       this.requiresNumberOfServers = requiresNumberOfServers;
+      this.requiresBufferSize = requiresBufferSize;
     }
     
     private SimQueue newInstance (final Class<? extends SimQueue> queueClass, final Parameters parameters)
@@ -174,6 +179,11 @@ public enum KnownSimQueue
         {
           final Constructor constructor = queueClass.getConstructor (SimEventList.class, Integer.TYPE);
           return (SimQueue) constructor.newInstance (parameters.eventList, parameters.numberOfServers);
+        }
+        else if (this == SE_BS)
+        {
+          final Constructor constructor = queueClass.getConstructor (SimEventList.class, Integer.TYPE);
+          return (SimQueue) constructor.newInstance (parameters.eventList, parameters.bufferSize);
         }
         else
         {
@@ -278,6 +288,8 @@ public enum KnownSimQueue
     public double waitServiceTime = 0;
     
     public int numberOfServers = 1;
+    
+    public int bufferSize = 10;
     
   }
   

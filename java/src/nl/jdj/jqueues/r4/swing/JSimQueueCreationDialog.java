@@ -143,6 +143,32 @@ implements ItemListener
       }
     });
     final JTextField bufferSizeTextField = new JTextField ("Buffer Size Value");
+    bufferSizeTextField.addActionListener (new ActionListener ()
+    {
+      @Override
+      public final void actionPerformed (final ActionEvent ae)
+      {
+        final String text = bufferSizeTextField.getText ();
+        if (text != null)
+        {
+          final int bufferSizeInt;
+          try
+          {
+            bufferSizeInt = Integer.parseInt (text);
+            if (bufferSizeInt < 0)
+              bufferSizeTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.bufferSize));        
+            else
+              JSimQueueCreationDialog.this.parameters.bufferSize = bufferSizeInt;
+          }
+          catch (NumberFormatException nfe)
+          {
+            bufferSizeTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.bufferSize));        
+          }
+        }
+        else
+          bufferSizeTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.bufferSize));
+      }
+    });
     final JTextField waitServiceTimeTextField = new JTextField ("Wait/Service Time Value");
     waitServiceTimeTextField.addActionListener (new ActionListener ()
     {
