@@ -58,7 +58,7 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
     this.jobQueue.add (job);
   }
 
-  /** Removes the job from the job queue, indicating it should depart immediately.
+  /** Removes the job from the job queue, resets the job's queue and fires a notification of the departure.
    * 
    * @see #arrive
    * @see #jobQueue
@@ -68,6 +68,8 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
     this.jobQueue.remove (job);
+    job.setQueue (null);
+    fireDeparture (time, job);
   }
 
   /** Throws {@link IllegalStateException}.

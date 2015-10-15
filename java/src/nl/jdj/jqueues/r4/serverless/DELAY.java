@@ -70,11 +70,14 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
   }
 
   /** If needed, schedules a departure event for the arrived job respecting the fixed wait time of this queue;
-   * otherwise (zero wait time), removes the job from the job queue.
+   * otherwise (zero wait time), removes the job from the job queue, set its queue to <code>null</code> and notifies
+   * listeners of the departure.
    * 
    * @see #getWaitTime
    * @see #scheduleDepartureEvent
    * @see #jobQueue
+   * @see SimJob#setQueue
+   * @see #fireDeparture
    * 
    */
   @Override
@@ -84,7 +87,11 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
     if (waitTime > 0)
       scheduleDepartureEvent (time + waitTime, job);
     else
+    {
       this.jobQueue.remove (job);
+      job.setQueue (null);
+      fireDeparture (time, job);
+    }
   }
 
   /** Invokes {@link #removeJobFromQueueUponRevokation}, requesting <code>interruptService</code>.

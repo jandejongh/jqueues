@@ -372,7 +372,8 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * Checks the server-access credits and if passed,
    * lets the delegate job arrive at the queue returned by
    * {@link #getFirstQueue}.
-   * Should <code>null</code> be returned, then the real job departs.
+   * Should <code>null</code> be returned, then the real job departs, removing it from all internal queues,
+   * setting the job's queue to <code>null</code>, and notifying listeners of the departure.
    * 
    */
   @Override
@@ -404,6 +405,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
         // We do not get a queue to arrive at.
         // So we depart; without having been executed!
         exitJobFromQueues (job, delegateJob);
+        job.setQueue (null);
         fireDeparture (time, job);
       }
     }
@@ -610,7 +612,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
       // Use a separate event for start notifications,
       // because the start at the delegate queue hasn't completed yet (e.g., in terms of notifications).
       fireStart (t, realJob);
-      AbstractBlackSimQueueNetwork.this.startForSubClass (t, job, queue);
+      startForSubClass (t, job, queue);
       //getEventList ().add (new SimEvent (t, null, new SimEventAction ()
       //{
       //  @Override

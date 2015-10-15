@@ -247,9 +247,11 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    *     {@link #insertJobInQueueUponArrival} has denied immediately the queue visit.
    * <li>If present, sets this queue to be the visited queue on the job (with {@link SimJob#setQueue}),
    *     and invokes the queue-discipline specific {@link #rescheduleAfterArrival}.
-   *     Subsequently, it checks again the presence of the job in {@link #jobQueue} and if absent,
-   *       it considers this as a shortcut for immediate departure and invokes {@link #fireDeparture},
-   *       but <i>not</i> {@link #rescheduleAfterDeparture}.
+   *     Subsequently, it performs sanity checks on the job in case it is no longer in {@link #jobQueue},
+   *       which is a legal outcome of {@link #rescheduleAfterArrival}.
+   *     Note however that if {@link #rescheduleAfterArrival} removes the job from {@link #jobQueue},
+   *       it is itself responsible for notifying listeners of (either) drop, revocation or departure
+   *       (and start for that matter, if applicable).
    * </ul>
    * 
    * </ul>
@@ -292,13 +294,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
           throw new IllegalStateException ();
         job.setQueue (this);
         rescheduleAfterArrival (job, time);
-        if (! this.jobQueue.contains (job))
-        {
-          if (this.jobsExecuting.contains (job))
-            throw new IllegalStateException ();
-          job.setQueue (null);
-          fireDeparture (time, job);
-        }
+        if ((! this.jobQueue.contains (job))
+        && (this.jobsExecuting.contains (job) || job.getQueue () == this))
+          throw new IllegalStateException ();
       }
     }
   }
