@@ -114,8 +114,38 @@ implements ItemListener
     final JPanel parametersPanel = new JPanel ();
     final JLabel numberOfServersLabel = new JLabel ("Number of Servers");
     final JLabel bufferSizeLabel = new JLabel ("Buffer Size");
+    final JLabel waitServiceTimeLabel = new JLabel ("Wait/Service Time");
     final JTextField numberOfServersTextField = new JTextField ("Number of Servers Value");
     final JTextField bufferSizeTextField = new JTextField ("Buffer Size Value");
+    final JTextField waitServiceTimeTextField = new JTextField ("Wait/Service Time Value");
+    waitServiceTimeTextField.addActionListener (new ActionListener ()
+    {
+      @Override
+      public final void actionPerformed (final ActionEvent ae)
+      {
+        final String text = waitServiceTimeTextField.getText ();
+        if (text != null)
+        {
+          final double waitServiceTimeDouble;
+          try
+          {
+            waitServiceTimeDouble = Double.parseDouble (text);
+            if (waitServiceTimeDouble < 0)
+              waitServiceTimeTextField.setText (Double.toString (JSimQueueCreationDialog.this.parameters.waitServiceTime));        
+            else
+              JSimQueueCreationDialog.this.parameters.waitServiceTime = waitServiceTimeDouble;
+          }
+          catch (NumberFormatException nfe)
+          {
+            waitServiceTimeTextField.setText (Double.toString (JSimQueueCreationDialog.this.parameters.waitServiceTime));        
+          }
+        }
+        else
+        {
+          waitServiceTimeTextField.setText (Double.toString (JSimQueueCreationDialog.this.parameters.waitServiceTime));        
+        }
+      }
+    });
     final GroupLayout parametersLayout = new GroupLayout (parametersPanel);
     parametersPanel.setLayout (parametersLayout);
     parametersLayout.setAutoCreateGaps (true);
@@ -128,12 +158,14 @@ implements ItemListener
           parametersLayout.createParallelGroup (GroupLayout.Alignment.LEADING)
             .addComponent (numberOfServersLabel)
             .addComponent (bufferSizeLabel)
+            .addComponent (waitServiceTimeLabel)
         )
         .addGroup
         (
           parametersLayout.createParallelGroup (GroupLayout.Alignment.LEADING)
             .addComponent (numberOfServersTextField)
             .addComponent (bufferSizeTextField)
+            .addComponent (waitServiceTimeTextField)
         )
     );
     parametersLayout.setVerticalGroup
@@ -150,6 +182,12 @@ implements ItemListener
           parametersLayout.createParallelGroup (GroupLayout.Alignment.BASELINE)
             .addComponent (bufferSizeLabel)
             .addComponent (bufferSizeTextField)
+        )
+        .addGroup
+        (
+          parametersLayout.createParallelGroup (GroupLayout.Alignment.BASELINE)
+            .addComponent (waitServiceTimeLabel)
+            .addComponent (waitServiceTimeTextField)
         )
     );
     parametersPanel.setBorder

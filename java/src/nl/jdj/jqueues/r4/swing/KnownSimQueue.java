@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r4.swing;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -18,23 +19,23 @@ public enum KnownSimQueue
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // serverless
-  DROP    ("DROP",  false, nl.jdj.jqueues.r4.serverless.DROP.class,  GeneratorProfile.SIMEVENT),
-  SINK    ("SINK",  false, nl.jdj.jqueues.r4.serverless.SINK.class,  GeneratorProfile.SIMEVENT),
-  DELAY   ("DELAY", false, nl.jdj.jqueues.r4.serverless.DELAY.class, GeneratorProfile.UNKNOWN),
-  ZERO    ("ZERO",  false, nl.jdj.jqueues.r4.serverless.ZERO.class,  GeneratorProfile.SIMEVENT),
+  DROP    ("DROP",  false, nl.jdj.jqueues.r4.serverless.DROP.class,  GeneratorProfile.SE),
+  SINK    ("SINK",  false, nl.jdj.jqueues.r4.serverless.SINK.class,  GeneratorProfile.SE),
+  DELAY   ("DELAY", false, nl.jdj.jqueues.r4.serverless.DELAY.class, GeneratorProfile.SE_WST),
+  ZERO    ("ZERO",  false, nl.jdj.jqueues.r4.serverless.ZERO.class,  GeneratorProfile.SE),
   
   // nonpreemptive
   NO_BUFFER_C ("NoBuffer_c", false, nl.jdj.jqueues.r4.nonpreemptive.NoBuffer_c.class, GeneratorProfile.UNKNOWN),
-  FCFS        ("FCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.FCFS.class,       GeneratorProfile.SIMEVENT),
+  FCFS        ("FCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.FCFS.class,       GeneratorProfile.SE),
   FCFS_FB     ("FCFS_FB",    false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_FB.class,    GeneratorProfile.UNKNOWN),
   FCFS_c      ("FCFS_c",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_c.class,     GeneratorProfile.UNKNOWN),
-  LCFS        ("LCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.LCFS.class,       GeneratorProfile.SIMEVENT),
-  RANDOM      ("RANDOM",     false, nl.jdj.jqueues.r4.nonpreemptive.RANDOM.class,     GeneratorProfile.SIMEVENT),
-  SJF         ("SJF",        false, nl.jdj.jqueues.r4.nonpreemptive.SJF.class,        GeneratorProfile.SIMEVENT),
-  LJF         ("LJF",        false, nl.jdj.jqueues.r4.nonpreemptive.LJF.class,        GeneratorProfile.SIMEVENT),
-  IS          ("IS",         false, nl.jdj.jqueues.r4.nonpreemptive.IS.class,         GeneratorProfile.SIMEVENT),
-  IS_CST      ("IS_CST",     false, nl.jdj.jqueues.r4.nonpreemptive.IS_CST.class,     GeneratorProfile.UNKNOWN),
-  IC          ("IC",         false, nl.jdj.jqueues.r4.nonpreemptive.IC.class,         GeneratorProfile.SIMEVENT),
+  LCFS        ("LCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.LCFS.class,       GeneratorProfile.SE),
+  RANDOM      ("RANDOM",     false, nl.jdj.jqueues.r4.nonpreemptive.RANDOM.class,     GeneratorProfile.SE),
+  SJF         ("SJF",        false, nl.jdj.jqueues.r4.nonpreemptive.SJF.class,        GeneratorProfile.SE),
+  LJF         ("LJF",        false, nl.jdj.jqueues.r4.nonpreemptive.LJF.class,        GeneratorProfile.SE),
+  IS          ("IS",         false, nl.jdj.jqueues.r4.nonpreemptive.IS.class,         GeneratorProfile.SE),
+  IS_CST      ("IS_CST",     false, nl.jdj.jqueues.r4.nonpreemptive.IS_CST.class,     GeneratorProfile.SE_WST),
+  IC          ("IC",         false, nl.jdj.jqueues.r4.nonpreemptive.IC.class,         GeneratorProfile.SE),
   
   // composite
   ENCAPSULATOR   ("Encapsulator",  true, nl.jdj.jqueues.r4.composite.BlackEncapsulatorSimQueue.class,
@@ -110,17 +111,24 @@ public enum KnownSimQueue
   public enum GeneratorProfile
   {
     
-    SIMEVENT (true,  true),
-    UNKNOWN  (false, false);
+    SE       (true,  true,  false),
+    SE_WST   (true,  true,  true),
+    UNKNOWN  (false, false, false);
     
     private final boolean canInstantiate;
     
     private final boolean requiresSimEventList;
     
-    private GeneratorProfile (final boolean canInstatiate, final boolean requiresSimEventList)
+    private final boolean requiresWaitServiceTime;
+    
+    private GeneratorProfile
+      (final boolean canInstatiate,
+       final boolean requiresSimEventList,
+       final boolean requiresWaitServiceTime)
     {
       this.canInstantiate = canInstatiate;
       this.requiresSimEventList = requiresSimEventList;
+      this.requiresWaitServiceTime = requiresWaitServiceTime;
     }
     
     private SimQueue newInstance (final Class<? extends SimQueue> queueClass, final Parameters parameters)
@@ -145,31 +153,32 @@ public enum KnownSimQueue
         System.err.println ("No event-list supplied for new SimQueue instance with profile " + this + ".");
         return null;
       }
-      if (this == SIMEVENT)
+      try
       {
-        final Constructor constructor;
-        try
+        if (this == SE)
         {
-          constructor = queueClass.getConstructor (SimEventList.class);
-        }
-        catch (NoSuchMethodException nsme)
-        {
-          System.err.println ("Could not find suitable constructor for new SimQueue instance with profile " + this + ".");
-          return null;
-        }
-        try
-        {
+          final Constructor constructor = queueClass.getConstructor (SimEventList.class);
           return (SimQueue) constructor.newInstance (parameters.eventList);
         }
-        catch (Exception e)
+        else if (this == SE_WST)
         {
-          System.err.println ("Could not find instantiate new SimQueue instance with profile " + this + ": " + e + ".");
+          final Constructor constructor = queueClass.getConstructor (SimEventList.class, Double.TYPE);
+          return (SimQueue) constructor.newInstance (parameters.eventList, parameters.waitServiceTime);
+        }
+        else
+        {
+          System.err.println ("Unsupported instantiation of new SimQueue instance with profile " + this + ".");
           return null;
         }
       }
-      else
+      catch (NoSuchMethodException nsme)
       {
-        System.err.println ("Unsupported instantiation of new SimQueue instance with profile " + this + ".");
+        System.err.println ("Could not find suitable constructor for new SimQueue instance with profile " + this + ".");
+        return null;
+      }
+      catch (InstantiationException | IllegalAccessException | InvocationTargetException e)
+      {
+        System.err.println ("Could not find instantiate new SimQueue instance with profile " + this + ": " + e + ".");
         return null;
       }
     }
@@ -255,6 +264,8 @@ public enum KnownSimQueue
     public boolean queueAccessVacation = false;
     
     public int serverAccessCredits = Integer.MAX_VALUE;
+    
+    public double waitServiceTime = 0;
     
   }
   
