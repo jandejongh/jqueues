@@ -239,6 +239,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * <li>
    * Otherwise, it then invokes the subclass {@link #insertJobInQueueUponArrival},
    * and checks the presence of the job in {@link #jobQueue}:
+   * 
    * <ul>
    * <li>If <i>not</i> present, sets the jobs queue to <code>null</code> and invokes {@link #fireDrop},
    *     again bypassing {@link #drop} because the job is not present in the system at this point.
@@ -246,6 +247,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    *     {@link #insertJobInQueueUponArrival} has denied immediately the queue visit.
    * <li>If present, sets this queue to be the visited queue on the job (with {@link SimJob#setQueue}),
    *     and invokes the queue-discipline specific {@link #rescheduleAfterArrival}.
+   *     Subsequently, it checks again the presence of the job in {@link #jobQueue} and if absent,
+   *       it considers this as a shortcut for immediate departure and invokes {@link #fireDeparture},
+   *       but <i>not</i> {@link #rescheduleAfterDeparture}.
    * </ul>
    * 
    * </ul>
@@ -288,6 +292,13 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
           throw new IllegalStateException ();
         job.setQueue (this);
         rescheduleAfterArrival (job, time);
+        if (! this.jobQueue.contains (job))
+        {
+          if (this.jobsExecuting.contains (job))
+            throw new IllegalStateException ();
+          fireDeparture (time, job);
+          rescheduleAfterDeparture (job, time);    
+        }
       }
     }
   }
@@ -331,10 +342,13 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * {@link #update} should not be called.
    * 
    * <p>This method should maintain the {@link #jobsExecuting} data.
-   * It should, however, <i>not</i>mangle the {@link #jobQueue} members, as the job set cannot change as a result of this
-   * method.
+   * Normally it should <i>not</i>mangle the {@link #jobQueue} members, as the job set cannot change as a result of this
+   * method. However, the only exception is that the callee may remove the jobs from {@link #jobQueue}, <i>leaving all
+   * other jobs untouched</i>, which is considered by the caller {@link #arrive} that the job is to depart immediately.
+   * Note that in that particular case, the caller assumes that <i>no</i> departure events have been scheduled for this job,
+   * and it does </not> invoke {@link #rescheduleAfterDeparture} or {@link #removeJobFromQueueUponDeparture} for this job.
    * 
-   * @param job The job that arrived.
+   * @param job The job that arrived (and is present in {@link #jobQueue}).
    * @param time  The current time (i.e., the arrival time of the job).
    * 
    * @see #arrive
@@ -1022,9 +1036,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     if (this.jobQueue.contains (job)
       || this.jobsExecuting.contains (job))
       throw new IllegalStateException ();
-    this.fireDeparture (job, event);
-    this.rescheduleAfterDeparture (job, time);
-    
+    fireDeparture (job, event);
+    rescheduleAfterDeparture (job, time);    
   }
   
   /** Removes a job from the internal queues upon departure.
