@@ -7,7 +7,11 @@ import nl.jdj.jsimulation.r4.SimEventList;
 
 /** The {@link DELAY} queue induces a fixed waiting delay, after which jobs depart without service.
  * 
- * <p>A {@link DELAY} queue is <i>only</i> <code>noWaitArmed</code> if the fixed delay time is zero,
+ * <p>
+ * This {@link SimQueue} is server-less.
+ * 
+ * <p>
+ * A {@link DELAY} queue is <i>only</i> <code>noWaitArmed</code> if the fixed delay time is zero,
  * see {@link SimQueue#isNoWaitArmed} and its final implementation in this class {@link #isNoWaitArmed}.
  *
  * @param <J> The type of {@link SimJob}s supported.
@@ -47,8 +51,6 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
   
   /** Returns <code>true</code> if and only if the wait-time for all jobs is zero.
    * 
-   * {@inheritDoc}
-   * 
    * @return True if and only if the wait-time for all jobs is zero.
    * 
    */
@@ -60,8 +62,6 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
 
   /** Adds the job to the tail of the {@link #jobQueue}.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
@@ -69,23 +69,25 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
     this.jobQueue.add (job);
   }
 
-  /** Schedules a departure event for the arrived job respecting the fixed wait time of this queue.
+  /** If needed, schedules a departure event for the arrived job respecting the fixed wait time of this queue;
+   * otherwise (zero wait time), removes the job from the job queue.
    * 
-   * {@inheritDoc}
-   * 
-   * @see #scheduleDepartureEvent
    * @see #getWaitTime
+   * @see #scheduleDepartureEvent
+   * @see #jobQueue
    * 
    */
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    scheduleDepartureEvent (time + getWaitTime (), job);
+    final double waitTime = getWaitTime ();
+    if (waitTime > 0)
+      scheduleDepartureEvent (time + waitTime, job);
+    else
+      this.jobQueue.remove (job);
   }
 
   /** Invokes {@link #removeJobFromQueueUponRevokation}, requesting <code>interruptService</code>.
-   * 
-   * {@inheritDoc}
    * 
    */
   @Override
@@ -96,8 +98,6 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void rescheduleAfterDrop (final J job, final double time)
@@ -106,8 +106,6 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
   }
 
   /** Cancels the departure of the job and removes it, after passing sanity checks, from the job queue {@link #jobQueue}.
-   * 
-   * {@inheritDoc}
    * 
    * @return True.
    * 
@@ -128,8 +126,6 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void rescheduleAfterRevokation (final J job, final double time)
@@ -138,8 +134,6 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
   }
 
   /** Removes the job, after several sanity checks, from the {@link #jobQueue}.
-   * 
-   * {@inheritDoc}
    * 
    */
   @Override
@@ -154,8 +148,6 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
@@ -164,8 +156,6 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
   }
 
   /** Does nothing.
-   * 
-   * {@inheritDoc}
    * 
    */
   @Override
@@ -176,8 +166,6 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void update (final double time)
@@ -186,8 +174,6 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
   }
 
   /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
    * 
    */
   @Override

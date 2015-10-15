@@ -5,37 +5,40 @@ import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-/** The {@link NONE} queue has unlimited waiting capacity, but does not provide
+/** The {@link SINK} queue has unlimited waiting capacity, but does not provide
  *  any service.
  *
- * Obviously, the {@link NONE} queue does not schedule any events on the
+ * <p>
+ * This {@link SimQueue} is server-less.
+ * 
+ * <p>
+ * Obviously, the {@link SINK} queue does not schedule any events on the
  * {@link #eventList} and never invokes actions in
  * {@link #startActions} or {@link #departureActions}.
  * It does support job revocations though.
  * 
- * <p>A {@link NONE} queue is <i>never</i> <code>noWaitArmed</code>,
+ * <p>
+ * A {@link SINK} queue is <i>never</i> <code>noWaitArmed</code>,
  * see {@link SimQueue#isNoWaitArmed} and its final implementation in this class {@link #isNoWaitArmed}.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, Q>
+public class SINK<J extends SimJob, Q extends SINK> extends AbstractSimQueue<J, Q>
 {
 
-  /** Creates a NONE queue given an event list.
+  /** Creates a SINK queue given an event list.
    *
    * @param eventList The event list to use.
    *
    */
-  public NONE (final SimEventList eventList)
+  public SINK (final SimEventList eventList)
   {
     super (eventList);
   }
   
   /** Returns <code>false</code>.
-   * 
-   * {@inheritDoc}
    * 
    * @return False.
    * 
@@ -48,8 +51,6 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
 
   /** Adds the job to the tail of the {@link #jobQueue}.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
@@ -58,8 +59,6 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
   }
 
   /** Does nothing.
-   * 
-   * {@inheritDoc}
    * 
    */
   @Override
@@ -70,8 +69,6 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
 
   /** Invokes {@link #removeJobFromQueueUponRevokation}, requesting <code>interruptService</code>.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
@@ -81,8 +78,6 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void rescheduleAfterDrop (final J job, final double time)
@@ -91,8 +86,6 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
   }
 
   /** Removes the job, after passing sanity checks, from the job queue {@link #jobQueue}.
-   * 
-   * {@inheritDoc}
    * 
    * @return True.
    * 
@@ -110,8 +103,6 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void rescheduleAfterRevokation (final J job, final double time)
@@ -120,8 +111,6 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
   }
 
   /** Throws {@link IllegalStateException}.
-   * 
-   * {@inheritDoc}
    * 
    * @throws IllegalStateException Always, as this {@link SimQueue} does not allow departures.
    * 
@@ -134,8 +123,6 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
 
   /** Throws {@link IllegalStateException}.
    * 
-   * {@inheritDoc}
-   * 
    * @throws IllegalStateException Always, as this {@link SimQueue} does not allow departures.
    * 
    */
@@ -147,8 +134,6 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
@@ -157,8 +142,6 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
   }
 
   /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
    * 
    */
   @Override
@@ -169,8 +152,6 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void reset ()
@@ -178,15 +159,15 @@ public class NONE<J extends SimJob, Q extends NONE> extends AbstractSimQueue<J, 
     super.reset ();
   }  
   
-  /** Returns "NONE".
+  /** Returns "SINK".
    * 
-   * @return "NONE".
+   * @return "SINK".
    * 
    */
   @Override
   public String toString ()
   {
-    return "NONE";
+    return "SINK";
   }
 
 }

@@ -7,7 +7,7 @@ import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.serverless.DELAY;
 import nl.jdj.jqueues.r4.serverless.DROP;
-import nl.jdj.jqueues.r4.serverless.NONE;
+import nl.jdj.jqueues.r4.serverless.SINK;
 import nl.jdj.jqueues.r4.serverless.ZERO;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
@@ -146,9 +146,9 @@ public final class Main
       jobList.add (new TestJob (true, n));
     System.out.println ("-> Creating event list...");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    System.out.println ("-> Creating NONE queue...");
-    final SimQueue noneQueue = new NONE (el);
-    System.out.println ("-> Submitting jobs to NONE ('Hotel California') queue...");
+    System.out.println ("-> Creating SINK queue...");
+    final SimQueue noneQueue = new SINK (el);
+    System.out.println ("-> Submitting jobs to SINK ('Hotel California') queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
       final SimJob j = jobList.get (i);

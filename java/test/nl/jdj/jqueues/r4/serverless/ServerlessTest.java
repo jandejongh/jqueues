@@ -206,17 +206,17 @@ public class ServerlessTest
   }
   
   /**
-   * Test of NONE.
+   * Test of SINK.
    * 
    */
   @Test
-  public void testNONE ()
+  public void testSINK ()
   {
     System.out.println ("====");
-    System.out.println ("NONE");
+    System.out.println ("SINK");
     System.out.println ("====");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NONE queue = new NONE (el);
+    final SINK queue = new SINK (el);
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
@@ -358,7 +358,7 @@ public class ServerlessTest
     System.out.println ("Queue Access Vacation ");
     System.out.println ("======================");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final NONE queue = new NONE (el);
+    final SINK queue = new SINK (el);
     queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
     {
 

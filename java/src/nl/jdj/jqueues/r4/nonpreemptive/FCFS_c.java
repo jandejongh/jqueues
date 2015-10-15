@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r4.nonpreemptive;
 
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.serverless.NONE;
+import nl.jdj.jqueues.r4.serverless.SINK;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** The {@link FCFS_c} queueing system serves jobs in order of arrival times with multiple servers.
@@ -10,7 +10,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * First Come First Served with c servers and infinite buffer size.
  *
  * <p>
- * Although the queue will work with zero servers, the optimized {@link NONE} queuing system is specially
+ * Although the queue will work with zero servers, the optimized {@link SINK} queuing system is specially
  * designed for "no server" systems.
  * 
  * @param <J> The type of {@link SimJob}s supported.
@@ -18,7 +18,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  *
  * @see FCFS
  * @see FCFS_FB
- * @see NONE
+ * @see SINK
  * 
  */
 public class FCFS_c<J extends SimJob, Q extends FCFS_c> extends AbstractNonPreemptiveMultipleServerSimQueue<J, Q>

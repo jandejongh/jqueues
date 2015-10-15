@@ -19,7 +19,7 @@ public enum KnownSimQueue
   
   // serverless
   DROP    ("DROP",  false, nl.jdj.jqueues.r4.serverless.DROP.class,  GeneratorProfile.SIMEVENT),
-  NONE    ("NONE",  false, nl.jdj.jqueues.r4.serverless.NONE.class,  GeneratorProfile.SIMEVENT),
+  SINK    ("SINK",  false, nl.jdj.jqueues.r4.serverless.SINK.class,  GeneratorProfile.SIMEVENT),
   DELAY   ("DELAY", false, nl.jdj.jqueues.r4.serverless.DELAY.class, GeneratorProfile.UNKNOWN),
   ZERO    ("ZERO",  false, nl.jdj.jqueues.r4.serverless.ZERO.class,  GeneratorProfile.SIMEVENT),
   

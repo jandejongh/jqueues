@@ -7,12 +7,20 @@ import nl.jdj.jsimulation.r4.SimEventList;
 
 /** The {@link ZERO} queue induces no waiting, after which jobs depart without service.
  * 
- * <p>A {@link ZERO} queue is <i>always</i> <code>noWaitArmed</code>,
+ * <p>
+ * This {@link SimQueue} is server-less.
+ * 
+ * <p>
+ * A {@link ZERO} queue is <i>always</i> <code>noWaitArmed</code>,
  * see {@link SimQueue#isNoWaitArmed} and its final implementation in this class {@link #isNoWaitArmed}.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
+ * @see DROP
+ * @see SINK
+ * @see DELAY
+ * 
  */
 public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, Q>
 {
@@ -29,8 +37,6 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
   
   /** Returns <code>true</code>.
    * 
-   * {@inheritDoc}
-   * 
    * @return True.
    * 
    */
@@ -42,7 +48,8 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
 
   /** Adds the job to the tail of the {@link #jobQueue}.
    * 
-   * {@inheritDoc}
+   * @see #arrive
+   * @see #jobQueue
    * 
    */
   @Override
@@ -51,102 +58,85 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
     this.jobQueue.add (job);
   }
 
-  /** Schedules a departure event (now) for the arrived job.
+  /** Removes the job from the job queue, indicating it should depart immediately.
    * 
-   * {@inheritDoc}
-   * 
-   * @see #scheduleDepartureEvent
+   * @see #arrive
+   * @see #jobQueue
    * 
    */
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    scheduleDepartureEvent (time, job);
+    this.jobQueue.remove (job);
   }
 
-  /** Invokes {@link #removeJobFromQueueUponRevokation}, requesting <code>interruptService</code>.
+  /** Throws {@link IllegalStateException}.
    * 
-   * {@inheritDoc}
+   * @throws IllegalStateException Always, as a call to this method is unexpected.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
-    removeJobFromQueueUponRevokation (job, time, true);
+    throw new IllegalStateException ();
   }
 
-  /** Does nothing.
+  /** Throws {@link IllegalStateException}.
    * 
-   * {@inheritDoc}
+   * @throws IllegalStateException Always, as a call to this method is unexpected.
    * 
    */
   @Override
   protected final void rescheduleAfterDrop (final J job, final double time)
   {
-    /* EMPTY */
+    throw new IllegalStateException ();
   }
 
-  /** Cancels the departure of the job and removes it, after passing sanity checks, from the job queue {@link #jobQueue}.
+  /** Throws {@link IllegalStateException}.
    * 
-   * {@inheritDoc}
-   * 
-   * @return True.
-   * 
-   * @see #cancelDepartureEvent
+   * @throws IllegalStateException Always, as a call to this method is unexpected.
    * 
    */
   @Override
   protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
   {
-    if (job == null || ! this.jobQueue.contains (job))
-      throw new IllegalArgumentException ();
-    if (! this.jobsExecuting.isEmpty ())
-      throw new IllegalStateException ();
-    cancelDepartureEvent (job);
-    this.jobQueue.remove (job);
-    return true;
+    throw new IllegalStateException ();
   }
 
-  /** Does nothing.
+  /** Throws {@link IllegalStateException}.
    * 
-   * {@inheritDoc}
+   * @throws IllegalStateException Always, as a call to this method is unexpected.
    * 
    */
   @Override
   protected final void rescheduleAfterRevokation (final J job, final double time)
   {
-    /* EMPTY */
+    throw new IllegalStateException ();
   }
 
-  /** Removes the job, after several sanity checks, from the {@link #jobQueue}.
+  /** Throws {@link IllegalStateException}.
    * 
-   * {@inheritDoc}
+   * @throws IllegalStateException Always, as a call to this method is unexpected.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    if (departingJob == null || ! this.jobQueue.contains (departingJob))
-      throw new IllegalArgumentException ();
-    if (! this.jobsExecuting.isEmpty ())
-      throw new IllegalStateException ();
-    this.jobQueue.remove (departingJob);
+    throw new IllegalStateException ();
   }
 
-  /** Does nothing.
+  /** Throws {@link IllegalStateException}.
    * 
-   * {@inheritDoc}
+   * @throws IllegalStateException Always, as a call to this method is unexpected.
    * 
    */
   @Override
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
-    /* EMPTY */
+    throw new IllegalStateException ();
   }
 
   /** Does nothing.
-   * 
-   * {@inheritDoc}
    * 
    */
   @Override
@@ -157,8 +147,6 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void update (final double time)
@@ -167,8 +155,6 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
   }
 
   /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
    * 
    */
   @Override

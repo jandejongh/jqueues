@@ -1,7 +1,7 @@
 package nl.jdj.jqueues.r4;
 
 import nl.jdj.jqueues.r4.nonpreemptive.AbstractNonPreemptiveSimQueue;
-import nl.jdj.jqueues.r4.serverless.NONE;
+import nl.jdj.jqueues.r4.serverless.SINK;
 import nl.jdj.jsimulation.r4.SimEventList;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventListListener;
@@ -89,7 +89,7 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * In general, the required service ('execution') time of the job during a queue visit
  * must be provided by each job through {@link SimJob#getServiceTime}.
  * It must remain constant during a queue visit (but may be changed in between visits).
- * Not all {@link SimQueue} implementations use the notion of service time (e.g., {@link NONE}),
+ * Not all {@link SimQueue} implementations use the notion of service time (e.g., {@link SINK}),
  * but if they do,
  * the service time is to be interpreted as follows:
  * If a queue spends unit capacity on serving this and only this job, it will

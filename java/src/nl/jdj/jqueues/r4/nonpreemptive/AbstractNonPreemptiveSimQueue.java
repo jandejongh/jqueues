@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r4.nonpreemptive;
 import nl.jdj.jqueues.r4.AbstractSimQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.serverless.NONE;
+import nl.jdj.jqueues.r4.serverless.SINK;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** An abstract base class for non-preemptive queueing disciplines
@@ -27,7 +27,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @see SimEventList#run
  * @see AbstractNonPreemptiveSingleServerSimQueue
  * @see AbstractNonPreemptiveInfiniteServerSimQueue
- * @see NONE
+ * @see SINK
  * 
  */
 public abstract class AbstractNonPreemptiveSimQueue

@@ -7,6 +7,9 @@ import nl.jdj.jsimulation.r4.SimEventList;
 
 /** The {@link DROP} queue drops all jobs upon arrival.
  * 
+ * <p>
+ * This {@link SimQueue} is server-less.
+ * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
@@ -26,8 +29,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
   
   /** Returns <code>false</code>.
    * 
-   * {@inheritDoc}
-   * 
    * @return False.
    * 
    */
@@ -39,8 +40,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
 
   /** Does nothing (effectively forcing the job to be dropped).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
@@ -48,8 +47,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
   }
 
   /** Throws {@link IllegalStateException}.
-   * 
-   * {@inheritDoc}
    * 
    * @throws IllegalStateException Always, as this method is not expected to be invoked.
    * 
@@ -62,8 +59,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
 
   /** Throws {@link IllegalStateException}.
    * 
-   * {@inheritDoc}
-   * 
    * @throws IllegalStateException Always, as this method is not expected to be invoked.
    * 
    */
@@ -74,8 +69,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
   }
 
   /** Throws {@link IllegalStateException}.
-   * 
-   * {@inheritDoc}
    * 
    * @throws IllegalStateException Always, as this method is not expected to be invoked.
    * 
@@ -88,8 +81,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
 
   /** Throws {@link IllegalStateException}.
    * 
-   * {@inheritDoc}
-   * 
    * @throws IllegalStateException Always, as this {@link SimQueue} does not allow revocations.
    * 
    */
@@ -100,8 +91,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
   }
 
   /** Throws {@link IllegalStateException}.
-   * 
-   * {@inheritDoc}
    * 
    * @throws IllegalStateException Always, as this {@link SimQueue} does not allow revocations.
    * 
@@ -114,8 +103,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
 
   /** Throws {@link IllegalStateException}.
    * 
-   * {@inheritDoc}
-   * 
    * @throws IllegalStateException Always, as this {@link SimQueue} does not allow departures.
    * 
    */
@@ -126,8 +113,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
   }
 
   /** Throws {@link IllegalStateException}.
-   * 
-   * {@inheritDoc}
    * 
    * @throws IllegalStateException Always, as this {@link SimQueue} does not allow departures.
    * 
@@ -140,8 +125,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
@@ -151,8 +134,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void update (final double time)
@@ -161,8 +142,6 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
   }
 
   /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
    * 
    */
   @Override

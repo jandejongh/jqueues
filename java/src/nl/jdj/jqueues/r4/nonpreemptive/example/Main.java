@@ -141,14 +141,6 @@ public final class Main
    * The arrival time and the requested service time of each job are equal to the job index.
    * In other words, job 1 arrives at t=1 and requests S=1, job 2 arrives at t=2 and requests S=2, etc.
    * 
-   * <p>
-   * Despite the arrival scheme, all queue types except NONE and IS can actually serve all jobs until completion without
-   * interruption from t=1 onwards. Since for these cases, the total requested service time is 55 (1+2+3+...+10), the simulation will end
-   * at t=56 (since we "start" at t=1) having completed all jobs.
-   * For IS, the only multi-server discipline implemented so far, the case is different, since IS can process multiple jobs at the
-   * same time, effectively increasing its overall capacity while doing so. It is easily verified that with IS,
-   * job n (arriving at t=n) leaves the queue at t=2*n. Hence, at t=20, job 10 departs and the simulation ends.
-   * 
    * @param args The command-line arguments (ignored).
    * 
    */
