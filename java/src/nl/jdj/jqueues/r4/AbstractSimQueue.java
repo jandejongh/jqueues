@@ -296,6 +296,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
         {
           if (this.jobsExecuting.contains (job))
             throw new IllegalStateException ();
+          job.setQueue (null);
           fireDeparture (time, job);
         }
       }
