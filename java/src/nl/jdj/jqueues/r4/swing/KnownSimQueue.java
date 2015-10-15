@@ -25,10 +25,10 @@ public enum KnownSimQueue
   ZERO    ("ZERO",  false, nl.jdj.jqueues.r4.serverless.ZERO.class,  GeneratorProfile.SE),
   
   // nonpreemptive
-  NO_BUFFER_C ("NoBuffer_c", false, nl.jdj.jqueues.r4.nonpreemptive.NoBuffer_c.class, GeneratorProfile.UNKNOWN),
+  NO_BUFFER_c ("NoBuffer_c", false, nl.jdj.jqueues.r4.nonpreemptive.NoBuffer_c.class, GeneratorProfile.SE_c),
   FCFS        ("FCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.FCFS.class,       GeneratorProfile.SE),
   FCFS_FB     ("FCFS_FB",    false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_FB.class,    GeneratorProfile.UNKNOWN),
-  FCFS_c      ("FCFS_c",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_c.class,     GeneratorProfile.UNKNOWN),
+  FCFS_c      ("FCFS_c",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_c.class,     GeneratorProfile.SE_c),
   LCFS        ("LCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.LCFS.class,       GeneratorProfile.SE),
   RANDOM      ("RANDOM",     false, nl.jdj.jqueues.r4.nonpreemptive.RANDOM.class,     GeneratorProfile.SE),
   SJF         ("SJF",        false, nl.jdj.jqueues.r4.nonpreemptive.SJF.class,        GeneratorProfile.SE),
@@ -111,9 +111,10 @@ public enum KnownSimQueue
   public enum GeneratorProfile
   {
     
-    SE       (true,  true,  false),
-    SE_WST   (true,  true,  true),
-    UNKNOWN  (false, false, false);
+    SE       (true,  true,  false, false),
+    SE_WST   (true,  true,  true,  false),
+    SE_c     (true,  true,  false, true),
+    UNKNOWN  (false, false, false, false);
     
     private final boolean canInstantiate;
     
@@ -121,14 +122,18 @@ public enum KnownSimQueue
     
     private final boolean requiresWaitServiceTime;
     
+    private final boolean requiresNumberOfServers;
+    
     private GeneratorProfile
       (final boolean canInstatiate,
        final boolean requiresSimEventList,
-       final boolean requiresWaitServiceTime)
+       final boolean requiresWaitServiceTime,
+       final boolean requiresNumberOfServers)
     {
       this.canInstantiate = canInstatiate;
       this.requiresSimEventList = requiresSimEventList;
       this.requiresWaitServiceTime = requiresWaitServiceTime;
+      this.requiresNumberOfServers = requiresNumberOfServers;
     }
     
     private SimQueue newInstance (final Class<? extends SimQueue> queueClass, final Parameters parameters)
@@ -164,6 +169,11 @@ public enum KnownSimQueue
         {
           final Constructor constructor = queueClass.getConstructor (SimEventList.class, Double.TYPE);
           return (SimQueue) constructor.newInstance (parameters.eventList, parameters.waitServiceTime);
+        }
+        else if (this == SE_c)
+        {
+          final Constructor constructor = queueClass.getConstructor (SimEventList.class, Integer.TYPE);
+          return (SimQueue) constructor.newInstance (parameters.eventList, parameters.numberOfServers);
         }
         else
         {
@@ -266,6 +276,8 @@ public enum KnownSimQueue
     public int serverAccessCredits = Integer.MAX_VALUE;
     
     public double waitServiceTime = 0;
+    
+    public int numberOfServers = 1;
     
   }
   

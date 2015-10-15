@@ -116,6 +116,32 @@ implements ItemListener
     final JLabel bufferSizeLabel = new JLabel ("Buffer Size");
     final JLabel waitServiceTimeLabel = new JLabel ("Wait/Service Time");
     final JTextField numberOfServersTextField = new JTextField ("Number of Servers Value");
+    numberOfServersTextField.addActionListener (new ActionListener ()
+    {
+      @Override
+      public final void actionPerformed (final ActionEvent ae)
+      {
+        final String text = numberOfServersTextField.getText ();
+        if (text != null)
+        {
+          final int numberOfServersInt;
+          try
+          {
+            numberOfServersInt = Integer.parseInt (text);
+            if (numberOfServersInt < 0)
+              numberOfServersTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));        
+            else
+              JSimQueueCreationDialog.this.parameters.numberOfServers = numberOfServersInt;
+          }
+          catch (NumberFormatException nfe)
+          {
+            numberOfServersTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));        
+          }
+        }
+        else
+          numberOfServersTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));
+      }
+    });
     final JTextField bufferSizeTextField = new JTextField ("Buffer Size Value");
     final JTextField waitServiceTimeTextField = new JTextField ("Wait/Service Time Value");
     waitServiceTimeTextField.addActionListener (new ActionListener ()

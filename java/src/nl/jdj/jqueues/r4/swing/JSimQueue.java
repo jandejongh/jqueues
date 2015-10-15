@@ -178,7 +178,7 @@ implements SimQueueVacationListener
     g2d.setColor (Color.black);
     g2d.drawOval (middleX - 30, middleY + 10, 60, 60);
     // Draw number of jobs executing.
-    g2d.drawString ("E:" + this.queue.getNumberOfJobsExecuting (), middleX - 20, middleY + 50);    
+    g2d.drawString ("E:" + this.queue.getNumberOfJobsExecuting (), middleX - 20, middleY + 45);    
     // Draw queue name.
     g2d.setColor (Color.black);
     g2d.drawString (this.queue.toString (), middleX - 40, middleY + 90);
