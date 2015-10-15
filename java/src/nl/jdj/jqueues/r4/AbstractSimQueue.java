@@ -1009,8 +1009,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * invoking {@link #removeJobFromQueueUponDeparture}
    * (which must remove the job from the {@link #jobQueue}
    * and the {@link #jobsExecuting} lists).
-   * It then invokes {@link #fireDeparture} and thereafter
-   * the discipline-specific {@link #rescheduleAfterDeparture} method.
+   * It then invokes the discipline-specific {@link #rescheduleAfterDeparture}
+   * followed by {@link #fireDeparture}.
    * 
    * @param event The departure event; must be non-<code>null</code> and present in {@link #eventsScheduled}.
    * 
@@ -1036,8 +1036,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     if (this.jobQueue.contains (job)
       || this.jobsExecuting.contains (job))
       throw new IllegalStateException ();
-    fireDeparture (job, event);
     rescheduleAfterDeparture (job, time);    
+    fireDeparture (job, event);
   }
   
   /** Removes a job from the internal queues upon departure.
