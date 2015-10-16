@@ -77,9 +77,14 @@ implements ItemListener
       // this.numberOfServersTextField
       final int defaultNumberOfServers = queueType.getNumberOfServersProfile ().getDefValue ();
       this.numberOfServersTextField.setText (defaultNumberOfServers == -1 ? "Infinite" : Integer.toString (defaultNumberOfServers));
+      this.parameters.numberOfServers = defaultNumberOfServers;
       final boolean numberOfServersEditable = queueType.getNumberOfServersProfile ().isUserSettable ();
       this.numberOfServersTextField.setEditable (numberOfServersEditable);
       this.numberOfServersTextField.setBackground (numberOfServersEditable ? getBackground () : new Color (255, 192, 192));
+    }
+    else
+    {
+      // XXX
     }
   }
   
@@ -146,35 +151,7 @@ implements ItemListener
     final JLabel numberOfServersLabel = new JLabel ("Number of Servers");
     final JLabel bufferSizeLabel = new JLabel ("Buffer Size");
     final JLabel waitServiceTimeLabel = new JLabel ("Wait/Service Time");
-    this.numberOfServersTextField.addActionListener (new ActionListener ()
-    {
-      @Override
-      public final void actionPerformed (final ActionEvent ae)
-      {
-        final String text = JSimQueueCreationDialog.this.numberOfServersTextField.getText ();
-        if (text != null)
-        {
-          final int numberOfServersInt;
-          try
-          {
-            numberOfServersInt = Integer.parseInt (text);
-            if (numberOfServersInt < 0)
-              JSimQueueCreationDialog.this.numberOfServersTextField.setText
-                (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));        
-            else
-              JSimQueueCreationDialog.this.parameters.numberOfServers = numberOfServersInt;
-          }
-          catch (NumberFormatException nfe)
-          {
-            JSimQueueCreationDialog.this.numberOfServersTextField.setText
-              (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));        
-          }
-        }
-        else
-          JSimQueueCreationDialog.this.numberOfServersTextField.setText
-            (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));
-      }
-    });
+    this.numberOfServersTextField.addActionListener (new NumberOfServersTextFieldListener ());
     final JTextField bufferSizeTextField = new JTextField ("Buffer Size Value");
     bufferSizeTextField.addActionListener (new ActionListener ()
     {
@@ -532,4 +509,45 @@ implements ItemListener
     
   };
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NUMBER OF SERVERS TEXTFIELD LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class NumberOfServersTextFieldListener
+  implements ActionListener
+  {
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.knownQueues.getSelectedItem ();
+      if (knownQueue == null)
+      {
+        JSimQueueCreationDialog.this.numberOfServersTextField.setText ("0");
+        JSimQueueCreationDialog.this.parameters.numberOfServers = 0;
+        return;
+      }
+      final String text = JSimQueueCreationDialog.this.numberOfServersTextField.getText ();
+      if (text != null)
+      {
+        try
+        {
+          final int numberOfServersInt = Integer.parseInt (text);
+          if (knownQueue.getNumberOfServersProfile ().isValidValue (numberOfServersInt))
+            JSimQueueCreationDialog.this.parameters.numberOfServers = numberOfServersInt;
+          return;
+        }
+        catch (NumberFormatException nfe)
+        {
+        }
+      }
+      if (! knownQueue.getNumberOfServersProfile ().isValidValue (JSimQueueCreationDialog.this.parameters.numberOfServers))
+        JSimQueueCreationDialog.this.parameters.numberOfServers = knownQueue.getNumberOfServersProfile ().getDefValue ();
+      JSimQueueCreationDialog.this.numberOfServersTextField.setText
+        (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));
+    }
+    
+  }
+  
 }
