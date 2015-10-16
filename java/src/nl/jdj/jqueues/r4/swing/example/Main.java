@@ -60,15 +60,15 @@ public final class Main
         
         private final void setQueue (final SimQueue queue)
         {
-          final boolean isQueueAccessVacation = queue.isQueueAccessVacation ();
-          final int serverAccessCredits = queue.getServerAccessCredits ();
-          this.eventList.reset ();
+          //final boolean isQueueAccessVacation = queue.isQueueAccessVacation ();
+          //final int serverAccessCredits = queue.getServerAccessCredits ();
+          //this.eventList.reset ();
           this.queue = queue;
-          if (isQueueAccessVacation)
-            this.queue.startQueueAccessVacation ();
-          else
-            this.queue.stopQueueAccessVacation ();
-          this.queue.setServerAccessCredits (serverAccessCredits);
+          //if (isQueueAccessVacation)
+          //  this.queue.startQueueAccessVacation ();
+          //else
+          //  this.queue.stopQueueAccessVacation ();
+          //this.queue.setServerAccessCredits (serverAccessCredits);
           jQueue.setQueue (this.eventList, this.queue);
           frame.invalidate ();
           // frame.repaint ();
