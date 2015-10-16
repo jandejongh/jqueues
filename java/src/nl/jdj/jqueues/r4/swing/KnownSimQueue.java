@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r4.swing;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
 import java.util.Set;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.composite.DelegateSimJobFactory;
@@ -69,37 +70,57 @@ public enum KnownSimQueue
                DoubleParameterProfile.DPP_IRRELEVANT),
   
   // composite
-  ENCAPSULATOR   ("Encapsulator",  true, nl.jdj.jqueues.r4.composite.BlackEncapsulatorSimQueue.class,
-                  GeneratorProfile.SE_Q_DSJF, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+  ENCAPSULATOR   ("Encapsulator", true, nl.jdj.jqueues.r4.composite.BlackEncapsulatorSimQueue.class,
+                  GeneratorProfile.SE_Q_DSJF,
+                  IntegerParameterProfile.IPP_IRRELEVANT,
+                  IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   DROP_COLLECTOR ("DropCollector", true, nl.jdj.jqueues.r4.composite.BlackDropCollectorSimQueue.class,
-                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  GeneratorProfile.SE_Q1_Q2_DSJF,
+                  IntegerParameterProfile.IPP_IRRELEVANT,
+                  IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
-  TANDEM         ("Tandem",        true, nl.jdj.jqueues.r4.composite.BlackTandemSimQueue.class,
-                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+  TANDEM         ("Tandem", true, nl.jdj.jqueues.r4.composite.BlackTandemSimQueue.class,
+                  GeneratorProfile.UNKNOWN,
+                  IntegerParameterProfile.IPP_IRRELEVANT,
+                  IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   COMP_TANDEM_2  ("Comp_Tandem_2", true, nl.jdj.jqueues.r4.composite.BlackCompressedTandem2SimQueue.class,
-                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  GeneratorProfile.SE_Q1_Q2_DSJF,
+                  IntegerParameterProfile.IPP_IRRELEVANT,
+                  IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
-  PARALLEL       ("Parallel",      true, nl.jdj.jqueues.r4.composite.BlackParallelSimQueues.class,
-                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+  PARALLEL       ("Parallel", true, nl.jdj.jqueues.r4.composite.BlackParallelSimQueues.class,
+                  GeneratorProfile.UNKNOWN,
+                  IntegerParameterProfile.IPP_IRRELEVANT,
+                  IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
-  JSQ            ("JSQ",           true, nl.jdj.jqueues.r4.composite.BlackJoinShortestSimQueue.class,
-                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+  JSQ            ("JSQ", true, nl.jdj.jqueues.r4.composite.BlackJoinShortestSimQueue.class,
+                  GeneratorProfile.UNKNOWN,
+                  IntegerParameterProfile.IPP_IRRELEVANT,
+                  IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
-  FB_PROB        ("FB_Prob",       true, nl.jdj.jqueues.r4.composite.BlackProbabilisticFeedbackSimQueue.class,
-                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+  FB_PROB        ("FB_Prob", true, nl.jdj.jqueues.r4.composite.BlackProbabilisticFeedbackSimQueue.class,
+                  GeneratorProfile.UNKNOWN,
+                  IntegerParameterProfile.IPP_IRRELEVANT,
+                  IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
-  FB_VISITS      ("FB_NumVisits",  true, nl.jdj.jqueues.r4.composite.BlackNumVisitsFeedbackSimQueue.class,
-                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+  FB_VISITS      ("FB_NumVisits", true, nl.jdj.jqueues.r4.composite.BlackNumVisitsFeedbackSimQueue.class,
+                  GeneratorProfile.UNKNOWN,
+                  IntegerParameterProfile.IPP_IRRELEVANT,
+                  IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
-  JACKSON        ("Jackson",       true, nl.jdj.jqueues.r4.composite.BlackJacksonSimQueueNetwork.class,
-                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+  JACKSON        ("Jackson", true, nl.jdj.jqueues.r4.composite.BlackJacksonSimQueueNetwork.class,
+                  GeneratorProfile.UNKNOWN,
+                  IntegerParameterProfile.IPP_IRRELEVANT,
+                  IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   
   // unknown
-  UNKNOWN ("Unknown", true,  null, GeneratorProfile.UNKNOWN,
-           IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_IRRELEVANT,
+  UNKNOWN ("Unknown", true,  null,
+           GeneratorProfile.UNKNOWN,
+           IntegerParameterProfile.IPP_IRRELEVANT,
+           IntegerParameterProfile.IPP_IRRELEVANT,
            DoubleParameterProfile.DPP_IRRELEVANT);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,12 +178,13 @@ public enum KnownSimQueue
   public enum GeneratorProfile
   {
     
-    SE        (true,  true,  false, false, false, false, 0, 0),
-    SE_WST    (true,  true,  true,  false, false, false, 0, 0),
-    SE_c      (true,  true,  false, true,  false, false, 0, 0),
-    SE_B      (true,  true,  false, false, true,  false, 0, 0),
-    SE_Q_DSJF (true,  true,  false, false, false, true,  1, 1),
-    UNKNOWN   (false, false, false, false, false, false, 0, 0);
+    SE            (true,  true,  false, false, false, false, 0, 0),
+    SE_WST        (true,  true,  true,  false, false, false, 0, 0),
+    SE_c          (true,  true,  false, true,  false, false, 0, 0),
+    SE_B          (true,  true,  false, false, true,  false, 0, 0),
+    SE_Q_DSJF     (true,  true,  false, false, false, true,  1, 1),
+    SE_Q1_Q2_DSJF (true,  true,  false, false, false, true,  2, 2),
+    UNKNOWN       (false, false, false, false, false, false, 0, 0);
     
     private final boolean canInstantiate;
     
@@ -269,7 +291,18 @@ public enum KnownSimQueue
         {
           final Constructor constructor = queueClass.getConstructor
             (SimEventList.class, SimQueue.class, DelegateSimJobFactory.class);
-          return (SimQueue) constructor.newInstance (parameters.eventList, parameters.queues.iterator ().next (), null);
+          final Iterator<SimQueue> iterator = parameters.queues.iterator ();
+          final SimQueue q = iterator.next ();
+          return (SimQueue) constructor.newInstance (parameters.eventList, q, null);
+        }
+        else if (this == SE_Q1_Q2_DSJF)
+        {
+          final Constructor constructor = queueClass.getConstructor
+            (SimEventList.class, SimQueue.class, SimQueue.class, DelegateSimJobFactory.class);
+          final Iterator<SimQueue> iterator = parameters.queues.iterator ();
+          final SimQueue q1 = iterator.next ();
+          final SimQueue q2 = iterator.next ();
+          return (SimQueue) constructor.newInstance (parameters.eventList, q1, q2, null);
         }
         else
         {
