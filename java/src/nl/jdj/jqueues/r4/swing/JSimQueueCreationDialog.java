@@ -28,6 +28,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import nl.jdj.jqueues.r4.SimQueue;
@@ -42,6 +43,8 @@ extends JDialog
 implements ItemListener
 {
   
+  private final Frame frame;
+  
   private final SimEventList eventList;
   
   private SimQueue createdQueue = null;
@@ -52,8 +55,6 @@ implements ItemListener
   }
   
   private final JComboBox knownQueues;
-  
-  private final Set<SimQueue> subQueues = new LinkedHashSet<>  ();
   
   private final KnownSimQueue.Parameters parameters = new KnownSimQueue.Parameters ();
 
@@ -72,6 +73,16 @@ implements ItemListener
   final JTextField bufferSizeTextField = new JTextField ("Buffer Size Value");
 
   final JTextField waitServiceTimeTextField = new JTextField ("Wait/Service Time Value");
+  
+  final JButton moveUpSubQueueButton = new JButton ("Up");
+  
+  final JButton moveDownSubQueueButton = new JButton ("Down");
+  
+  final JButton addSubQueueButton = new JButton ("Add");
+  
+  final JButton insertSubQueueButton = new JButton ("Insert");
+  
+  final JButton deleteSubQueueButton = new JButton ("Delete");
   
   private void setQueueType (final KnownSimQueue queueType)
   {
@@ -132,13 +143,16 @@ implements ItemListener
     super (frame, "Create Queue", true);
     if (eventList == null)
       throw new IllegalArgumentException ();
+    this.frame = frame;
     this.eventList = eventList;
     this.parameters.eventList = this.eventList;
     this.knownQueues = new JComboBox (KnownSimQueue.values ());
     if (queue != null)
+      // XXX What is we have an unknown queue?
       this.knownQueues.setSelectedItem (KnownSimQueue.valueOf (queue));
-    if (this.knownQueues.getSelectedItem () != null && ((KnownSimQueue) this.knownQueues.getSelectedItem ()).isComposite ())
-      this.subQueues.addAll (((BlackSimQueueNetwork) queue).getQueues ());
+    this.parameters.queues = new LinkedHashSet<> ();
+    if (queue != null && (queue instanceof BlackSimQueueNetwork))
+      this.parameters.queues.addAll (((BlackSimQueueNetwork) queue).getQueues ());
     getContentPane ().setLayout (new BoxLayout (getContentPane (), BoxLayout.PAGE_AXIS));
     add (Box.createRigidArea (new Dimension (0, 10)));
     this.knownQueues.setPreferredSize (new Dimension (200, 50));
@@ -148,6 +162,9 @@ implements ItemListener
       (BorderFactory.createLineBorder (Color.orange, 4, true), "Select Queue Type"));
     add (this.knownQueues);
     add (Box.createRigidArea (new Dimension (0, 10)));
+    
+    final Box subQueuesBox = new Box (BoxLayout.PAGE_AXIS);
+    
     if (this.knownQueues.getSelectedItem () != null && ((KnownSimQueue) this.knownQueues.getSelectedItem ()).isComposite ())
     {
       this.table.setBackground (getBackground ());
@@ -158,16 +175,39 @@ implements ItemListener
       this.table.setBackground (new Color (255, 192, 192));
       this.table.setEnabled (false);
     }
+    this.table.setSelectionMode (ListSelectionModel.SINGLE_SELECTION);
     this.table.setPreferredSize (new Dimension (200, 200));
     this.table.setMaximumSize (new Dimension (200, 200));
     final JComponent scrollPane = new JScrollPane (this.table);
     scrollPane.setPreferredSize (new Dimension (400, 200));
     scrollPane.setMaximumSize (new Dimension (400, 200));
-    scrollPane.setBorder
+    subQueuesBox.add (scrollPane);
+    
+    add (Box.createRigidArea (new Dimension (0, 10)));
+    
+    final Box tableButtonBox = new Box (BoxLayout.LINE_AXIS);
+    
+    this.moveUpSubQueueButton.addActionListener (new MoveUpQueueButtonListener ());
+    this.moveDownSubQueueButton.addActionListener (new MoveDownQueueButtonListener ());
+    this.addSubQueueButton.addActionListener (new AddSubQueueButtonListener ());
+    this.insertSubQueueButton.addActionListener (new InsertSubQueueButtonListener ());
+    this.deleteSubQueueButton.addActionListener (new DeleteSubQueueButtonListener ());
+    
+    tableButtonBox.add (this.moveUpSubQueueButton);
+    tableButtonBox.add (this.moveDownSubQueueButton);
+    tableButtonBox.add (this.addSubQueueButton);
+    tableButtonBox.add (this.insertSubQueueButton);
+    tableButtonBox.add (this.deleteSubQueueButton);
+
+    subQueuesBox.add (tableButtonBox);
+    
+    add (subQueuesBox);
+    subQueuesBox.setBorder
       (BorderFactory.createTitledBorder
       (BorderFactory.createLineBorder (Color.orange, 4, true), "Sub-Queues"));
-    add (scrollPane);
+    
     add (Box.createRigidArea (new Dimension (0, 10)));
+    
     final JPanel parametersPanel = new JPanel ();
     final JLabel numberOfServersLabel = new JLabel ("Number of Servers");
     final JLabel bufferSizeLabel = new JLabel ("Buffer Size");
@@ -446,7 +486,8 @@ implements ItemListener
     @Override
     public final int getRowCount ()
     {
-      return JSimQueueCreationDialog.this.subQueues.size ();
+      // JdJ: all non-null here!
+      return JSimQueueCreationDialog.this.parameters.queues.size ();
     }
 
     @Override
@@ -488,11 +529,11 @@ implements ItemListener
     @Override
     public final Object getValueAt (final int r, final int c)
     {
-      if (r < 0 || r >= JSimQueueCreationDialog.this.subQueues.size ())
+      if (r < 0 || r >= JSimQueueCreationDialog.this.parameters.queues.size ())
         return null;
       if (c < 0 || c >= 2)
         return null;
-      final Iterator<SimQueue> iterator = JSimQueueCreationDialog.this.subQueues.iterator ();
+      final Iterator<SimQueue> iterator = JSimQueueCreationDialog.this.parameters.queues.iterator ();
       SimQueue q = iterator.next ();
       int i = 0;
       while (i < r)
@@ -506,15 +547,197 @@ implements ItemListener
         return q.toString ();
       else if (c == 2)
         return KnownSimQueue.valueOf (q).isComposite ();
-      //else if (c == 2)
-      //  return e.getObject ();
-      //else if (c == 3)
-      //  return e.getEventAction ();
       throw new RuntimeException ();
     }
     
   };
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // MOVE UP SUB-QUEUE BUTTON LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class MoveUpQueueButtonListener
+  extends AbstractAction
+  {
+
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      final int selectedIndex = JSimQueueCreationDialog.this.table.getSelectedRow ();
+      if (selectedIndex <= 0
+        || JSimQueueCreationDialog.this.parameters.queues.size () <= 1)
+        return;
+      if (selectedIndex >= JSimQueueCreationDialog.this.parameters.queues.size ())
+      {
+        System.err.println ("Unexpected software problem with selected index of sub-queues table!");
+        System.err.println ("-> Ignoring request!");
+        return;
+      }
+      final Iterator<SimQueue> iterator = JSimQueueCreationDialog.this.parameters.queues.iterator ();
+      final Set<SimQueue> newSubQueues = new LinkedHashSet<> ();
+      for (int i = 0; i < selectedIndex - 1; i++)
+        newSubQueues.add (iterator.next ());
+      final SimQueue q1 = iterator.next ();
+      final SimQueue q2 = iterator.next ();
+      newSubQueues.add (q2);
+      newSubQueues.add (q1);
+      while (iterator.hasNext ())
+        newSubQueues.add (iterator.next ());
+      JSimQueueCreationDialog.this.parameters.queues = newSubQueues;
+      ((AbstractTableModel) JSimQueueCreationDialog.this.tableModel).fireTableDataChanged ();
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // MOVE DOWN SUB-QUEUE BUTTON LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class MoveDownQueueButtonListener
+  extends AbstractAction
+  {
+
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      final int selectedIndex = JSimQueueCreationDialog.this.table.getSelectedRow ();
+      if (selectedIndex < 0
+        || JSimQueueCreationDialog.this.parameters.queues.size () <= 1
+        || selectedIndex == JSimQueueCreationDialog.this.parameters.queues.size () - 1)
+        return;
+      if (selectedIndex >= JSimQueueCreationDialog.this.parameters.queues.size ())
+      {
+        System.err.println ("Unexpected software problem with selected index of sub-queues table!");
+        System.err.println ("-> Ignoring request!");
+        return;
+      }
+      final Iterator<SimQueue> iterator = JSimQueueCreationDialog.this.parameters.queues.iterator ();
+      final Set<SimQueue> newSubQueues = new LinkedHashSet<> ();
+      for (int i = 0; i < selectedIndex; i++)
+        newSubQueues.add (iterator.next ());
+      final SimQueue q1 = iterator.next ();
+      final SimQueue q2 = iterator.next ();
+      newSubQueues.add (q2);
+      newSubQueues.add (q1);
+      while (iterator.hasNext ())
+        newSubQueues.add (iterator.next ());
+      JSimQueueCreationDialog.this.parameters.queues = newSubQueues;
+      ((AbstractTableModel) JSimQueueCreationDialog.this.tableModel).fireTableDataChanged ();
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ADD SUB-QUEUE BUTTON LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class AddSubQueueButtonListener
+  extends AbstractAction
+  {
+
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      final JSimQueueCreationDialog dialog =
+        new JSimQueueCreationDialog (JSimQueueCreationDialog.this.frame,
+          JSimQueueCreationDialog.this.eventList,
+          null);
+      dialog.setTitle ("Create New Sub-Queue");
+      dialog.setVisible (true);
+      final SimQueue createdSubQueue = dialog.getCreatedQueue ();
+      if (createdSubQueue != null)
+      {
+        JSimQueueCreationDialog.this.parameters.queues.add (createdSubQueue);
+        ((AbstractTableModel) JSimQueueCreationDialog.this.tableModel).fireTableDataChanged ();
+      }
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // INSERT SUB-QUEUE BUTTON LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class InsertSubQueueButtonListener
+  extends AbstractAction
+  {
+
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      final JSimQueueCreationDialog dialog =
+        new JSimQueueCreationDialog (JSimQueueCreationDialog.this.frame,
+          JSimQueueCreationDialog.this.eventList,
+          null);
+      dialog.setTitle ("Create New Sub-Queue");
+      dialog.setVisible (true);
+      final SimQueue createdSubQueue = dialog.getCreatedQueue ();
+      if (createdSubQueue != null)
+      {
+        final int selectedIndex = JSimQueueCreationDialog.this.table.getSelectedRow ();
+        if (selectedIndex >= JSimQueueCreationDialog.this.parameters.queues.size ())
+        {
+          System.err.println ("Unexpected software problem with selected index of sub-queues table!");
+          System.err.println ("-> Ignoring request!");
+          return;
+        }
+        final Iterator<SimQueue> iterator = JSimQueueCreationDialog.this.parameters.queues.iterator ();
+        final Set<SimQueue> newSubQueues = new LinkedHashSet<> ();
+        for (int i = 0; i < selectedIndex; i++)
+          newSubQueues.add (iterator.next ());
+        newSubQueues.add (createdSubQueue);
+        while (iterator.hasNext ())
+          newSubQueues.add (iterator.next ());
+        JSimQueueCreationDialog.this.parameters.queues = newSubQueues;
+        ((AbstractTableModel) JSimQueueCreationDialog.this.tableModel).fireTableDataChanged ();
+      }
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DELETE SUB-QUEUE BUTTON LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class DeleteSubQueueButtonListener
+  extends AbstractAction
+  {
+
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      final int selectedIndex = JSimQueueCreationDialog.this.table.getSelectedRow ();
+      if (selectedIndex < 0)
+        return;
+      if (selectedIndex >= JSimQueueCreationDialog.this.parameters.queues.size ())
+      {
+        System.err.println ("Unexpected software problem with selected index of sub-queues table!");
+        System.err.println ("-> Ignoring request!");
+        return;
+      }
+      final Iterator<SimQueue> iterator = JSimQueueCreationDialog.this.parameters.queues.iterator ();
+      final Set<SimQueue> newSubQueues = new LinkedHashSet<> ();
+      for (int i = 0; i < selectedIndex; i++)
+        newSubQueues.add (iterator.next ());
+      iterator.next ();
+      while (iterator.hasNext ())
+        newSubQueues.add (iterator.next ());
+      JSimQueueCreationDialog.this.parameters.queues = newSubQueues;
+      ((AbstractTableModel) JSimQueueCreationDialog.this.tableModel).fireTableDataChanged ();
+    }
+    
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // NUMBER OF SERVERS TEXTFIELD LISTENER

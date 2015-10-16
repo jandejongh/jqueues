@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.composite.DelegateSimJobFactory;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /**
@@ -69,7 +70,7 @@ public enum KnownSimQueue
   
   // composite
   ENCAPSULATOR   ("Encapsulator",  true, nl.jdj.jqueues.r4.composite.BlackEncapsulatorSimQueue.class,
-                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  GeneratorProfile.SE_Q_DSJF, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   DROP_COLLECTOR ("DropCollector", true, nl.jdj.jqueues.r4.composite.BlackDropCollectorSimQueue.class,
                   GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
@@ -156,11 +157,12 @@ public enum KnownSimQueue
   public enum GeneratorProfile
   {
     
-    SE       (true,  true,  false, false, false),
-    SE_WST   (true,  true,  true,  false, false),
-    SE_c     (true,  true,  false, true,  false),
-    SE_B     (true,  true,  false, false, true),
-    UNKNOWN  (false, false, false, false, false);
+    SE        (true,  true,  false, false, false, false, 0, 0),
+    SE_WST    (true,  true,  true,  false, false, false, 0, 0),
+    SE_c      (true,  true,  false, true,  false, false, 0, 0),
+    SE_B      (true,  true,  false, false, true,  false, 0, 0),
+    SE_Q_DSJF (true,  true,  false, false, false, true,  1, 1),
+    UNKNOWN   (false, false, false, false, false, false, 0, 0);
     
     private final boolean canInstantiate;
     
@@ -172,18 +174,30 @@ public enum KnownSimQueue
     
     private final boolean requiresBufferSize;
     
+    private final boolean requiresSubQueues;
+    
+    private final int minSubQueues;
+    
+    private final int maxSubQueues;
+    
     private GeneratorProfile
       (final boolean canInstatiate,
        final boolean requiresSimEventList,
        final boolean requiresWaitServiceTime,
        final boolean requiresNumberOfServers,
-       final boolean requiresBufferSize)
+       final boolean requiresBufferSize,
+       final boolean requiresSubQueues,
+       final int     minSubQueues,
+       final int     maxSubQueues)
     {
       this.canInstantiate = canInstatiate;
       this.requiresSimEventList = requiresSimEventList;
       this.requiresWaitServiceTime = requiresWaitServiceTime;
       this.requiresNumberOfServers = requiresNumberOfServers;
       this.requiresBufferSize = requiresBufferSize;
+      this.requiresSubQueues = requiresSubQueues;
+      this.minSubQueues = minSubQueues;
+      this.maxSubQueues = maxSubQueues;
     }
     
     private SimQueue newInstance (final Class<? extends SimQueue> queueClass, final Parameters parameters)
@@ -208,6 +222,27 @@ public enum KnownSimQueue
         System.err.println ("No event-list supplied for new SimQueue instance with profile " + this + ".");
         return null;
       }
+      if (this.requiresSubQueues)
+      {
+        if (parameters.queues == null)
+        {
+          System.err.println ("No sub-queues supplied for new SimQueue instance with profile " + this + ".");
+          return null;
+        }
+        else if (parameters.queues.size () < this.minSubQueues)
+        {
+          System.err.println ("Error: Not enough sub-queues supplied for new SimQueue instance with profile " + this + ".");
+          System.err.println ("-> Minimum:  " + this.minSubQueues + ".");
+          System.err.println ("-> Supplied: " + parameters.queues.size () + ".");
+          return null;
+        }
+        else if (parameters.queues.size () > this.maxSubQueues)
+        {
+          System.err.println ("Warning: Too many sub-queues supplied for new SimQueue instance with profile " + this + ".");
+          System.err.println ("-> Maximum:  " + this.maxSubQueues + ".");
+          System.err.println ("-> Supplied: " + parameters.queues.size () + ".");
+        }
+      }
       try
       {
         if (this == SE)
@@ -229,6 +264,12 @@ public enum KnownSimQueue
         {
           final Constructor constructor = queueClass.getConstructor (SimEventList.class, Integer.TYPE);
           return (SimQueue) constructor.newInstance (parameters.eventList, parameters.bufferSize);
+        }
+        else if (this == SE_Q_DSJF)
+        {
+          final Constructor constructor = queueClass.getConstructor
+            (SimEventList.class, SimQueue.class, DelegateSimJobFactory.class);
+          return (SimQueue) constructor.newInstance (parameters.eventList, parameters.queues.iterator ().next (), null);
         }
         else
         {
