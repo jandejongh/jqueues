@@ -152,6 +152,17 @@ public class BlackParallelSimQueues
    * 
    */
   @Override
+  protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
+  {
+    return super.getDropDestinationQueue (t, job, queue);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
   public final void update (final double time)
   {
     super.update (time);

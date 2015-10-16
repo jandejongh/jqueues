@@ -152,6 +152,17 @@ public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue,
     super.update (time);
   }
 
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
+  {
+    return super.getDropDestinationQueue (t, job, queue);
+  }
+
   /** Returns "Tandem[queue list]".
    * 
    * @return "Tandem[queue list]".

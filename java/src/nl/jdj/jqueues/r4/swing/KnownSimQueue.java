@@ -40,6 +40,8 @@ public enum KnownSimQueue
   // composite
   ENCAPSULATOR   ("Encapsulator",  true, nl.jdj.jqueues.r4.composite.BlackEncapsulatorSimQueue.class,
                                          GeneratorProfile.UNKNOWN),
+  DROP_COLLECTOR ("DropCollector", true, nl.jdj.jqueues.r4.composite.BlackDropCollectorSimQueue.class,
+                                         GeneratorProfile.UNKNOWN),
   TANDEM         ("Tandem",        true, nl.jdj.jqueues.r4.composite.BlackTandemSimQueue.class,
                                          GeneratorProfile.UNKNOWN),
   COMP_TANDEM_2  ("Comp_Tandem_2", true, nl.jdj.jqueues.r4.composite.BlackCompressedTandem2SimQueue.class,

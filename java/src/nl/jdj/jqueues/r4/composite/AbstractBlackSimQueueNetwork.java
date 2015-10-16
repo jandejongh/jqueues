@@ -573,7 +573,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   /**
    * {@inheritDoc}
    * 
-   * Checks if the job is a known delegate job, and calls {@link #notifyUpdate}.
+   * Checks if the job is a known delegate job, and calls {@link #update}.
    * 
    */
   @Override
@@ -594,7 +594,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   /**
    * {@inheritDoc}
    * 
-   * Calls {@link #notifyUpdate}.
+   * Calls {@link #update}.
    * If needed, fires a start event for the real job, and
    * puts that job in {@link #jobsExecuting}.
    * 
@@ -627,12 +627,42 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     }
   }
 
+  /** Returns an optional destination (delegate) {@link SimQueue} for dropped jobs.
+   * 
+   * Normally, dropping a delegate job as noted by {@link #notifyDrop} results in dropping the corresponding real job.
+   * By overriding this method the default behavior can be changed, and such jobs can be sent to one of the
+   * sub-queues as an arrival.
+   * 
+   * <p>
+   * The default implementation return <code>null</code>, implying that the real job is to be dropped as well.
+   * 
+   * @param t The time the delegate job was dropped, i.e., the current time.
+   * @param job The (delegate) job that was dropped.
+   * @param queue The queue at which it was dropped.
+   * 
+   * @return Any {@link SimQueue} in {@link #getQueues} to which the dropped job is to be sent as an arrival, or <code>null</code>
+   *           if the corresponding real job is to be dropped as well.
+   * 
+   * @see #notifyDrop
+   * 
+   */
+  protected DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
+  {
+    return null;
+  }
+  
   /**
    * {@inheritDoc}
    * 
-   * Calls {@link #notifyUpdate}.
-   * Gets the real job and drops it as well.
+   * Calls {@link #update}.
+   * Starts the dropped job on a valid non-<code>null</code> result from {@link #getDropDestinationQueue};
+   * otherwise it gets the real job, sets its queue to <code>null</code> and drops it as well.
    * 
+   * @see #update
+   * @see #getDropDestinationQueue
+   * @see #arrive
+   * @see #exitJobFromQueues
+   * @see SimJob#setQueue
    * @see #fireDrop
    * 
    */
@@ -641,11 +671,22 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   {
     final J realJob = getRealJob (job, queue);
     update (t);
-    exitJobFromQueues (realJob, job);
-    fireDrop (t, realJob);
+    final DQ dropDestinationQueue = getDropDestinationQueue (t, job, queue);
+    if (dropDestinationQueue != null)
+    {
+      if (! getQueues ().contains (dropDestinationQueue))
+        throw new RuntimeException ();
+      dropDestinationQueue.arrive (job, t);
+    }
+    else
+    {
+      exitJobFromQueues (realJob, job);
+      job.setQueue (null);
+      fireDrop (t, realJob);
+    }
   }
 
-  /** *  Checks if the job is a known delegate job, and calls {@link #notifyUpdate}.
+  /** *  Checks if the job is a known delegate job, and calls {@link #update}.
    * 
    * {@inheritDoc}
    * 
@@ -661,7 +702,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   /**
    * {@inheritDoc}
    * 
-   * Calls {@link #notifyUpdate}.
+   * Calls {@link #update}.
    * 
    * Finds the next queue to visit by the delegate job.
    * If found, schedules the arrival of the delegate job at the next queue.
@@ -709,10 +750,10 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   /**
    * {@inheritDoc}
    * 
-   * Calls {@link #notifyUpdate} and {@link #reassessNoWaitArmed}.
+   * Calls {@link #update} and {@link #reassessNoWaitArmed}.
    * May be overridden.
    *
-   * @see #notifyUpdate
+   * @see #update
    * @see #reassessNoWaitArmed
    * @see #isNoWaitArmed
    * 

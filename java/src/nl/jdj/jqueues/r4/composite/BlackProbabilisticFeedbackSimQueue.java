@@ -80,28 +80,6 @@ public class BlackProbabilisticFeedbackSimQueue
    * 
    */
   @Override
-  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
-  {
-    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  protected final void startForSubClass (final double t, final DJ job, final DQ queue)
-  {
-    super.startForSubClass (t, job, queue);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
   public final void update (final double time)
   {
     super.update (time);

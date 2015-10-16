@@ -20,7 +20,7 @@ public class BlackEncapsulatorSimQueue
   extends BlackTandemSimQueue<DJ, DQ, J, Q>
 {
   
-  /** Auxiliary method to create the required {@link Set} of {@link SimQueue}s in the constructor.
+  /** Auxiliary method to create the required {@link Set} of a single {@link SimQueue} in the constructor.
    * 
    * @param queue  The queue.
    * 
@@ -36,7 +36,7 @@ public class BlackEncapsulatorSimQueue
     return set;
   }
   
-  /** Creates a black compressed tandem queue given an event list, a wait queue and a serve queue.
+  /** Creates a black encapsulated queue given an event list and a queue.
    *
    * @param eventList The event list to use.
    * @param queue     The encapsulated queue.

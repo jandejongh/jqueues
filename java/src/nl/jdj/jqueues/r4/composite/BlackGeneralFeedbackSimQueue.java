@@ -141,7 +141,30 @@ public class BlackGeneralFeedbackSimQueue
   {
     return super.isNoWaitArmed ();
   }
+
+  @Override
+  public final void notifyNewNoWaitArmed (double time, DQ queue, boolean noWaitArmed)
+  {
+    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
+  }
+
+  @Override
+  protected final void startForSubClass (double t, DJ job, DQ queue)
+  {
+    super.startForSubClass (t, job, queue);
+  }
   
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
+  {
+    return super.getDropDestinationQueue (t, job, queue);
+  }
+
   /** Returns "GenFB[embedded queue]".
    * 
    * @return "GenFB[embedded queue]".

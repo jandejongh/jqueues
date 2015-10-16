@@ -216,6 +216,17 @@ public class BlackJacksonSimQueueNetwork
 
   /** Calls super method (in order to make implementation final).
    * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
+  {
+    return super.getDropDestinationQueue (t, job, queue);
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
    * <p>
    * {@inheritDoc}
    * 
