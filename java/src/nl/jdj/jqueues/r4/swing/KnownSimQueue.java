@@ -509,6 +509,8 @@ public enum KnownSimQueue
     
     public int bufferSize = 10;
     
+    public double startTime = Double.NEGATIVE_INFINITY;
+    
   }
   
 }

@@ -73,7 +73,7 @@ implements ItemListener
 
   final JTextField waitServiceTimeTextField = new JTextField ("Wait/Service Time Value");
   
-  private final void setQueueType (final KnownSimQueue queueType)
+  private void setQueueType (final KnownSimQueue queueType)
   {
     if (queueType != null)
     {
@@ -108,7 +108,7 @@ implements ItemListener
     }
   }
   
-  private final void createQueueAndClose ()
+  private void createQueueAndClose ()
   {
     final SimQueue createdQueue = ((KnownSimQueue) this.knownQueues.getSelectedItem ()).newInstance (this.parameters);
     if (createdQueue == null)
@@ -121,6 +121,7 @@ implements ItemListener
     else
     {
       this.createdQueue = createdQueue;
+      this.eventList.reset (this.parameters.startTime);
       setVisible (false);
       // dispose ();
     }
@@ -230,8 +231,33 @@ implements ItemListener
     add (parametersPanel);
     add (Box.createRigidArea (new Dimension (0, 10)));
     final JPanel initialStatePanel = new JPanel ();
+    final JLabel startTimeLabel           = new JLabel ("Start Time");
     final JLabel queueAccessVacationLabel = new JLabel ("Queue Access Vacation");
     final JLabel serverAccessCreditsLabel = new JLabel ("Server-Access Credits");
+    final JTextField startTimeTextField = new JTextField ();
+    startTimeTextField.setText (Double.toString (this.parameters.startTime));
+    startTimeTextField.addActionListener (new ActionListener ()
+    {
+      @Override
+      public final void actionPerformed (final ActionEvent ae)
+      {
+        final String text = startTimeTextField.getText ();
+        if (text != null)
+        {
+          final double startTimeDouble;
+          try
+          {
+            startTimeDouble = Double.parseDouble (text);
+            JSimQueueCreationDialog.this.parameters.startTime = startTimeDouble;
+            return;
+          }
+          catch (NumberFormatException nfe)
+          {
+          }
+        }
+        startTimeTextField.setText (Double.toString (JSimQueueCreationDialog.this.parameters.startTime));
+      }
+    });
     final JCheckBox queueAccessVacationCheckBox = new JCheckBox ();
     queueAccessVacationCheckBox.setSelected (queue == null ? false : queue.isQueueAccessVacation ());
     this.parameters.queueAccessVacation = (queue == null ? false : queue.isQueueAccessVacation ());
@@ -313,12 +339,14 @@ implements ItemListener
         .addGroup
         (
           initialStateLayout.createParallelGroup (GroupLayout.Alignment.LEADING)
+            .addComponent (startTimeLabel)
             .addComponent (queueAccessVacationLabel)
             .addComponent (serverAccessCreditsLabel)
         )
         .addGroup
         (
           initialStateLayout.createParallelGroup (GroupLayout.Alignment.LEADING)
+            .addComponent (startTimeTextField)
             .addComponent (queueAccessVacationCheckBox)
             .addComponent (serverAccessCreditsTextField)
         )
@@ -326,6 +354,12 @@ implements ItemListener
     initialStateLayout.setVerticalGroup
     (
       initialStateLayout.createSequentialGroup ()
+        .addGroup
+        (
+          initialStateLayout.createParallelGroup (GroupLayout.Alignment.BASELINE)
+            .addComponent (startTimeLabel)
+            .addComponent (startTimeTextField)
+        )
         .addGroup
         (
           initialStateLayout.createParallelGroup (GroupLayout.Alignment.BASELINE)
@@ -509,7 +543,7 @@ implements ItemListener
       actionPerformed ();
     }
     
-    private final void actionPerformed ()
+    private void actionPerformed ()
     {
       final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.knownQueues.getSelectedItem ();
       if (knownQueue == null)
@@ -568,7 +602,7 @@ implements ItemListener
       actionPerformed ();
     }
     
-    private final void actionPerformed ()
+    private void actionPerformed ()
     {
       final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.knownQueues.getSelectedItem ();
       if (knownQueue == null)
@@ -627,7 +661,7 @@ implements ItemListener
       actionPerformed ();
     }
     
-    private final void actionPerformed ()
+    private void actionPerformed ()
     {
       final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.knownQueues.getSelectedItem ();
       if (knownQueue == null)
