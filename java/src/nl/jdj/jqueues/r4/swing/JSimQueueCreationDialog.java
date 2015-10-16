@@ -60,12 +60,10 @@ implements ItemListener
     final SimQueue createdQueue = ((KnownSimQueue) this.knownQueues.getSelectedItem ()).newInstance (this.parameters);
     if (createdQueue == null)
     {
-      if (JOptionPane.showConfirmDialog
-          (this, "Could not create SimQueue!", "Error", JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE) == 0)
-      {
-        setVisible (false);
-        // dispose ();
-      }
+      JOptionPane.showConfirmDialog
+        (this, "Could not create SimQueue!", "Error", JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE);
+      // setVisible (false);
+      // dispose ();
     }
     else
     {
@@ -98,9 +96,15 @@ implements ItemListener
     add (Box.createRigidArea (new Dimension (0, 10)));
     this.table = new JTable (this.tableModel);
     if (this.knownQueues.getSelectedItem () != null && ((KnownSimQueue) this.knownQueues.getSelectedItem ()).isComposite ())
+    {
+      this.table.setBackground (getBackground ());
       this.table.setEnabled (true);
+    }
     else
+    {
+      this.table.setBackground (new Color (255, 192, 192));
       this.table.setEnabled (false);
+    }
     this.table.setPreferredSize (new Dimension (200, 200));
     this.table.setMaximumSize (new Dimension (200, 200));
     final JComponent scrollPane = new JScrollPane (this.table);
@@ -412,6 +416,7 @@ implements ItemListener
     {
       final KnownSimQueue item = (KnownSimQueue) event.getItem ();
       this.table.setEnabled (item.isComposite ());
+      this.table.setBackground (item.isComposite () ? getBackground () : new Color (255, 192, 192));
       // do something with object
     }
   }
@@ -436,7 +441,7 @@ implements ItemListener
     @Override
     public final int getColumnCount ()
     {
-      return 2;
+      return 3;
     }
 
     @Override
@@ -447,6 +452,8 @@ implements ItemListener
       else if (column == 0)
         return "Type";
       else if (column == 1)
+        return "Name";
+      else if (column == 2)
         return "Composite";
       else
         return null;
@@ -460,6 +467,8 @@ implements ItemListener
       else if (column == 0)
         return KnownSimQueue.class;
       else if (column == 1)
+        return String.class;
+      else if (column == 2)
         return Boolean.class;
       else
         return null;
@@ -470,7 +479,7 @@ implements ItemListener
     {
       if (r < 0 || r >= JSimQueueCreationDialog.this.subQueues.size ())
         return null;
-      if (c < 0 || c >= 1)
+      if (c < 0 || c >= 2)
         return null;
       final Iterator<SimQueue> iterator = JSimQueueCreationDialog.this.subQueues.iterator ();
       SimQueue q = iterator.next ();
@@ -482,7 +491,9 @@ implements ItemListener
       }
       if (c == 0)
         return KnownSimQueue.valueOf (q);
-      else if (c ==1)
+      else if (c == 1)
+        return q.toString ();
+      else if (c == 2)
         return KnownSimQueue.valueOf (q).isComposite ();
       //else if (c == 2)
       //  return e.getObject ();
