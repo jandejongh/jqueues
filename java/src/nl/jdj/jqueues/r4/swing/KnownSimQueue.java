@@ -19,44 +19,61 @@ public enum KnownSimQueue
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // serverless
-  DROP    ("DROP",  false, nl.jdj.jqueues.r4.serverless.DROP.class,  GeneratorProfile.SE),
-  SINK    ("SINK",  false, nl.jdj.jqueues.r4.serverless.SINK.class,  GeneratorProfile.SE),
-  DELAY   ("DELAY", false, nl.jdj.jqueues.r4.serverless.DELAY.class, GeneratorProfile.SE_WST),
-  ZERO    ("ZERO",  false, nl.jdj.jqueues.r4.serverless.ZERO.class,  GeneratorProfile.SE),
+  DROP    ("DROP",  false, nl.jdj.jqueues.r4.serverless.DROP.class,  GeneratorProfile.SE,
+           NumberOfServersProfile.NOS_ALWAYS_ZERO),
+  SINK    ("SINK",  false, nl.jdj.jqueues.r4.serverless.SINK.class,  GeneratorProfile.SE,
+           NumberOfServersProfile.NOS_ALWAYS_ZERO),
+  DELAY   ("DELAY", false, nl.jdj.jqueues.r4.serverless.DELAY.class, GeneratorProfile.SE_WST,
+           NumberOfServersProfile.NOS_ALWAYS_ZERO),
+  ZERO    ("ZERO",  false, nl.jdj.jqueues.r4.serverless.ZERO.class,  GeneratorProfile.SE,
+           NumberOfServersProfile.NOS_ALWAYS_ZERO),
   
   // nonpreemptive
-  NO_BUFFER_c ("NoBuffer_c", false, nl.jdj.jqueues.r4.nonpreemptive.NoBuffer_c.class, GeneratorProfile.SE_c),
-  FCFS        ("FCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.FCFS.class,       GeneratorProfile.SE),
-  FCFS_B      ("FCFS_B",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_B.class,     GeneratorProfile.SE_B),
-  FCFS_c      ("FCFS_c",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_c.class,     GeneratorProfile.SE_c),
-  LCFS        ("LCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.LCFS.class,       GeneratorProfile.SE),
-  RANDOM      ("RANDOM",     false, nl.jdj.jqueues.r4.nonpreemptive.RANDOM.class,     GeneratorProfile.SE),
-  SJF         ("SJF",        false, nl.jdj.jqueues.r4.nonpreemptive.SJF.class,        GeneratorProfile.SE),
-  LJF         ("LJF",        false, nl.jdj.jqueues.r4.nonpreemptive.LJF.class,        GeneratorProfile.SE),
-  IS          ("IS",         false, nl.jdj.jqueues.r4.nonpreemptive.IS.class,         GeneratorProfile.SE),
-  IS_CST      ("IS_CST",     false, nl.jdj.jqueues.r4.nonpreemptive.IS_CST.class,     GeneratorProfile.SE_WST),
-  IC          ("IC",         false, nl.jdj.jqueues.r4.nonpreemptive.IC.class,         GeneratorProfile.SE),
+  NO_BUFFER_c ("NoBuffer_c", false, nl.jdj.jqueues.r4.nonpreemptive.NoBuffer_c.class, GeneratorProfile.SE_c,
+               NumberOfServersProfile.NOS_FINITE),
+  FCFS        ("FCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.FCFS.class,       GeneratorProfile.SE,
+               NumberOfServersProfile.NOS_ALWAYS_ONE),
+  FCFS_B      ("FCFS_B",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_B.class,     GeneratorProfile.SE_B,
+               NumberOfServersProfile.NOS_ALWAYS_ONE),
+  FCFS_c      ("FCFS_c",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_c.class,     GeneratorProfile.SE_c,
+               NumberOfServersProfile.NOS_FINITE),
+  LCFS        ("LCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.LCFS.class,       GeneratorProfile.SE,
+               NumberOfServersProfile.NOS_ALWAYS_ONE),
+  RANDOM      ("RANDOM",     false, nl.jdj.jqueues.r4.nonpreemptive.RANDOM.class,     GeneratorProfile.SE,
+               NumberOfServersProfile.NOS_ALWAYS_ONE),
+  SJF         ("SJF",        false, nl.jdj.jqueues.r4.nonpreemptive.SJF.class,        GeneratorProfile.SE,
+               NumberOfServersProfile.NOS_ALWAYS_ONE),
+  LJF         ("LJF",        false, nl.jdj.jqueues.r4.nonpreemptive.LJF.class,        GeneratorProfile.SE,
+               NumberOfServersProfile.NOS_ALWAYS_ONE),
+  IS          ("IS",         false, nl.jdj.jqueues.r4.nonpreemptive.IS.class,         GeneratorProfile.SE,
+               NumberOfServersProfile.NOS_ALWAYS_INFINITE),
+  IS_CST      ("IS_CST",     false, nl.jdj.jqueues.r4.nonpreemptive.IS_CST.class,     GeneratorProfile.SE_WST,
+               NumberOfServersProfile.NOS_ALWAYS_INFINITE),
+  IC          ("IC",         false, nl.jdj.jqueues.r4.nonpreemptive.IC.class,         GeneratorProfile.SE,
+               NumberOfServersProfile.NOS_ALWAYS_INFINITE),
   
   // composite
   ENCAPSULATOR   ("Encapsulator",  true, nl.jdj.jqueues.r4.composite.BlackEncapsulatorSimQueue.class,
-                                         GeneratorProfile.UNKNOWN),
+                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
   DROP_COLLECTOR ("DropCollector", true, nl.jdj.jqueues.r4.composite.BlackDropCollectorSimQueue.class,
-                                         GeneratorProfile.UNKNOWN),
+                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
   TANDEM         ("Tandem",        true, nl.jdj.jqueues.r4.composite.BlackTandemSimQueue.class,
-                                         GeneratorProfile.UNKNOWN),
+                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
   COMP_TANDEM_2  ("Comp_Tandem_2", true, nl.jdj.jqueues.r4.composite.BlackCompressedTandem2SimQueue.class,
-                                         GeneratorProfile.UNKNOWN),
+                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
   PARALLEL       ("Parallel",      true, nl.jdj.jqueues.r4.composite.BlackParallelSimQueues.class,
-                                         GeneratorProfile.UNKNOWN),
+                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
+  JSQ            ("JSQ",           true, nl.jdj.jqueues.r4.composite.BlackJoinShortestSimQueue.class,
+                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
   FB_PROB        ("FB_Prob",       true, nl.jdj.jqueues.r4.composite.BlackProbabilisticFeedbackSimQueue.class,
-                                         GeneratorProfile.UNKNOWN),
+                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
   FB_VISITS      ("FB_NumVisits",  true, nl.jdj.jqueues.r4.composite.BlackNumVisitsFeedbackSimQueue.class,
-                                         GeneratorProfile.UNKNOWN),
+                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
   JACKSON        ("Jackson",       true, nl.jdj.jqueues.r4.composite.BlackJacksonSimQueueNetwork.class,
-                                         GeneratorProfile.UNKNOWN),
+                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
   
   // unknown
-  UNKNOWN ("Unknown", true,  null, GeneratorProfile.UNKNOWN);
+  UNKNOWN ("Unknown", true,  null, GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -209,6 +226,80 @@ public enum KnownSimQueue
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // NUMBER OF SERVERS PROFILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final NumberOfServersProfile numberOfServersProfile;
+  
+  public final NumberOfServersProfile getNumberOfServersProfile ()
+  {
+    return this.numberOfServersProfile;
+  }
+  
+  public enum NumberOfServersProfile
+  {
+    
+    NOS_IRRELEVANT      ( 0,  0,  0),
+    NOS_ALWAYS_ZERO     ( 0,  0,  0),
+    NOS_ALWAYS_ONE      ( 1,  1,  1),
+    NOS_ALWAYS_INFINITE (-1, -1, -1),
+    NOS_NON_ZERO        ( 1, -1, -1),
+    NOS_FINITE          ( 0, Integer.MAX_VALUE, 1),
+    NOS_NON_ZERO_FINITE ( 1, Integer.MAX_VALUE, 1),
+    NOS_ANY             ( 0, -1, -1);
+
+    private final int minVal;
+    
+    private final int maxVal;
+    
+    private final int defVal;
+    
+    private NumberOfServersProfile (final int minVal, final int maxVal, final int defVal)
+    {
+      this.minVal = minVal;
+      this.maxVal = maxVal;
+      this.defVal = defVal;
+    }
+    
+    public final int getMinValue ()
+    {
+      return this.minVal;
+    }
+    
+    public final int getMaxValue ()
+    {
+      return this.maxVal;
+    }
+    
+    public final int getDefValue ()
+    {
+      return this.defVal;
+    }
+    
+    public final boolean isUserSettable ()
+    {
+      return getMinValue () != getMaxValue ();
+    }
+    
+    public final boolean isValidValue (int val)
+    {
+      if (val < -1)
+        return false;
+      if (! isUserSettable ())
+        return (val == getMinValue ());
+      if (this.minVal == -1)
+        return (val == -1);
+      if (val != -1 && val < this.minVal)
+        return false;
+      if (this.maxVal == -1)
+        return true;
+      return (val != -1 && val <= this.maxVal);
+    }
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // CONSTRUCTOR
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -217,12 +308,14 @@ public enum KnownSimQueue
   (final String defaultName,
     final boolean composite,
     final Class<? extends SimQueue> queueClass,
-    final GeneratorProfile generatorProfile)
+    final GeneratorProfile generatorProfile,
+    final NumberOfServersProfile numberOfServersProfile)
   {
     this.queueClass = queueClass;
     this.defaultName = defaultName;
     this.composite = composite;
     this.generatorProfile = generatorProfile;
+    this.numberOfServersProfile = numberOfServersProfile;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

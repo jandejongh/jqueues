@@ -54,6 +54,34 @@ implements ItemListener
   private final Set<SimQueue> subQueues = new LinkedHashSet<>  ();
   
   private final KnownSimQueue.Parameters parameters = new KnownSimQueue.Parameters ();
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SWING COMPONENTS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final TableModel tableModel = new QueuesTableModel ();
+  
+  private final JTable table = new JTable (this.tableModel);
+  
+  final JTextField numberOfServersTextField = new JTextField ("Number of Servers Value");
+  
+  private final void setQueueType (final KnownSimQueue queueType)
+  {
+    if (queueType != null)
+    {
+      // this.table
+      this.table.setEnabled (queueType.isComposite ());
+      this.table.setBackground (queueType.isComposite () ? getBackground () : new Color (255, 192, 192));
+      // this.numberOfServersTextField
+      final int defaultNumberOfServers = queueType.getNumberOfServersProfile ().getDefValue ();
+      this.numberOfServersTextField.setText (defaultNumberOfServers == -1 ? "Infinite" : Integer.toString (defaultNumberOfServers));
+      final boolean numberOfServersEditable = queueType.getNumberOfServersProfile ().isUserSettable ();
+      this.numberOfServersTextField.setEditable (numberOfServersEditable);
+      this.numberOfServersTextField.setBackground (numberOfServersEditable ? getBackground () : new Color (255, 192, 192));
+    }
+  }
   
   private final void createQueueAndClose ()
   {
@@ -94,7 +122,6 @@ implements ItemListener
       (BorderFactory.createLineBorder (Color.orange, 4, true), "Select Queue Type"));
     add (this.knownQueues);
     add (Box.createRigidArea (new Dimension (0, 10)));
-    this.table = new JTable (this.tableModel);
     if (this.knownQueues.getSelectedItem () != null && ((KnownSimQueue) this.knownQueues.getSelectedItem ()).isComposite ())
     {
       this.table.setBackground (getBackground ());
@@ -119,13 +146,12 @@ implements ItemListener
     final JLabel numberOfServersLabel = new JLabel ("Number of Servers");
     final JLabel bufferSizeLabel = new JLabel ("Buffer Size");
     final JLabel waitServiceTimeLabel = new JLabel ("Wait/Service Time");
-    final JTextField numberOfServersTextField = new JTextField ("Number of Servers Value");
-    numberOfServersTextField.addActionListener (new ActionListener ()
+    this.numberOfServersTextField.addActionListener (new ActionListener ()
     {
       @Override
       public final void actionPerformed (final ActionEvent ae)
       {
-        final String text = numberOfServersTextField.getText ();
+        final String text = JSimQueueCreationDialog.this.numberOfServersTextField.getText ();
         if (text != null)
         {
           final int numberOfServersInt;
@@ -133,17 +159,20 @@ implements ItemListener
           {
             numberOfServersInt = Integer.parseInt (text);
             if (numberOfServersInt < 0)
-              numberOfServersTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));        
+              JSimQueueCreationDialog.this.numberOfServersTextField.setText
+                (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));        
             else
               JSimQueueCreationDialog.this.parameters.numberOfServers = numberOfServersInt;
           }
           catch (NumberFormatException nfe)
           {
-            numberOfServersTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));        
+            JSimQueueCreationDialog.this.numberOfServersTextField.setText
+              (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));        
           }
         }
         else
-          numberOfServersTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));
+          JSimQueueCreationDialog.this.numberOfServersTextField.setText
+            (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfServers));
       }
     });
     final JTextField bufferSizeTextField = new JTextField ("Buffer Size Value");
@@ -404,6 +433,8 @@ implements ItemListener
       (BorderFactory.createLineBorder (Color.orange, 4, true), "Exit"));
     add (exitPanel);
     add (Box.createRigidArea (new Dimension (0, 10)));
+    setQueueType ((KnownSimQueue) this.knownQueues.getSelectedItem ());
+    ((AbstractTableModel) this.table.getModel ()).fireTableDataChanged ();
     pack ();
     setLocationRelativeTo (frame);
     this.knownQueues.addItemListener (this);
@@ -415,21 +446,18 @@ implements ItemListener
     if (event.getStateChange () == ItemEvent.SELECTED)
     {
       final KnownSimQueue item = (KnownSimQueue) event.getItem ();
-      this.table.setEnabled (item.isComposite ());
-      this.table.setBackground (item.isComposite () ? getBackground () : new Color (255, 192, 192));
-      // do something with object
+      setQueueType (item);
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // TABLE AND TABLE MODEL
+  // TABLE MODEL
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  private final JTable table;
-  
-  private final TableModel tableModel = new AbstractTableModel ()
+  private final class QueuesTableModel
+  extends AbstractTableModel
   {
 
     @Override
