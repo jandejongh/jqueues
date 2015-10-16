@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r4.swing;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.composite.DelegateSimJobFactory;
@@ -81,7 +82,7 @@ public enum KnownSimQueue
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   TANDEM         ("Tandem", true, nl.jdj.jqueues.r4.composite.BlackTandemSimQueue.class,
-                  GeneratorProfile.UNKNOWN,
+                  GeneratorProfile.SE_QSET_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
@@ -184,6 +185,7 @@ public enum KnownSimQueue
     SE_B          (true,  true,  false, false, true,  false, 0, 0),
     SE_Q_DSJF     (true,  true,  false, false, false, true,  1, 1),
     SE_Q1_Q2_DSJF (true,  true,  false, false, false, true,  2, 2),
+    SE_QSET_DSJF  (true,  true,  false, false, false, true,  0, Integer.MAX_VALUE),
     UNKNOWN       (false, false, false, false, false, false, 0, 0);
     
     private final boolean canInstantiate;
@@ -303,6 +305,13 @@ public enum KnownSimQueue
           final SimQueue q1 = iterator.next ();
           final SimQueue q2 = iterator.next ();
           return (SimQueue) constructor.newInstance (parameters.eventList, q1, q2, null);
+        }
+        else if (this == SE_QSET_DSJF)
+        {
+          final Constructor constructor = queueClass.getConstructor
+            (SimEventList.class, Set.class, DelegateSimJobFactory.class);
+          final Set<SimQueue> qSet = new LinkedHashSet<> (parameters.queues);
+          return (SimQueue) constructor.newInstance (parameters.eventList, qSet, null);
         }
         else
         {
