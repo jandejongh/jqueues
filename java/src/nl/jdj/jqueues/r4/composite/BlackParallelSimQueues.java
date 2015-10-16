@@ -141,17 +141,6 @@ public class BlackParallelSimQueues
    * 
    */
   @Override
-  public final boolean isNoWaitArmed ()
-  {
-    return super.isNoWaitArmed ();
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
   protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
   {
     return super.getDropDestinationQueue (t, job, queue);
