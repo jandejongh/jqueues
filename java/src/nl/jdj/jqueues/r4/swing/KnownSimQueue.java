@@ -20,60 +20,86 @@ public enum KnownSimQueue
   
   // serverless
   DROP    ("DROP",  false, nl.jdj.jqueues.r4.serverless.DROP.class,  GeneratorProfile.SE,
-           NumberOfServersProfile.NOS_ALWAYS_ZERO),
+           IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_IRRELEVANT,
+           DoubleParameterProfile.DPP_IRRELEVANT),
   SINK    ("SINK",  false, nl.jdj.jqueues.r4.serverless.SINK.class,  GeneratorProfile.SE,
-           NumberOfServersProfile.NOS_ALWAYS_ZERO),
+           IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+           DoubleParameterProfile.DPP_IRRELEVANT),
   DELAY   ("DELAY", false, nl.jdj.jqueues.r4.serverless.DELAY.class, GeneratorProfile.SE_WST,
-           NumberOfServersProfile.NOS_ALWAYS_ZERO),
+           IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+           DoubleParameterProfile.DPP_POSITIVE),
   ZERO    ("ZERO",  false, nl.jdj.jqueues.r4.serverless.ZERO.class,  GeneratorProfile.SE,
-           NumberOfServersProfile.NOS_ALWAYS_ZERO),
+           IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+           DoubleParameterProfile.DPP_IRRELEVANT),
   
   // nonpreemptive
   NO_BUFFER_c ("NoBuffer_c", false, nl.jdj.jqueues.r4.nonpreemptive.NoBuffer_c.class, GeneratorProfile.SE_c,
-               NumberOfServersProfile.NOS_FINITE),
+               IntegerParameterProfile.IPP_FINITE, IntegerParameterProfile.IPP_ALWAYS_ZERO,
+               DoubleParameterProfile.DPP_IRRELEVANT),
   FCFS        ("FCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.FCFS.class,       GeneratorProfile.SE,
-               NumberOfServersProfile.NOS_ALWAYS_ONE),
+               IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+               DoubleParameterProfile.DPP_IRRELEVANT),
   FCFS_B      ("FCFS_B",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_B.class,     GeneratorProfile.SE_B,
-               NumberOfServersProfile.NOS_ALWAYS_ONE),
+               IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_FINITE,
+               DoubleParameterProfile.DPP_IRRELEVANT),
   FCFS_c      ("FCFS_c",     false, nl.jdj.jqueues.r4.nonpreemptive.FCFS_c.class,     GeneratorProfile.SE_c,
-               NumberOfServersProfile.NOS_FINITE),
+               IntegerParameterProfile.IPP_FINITE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+               DoubleParameterProfile.DPP_IRRELEVANT),
   LCFS        ("LCFS",       false, nl.jdj.jqueues.r4.nonpreemptive.LCFS.class,       GeneratorProfile.SE,
-               NumberOfServersProfile.NOS_ALWAYS_ONE),
+               IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+               DoubleParameterProfile.DPP_IRRELEVANT),
   RANDOM      ("RANDOM",     false, nl.jdj.jqueues.r4.nonpreemptive.RANDOM.class,     GeneratorProfile.SE,
-               NumberOfServersProfile.NOS_ALWAYS_ONE),
+               IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+               DoubleParameterProfile.DPP_IRRELEVANT),
   SJF         ("SJF",        false, nl.jdj.jqueues.r4.nonpreemptive.SJF.class,        GeneratorProfile.SE,
-               NumberOfServersProfile.NOS_ALWAYS_ONE),
+               IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+               DoubleParameterProfile.DPP_IRRELEVANT),
   LJF         ("LJF",        false, nl.jdj.jqueues.r4.nonpreemptive.LJF.class,        GeneratorProfile.SE,
-               NumberOfServersProfile.NOS_ALWAYS_ONE),
+               IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+               DoubleParameterProfile.DPP_IRRELEVANT),
   IS          ("IS",         false, nl.jdj.jqueues.r4.nonpreemptive.IS.class,         GeneratorProfile.SE,
-               NumberOfServersProfile.NOS_ALWAYS_INFINITE),
+               IntegerParameterProfile.IPP_ALWAYS_INFINITE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+               DoubleParameterProfile.DPP_IRRELEVANT),
   IS_CST      ("IS_CST",     false, nl.jdj.jqueues.r4.nonpreemptive.IS_CST.class,     GeneratorProfile.SE_WST,
-               NumberOfServersProfile.NOS_ALWAYS_INFINITE),
+               IntegerParameterProfile.IPP_ALWAYS_INFINITE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+               DoubleParameterProfile.DPP_POSITIVE),
   IC          ("IC",         false, nl.jdj.jqueues.r4.nonpreemptive.IC.class,         GeneratorProfile.SE,
-               NumberOfServersProfile.NOS_ALWAYS_INFINITE),
+               IntegerParameterProfile.IPP_ALWAYS_INFINITE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+               DoubleParameterProfile.DPP_IRRELEVANT),
   
   // composite
   ENCAPSULATOR   ("Encapsulator",  true, nl.jdj.jqueues.r4.composite.BlackEncapsulatorSimQueue.class,
-                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
+                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  DoubleParameterProfile.DPP_IRRELEVANT),
   DROP_COLLECTOR ("DropCollector", true, nl.jdj.jqueues.r4.composite.BlackDropCollectorSimQueue.class,
-                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
+                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  DoubleParameterProfile.DPP_IRRELEVANT),
   TANDEM         ("Tandem",        true, nl.jdj.jqueues.r4.composite.BlackTandemSimQueue.class,
-                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
+                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  DoubleParameterProfile.DPP_IRRELEVANT),
   COMP_TANDEM_2  ("Comp_Tandem_2", true, nl.jdj.jqueues.r4.composite.BlackCompressedTandem2SimQueue.class,
-                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
+                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  DoubleParameterProfile.DPP_IRRELEVANT),
   PARALLEL       ("Parallel",      true, nl.jdj.jqueues.r4.composite.BlackParallelSimQueues.class,
-                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
+                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  DoubleParameterProfile.DPP_IRRELEVANT),
   JSQ            ("JSQ",           true, nl.jdj.jqueues.r4.composite.BlackJoinShortestSimQueue.class,
-                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
+                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  DoubleParameterProfile.DPP_IRRELEVANT),
   FB_PROB        ("FB_Prob",       true, nl.jdj.jqueues.r4.composite.BlackProbabilisticFeedbackSimQueue.class,
-                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
+                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  DoubleParameterProfile.DPP_IRRELEVANT),
   FB_VISITS      ("FB_NumVisits",  true, nl.jdj.jqueues.r4.composite.BlackNumVisitsFeedbackSimQueue.class,
-                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
+                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  DoubleParameterProfile.DPP_IRRELEVANT),
   JACKSON        ("Jackson",       true, nl.jdj.jqueues.r4.composite.BlackJacksonSimQueueNetwork.class,
-                  GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT),
+                  GeneratorProfile.UNKNOWN, IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+                  DoubleParameterProfile.DPP_IRRELEVANT),
   
   // unknown
-  UNKNOWN ("Unknown", true,  null, GeneratorProfile.UNKNOWN, NumberOfServersProfile.NOS_IRRELEVANT);
+  UNKNOWN ("Unknown", true,  null, GeneratorProfile.UNKNOWN,
+           IntegerParameterProfile.IPP_IRRELEVANT, IntegerParameterProfile.IPP_IRRELEVANT,
+           DoubleParameterProfile.DPP_IRRELEVANT);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -226,28 +252,21 @@ public enum KnownSimQueue
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // NUMBER OF SERVERS PROFILE
+  // INTEGER PARAMETER PROFILE
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private final NumberOfServersProfile numberOfServersProfile;
-  
-  public final NumberOfServersProfile getNumberOfServersProfile ()
-  {
-    return this.numberOfServersProfile;
-  }
-  
-  public enum NumberOfServersProfile
+  public enum IntegerParameterProfile
   {
     
-    NOS_IRRELEVANT      ( 0,  0,  0),
-    NOS_ALWAYS_ZERO     ( 0,  0,  0),
-    NOS_ALWAYS_ONE      ( 1,  1,  1),
-    NOS_ALWAYS_INFINITE (-1, -1, -1),
-    NOS_NON_ZERO        ( 1, -1, -1),
-    NOS_FINITE          ( 0, Integer.MAX_VALUE, 1),
-    NOS_NON_ZERO_FINITE ( 1, Integer.MAX_VALUE, 1),
-    NOS_ANY             ( 0, -1, -1);
+    IPP_IRRELEVANT      ( 0,  0,  0),
+    IPP_ALWAYS_ZERO     ( 0,  0,  0),
+    IPP_ALWAYS_ONE      ( 1,  1,  1),
+    IPP_ALWAYS_INFINITE (-1, -1, -1),
+    IPP_NON_ZERO        ( 1, -1, -1),
+    IPP_FINITE          ( 0, Integer.MAX_VALUE, 1),
+    IPP_NON_ZERO_FINITE ( 1, Integer.MAX_VALUE, 1),
+    IPP_ANY             ( 0, -1, -1);
 
     private final int minVal;
     
@@ -255,7 +274,7 @@ public enum KnownSimQueue
     
     private final int defVal;
     
-    private NumberOfServersProfile (final int minVal, final int maxVal, final int defVal)
+    private IntegerParameterProfile (final int minVal, final int maxVal, final int defVal)
     {
       this.minVal = minVal;
       this.maxVal = maxVal;
@@ -282,7 +301,7 @@ public enum KnownSimQueue
       return getMinValue () != getMaxValue ();
     }
     
-    public final boolean isValidValue (int val)
+    public final boolean isValidValue (final int val)
     {
       if (val < -1)
         return false;
@@ -296,6 +315,106 @@ public enum KnownSimQueue
         return true;
       return (val != -1 && val <= this.maxVal);
     }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DOUBLE PARAMETER PROFILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  public enum DoubleParameterProfile
+  {
+    
+    DPP_IRRELEVANT    ( 0.0,  0.0,  0.0),
+    DPP_ALWAYS_ZERO   ( 0.0,  0.0,  0.0),
+    DPP_ALWAYS_ONE    ( 1.0,  1.0,  1.0),
+    DPP_ZERO_ONE_INC  ( 0.0,  1.0,  0.5),
+    DPP_POSITIVE      ( 0.0,  Double.POSITIVE_INFINITY, 1.0),
+    DPP_ANY           ( Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0.0);
+
+    private final double minVal;
+    
+    private final double maxVal;
+    
+    private final double defVal;
+    
+    private DoubleParameterProfile (final double minVal, final double maxVal, final double defVal)
+    {
+      this.minVal = minVal;
+      this.maxVal = maxVal;
+      this.defVal = defVal;
+    }
+    
+    public final double getMinValue ()
+    {
+      return this.minVal;
+    }
+    
+    public final double getMaxValue ()
+    {
+      return this.maxVal;
+    }
+    
+    public final double getDefValue ()
+    {
+      return this.defVal;
+    }
+    
+    public final boolean isUserSettable ()
+    {
+      return getMinValue () != getMaxValue ();
+    }
+    
+    public final boolean isValidValue (final double val)
+    {
+      if (! isUserSettable ())
+        return (val == getMinValue ());
+      if (val < this.minVal)
+        return false;
+      return (val <= this.maxVal);
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NUMBER OF SERVERS PROFILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final IntegerParameterProfile numberOfServersProfile;
+  
+  public final IntegerParameterProfile getNumberOfServersProfile ()
+  {
+    return this.numberOfServersProfile;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // BUFFER SIZE PROFILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final IntegerParameterProfile bufferSizeProfile;
+  
+  public final IntegerParameterProfile getBufferSizeProfile ()
+  {
+    return this.bufferSizeProfile;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // WAIT/SERVICE TIME PROFILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final DoubleParameterProfile waitServiceTimeProfile;
+  
+  public final DoubleParameterProfile getWaitServiceTimeProfile ()
+  {
+    return this.waitServiceTimeProfile;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -309,13 +428,17 @@ public enum KnownSimQueue
     final boolean composite,
     final Class<? extends SimQueue> queueClass,
     final GeneratorProfile generatorProfile,
-    final NumberOfServersProfile numberOfServersProfile)
+    final IntegerParameterProfile numberOfServersProfile,
+    final IntegerParameterProfile bufferSizeProfile,
+    final DoubleParameterProfile waitServiceTimeProfile)
   {
     this.queueClass = queueClass;
     this.defaultName = defaultName;
     this.composite = composite;
     this.generatorProfile = generatorProfile;
     this.numberOfServersProfile = numberOfServersProfile;
+    this.bufferSizeProfile = bufferSizeProfile;
+    this.waitServiceTimeProfile = waitServiceTimeProfile;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

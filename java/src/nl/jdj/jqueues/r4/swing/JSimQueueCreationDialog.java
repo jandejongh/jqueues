@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.Iterator;
@@ -67,6 +69,10 @@ implements ItemListener
   
   final JTextField numberOfServersTextField = new JTextField ("Number of Servers Value");
   
+  final JTextField bufferSizeTextField = new JTextField ("Buffer Size Value");
+
+  final JTextField waitServiceTimeTextField = new JTextField ("Wait/Service Time Value");
+  
   private final void setQueueType (final KnownSimQueue queueType)
   {
     if (queueType != null)
@@ -81,6 +87,20 @@ implements ItemListener
       final boolean numberOfServersEditable = queueType.getNumberOfServersProfile ().isUserSettable ();
       this.numberOfServersTextField.setEditable (numberOfServersEditable);
       this.numberOfServersTextField.setBackground (numberOfServersEditable ? getBackground () : new Color (255, 192, 192));
+      // this.bufferSizeTextField
+      final int defaultBufferSize = queueType.getBufferSizeProfile ().getDefValue ();
+      this.bufferSizeTextField.setText (defaultBufferSize == -1 ? "Infinite" : Integer.toString (defaultBufferSize));
+      this.parameters.bufferSize = defaultBufferSize;
+      final boolean bufferSizeEditable = queueType.getBufferSizeProfile ().isUserSettable ();
+      this.bufferSizeTextField.setEditable (bufferSizeEditable);
+      this.bufferSizeTextField.setBackground (bufferSizeEditable ? getBackground () : new Color (255, 192, 192));
+      // this.waitServiceTimeTextField
+      final double defaultWaitServiceTime = queueType.getWaitServiceTimeProfile ().getDefValue ();
+      this.waitServiceTimeTextField.setText (Double.toString (defaultWaitServiceTime));
+      this.parameters.waitServiceTime = defaultWaitServiceTime;
+      final boolean waitServiceTimeEditable = queueType.getWaitServiceTimeProfile ().isUserSettable ();
+      this.waitServiceTimeTextField.setEditable (waitServiceTimeEditable);
+      this.waitServiceTimeTextField.setBackground (waitServiceTimeEditable ? getBackground () : new Color (255, 192, 192));
     }
     else
     {
@@ -151,63 +171,15 @@ implements ItemListener
     final JLabel numberOfServersLabel = new JLabel ("Number of Servers");
     final JLabel bufferSizeLabel = new JLabel ("Buffer Size");
     final JLabel waitServiceTimeLabel = new JLabel ("Wait/Service Time");
-    this.numberOfServersTextField.addActionListener (new NumberOfServersTextFieldListener ());
-    final JTextField bufferSizeTextField = new JTextField ("Buffer Size Value");
-    bufferSizeTextField.addActionListener (new ActionListener ()
-    {
-      @Override
-      public final void actionPerformed (final ActionEvent ae)
-      {
-        final String text = bufferSizeTextField.getText ();
-        if (text != null)
-        {
-          final int bufferSizeInt;
-          try
-          {
-            bufferSizeInt = Integer.parseInt (text);
-            if (bufferSizeInt < 0)
-              bufferSizeTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.bufferSize));        
-            else
-              JSimQueueCreationDialog.this.parameters.bufferSize = bufferSizeInt;
-          }
-          catch (NumberFormatException nfe)
-          {
-            bufferSizeTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.bufferSize));        
-          }
-        }
-        else
-          bufferSizeTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.bufferSize));
-      }
-    });
-    final JTextField waitServiceTimeTextField = new JTextField ("Wait/Service Time Value");
-    waitServiceTimeTextField.addActionListener (new ActionListener ()
-    {
-      @Override
-      public final void actionPerformed (final ActionEvent ae)
-      {
-        final String text = waitServiceTimeTextField.getText ();
-        if (text != null)
-        {
-          final double waitServiceTimeDouble;
-          try
-          {
-            waitServiceTimeDouble = Double.parseDouble (text);
-            if (waitServiceTimeDouble < 0)
-              waitServiceTimeTextField.setText (Double.toString (JSimQueueCreationDialog.this.parameters.waitServiceTime));        
-            else
-              JSimQueueCreationDialog.this.parameters.waitServiceTime = waitServiceTimeDouble;
-          }
-          catch (NumberFormatException nfe)
-          {
-            waitServiceTimeTextField.setText (Double.toString (JSimQueueCreationDialog.this.parameters.waitServiceTime));        
-          }
-        }
-        else
-        {
-          waitServiceTimeTextField.setText (Double.toString (JSimQueueCreationDialog.this.parameters.waitServiceTime));        
-        }
-      }
-    });
+    final NumberOfServersTextFieldListener numberOfServersTextFieldListener = new NumberOfServersTextFieldListener ();
+    this.numberOfServersTextField.addActionListener (numberOfServersTextFieldListener);
+    this.numberOfServersTextField.addFocusListener (numberOfServersTextFieldListener);
+    final BufferSizeTextFieldListener bufferSizeTextFieldListener = new BufferSizeTextFieldListener ();
+    this.bufferSizeTextField.addActionListener (bufferSizeTextFieldListener);
+    this.bufferSizeTextField.addFocusListener (bufferSizeTextFieldListener);
+    final WaitServiceTimeTextFieldListener waitServiceTimeTextFieldListener = new WaitServiceTimeTextFieldListener ();
+    this.waitServiceTimeTextField.addActionListener (waitServiceTimeTextFieldListener);
+    this.waitServiceTimeTextField.addFocusListener (waitServiceTimeTextFieldListener);
     final GroupLayout parametersLayout = new GroupLayout (parametersPanel);
     parametersPanel.setLayout (parametersLayout);
     parametersLayout.setAutoCreateGaps (true);
@@ -516,10 +488,28 @@ implements ItemListener
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   private final class NumberOfServersTextFieldListener
-  implements ActionListener
+  implements ActionListener, FocusListener
   {
+
+    @Override
+    public final void focusGained (final FocusEvent fe)
+    {
+    }
+
+    @Override
+    public final void focusLost (final FocusEvent fe)
+    {
+      actionPerformed ();
+    }
+
+    
     @Override
     public final void actionPerformed (final ActionEvent ae)
+    {
+      actionPerformed ();
+    }
+    
+    private final void actionPerformed ()
     {
       final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.knownQueues.getSelectedItem ();
       if (knownQueue == null)
@@ -550,4 +540,128 @@ implements ItemListener
     
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // BUFFER SIZE TEXTFIELD LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class BufferSizeTextFieldListener
+  implements ActionListener, FocusListener
+  {
+
+    @Override
+    public final void focusGained (final FocusEvent fe)
+    {
+    }
+
+    @Override
+    public final void focusLost (final FocusEvent fe)
+    {
+      actionPerformed ();
+    }
+
+    
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      actionPerformed ();
+    }
+    
+    private final void actionPerformed ()
+    {
+      final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.knownQueues.getSelectedItem ();
+      if (knownQueue == null)
+      {
+        JSimQueueCreationDialog.this.bufferSizeTextField.setText ("0");
+        JSimQueueCreationDialog.this.parameters.bufferSize = 0;
+        return;
+      }
+      final String text = JSimQueueCreationDialog.this.bufferSizeTextField.getText ();
+      if (text != null)
+      {
+        try
+        {
+          final int bufferSizeInt = Integer.parseInt (text);
+          if (knownQueue.getBufferSizeProfile ().isValidValue (bufferSizeInt))
+            JSimQueueCreationDialog.this.parameters.bufferSize = bufferSizeInt;
+          return;
+        }
+        catch (NumberFormatException nfe)
+        {
+        }
+      }
+      if (! knownQueue.getBufferSizeProfile ().isValidValue (JSimQueueCreationDialog.this.parameters.bufferSize))
+        JSimQueueCreationDialog.this.parameters.bufferSize = knownQueue.getBufferSizeProfile ().getDefValue ();
+      JSimQueueCreationDialog.this.bufferSizeTextField.setText
+        (Integer.toString (JSimQueueCreationDialog.this.parameters.bufferSize));
+    }
+
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // WAIT/SERVICE TIME TEXTFIELD LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class WaitServiceTimeTextFieldListener
+  implements ActionListener, FocusListener
+  {
+
+    @Override
+    public final void focusGained (final FocusEvent fe)
+    {
+    }
+
+    @Override
+    public final void focusLost (final FocusEvent fe)
+    {
+      actionPerformed ();
+    }
+
+    
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      actionPerformed ();
+    }
+    
+    private final void actionPerformed ()
+    {
+      final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.knownQueues.getSelectedItem ();
+      if (knownQueue == null)
+      {
+        JSimQueueCreationDialog.this.waitServiceTimeTextField.setText ("NaN");
+        JSimQueueCreationDialog.this.parameters.waitServiceTime = Double.NaN;
+        return;
+      }
+      final String text = JSimQueueCreationDialog.this.waitServiceTimeTextField.getText ();
+      if (text != null)
+      {
+        try
+        {
+          final double waitServiceTimeDouble = Double.parseDouble (text);
+          if (knownQueue.getWaitServiceTimeProfile ().isValidValue (waitServiceTimeDouble))
+            JSimQueueCreationDialog.this.parameters.waitServiceTime = waitServiceTimeDouble;
+          return;
+        }
+        catch (NumberFormatException nfe)
+        {
+        }
+      }
+      if (! knownQueue.getWaitServiceTimeProfile ().isValidValue (JSimQueueCreationDialog.this.parameters.waitServiceTime))
+        JSimQueueCreationDialog.this.parameters.waitServiceTime = knownQueue.getWaitServiceTimeProfile ().getDefValue ();
+      JSimQueueCreationDialog.this.waitServiceTimeTextField.setText
+        (Double.toString (JSimQueueCreationDialog.this.parameters.waitServiceTime));
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 }
