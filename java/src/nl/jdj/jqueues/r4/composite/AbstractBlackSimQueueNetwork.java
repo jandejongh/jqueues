@@ -681,7 +681,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     else
     {
       exitJobFromQueues (realJob, job);
-      job.setQueue (null);
+      realJob.setQueue (null);
       fireDrop (t, realJob);
     }
   }
