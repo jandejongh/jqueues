@@ -195,7 +195,7 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     return "DELAY[" + getWaitTime () + "]";
   }

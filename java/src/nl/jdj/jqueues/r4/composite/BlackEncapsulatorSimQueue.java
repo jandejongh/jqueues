@@ -84,7 +84,7 @@ public class BlackEncapsulatorSimQueue
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     return "Enc[" + getQueues ().iterator ().next () + "]";
   }

@@ -1086,4 +1086,15 @@ implements MediumPhyStateObserver
       getEventList ().remove (this.SLOT_EXPIRED_EVENT);
   }
 
+  /** Returns "DCF".
+   * 
+   * @return "DCF".
+   * 
+   */
+  @Override
+  public String toStringDefault ()
+  {
+    return "DCF";
+  }
+
 }

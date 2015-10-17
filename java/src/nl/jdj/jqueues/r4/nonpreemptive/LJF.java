@@ -75,7 +75,7 @@ public class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreemptiveS
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     return "LJF";
   }

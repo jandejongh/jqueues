@@ -163,7 +163,7 @@ public class BlackParallelSimQueues
    * 
    */
   @Override
-  public String toString ()
+  public /* final */ String toStringDefault ()
   {
     String string = "Par[";
     boolean first = true;

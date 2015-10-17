@@ -95,7 +95,7 @@ public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreem
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     return "RANDOM";
   }

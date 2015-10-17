@@ -81,7 +81,7 @@ public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends Abstract
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     return "NoBuffer_" + getNumberOfServers ();
   }

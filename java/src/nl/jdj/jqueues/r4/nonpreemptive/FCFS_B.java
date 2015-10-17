@@ -89,7 +89,7 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     return "FCFS_B[" + getBufferSize () + "]";
   }

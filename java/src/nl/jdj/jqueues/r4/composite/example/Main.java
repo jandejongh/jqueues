@@ -265,41 +265,17 @@ public final class Main
     System.out.println ("-> Resetting event list...");
     el.reset ();
     System.out.println ("-> Creating 4 FCFS queues and putting them into a LinkedHashSet...");
-    final SimQueue jFcfsQueue1 = new FCFS (el)
-    {
-      @Override
-      public String toString ()
-      {
-        return super.toString () + "1";
-      }
-    };
+    final SimQueue jFcfsQueue1 = new FCFS (el);
+    jFcfsQueue1.setName (jFcfsQueue1.toStringDefault () + "1");
     jFcfsQueue1.registerQueueListener (new StdOutSimQueueVacationListener ());
-    final SimQueue jFcfsQueue2 = new FCFS (el)
-    {
-      @Override
-      public String toString ()
-      {
-        return super.toString () + "2";
-      }
-    };
+    final SimQueue jFcfsQueue2 = new FCFS (el);
+    jFcfsQueue2.setName (jFcfsQueue2.toStringDefault () + "2");
     jFcfsQueue2.registerQueueListener (new StdOutSimQueueVacationListener ());
-    final SimQueue jFcfsQueue3 = new FCFS (el)
-    {
-      @Override
-      public String toString ()
-      {
-        return super.toString () + "3";
-      }
-    };
+    final SimQueue jFcfsQueue3 = new FCFS (el);
+    jFcfsQueue3.setName (jFcfsQueue3.toStringDefault () + "3");
     jFcfsQueue3.registerQueueListener (new StdOutSimQueueVacationListener ());
-    final SimQueue jFcfsQueue4 = new FCFS (el)
-    {
-      @Override
-      public String toString ()
-      {
-        return super.toString () + "4";
-      }
-    };
+    final SimQueue jFcfsQueue4 = new FCFS (el);
+    jFcfsQueue3.setName (jFcfsQueue4.toStringDefault () + "4");
     jFcfsQueue4.registerQueueListener (new StdOutSimQueueVacationListener ());
     final Set<SimQueue> jacksonQueues = new LinkedHashSet<> ();
     jacksonQueues.add (jFcfsQueue1);

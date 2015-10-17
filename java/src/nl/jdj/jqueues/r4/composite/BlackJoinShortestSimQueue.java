@@ -216,7 +216,7 @@ public class BlackJoinShortestSimQueue
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     String string = "JSQ[";
     boolean first = true;

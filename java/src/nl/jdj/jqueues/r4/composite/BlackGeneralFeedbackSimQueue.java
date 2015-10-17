@@ -171,7 +171,7 @@ public class BlackGeneralFeedbackSimQueue
    * 
    */
   @Override
-  public String toString ()
+  public /* final */ String toStringDefault ()
   {
     return "GenFB[" + getQueues ().iterator ().next () + "]";
   }

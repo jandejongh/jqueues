@@ -171,7 +171,7 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     return "ZERO";
   }

@@ -79,4 +79,15 @@ implements SimQueueSelector<EDCASimJob, DCFSimJob, DCF>
     return null;
   }
 
+  /** Returns "EDCA".
+   * 
+   * @return "EDCA".
+   * 
+   */
+  @Override
+  public String toStringDefault ()
+  {
+    return "EDCA";
+  }
+
 }

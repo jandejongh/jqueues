@@ -1084,6 +1084,59 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // NAME, toString
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private String name = null;
+
+  /** Sets the internal name to the supplied name.
+   * 
+   * @param name The new name of this queue, if <code>null</code>, the queue-type default will be used.
+   * 
+   * @see #toString
+   * @see #toStringDefault
+   * 
+   */
+  @Override
+  public final void setName (final String name)
+  {
+    this.name = name;
+  }
+  
+  /** Returns a reasonable, type-specific name for this (kind of) {@link SimQueue}.
+   * 
+   * <p>
+   * To be overridden in subclasses, this default implementation returns "AbstractSimQueue";
+   * 
+   * @return A reasonable, type-specific name for this (kind of) {@link SimQueue}.
+   * 
+   */
+  @Override
+  public String toStringDefault ()
+  {
+    return "AbstractSimQueue";
+  }
+  
+  /** Returns the internally stored user-supplied name, if non-<code>null</code>, or the type specific default.
+   * 
+   * @return The internally stored user-supplied name, if non-<code>null</code>, or the type specific default.
+   * 
+   * @see #setName
+   * @see #toStringDefault
+   * 
+   */
+  @Override
+  public final String toString ()
+  {
+    if (this.name != null)
+      return this.name;
+    else
+      return toStringDefault ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // CONSTRUCTORS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

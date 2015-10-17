@@ -279,7 +279,7 @@ public class BlackJacksonSimQueueNetwork
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     String string = "Jackson[";
     boolean first = true;

@@ -156,7 +156,7 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     return "DROP";
   }

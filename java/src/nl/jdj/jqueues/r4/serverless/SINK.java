@@ -165,7 +165,7 @@ public class SINK<J extends SimJob, Q extends SINK> extends AbstractSimQueue<J, 
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     return "SINK";
   }

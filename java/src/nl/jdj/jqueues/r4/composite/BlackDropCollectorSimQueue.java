@@ -144,7 +144,7 @@ public class BlackDropCollectorSimQueue
    * 
    */
   @Override
-  public String toString ()
+  public final String toStringDefault ()
   {
     return "DropCol[" + getMainQueue () + "," + getDropQueue () + "]";
   }
