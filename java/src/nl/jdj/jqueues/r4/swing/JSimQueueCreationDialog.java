@@ -54,25 +54,25 @@ implements ItemListener
     return this.createdQueue;
   }
   
-  private final JComboBox knownQueues;
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // PARAMETERS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   private final KnownSimQueue.Parameters parameters = new KnownSimQueue.Parameters ();
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // SWING COMPONENTS
+  // [USER-CONTROLLABLE] SWING COMPONENTS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final JComboBox queueTypeComboBox;
   
   private final TableModel tableModel = new QueuesTableModel ();
   
   private final JTable table = new JTable (this.tableModel);
-  
-  final JTextField numberOfServersTextField = new JTextField ("Number of Servers Value");
-  
-  final JTextField bufferSizeTextField = new JTextField ("Buffer Size Value");
-
-  final JTextField waitServiceTimeTextField = new JTextField ("Wait/Service Time Value");
   
   final JButton moveUpSubQueueButton = new JButton ("Up");
   
@@ -83,6 +83,18 @@ implements ItemListener
   final JButton insertSubQueueButton = new JButton ("Insert");
   
   final JButton deleteSubQueueButton = new JButton ("Delete");
+  
+  final JTextField numberOfServersTextField = new JTextField ("Number of Servers Value");
+  
+  final JTextField bufferSizeTextField = new JTextField ("Buffer Size Value");
+
+  final JTextField waitServiceTimeTextField = new JTextField ("Wait/Service Time Value");
+  
+  final JTextField startTimeTextField = new JTextField ("Start Time Value");
+  
+  final JCheckBox queueAccessVacationCheckBox = new JCheckBox ();
+    
+  final JTextField serverAccessCreditsTextField = new JTextField ("Server-Access Credits Value");
   
   private void setQueueType (final KnownSimQueue queueType)
   {
@@ -121,7 +133,7 @@ implements ItemListener
   
   private void createQueueAndClose ()
   {
-    final SimQueue createdQueue = ((KnownSimQueue) this.knownQueues.getSelectedItem ()).newInstance (this.parameters);
+    final SimQueue createdQueue = ((KnownSimQueue) this.queueTypeComboBox.getSelectedItem ()).newInstance (this.parameters);
     if (createdQueue == null)
     {
       JOptionPane.showConfirmDialog
@@ -146,26 +158,27 @@ implements ItemListener
     this.frame = frame;
     this.eventList = eventList;
     this.parameters.eventList = this.eventList;
-    this.knownQueues = new JComboBox (KnownSimQueue.values ());
+    this.queueTypeComboBox = new JComboBox (KnownSimQueue.values ());
     if (queue != null)
       // XXX What is we have an unknown queue?
-      this.knownQueues.setSelectedItem (KnownSimQueue.valueOf (queue));
+      this.queueTypeComboBox.setSelectedItem (KnownSimQueue.valueOf (queue));
     this.parameters.queues = new LinkedHashSet<> ();
     if (queue != null && (queue instanceof BlackSimQueueNetwork))
       this.parameters.queues.addAll (((BlackSimQueueNetwork) queue).getQueues ());
     getContentPane ().setLayout (new BoxLayout (getContentPane (), BoxLayout.PAGE_AXIS));
     add (Box.createRigidArea (new Dimension (0, 10)));
-    this.knownQueues.setPreferredSize (new Dimension (200, 50));
-    this.knownQueues.setMaximumSize (new Dimension (200, 50));
-    this.knownQueues.setBorder
+    this.queueTypeComboBox.setPreferredSize (new Dimension (200, 50));
+    this.queueTypeComboBox.setMaximumSize (new Dimension (200, 50));
+    this.queueTypeComboBox.setBorder
       (BorderFactory.createTitledBorder
       (BorderFactory.createLineBorder (Color.orange, 4, true), "Select Queue Type"));
-    add (this.knownQueues);
+    add (this.queueTypeComboBox);
     add (Box.createRigidArea (new Dimension (0, 10)));
     
     final Box subQueuesBox = new Box (BoxLayout.PAGE_AXIS);
     
-    if (this.knownQueues.getSelectedItem () != null && ((KnownSimQueue) this.knownQueues.getSelectedItem ()).isComposite ())
+    if (this.queueTypeComboBox.getSelectedItem () != null
+      && ((KnownSimQueue) this.queueTypeComboBox.getSelectedItem ()).isComposite ())
     {
       this.table.setBackground (getBackground ());
       this.table.setEnabled (true);
@@ -192,7 +205,6 @@ implements ItemListener
     this.addSubQueueButton.addActionListener (new AddSubQueueButtonListener ());
     this.insertSubQueueButton.addActionListener (new InsertSubQueueButtonListener ());
     this.deleteSubQueueButton.addActionListener (new DeleteSubQueueButtonListener ());
-    
     tableButtonBox.add (this.moveUpSubQueueButton);
     tableButtonBox.add (this.moveDownSubQueueButton);
     tableButtonBox.add (this.addSubQueueButton);
@@ -274,101 +286,22 @@ implements ItemListener
     final JLabel startTimeLabel           = new JLabel ("Start Time");
     final JLabel queueAccessVacationLabel = new JLabel ("Queue Access Vacation");
     final JLabel serverAccessCreditsLabel = new JLabel ("Server-Access Credits");
-    final JTextField startTimeTextField = new JTextField ();
-    startTimeTextField.setText (Double.toString (this.parameters.startTime));
-    startTimeTextField.addActionListener (new ActionListener ()
-    {
-      @Override
-      public final void actionPerformed (final ActionEvent ae)
-      {
-        final String text = startTimeTextField.getText ();
-        if (text != null)
-        {
-          final double startTimeDouble;
-          try
-          {
-            startTimeDouble = Double.parseDouble (text);
-            JSimQueueCreationDialog.this.parameters.startTime = startTimeDouble;
-            return;
-          }
-          catch (NumberFormatException nfe)
-          {
-          }
-        }
-        startTimeTextField.setText (Double.toString (JSimQueueCreationDialog.this.parameters.startTime));
-      }
-    });
-    final JCheckBox queueAccessVacationCheckBox = new JCheckBox ();
-    queueAccessVacationCheckBox.setSelected (queue == null ? false : queue.isQueueAccessVacation ());
+    this.startTimeTextField.setText (Double.toString (this.parameters.startTime));
+    final StartTimeTextFieldListener startTimeTextFieldListener = new StartTimeTextFieldListener ();
+    this.startTimeTextField.addActionListener (startTimeTextFieldListener);
+    this.startTimeTextField.addFocusListener (startTimeTextFieldListener);
+    this.queueAccessVacationCheckBox.setSelected (queue == null ? false : queue.isQueueAccessVacation ());
     this.parameters.queueAccessVacation = (queue == null ? false : queue.isQueueAccessVacation ());
-    queueAccessVacationCheckBox.addItemListener (new ItemListener ()
-    {
-      @Override
-      public final void itemStateChanged (final ItemEvent ie)
-      {
-        JSimQueueCreationDialog.this.parameters.queueAccessVacation = (ie.getStateChange () == ItemEvent.SELECTED);
-      }
-    });
-    final JTextField serverAccessCreditsTextField = new JTextField ("Server-Access Credits Value");
+    this.queueAccessVacationCheckBox.addItemListener (new QueueAccessVacationCheckBoxListener ());
     final String initServerAccessCreditsString;
     if (queue == null || queue.getServerAccessCredits () == Integer.MAX_VALUE)
       initServerAccessCreditsString = "Infinity";
     else
       initServerAccessCreditsString = Integer.toString (queue.getServerAccessCredits ());
-    serverAccessCreditsTextField.setText (initServerAccessCreditsString);
-    serverAccessCreditsTextField.addActionListener (new ActionListener ()
-    {
-      @Override
-      public final void actionPerformed (final ActionEvent ae)
-      {
-        final String text = serverAccessCreditsTextField.getText ();
-        if (text != null)
-        {
-          if (text.trim ().startsWith ("inf") || text.trim ().startsWith ("Inf"))
-          {
-            serverAccessCreditsTextField.setText ("Infinity");
-            JSimQueueCreationDialog.this.parameters.serverAccessCredits = Integer.MAX_VALUE;
-          }
-          else
-          {
-            final int serverAccessCreditsInt;
-            try
-            {
-              serverAccessCreditsInt = Integer.parseInt (text);
-              if (serverAccessCreditsInt < 0)
-              {
-                if (JSimQueueCreationDialog.this.parameters.serverAccessCredits == Integer.MAX_VALUE)
-                  serverAccessCreditsTextField.setText ("Infinity");
-                else
-                  serverAccessCreditsTextField.setText (Integer.toString
-                    (JSimQueueCreationDialog.this.parameters.serverAccessCredits));        
-              }
-              else
-              {
-                JSimQueueCreationDialog.this.parameters.serverAccessCredits = serverAccessCreditsInt;
-                if (serverAccessCreditsInt == Integer.MAX_VALUE)
-                  numberOfServersTextField.setText ("Infinity");
-              }
-            }
-            catch (NumberFormatException nfe)
-            {
-              if (JSimQueueCreationDialog.this.parameters.serverAccessCredits == Integer.MAX_VALUE)
-                serverAccessCreditsTextField.setText ("Infinity");
-              else
-                serverAccessCreditsTextField.setText
-                  (Integer.toString (JSimQueueCreationDialog.this.parameters.serverAccessCredits));        
-            }
-          }
-        }
-        else
-        {
-          if (JSimQueueCreationDialog.this.parameters.serverAccessCredits == Integer.MAX_VALUE)
-            serverAccessCreditsTextField.setText ("Infinity");
-          else
-            serverAccessCreditsTextField.setText (Integer.toString (JSimQueueCreationDialog.this.parameters.serverAccessCredits));
-        }
-      }
-    });
+    this.serverAccessCreditsTextField.setText (initServerAccessCreditsString);
+    final ServerAccessCreditsTextFieldListener serverAccessCreditsTextFieldListener = new ServerAccessCreditsTextFieldListener ();
+    this.serverAccessCreditsTextField.addActionListener (serverAccessCreditsTextFieldListener);
+    this.serverAccessCreditsTextField.addFocusListener (serverAccessCreditsTextFieldListener);
     final GroupLayout initialStateLayout = new GroupLayout (initialStatePanel);
     initialStatePanel.setLayout (initialStateLayout);
     initialStateLayout.setAutoCreateGaps (true);
@@ -456,11 +389,11 @@ implements ItemListener
       (BorderFactory.createLineBorder (Color.orange, 4, true), "Exit"));
     add (exitPanel);
     add (Box.createRigidArea (new Dimension (0, 10)));
-    setQueueType ((KnownSimQueue) this.knownQueues.getSelectedItem ());
+    setQueueType ((KnownSimQueue) this.queueTypeComboBox.getSelectedItem ());
     ((AbstractTableModel) this.table.getModel ()).fireTableDataChanged ();
     pack ();
     setLocationRelativeTo (frame);
-    this.knownQueues.addItemListener (this);
+    this.queueTypeComboBox.addItemListener (this);
   }
   
   @Override
@@ -768,7 +701,7 @@ implements ItemListener
     
     private void actionPerformed ()
     {
-      final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.knownQueues.getSelectedItem ();
+      final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.queueTypeComboBox.getSelectedItem ();
       if (knownQueue == null)
       {
         JSimQueueCreationDialog.this.numberOfServersTextField.setText ("0");
@@ -827,7 +760,7 @@ implements ItemListener
     
     private void actionPerformed ()
     {
-      final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.knownQueues.getSelectedItem ();
+      final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.queueTypeComboBox.getSelectedItem ();
       if (knownQueue == null)
       {
         JSimQueueCreationDialog.this.bufferSizeTextField.setText ("0");
@@ -886,7 +819,7 @@ implements ItemListener
     
     private void actionPerformed ()
     {
-      final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.knownQueues.getSelectedItem ();
+      final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.queueTypeComboBox.getSelectedItem ();
       if (knownQueue == null)
       {
         JSimQueueCreationDialog.this.waitServiceTimeTextField.setText ("NaN");
@@ -913,6 +846,154 @@ implements ItemListener
         (Double.toString (JSimQueueCreationDialog.this.parameters.waitServiceTime));
     }
     
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START TIME TEXTFIELD LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class StartTimeTextFieldListener
+  implements ActionListener, FocusListener
+  {
+
+    @Override
+    public final void focusGained (final FocusEvent fe)
+    {
+    }
+
+    @Override
+    public final void focusLost (final FocusEvent fe)
+    {
+      actionPerformed ();
+    }
+
+    
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      actionPerformed ();
+    }
+    
+    private void actionPerformed ()
+    {
+      final String text = JSimQueueCreationDialog.this.startTimeTextField.getText ();
+      if (text != null)
+      {
+        final double startTimeDouble;
+        try
+        {
+          startTimeDouble = Double.parseDouble (text);
+          JSimQueueCreationDialog.this.parameters.startTime = startTimeDouble;
+          return;
+        }
+        catch (NumberFormatException nfe)
+        {
+        }
+      }
+      JSimQueueCreationDialog.this.startTimeTextField.setText
+        (Double.toString (JSimQueueCreationDialog.this.parameters.startTime));
+    }
+    
+  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // QUEUE-ACCESS VACTION CHECKBOX LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final class QueueAccessVacationCheckBoxListener
+  implements ItemListener
+  {
+    
+    @Override
+    public final void itemStateChanged (final ItemEvent ie)
+    {
+      JSimQueueCreationDialog.this.parameters.queueAccessVacation = (ie.getStateChange () == ItemEvent.SELECTED);
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVER_ACCESS CREDITS TEXTFIELD LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class ServerAccessCreditsTextFieldListener
+  implements ActionListener, FocusListener
+  {
+
+    @Override
+    public final void focusGained (final FocusEvent fe)
+    {
+    }
+
+    @Override
+    public final void focusLost (final FocusEvent fe)
+    {
+      actionPerformed ();
+    }
+
+    
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      actionPerformed ();
+    }
+    
+    private void actionPerformed ()
+    {
+      final String text = JSimQueueCreationDialog.this.serverAccessCreditsTextField.getText ();
+      if (text != null)
+      {
+        if (text.trim ().startsWith ("inf") || text.trim ().startsWith ("Inf"))
+        {
+          JSimQueueCreationDialog.this.serverAccessCreditsTextField.setText ("Infinity");
+          JSimQueueCreationDialog.this.parameters.serverAccessCredits = Integer.MAX_VALUE;
+        }
+        else
+        {
+          final int serverAccessCreditsInt;
+          try
+          {
+            serverAccessCreditsInt = Integer.parseInt (text);
+            if (serverAccessCreditsInt < 0)
+            {
+              if (JSimQueueCreationDialog.this.parameters.serverAccessCredits == Integer.MAX_VALUE)
+                JSimQueueCreationDialog.this.serverAccessCreditsTextField.setText ("Infinity");
+              else
+                JSimQueueCreationDialog.this.serverAccessCreditsTextField.setText (Integer.toString
+                  (JSimQueueCreationDialog.this.parameters.serverAccessCredits));        
+            }
+            else
+            {
+              JSimQueueCreationDialog.this.parameters.serverAccessCredits = serverAccessCreditsInt;
+              if (serverAccessCreditsInt == Integer.MAX_VALUE)
+                JSimQueueCreationDialog.this.numberOfServersTextField.setText ("Infinity");
+            }
+          }
+          catch (NumberFormatException nfe)
+          {
+            if (JSimQueueCreationDialog.this.parameters.serverAccessCredits == Integer.MAX_VALUE)
+              JSimQueueCreationDialog.this.serverAccessCreditsTextField.setText ("Infinity");
+            else
+              JSimQueueCreationDialog.this.serverAccessCreditsTextField.setText
+                (Integer.toString (JSimQueueCreationDialog.this.parameters.serverAccessCredits));        
+          }
+        }
+      }
+      else
+      {
+        if (JSimQueueCreationDialog.this.parameters.serverAccessCredits == Integer.MAX_VALUE)
+          JSimQueueCreationDialog.this.serverAccessCreditsTextField.setText ("Infinity");
+        else
+          JSimQueueCreationDialog.this.serverAccessCreditsTextField.setText
+            (Integer.toString (JSimQueueCreationDialog.this.parameters.serverAccessCredits));
+      }
+    }
+
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
