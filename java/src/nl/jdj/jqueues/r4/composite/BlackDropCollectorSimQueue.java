@@ -41,13 +41,13 @@ public class BlackDropCollectorSimQueue
     return set;
   }
   
-  private /* final */ DQ getMainQueue ()
+  protected final DQ getMainQueue ()
   {
     final Iterator<DQ> iterator = getQueues ().iterator ();
     return iterator.next ();
   }
   
-  private /* final */ DQ getDropQueue ()
+  protected final DQ getDropQueue ()
   {
     final Iterator<DQ> iterator = getQueues ().iterator ();
     final DQ firstQueue = iterator.next ();
@@ -100,12 +100,27 @@ public class BlackDropCollectorSimQueue
     return null;
   }
 
+  /** Returns the drop queue if the jobs was dropped from the main queue, <code>null</code> if dropped from the drop queue,
+   * and throw an {@link IllegalArgumentException} otherwise.
+   * 
+   * @return 
+   * 
+   * @see #getMainQueue
+   * @see #getDropQueue
+   * 
+   * @throws IllegalArgumentException If <code>queue == null</code> or not equal to the main queue or the drop queue.
+   * 
+   */
   @Override
   protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
   {
-    if (queue != getMainQueue ())
-      throw new IllegalStateException ();
-    return getDropQueue ();
+    if (queue == null)
+      throw new IllegalArgumentException ();
+    if (queue == getMainQueue ())
+      return getDropQueue ();
+    if (queue == getDropQueue ())
+      return null;
+    throw new IllegalArgumentException ();
   }
 
   @Override
