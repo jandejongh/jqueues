@@ -476,7 +476,8 @@ extends SimEventListListener
   /** Returns a default, type-specific name for this {@link SimQueue}.
    * 
    * <p>
-   * The string is used as a fallback return value for <code>Object.toString ()</code> in case the user did not set an instance-specific name
+   * The string is used as a fallback return value for <code>Object.toString ()</code>
+   * in case the user did not set an instance-specific name
    * through {@link #setName}.
    * 
    * <p>
