@@ -96,6 +96,29 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     return dq;
   }
   
+  /** Returns a copy of a given set of {@link SimQueue}s, each of which is copied in itself.
+   * 
+   * @param queues The set of {@link SimQueue}s.
+   * 
+   * @return A copy of the given set of {@link SimQueue}s, each of which is copied in itself.
+   * 
+   * @see SimQueue#getCopySimQueue
+   * 
+   * @throws IllegalArgumentException If <code>queues == null </code> or contains a <code>null</code> element.
+   * @throws UnsupportedOperationException If copying any of the sub-queues is unsupported; this should be considered as a
+   *         software error.
+   * 
+   */
+  public static Set<SimQueue> getCopySimQueues (final Set<SimQueue> queues) throws UnsupportedOperationException
+  {
+    if (queues == null || queues.contains (null))
+      throw new IllegalArgumentException ();
+    final Set<SimQueue> set = new LinkedHashSet<> ();
+    for (final SimQueue q : queues)
+      set.add (q.getCopySimQueue ());
+    return set;    
+  }
+  
   /** Returns a copy of the set of sub-queues, each of which is copied in itself.
    * 
    * @return A copy of the set of sub-queues, each of which is copied in itself.

@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.composite.AbstractBlackSimQueueNetwork;
 import nl.jdj.jqueues.r4.composite.DelegateSimJobFactory;
 import nl.jdj.jsimulation.r4.SimEventList;
 
@@ -246,6 +247,7 @@ public enum KnownSimQueue
         System.err.println ("No event-list supplied for new SimQueue instance with profile " + this + ".");
         return null;
       }
+      final Set<SimQueue> copiedQueues;
       if (this.requiresSubQueues)
       {
         if (parameters.queues == null)
@@ -266,7 +268,10 @@ public enum KnownSimQueue
           System.err.println ("-> Maximum:  " + this.maxSubQueues + ".");
           System.err.println ("-> Supplied: " + parameters.queues.size () + ".");
         }
+        copiedQueues = AbstractBlackSimQueueNetwork.getCopySimQueues (parameters.queues);
       }
+      else
+        copiedQueues = null;
       try
       {
         if (this == SE)
@@ -293,7 +298,7 @@ public enum KnownSimQueue
         {
           final Constructor constructor = queueClass.getConstructor
             (SimEventList.class, SimQueue.class, DelegateSimJobFactory.class);
-          final Iterator<SimQueue> iterator = parameters.queues.iterator ();
+          final Iterator<SimQueue> iterator = copiedQueues.iterator ();
           final SimQueue q = iterator.next ();
           return (SimQueue) constructor.newInstance (parameters.eventList, q, null);
         }
@@ -301,7 +306,7 @@ public enum KnownSimQueue
         {
           final Constructor constructor = queueClass.getConstructor
             (SimEventList.class, SimQueue.class, SimQueue.class, DelegateSimJobFactory.class);
-          final Iterator<SimQueue> iterator = parameters.queues.iterator ();
+          final Iterator<SimQueue> iterator = copiedQueues.iterator ();
           final SimQueue q1 = iterator.next ();
           final SimQueue q2 = iterator.next ();
           return (SimQueue) constructor.newInstance (parameters.eventList, q1, q2, null);
@@ -310,8 +315,7 @@ public enum KnownSimQueue
         {
           final Constructor constructor = queueClass.getConstructor
             (SimEventList.class, Set.class, DelegateSimJobFactory.class);
-          final Set<SimQueue> qSet = new LinkedHashSet<> (parameters.queues);
-          return (SimQueue) constructor.newInstance (parameters.eventList, qSet, null);
+          return (SimQueue) constructor.newInstance (parameters.eventList, copiedQueues, null);
         }
         else
         {
