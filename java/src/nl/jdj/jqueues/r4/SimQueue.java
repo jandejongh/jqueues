@@ -332,11 +332,11 @@ extends SimEventListListener
    */
   public int getServerAccessCredits ();
   
-  /** Returns whether the next arriving is guaranteed to suffer zero-waiting time before starting service or departing.
+  /** Returns whether the next arriving job is guaranteed to suffer zero-waiting time before starting service or departing.
    * 
    * The return value is <i>independent</i> of queue-access and server-access vacations.
    * 
-   * @return True if the next arriving is guaranteed to suffer zero-waiting time before starting service or departing,
+   * @return True if the next arriving job is guaranteed to suffer zero-waiting time before starting service or departing,
    *         in the absence of queue-access and server-access vacations.
    * 
    * @see SimQueueListener#notifyNewNoWaitArmed
