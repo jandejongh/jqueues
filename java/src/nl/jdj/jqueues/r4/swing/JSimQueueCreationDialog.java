@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r4.swing;
 
 import java.awt.Color;
+import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
@@ -95,6 +96,8 @@ implements ItemListener
   final JCheckBox queueAccessVacationCheckBox = new JCheckBox ();
     
   final JTextField serverAccessCreditsTextField = new JTextField ("Server-Access Credits Value");
+  
+  final JCheckBox onlyWaitingJobsCheckBox = new JCheckBox ();
   
   private void setQueueType (final KnownSimQueue queueType)
   {
@@ -233,6 +236,9 @@ implements ItemListener
     final WaitServiceTimeTextFieldListener waitServiceTimeTextFieldListener = new WaitServiceTimeTextFieldListener ();
     this.waitServiceTimeTextField.addActionListener (waitServiceTimeTextFieldListener);
     this.waitServiceTimeTextField.addFocusListener (waitServiceTimeTextFieldListener);
+    final JLabel otherParametersLabel = new JLabel ("Other");
+    final JButton otherParametersButton = new JButton ("Edit");
+    otherParametersButton.addActionListener (new OtherParametersButtonListener ());
     final GroupLayout parametersLayout = new GroupLayout (parametersPanel);
     parametersPanel.setLayout (parametersLayout);
     parametersLayout.setAutoCreateGaps (true);
@@ -246,13 +252,15 @@ implements ItemListener
             .addComponent (numberOfServersLabel)
             .addComponent (bufferSizeLabel)
             .addComponent (waitServiceTimeLabel)
+            .addComponent (otherParametersLabel)
         )
         .addGroup
         (
           parametersLayout.createParallelGroup (GroupLayout.Alignment.LEADING)
-            .addComponent (numberOfServersTextField)
-            .addComponent (bufferSizeTextField)
-            .addComponent (waitServiceTimeTextField)
+            .addComponent (this.numberOfServersTextField)
+            .addComponent (this.bufferSizeTextField)
+            .addComponent (this.waitServiceTimeTextField)
+            .addComponent (otherParametersButton)
         )
     );
     parametersLayout.setVerticalGroup
@@ -275,6 +283,12 @@ implements ItemListener
           parametersLayout.createParallelGroup (GroupLayout.Alignment.BASELINE)
             .addComponent (waitServiceTimeLabel)
             .addComponent (waitServiceTimeTextField)
+        )
+        .addGroup
+        (
+          parametersLayout.createParallelGroup (GroupLayout.Alignment.BASELINE)
+            .addComponent (otherParametersLabel)
+            .addComponent (otherParametersButton)
         )
     );
     parametersPanel.setBorder
@@ -897,6 +911,7 @@ implements ItemListener
     }
     
   }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // QUEUE-ACCESS VACTION CHECKBOX LISTENER
@@ -994,6 +1009,97 @@ implements ItemListener
       }
     }
 
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // OTHER PARAMETERS DIALOG
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private OtherParametersDialog otherParametersDialog = null;
+  
+  private final class OtherParametersDialog
+  extends JDialog
+  {
+
+    public OtherParametersDialog ()
+    {
+      super (JSimQueueCreationDialog.this, "Other Parameters", true);
+      final JLabel onlyWaitingJobsLabel = new JLabel ("Only Waiting Jobs");
+      JSimQueueCreationDialog.this.onlyWaitingJobsCheckBox.setSelected (JSimQueueCreationDialog.this.parameters.onlyWaitingJobs);
+      JSimQueueCreationDialog.this.onlyWaitingJobsCheckBox.addItemListener (new OnlyWaitingJobsBoxCheckBoxListener ());
+      final GroupLayout layout = new GroupLayout (getContentPane ());
+      getContentPane ().setLayout (layout);
+      layout.setAutoCreateGaps (true);
+      layout.setAutoCreateContainerGaps (true);
+      layout.setHorizontalGroup
+        (layout.createSequentialGroup ()
+          .addGroup
+            (layout.createParallelGroup (GroupLayout.Alignment.LEADING)
+              .addComponent (onlyWaitingJobsLabel)
+              //.addComponent (bufferSizeLabel)
+            )
+          .addGroup
+            (layout.createParallelGroup (GroupLayout.Alignment.LEADING)
+              .addComponent (JSimQueueCreationDialog.this.onlyWaitingJobsCheckBox)
+              //.addComponent (this.bufferSizeTextField)
+            )
+        );
+      layout.setVerticalGroup
+        (layout.createSequentialGroup ()
+          .addGroup
+            (layout.createParallelGroup (GroupLayout.Alignment.BASELINE)
+              .addComponent (onlyWaitingJobsLabel)
+              .addComponent (JSimQueueCreationDialog.this.onlyWaitingJobsCheckBox)
+            )
+          //.addGroup
+          //  (layout.createParallelGroup (GroupLayout.Alignment.BASELINE)
+          //    .addComponent (bufferSizeLabel)
+          //    .addComponent (bufferSizeTextField)
+          //  )
+        );
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // OTHER PARAMETERS BUTTON LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final class OtherParametersButtonListener
+  extends AbstractAction
+  {
+
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      if (JSimQueueCreationDialog.this.otherParametersDialog == null)
+        JSimQueueCreationDialog.this.otherParametersDialog = new OtherParametersDialog ();
+      JSimQueueCreationDialog.this.otherParametersDialog.pack ();
+      JSimQueueCreationDialog.this.otherParametersDialog.setVisible (true);
+    }
+    
+  }
+    
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ONLY WAITING JOBS CHECKBOX LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final class OnlyWaitingJobsBoxCheckBoxListener
+  implements ItemListener
+  {
+    
+    @Override
+    public final void itemStateChanged (final ItemEvent ie)
+    {
+      JSimQueueCreationDialog.this.parameters.onlyWaitingJobs = (ie.getStateChange () == ItemEvent.SELECTED);
+    }
+    
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

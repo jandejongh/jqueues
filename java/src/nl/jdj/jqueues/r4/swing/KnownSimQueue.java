@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r4.swing;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
+import java.util.Random;
 import java.util.Set;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.composite.AbstractBlackSimQueueNetwork;
@@ -98,7 +98,7 @@ public enum KnownSimQueue
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   JSQ            ("JSQ", true, nl.jdj.jqueues.r4.composite.BlackJoinShortestSimQueue.class,
-                  GeneratorProfile.UNKNOWN,
+                  GeneratorProfile.SE_QSET_DSJF_OWJ_RNG,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
@@ -180,14 +180,15 @@ public enum KnownSimQueue
   public enum GeneratorProfile
   {
     
-    SE            (true,  true,  false, false, false, false, 0, 0),
-    SE_WST        (true,  true,  true,  false, false, false, 0, 0),
-    SE_c          (true,  true,  false, true,  false, false, 0, 0),
-    SE_B          (true,  true,  false, false, true,  false, 0, 0),
-    SE_Q_DSJF     (true,  true,  false, false, false, true,  1, 1),
-    SE_Q1_Q2_DSJF (true,  true,  false, false, false, true,  2, 2),
-    SE_QSET_DSJF  (true,  true,  false, false, false, true,  0, Integer.MAX_VALUE),
-    UNKNOWN       (false, false, false, false, false, false, 0, 0);
+    SE                    (true,  true,  false, false, false, false, 0, 0,                 false),
+    SE_WST                (true,  true,  true,  false, false, false, 0, 0,                 false),
+    SE_c                  (true,  true,  false, true,  false, false, 0, 0,                 false),
+    SE_B                  (true,  true,  false, false, true,  false, 0, 0,                 false),
+    SE_Q_DSJF             (true,  true,  false, false, false, true,  1, 1,                 false),
+    SE_Q1_Q2_DSJF         (true,  true,  false, false, false, true,  2, 2,                 false),
+    SE_QSET_DSJF          (true,  true,  false, false, false, true,  0, Integer.MAX_VALUE, false),
+    SE_QSET_DSJF_OWJ_RNG  (true,  true,  false, false, false, true,  0, Integer.MAX_VALUE, true),
+    UNKNOWN               (false, false, false, false, false, false, 0, 0,                 false);
     
     private final boolean canInstantiate;
     
@@ -205,6 +206,8 @@ public enum KnownSimQueue
     
     private final int maxSubQueues;
     
+    private final boolean requiresOnlyWaitingJobs;
+    
     private GeneratorProfile
       (final boolean canInstatiate,
        final boolean requiresSimEventList,
@@ -213,7 +216,8 @@ public enum KnownSimQueue
        final boolean requiresBufferSize,
        final boolean requiresSubQueues,
        final int     minSubQueues,
-       final int     maxSubQueues)
+       final int     maxSubQueues,
+       final boolean requiresOnlyWaitingJobs)
     {
       this.canInstantiate = canInstatiate;
       this.requiresSimEventList = requiresSimEventList;
@@ -223,6 +227,7 @@ public enum KnownSimQueue
       this.requiresSubQueues = requiresSubQueues;
       this.minSubQueues = minSubQueues;
       this.maxSubQueues = maxSubQueues;
+      this.requiresOnlyWaitingJobs = requiresOnlyWaitingJobs;
     }
     
     private SimQueue newInstance (final Class<? extends SimQueue> queueClass, final Parameters parameters)
@@ -316,6 +321,12 @@ public enum KnownSimQueue
           final Constructor constructor = queueClass.getConstructor
             (SimEventList.class, Set.class, DelegateSimJobFactory.class);
           return (SimQueue) constructor.newInstance (parameters.eventList, copiedQueues, null);
+        }
+        else if (this == SE_QSET_DSJF_OWJ_RNG)
+        {
+          final Constructor constructor = queueClass.getConstructor
+            (SimEventList.class, Set.class, DelegateSimJobFactory.class, Boolean.TYPE, Random.class);
+          return (SimQueue) constructor.newInstance (parameters.eventList, copiedQueues, null, parameters.onlyWaitingJobs, null);
         }
         else
         {
@@ -597,6 +608,8 @@ public enum KnownSimQueue
     public int bufferSize = 10;
     
     public double startTime = Double.NEGATIVE_INFINITY;
+    
+    public boolean onlyWaitingJobs = false;
     
   }
   
