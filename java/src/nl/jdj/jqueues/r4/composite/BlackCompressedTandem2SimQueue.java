@@ -88,6 +88,28 @@ public class BlackCompressedTandem2SimQueue
     super (eventList, (Set<DQ>) createQueuesSet (waitQueue, serveQueue), delegateSimJobFactory);
   }
 
+  /** Returns a new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
+   * serve queues and the same delegate-job factory.
+   * 
+   * @return A new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
+   * serve queues and the same delegate-job factory.
+   * 
+   * @throws UnsupportedOperationException If the wait or serve queues could not be copied through {@link SimQueue#getCopySimQueue}.
+   * 
+   * @see #getEventList
+   * @see #getWaitQueue
+   * @see #getServeQueue
+   * @see #getDelegateSimJobFactory
+   * 
+   */
+  @Override
+  public BlackCompressedTandem2SimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  {
+    final SimQueue<DJ, DQ> waitQueueCopy = getWaitQueue ().getCopySimQueue ();
+    final SimQueue<DJ, DQ> serveQueueCopy = getServeQueue ().getCopySimQueue ();
+    return new BlackCompressedTandem2SimQueue<> (getEventList (), waitQueueCopy, serveQueueCopy, getDelegateSimJobFactory ());
+  }
+  
   @Override
   public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
   {

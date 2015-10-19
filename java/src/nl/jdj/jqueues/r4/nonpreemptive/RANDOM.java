@@ -52,6 +52,22 @@ public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreem
     this.RNG = ((RNG == null) ? new Random () : RNG);
   }
   
+  /** Returns a new {@link RANDOM} object on the same {@link SimEventList}.
+   *
+   * <p>
+   * The new object has its own newly created {@link Random} RNG.
+   * 
+   * @return A new {@link RANDOM} object on the same {@link SimEventList}.
+   * 
+   * @see #getEventList
+   * 
+   */
+  @Override
+  public RANDOM<J, Q> getCopySimQueue ()
+  {
+    return new RANDOM<> (getEventList ());
+  }
+  
   /** Inserts the job at a random position the job queue.
    * 
    * {@inheritDoc}

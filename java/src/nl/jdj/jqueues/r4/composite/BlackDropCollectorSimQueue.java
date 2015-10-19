@@ -86,6 +86,28 @@ public class BlackDropCollectorSimQueue
     super (eventList, (Set<DQ>) createQueuesSet (mainQueue, dropQueue), delegateSimJobFactory);
   }
 
+  /** Returns a new {@link BlackDropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and
+   *  drop queues and the same delegate-job factory.
+   * 
+   * @return A new {@link BlackDropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and
+   * drop queues and the same delegate-job factory.
+   * 
+   * @throws UnsupportedOperationException If the main or drop queues could not be copied through {@link SimQueue#getCopySimQueue}.
+   * 
+   * @see #getEventList
+   * @see #getMainQueue
+   * @see #getDropQueue
+   * @see #getDelegateSimJobFactory
+   * 
+   */
+  @Override
+  public BlackDropCollectorSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  {
+    final SimQueue<DJ, DQ> mainQueueCopy = getMainQueue ().getCopySimQueue ();
+    final SimQueue<DJ, DQ> dropQueueCopy = getDropQueue ().getCopySimQueue ();
+    return new BlackDropCollectorSimQueue<> (getEventList (), mainQueueCopy, dropQueueCopy, getDelegateSimJobFactory ());
+  }
+  
   @Override
   protected final SimQueue<DJ, DQ> getFirstQueue (final double time, final J job)
   {
@@ -101,9 +123,10 @@ public class BlackDropCollectorSimQueue
   }
 
   /** Returns the drop queue if the jobs was dropped from the main queue, <code>null</code> if dropped from the drop queue,
-   * and throw an {@link IllegalArgumentException} otherwise.
+   * and throws an {@link IllegalArgumentException} otherwise.
    * 
-   * @return 
+   * @return The drop queue if the jobs was dropped from the main queue, <code>null</code> if dropped from the drop queue,
+   * and throws an {@link IllegalArgumentException} otherwise.
    * 
    * @see #getMainQueue
    * @see #getDropQueue

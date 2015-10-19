@@ -29,6 +29,19 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
     super (eventList);
   }
   
+  /** Returns a new {@link LCFS} object on the same {@link SimEventList}.
+   * 
+   * @return A new {@link LCFS} object on the same {@link SimEventList}.
+   * 
+   * @see #getEventList
+   * 
+   */
+  @Override
+  public LCFS<J, Q> getCopySimQueue ()
+  {
+    return new LCFS<> (getEventList ());
+  }
+  
   /** Inserts the job at the head of the job queue.
    * 
    * {@inheritDoc}

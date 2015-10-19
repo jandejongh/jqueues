@@ -191,6 +191,28 @@ public class BlackJoinShortestSimQueue
     this.onlyWaitingJobs = onlyWaitingJobs;
   }
 
+  /** Returns a new {@link BlackJoinShortestSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
+   *  the same <code>onlyWaitingJobs</code> argument, a new RNG, and the same delegate-job factory.
+   * 
+   * @return A new {@link BlackJoinShortestSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
+   *  the same <code>onlyWaitingJobs</code> argument, a new RNG, and the same delegate-job factory.
+   * 
+   * @throws UnsupportedOperationException If the encapsulated queues could not be copied through {@link SimQueue#getCopySimQueue}.
+   * 
+   * @see #getEventList
+   * @see #getCopySubSimQueues
+   * @see #getDelegateSimJobFactory
+   * @see #isOnlyWaitingJobs
+   * 
+   */
+  @Override
+  public BlackJoinShortestSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  {
+    final Set<DQ> queuesCopy = getCopySubSimQueues ();
+    return new BlackJoinShortestSimQueue<>
+      (getEventList (), queuesCopy, getDelegateSimJobFactory (), isOnlyWaitingJobs (), null);
+  }
+  
   /** Returns <code>true</code> if {@link #getQueues} is empty
    *  or all members in it with the shortest queue length are in <code>noWaitArmed</code> state.
    * 

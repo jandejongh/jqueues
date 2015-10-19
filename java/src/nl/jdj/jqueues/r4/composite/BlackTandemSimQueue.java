@@ -50,6 +50,26 @@ public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue,
     super (eventList, queues, delegateSimJobFactory);
   }
 
+  /** Returns a new {@link BlackTandemSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
+   *  and the same delegate-job factory.
+   * 
+   * @return A new {@link BlackTandemSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
+   *  and the same delegate-job factory.
+   * 
+   * @throws UnsupportedOperationException If the encapsulated queues could not be copied through {@link SimQueue#getCopySimQueue}.
+   * 
+   * @see #getEventList
+   * @see #getCopySubSimQueues
+   * @see #getDelegateSimJobFactory
+   * 
+   */
+  @Override
+  public BlackTandemSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  {
+    final Set<DQ> queuesCopy = getCopySubSimQueues ();
+    return new BlackTandemSimQueue<> (getEventList (), queuesCopy, getDelegateSimJobFactory ());
+  }
+  
   /**
    * {@inheritDoc}
    * 

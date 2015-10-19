@@ -38,6 +38,19 @@ public class SINK<J extends SimJob, Q extends SINK> extends AbstractSimQueue<J, 
     super (eventList);
   }
   
+  /** Returns a new {@link SINK} object on the same {@link SimEventList}.
+   * 
+   * @return A new {@link SINK} object on the same {@link SimEventList}.
+   * 
+   * @see #getEventList
+   * 
+   */
+  @Override
+  public SINK<J, Q> getCopySimQueue ()
+  {
+    return new SINK<> (getEventList ());
+  }
+  
   /** Returns <code>false</code>.
    * 
    * @return False.

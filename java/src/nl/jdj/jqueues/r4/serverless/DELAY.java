@@ -37,6 +37,20 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
     this.waitTime = waitTime;
   }
   
+  /** Returns a new {@link DELAY} object on the same {@link SimEventList} with the same wait time.
+   * 
+   * @return A new {@link DELAY} object on the same {@link SimEventList} with the same wait time.
+   * 
+   * @see #getEventList
+   * @see #getWaitTime
+   * 
+   */
+  @Override
+  public DELAY<J, Q> getCopySimQueue ()
+  {
+    return new DELAY<> (getEventList (), getWaitTime ());
+  }
+  
   private final double waitTime;
   
   /** Returns the wait time for all jobs.

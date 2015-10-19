@@ -46,6 +46,19 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     super (eventList);
   }
   
+  /** Returns a new {@link IS} object on the same {@link SimEventList}.
+   * 
+   * @return A new {@link IS} object on the same {@link SimEventList}.
+   * 
+   * @see #getEventList
+   * 
+   */
+  @Override
+  public IS<J, Q> getCopySimQueue ()
+  {
+    return new IS<> (getEventList ());
+  }
+  
   /** Calls super method (in order to make implementation final).
    * 
    * {@inheritDoc}

@@ -37,6 +37,20 @@ public class FCFS_c<J extends SimJob, Q extends FCFS_c> extends AbstractNonPreem
     super (eventList, c);
   }
   
+  /** Returns a new {@link FCFS_c} object on the same {@link SimEventList} with the same number of servers.
+   * 
+   * @return A new {@link FCFS_c} object on the same {@link SimEventList} with the same number of servers.
+   * 
+   * @see #getEventList
+   * @see #getNumberOfServers
+   * 
+   */
+  @Override
+  public FCFS_c<J, Q> getCopySimQueue ()
+  {
+    return new FCFS_c<> (getEventList (), getNumberOfServers ());
+  }
+  
   /** Inserts the job at the tail of the job queue.
    * 
    * {@inheritDoc}

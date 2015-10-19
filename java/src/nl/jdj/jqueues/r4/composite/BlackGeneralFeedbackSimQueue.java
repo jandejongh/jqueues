@@ -29,11 +29,30 @@ public class BlackGeneralFeedbackSimQueue
 <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackGeneralFeedbackSimQueue>
   extends AbstractBlackSimQueueNetwork<DJ, DQ, J, Q>
 {
+  /** Returns the encapsulated queue.
+   * 
+   * @return The encapsulated queue, non-<code>null</code>.
+   * 
+   */
+  public final SimQueue<DJ, DQ> getEncapsulatedQueue ()
+  {
+    return getQueues ().iterator ().next ();
+  }
 
   /** The feedback controller.
    * 
    */
   private final SimQueueFeedbackController<J, DJ, Q, DQ> feedbackController;
+  
+  /** Returns the feedback controller.
+   * 
+   * @return The feedback controller, non-<code>null</code>.
+   * 
+   */
+  public final SimQueueFeedbackController<J, DJ, Q, DQ> getFeedbackController ()
+  {
+    return this.feedbackController;
+  }
   
   /** Auxiliary method to create the required {@link Set} of {@link SimQueue}s in the constructor.
    * 
@@ -74,6 +93,28 @@ public class BlackGeneralFeedbackSimQueue
     if (feedbackController == null)
       throw new IllegalArgumentException ();
     this.feedbackController = feedbackController;
+  }
+  
+  /** Returns a new {@link BlackGeneralFeedbackSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
+   *  queue and the same delegate-job factory.
+   * 
+   * @return A new {@link BlackGeneralFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
+   *         queue and the same delegate-job factory.
+   * 
+   * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
+   * 
+   * @see #getEventList
+   * @see #getEncapsulatedQueue
+   * @see #getFeedbackController
+   * @see #getDelegateSimJobFactory
+   * 
+   */
+  @Override
+  public BlackGeneralFeedbackSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  {
+    final SimQueue<DJ, DQ> encapsulatedQueueCopy = getEncapsulatedQueue ().getCopySimQueue ();
+    return new BlackGeneralFeedbackSimQueue<>
+      (getEventList (), (DQ) encapsulatedQueueCopy, getFeedbackController (), getDelegateSimJobFactory ());
   }
   
   private final Map<J, Integer> visits = new HashMap<> ();

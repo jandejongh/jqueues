@@ -499,5 +499,23 @@ extends SimEventListListener
    * 
    */
   public void setName (String name);
+ 
+  /** Creates a functional copy of this {@link SimQueue}.
+   *
+   * <p>
+   * The new object has the same (concrete) type as the original, but starts without jobs and without external listeners.
+   * Its initial state must be as if {@link #reset} was invoked on the queue.
+   * 
+   * <p>
+   * Note that the semantics of this method are much less strict than the <code>Object.clone ()</code> method.
+   * Typically, concrete classes will implement this by returning a <code>new (...)</code> object.
+   * This way, we circumvent the problem of cloning objects with final (for good reasons) fields.
+   * 
+   * @return A functional copy of this {@link SimQueue}.
+   * 
+   * @throws UnsupportedOperationException If the operation is not supported yet; this should be considered a software error.
+   * 
+   */
+  public SimQueue<J, Q> getCopySimQueue () throws UnsupportedOperationException;
   
 }

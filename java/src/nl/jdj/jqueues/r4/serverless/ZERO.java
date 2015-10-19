@@ -35,6 +35,19 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
     super (eventList);
   }
   
+  /** Returns a new {@link ZERO} object on the same {@link SimEventList}.
+   * 
+   * @return A new {@link ZERO} object on the same {@link SimEventList}.
+   * 
+   * @see #getEventList
+   * 
+   */
+  @Override
+  public ZERO<J, Q> getCopySimQueue ()
+  {
+    return new ZERO<> (getEventList ());
+  }
+  
   /** Returns <code>true</code>.
    * 
    * @return True.

@@ -68,6 +68,20 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     this.serviceTime = serviceTime;
   }
   
+  /** Returns a new {@link IS_CST} object on the same {@link SimEventList} with the same service time.
+   * 
+   * @return A new {@link IS_CST} object on the same {@link SimEventList} with the same service time.
+   * 
+   * @see #getEventList
+   * @see #getServiceTime
+   * 
+   */
+  @Override
+  public IS_CST<J, Q> getCopySimQueue ()
+  {
+    return new IS_CST<> (getEventList (), getServiceTime ());
+  }
+  
   /** Calls super method (in order to make implementation final).
    * 
    * {@inheritDoc}

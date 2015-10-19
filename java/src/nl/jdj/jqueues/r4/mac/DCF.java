@@ -120,6 +120,13 @@ implements MediumPhyStateObserver
     this (eventList, mediumPhyStateMonitor, slotTime_s, acParameters.aifs_slots, difs_mus, eifs_mus, acParameters.cw);
   }
   
+  @Override
+  public DCF getCopySimQueue ()
+  {
+    return new DCF
+      (getEventList (), this.mediumPhyStateMonitor, this.slotTime_s, this.aifs_slots, this.difs_mus, this.eifs_mus, this.cw);
+  }
+  
   /** The slot time.
    *
    * @return The slot time, in seconds.

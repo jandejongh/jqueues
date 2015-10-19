@@ -23,6 +23,16 @@ public class BlackNumVisitsFeedbackSimQueue
    */
   private final int numberOfVisits;
   
+  /** Returns the required number of visits to the embedded queue.
+   * 
+   * @return The required number of visits to the embedded queue.
+   * 
+   */
+  public final int getNumberOfVisits ()
+  {
+    return this.numberOfVisits;
+  }
+  
   /** Creates a suitable {@link SimQueueFeedbackController}.
    * 
    * Auxiliary function to constructor.
@@ -67,6 +77,28 @@ public class BlackNumVisitsFeedbackSimQueue
   {
     super (eventList, queue, createFeedbackController (numberOfVisits), delegateSimJobFactory);
     this.numberOfVisits = numberOfVisits;
+  }
+  
+  /** Returns a new {@link BlackNumVisitsFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
+   *  the same number of visits required, and the same delegate-job factory.
+   * 
+   * @return A new {@link BlackNumVisitsFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
+   *  the same number of visits required, and the same delegate-job factory.
+   * 
+   * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
+   * 
+   * @see #getEventList
+   * @see #getEncapsulatedQueue
+   * @see #getNumberOfVisits
+   * @see #getDelegateSimJobFactory
+   * 
+   */
+  @Override
+  public BlackNumVisitsFeedbackSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  {
+    final SimQueue<DJ, DQ> queueCopy = getEncapsulatedQueue ().getCopySimQueue ();
+    return new BlackNumVisitsFeedbackSimQueue<>
+      (getEventList (), (DQ) queueCopy, getNumberOfVisits (), getDelegateSimJobFactory ());
   }
   
   /** Calls super method (in order to make implementation final).

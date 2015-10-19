@@ -1,5 +1,6 @@
 package nl.jdj.jqueues.r4.composite;
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimJob;
@@ -26,10 +27,20 @@ public class BlackJacksonSimQueueNetwork
   implements BlackSimQueueNetwork<DJ, DQ, J, Q>
 {
   
+  /** The arrival probabilities (as probability distribution function).
+   * 
+   */
+  private final double[] pdfArrival;
+  
   /** The arrival probabilities (as cumulative distribution function).
    * 
    */
   private final double[] cdfArrival;
+  
+  /** The transition probabilities for each (source) queue in turn (as probability distribution function).
+   * 
+   */
+  private final double[][] pdfTransition;
   
   /** The transition probabilities for each (source) queue in turn (as cumulative distribution function).
    * 
@@ -128,11 +139,13 @@ public class BlackJacksonSimQueueNetwork
    *                                must be array of size <code>|Q|</code>.
    *                              Entries must be between zero and unity and their sum should not exceed unity.
    *                              The "remainder" denotes the probability that a job departs immediately upon arrival.
+   *                              This argument is copied for future use in the constructor.
    * @param pdfTransition         The transition probabilities from/to each queue (pdf for each (source) queue);
    *                                must be square matrix of size <code>|Q|x|Q|</code>.
    *                              Entries must be between zero and unity and each row sum should not exceed unity.
    *                              The "remainder" in a row denotes the probability that a job departs after a visit to the
    *                                corresponding queue.
+   *                              This argument is (deep-)copied for future use in the constructor.
    * @param userRNG               An optional user-supplied random-number generator
    *                                (if absent, a new one is created for local use).
    * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
@@ -157,17 +170,42 @@ public class BlackJacksonSimQueueNetwork
   {
     super (eventList, queues, delegateSimJobFactory);
     checkPdfArray (pdfArrival, queues.size ());
+    this.pdfArrival = Arrays.copyOf (pdfArrival, pdfArrival.length);
     this.cdfArrival = new double[queues.size ()];
     for (int e = 0; e < queues.size (); e++)
-      this.cdfArrival[e] = pdfArrival[e] + ((e > 0) ? this.cdfArrival[e-1] : 0);
+      this.cdfArrival[e] = this.pdfArrival[e] + ((e > 0) ? this.cdfArrival[e-1] : 0);
     checkPdfMatrix (pdfTransition, queues.size ());
+    this.pdfTransition = new double[queues.size ()][];
+    for (int r = 0; r < queues.size (); r++)
+      this.pdfTransition[r] = Arrays.copyOf (pdfTransition[r], queues.size ());
     this.cdfTransition = new double[queues.size ()][queues.size ()];
     for (int r = 0; r < queues.size (); r++)
       for (int c = 0; c < queues.size (); c++)
-        this.cdfTransition[r][c] = pdfTransition[r][c] + ((c > 0) ? this.cdfTransition[r][c-1] : 0);
+        this.cdfTransition[r][c] = this.pdfTransition[r][c] + ((c > 0) ? this.cdfTransition[r][c-1] : 0);
     this.rng = ((userRNG != null) ? userRNG : new Random ());
   }
 
+  /** Returns a new {@link BlackJacksonSimQueueNetwork} object on the same {@link SimEventList} with copies of the sub-queues and
+   *  probability arguments, a new RNG, and the same delegate-job factory.
+   * 
+   * @return A new {@link BlackJacksonSimQueueNetwork} object on the same {@link SimEventList} with copies of the sub-queues and
+   *  probability arguments, a new RNG, and the same delegate-job factory.
+   * 
+   * @throws UnsupportedOperationException If the encapsulated queues could not be copied through {@link SimQueue#getCopySimQueue}.
+   * 
+   * @see #getEventList
+   * @see #getCopySubSimQueues
+   * @see #getDelegateSimJobFactory
+   * 
+   */
+  @Override
+  public BlackJacksonSimQueueNetwork<DJ, DQ, J, Q> getCopySimQueue ()
+  {
+    final Set<DQ> queuesCopy = getCopySubSimQueues ();
+    return new BlackJacksonSimQueueNetwork<>
+      (getEventList (), queuesCopy, this.pdfArrival, this.pdfTransition, null, getDelegateSimJobFactory ());
+  }
+  
   /** Returns the queue selected (or <code>null</code> implying an immediate departure)
    * from a probabilistic experiment governed by the <code>pdfArrival</code>
    * array passed in the constructor.

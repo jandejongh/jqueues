@@ -68,6 +68,30 @@ public class BlackParallelSimQueues
       this.simQueueSelector = simQueueSelector;
   }
 
+  /** Returns a new {@link BlackParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
+   *  the same {@link SimQueueSelector} (bearing in mind <code>this</code> could be its own selector),
+   *  and the same delegate-job factory.
+   * 
+   * @return A new {@link BlackParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
+   *  the same {@link SimQueueSelector} (bearing in mind <code>this</code> could be its own selector),
+   *  and the same delegate-job factory.
+   * 
+   * @throws UnsupportedOperationException If the encapsulated queues could not be copied through {@link SimQueue#getCopySimQueue}.
+   * 
+   * @see #getEventList
+   * @see #getCopySubSimQueues
+   * @see #getDelegateSimJobFactory
+   * 
+   */
+  @Override
+  public BlackParallelSimQueues<DJ, DQ, J, Q> getCopySimQueue ()
+  {
+    final Set<DQ> queuesCopy = getCopySubSimQueues ();
+    final SimQueueSelector simQueueSelectorCopy = (this.simQueueSelector == this ? null : this.simQueueSelector);
+    return new BlackParallelSimQueues<>
+      (getEventList (), queuesCopy, getDelegateSimJobFactory (), simQueueSelectorCopy);
+  }
+  
   /**
    * {@inheritDoc}
    * 

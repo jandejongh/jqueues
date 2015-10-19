@@ -27,6 +27,19 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
     super (eventList);
   }
   
+  /** Returns a new {@link DROP} object on the same {@link SimEventList}.
+   * 
+   * @return A new {@link DROP} object on the same {@link SimEventList}.
+   * 
+   * @see #getEventList
+   * 
+   */
+  @Override
+  public DROP<J, Q> getCopySimQueue ()
+  {
+    return new DROP<> (getEventList ());
+  }
+  
   /** Returns <code>false</code>.
    * 
    * @return False.

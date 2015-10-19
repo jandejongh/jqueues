@@ -27,6 +27,19 @@ public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveS
     super (eventList);
   }
   
+  /** Returns a new {@link SJF} object on the same {@link SimEventList}.
+   * 
+   * @return A new {@link SJF} object on the same {@link SimEventList}.
+   * 
+   * @see #getEventList
+   * 
+   */
+  @Override
+  public SJF<J, Q> getCopySimQueue ()
+  {
+    return new SJF<> (getEventList ());
+  }
+  
   /** Inserts the job in the job queue maintaining non-decreasing service-time ordering.
    * 
    * {@inheritDoc}

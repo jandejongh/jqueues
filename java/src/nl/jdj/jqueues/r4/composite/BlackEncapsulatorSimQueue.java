@@ -20,6 +20,11 @@ public class BlackEncapsulatorSimQueue
   extends BlackTandemSimQueue<DJ, DQ, J, Q>
 {
   
+  public final SimQueue<DJ, DQ> getEncapsulatedQueue ()
+  {
+    return getQueues ().iterator ().next ();
+  }
+  
   /** Auxiliary method to create the required {@link Set} of a single {@link SimQueue} in the constructor.
    * 
    * @param queue  The queue.
@@ -54,6 +59,26 @@ public class BlackEncapsulatorSimQueue
    final DelegateSimJobFactory delegateSimJobFactory)
   {
     super (eventList, (Set<DQ>) createQueuesSet (queue), delegateSimJobFactory);
+  }
+  
+  /** Returns a new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
+   *  queue and the same delegate-job factory.
+   * 
+   * @return A new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
+   *         queue and the same delegate-job factory.
+   * 
+   * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
+   * 
+   * @see #getEventList
+   * @see #getEncapsulatedQueue
+   * @see #getDelegateSimJobFactory
+   * 
+   */
+  @Override
+  public BlackEncapsulatorSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  {
+    final SimQueue<DJ, DQ> encapsulatedQueueCopy = getEncapsulatedQueue ().getCopySimQueue ();
+    return new BlackEncapsulatorSimQueue<> (getEventList (), encapsulatedQueueCopy, getDelegateSimJobFactory ());
   }
   
   /** Calls super method (in order to make implementation final).

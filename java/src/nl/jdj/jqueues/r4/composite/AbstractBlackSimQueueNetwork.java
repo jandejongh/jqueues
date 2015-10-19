@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r4.composite;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimQueue;
@@ -95,6 +96,25 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     return dq;
   }
   
+  /** Returns a copy of the set of sub-queues, each of which is copied in itself.
+   * 
+   * @return A copy of the set of sub-queues, each of which is copied in itself.
+   * 
+   * @see #getQueues
+   * @see SimQueue#getCopySimQueue
+   * 
+   * @throws UnsupportedOperationException If copying any of the sub-queues is unsupported; this should be considered as a
+   *         software error.
+   * 
+   */
+  protected final Set<DQ> getCopySubSimQueues () throws UnsupportedOperationException
+  {
+    final Set<DQ> set = new LinkedHashSet<> ();
+    for (final DQ dq : getQueues ())
+      set.add ((DQ) dq.getCopySimQueue ());
+    return set;
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // DELEGATE SIMJOBS AND REAL/DELEGATE SIMJOB MAPPINGS
@@ -105,6 +125,15 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
    * 
    */
   private final DelegateSimJobFactory<? extends DJ, DQ, J, Q> delegateSimJobFactory;
+  
+  /** Returns the factory to create delegate {@link SimJob}s, non-<code>null</code>.
+   * 
+   * @return The factory to create delegate {@link SimJob}s, non-<code>null</code>.
+   */
+  public final DelegateSimJobFactory<? extends DJ, DQ, J, Q> getDelegateSimJobFactory ()
+  {
+    return this.delegateSimJobFactory;
+  }
   
   /** Maps "real" jobs onto delegate jobs.
    * 

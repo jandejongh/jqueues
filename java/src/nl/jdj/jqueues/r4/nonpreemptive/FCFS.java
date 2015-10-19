@@ -30,6 +30,19 @@ public class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPreemptiv
     super (eventList);
   }
   
+  /** Returns a new {@link FCFS} object on the same {@link SimEventList}.
+   * 
+   * @return A new {@link FCFS} object on the same {@link SimEventList}.
+   * 
+   * @see #getEventList
+   * 
+   */
+  @Override
+  public FCFS<J, Q> getCopySimQueue ()
+  {
+    return new FCFS<> (getEventList ());
+  }
+  
   /** Inserts the job at the tail of the job queue.
    * 
    * {@inheritDoc}

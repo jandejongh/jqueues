@@ -32,6 +32,20 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
     this.bufferSize = bufferSize;
   }
   
+  /** Returns a new {@link FCFS_B} object on the same {@link SimEventList} with the same buffer size.
+   * 
+   * @return A new {@link FCFS_B} object on the same {@link SimEventList} with the same buffer size.
+   * 
+   * @see #getEventList
+   * @see #getBufferSize
+   * 
+   */
+  @Override
+  public FCFS_B<J, Q> getCopySimQueue ()
+  {
+    return new FCFS_B<> (getEventList (), getBufferSize ());
+  }
+  
   /** Inserts the job at the tail of the job queue if it will be taken into service immediately,
    * or else if there is still waiting room available.
    * 

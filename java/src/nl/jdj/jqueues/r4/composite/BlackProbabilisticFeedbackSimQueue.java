@@ -24,6 +24,16 @@ public class BlackProbabilisticFeedbackSimQueue
    */
   private final double p_feedback;
   
+  /** Returns the feedback probability.
+   * 
+   * @return The feedback probability, between zero and unity inclusive.
+   * 
+   */
+  public final double getFeedbackProbability ()
+  {
+    return this.p_feedback;
+  }
+  
   /** Creates a suitable {@link SimQueueFeedbackController}.
    * 
    * Auxiliary function to constructor.
@@ -73,6 +83,29 @@ public class BlackProbabilisticFeedbackSimQueue
     super (eventList, queue, createFeedbackController (p_feedback, userRNG), delegateSimJobFactory);
     this.p_feedback = p_feedback;
   }
+  
+  /** Returns a new {@link BlackProbabilisticFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
+   *  the same feedback probability, a new RNG, and the same delegate-job factory.
+   * 
+   * @return A new {@link BlackProbabilisticFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
+   *  the same feedback probability, a new RNG, and the same delegate-job factory.
+   * 
+   * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
+   * 
+   * @see #getEventList
+   * @see #getEncapsulatedQueue
+   * @see #getFeedbackProbability
+   * @see #getDelegateSimJobFactory
+   * 
+   */
+  @Override
+  public BlackProbabilisticFeedbackSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  {
+    final SimQueue<DJ, DQ> queueCopy = getEncapsulatedQueue ().getCopySimQueue ();
+    return new BlackProbabilisticFeedbackSimQueue<>
+      (getEventList (), (DQ) queueCopy, getFeedbackProbability (), null, getDelegateSimJobFactory ());
+  }
+  
   
   /** Calls super method (in order to make implementation final).
    * 

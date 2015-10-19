@@ -36,6 +36,20 @@ public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends Abstract
     super (eventList, c);
   }
   
+  /** Returns a new {@link NoBuffer_c} object on the same {@link SimEventList} with the same number of servers.
+   * 
+   * @return A new {@link NoBuffer_c} object on the same {@link SimEventList} with the same number of servers.
+   * 
+   * @see #getEventList
+   * @see #getNumberOfServers
+   * 
+   */
+  @Override
+  public NoBuffer_c<J, Q> getCopySimQueue ()
+  {
+    return new NoBuffer_c<> (getEventList (), getNumberOfServers ());
+  }
+  
   /** Inserts the job at the tail of the job queue if a server is available and there are server-access credits.
    * 
    * {@inheritDoc}

@@ -17,8 +17,25 @@ extends BlackParallelSimQueues<DCFSimJob, DCF, EDCASimJob, EDCA>
 implements SimQueueSelector<EDCASimJob, DCFSimJob, DCF>
 {
 
+  /** The slot time in seconds.
+   * 
+   */
+  private final double slotTime_s;
+  
+  /** The DIFS (in micro-seconds).
+   * 
+   */
+  private final double difs_mus;
+  
+  /** The EIFS (in micro-seconds).
+   * 
+   */
+  private final double eifs_mus;
+  
   private final Map<ACParameters, DCF> acMap = new HashMap<> ();
   
+  private final MediumPhyStateMonitor mediumPhyStateMonitor;
+
   private static Set<DCF> createQueues (final SimEventList eventList,
     final MediumPhyStateMonitor mediumPhyStateMonitor,
     final Set<? extends ACParameters> acParameters,
@@ -57,8 +74,19 @@ implements SimQueueSelector<EDCASimJob, DCFSimJob, DCF>
     final Iterator<DCF> queueIterator = getQueues ().iterator ();
     for (ACParameters acp : acps)
       this.acMap.put (acp, queueIterator.next ());
+    this.slotTime_s = slotTime_s;
+    this.difs_mus = difs_mus;
+    this.eifs_mus = eifs_mus;
+    this.mediumPhyStateMonitor = mediumPhyStateMonitor;
   }
 
+  @Override
+  public EDCA getCopySimQueue ()
+  {
+    return new EDCA
+      (getEventList (), this.mediumPhyStateMonitor, this.slotTime_s, this.difs_mus, this.eifs_mus, this.acMap.keySet ());
+  }
+  
   @Override
   public DCF selectFirstQueue (double time, EDCASimJob job)
   {
