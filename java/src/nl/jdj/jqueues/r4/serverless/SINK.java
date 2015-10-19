@@ -13,8 +13,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * 
  * <p>
  * Obviously, the {@link SINK} queue does not schedule any events on the
- * {@link #eventList} and never invokes actions in
- * {@link #startActions} or {@link #departureActions}.
+ * {@link #eventList} and never fires start or departure events.
  * It does support job revocations though.
  * 
  * <p>

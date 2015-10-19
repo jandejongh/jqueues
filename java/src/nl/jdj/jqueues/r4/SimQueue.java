@@ -56,7 +56,6 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * After its start, a job is said to be <i>executing</i>.
  * Once the execution finishes, the job <i>departs</i> from the queue.
  * Note, however, that a job may also depart from the {@link SimQueue} without having started!
- * Note that this life-cycle is strict in the sense that only waiting jobs can start.
  * 
  * <p>
  * Once a job has been offered, {@link #revoke} tries to revoke the job,
@@ -139,19 +138,7 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * Note that this state setting ignores queue and server-access vacations.
  * 
  * <p>
- * A {@link SimQueue} supports registration and un-registration of
- * queue-specific {@link SimEventAction}s to be invoked for specific events,
- * in particular
- * <ul>
- * <li>job arrivals ({@link #addArrivalAction} and {@link #removeArrivalAction}),
- * <li>job service start events ({@link #addStartAction} and {@link #removeStartAction}),
- * <li>job drop events ({@link #addDropAction} and {@link #removeDropAction}),
- * <li>job revocation events ({@link #addRevocationAction} and {@link #removeRevocationAction}),
- * <li>job departures ({@link #addDepartureAction} and {@link #removeDepartureAction}).
- * </ul>
- * 
- * <p>
- * In addition, a {@link SimQueue} respects the various per job actions to be performed by
+ * A {@link SimQueue} respects the various per job actions to be performed by
  * the queue as specified by
  * <ul>
  * <li>{@link SimJob#getQueueArriveAction},
@@ -167,10 +154,6 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * {@link SimQueue} and {@link SimJob} objects,
  * i.e., <i>after</i> both objects truly reflect the new state of the queue
  * and the job, respectively.
- * As a general rule, queue-registered (global) actions take precedence
- * over job-specific actions, in the sense that the former are called
- * before the latter.
- * However, we think it is bad practice to depend upon this behavior.
  *
  * <p>
  * Arrival-related notifications are always issued immediately at the time a job arrives at a queue,
@@ -178,10 +161,9 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * (and vice versa, for that matter).
  * 
  * <p>
- * A more convenient way to be notified of {@link SimQueue} events is by registering as a {@link SimQueueListener} through
- * {@link #registerQueueListener}. The relevant methods of a {@link SimQueueListener} are invoked immediately after invocation of
- * the registered {@link SimEventAction}s, but before the jobs-specific actions.
- * Again, this order should not be relied upon.
+ * A convenient queue-centric way to be notified of {@link SimQueue} events is by registering as a {@link SimQueueListener} through
+ * {@link #registerQueueListener}. The relevant methods of a {@link SimQueueListener} are invoked before the jobs-specific actions.
+ * This order should not be relied upon though.
  * 
  * <p>
  * If the {@link SimQueueListener} is also a {@link SimQueueVacationListener},
@@ -189,13 +171,13 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * see {@link SimQueueVacationListener} for more details.
  * 
  * <p>
- * Unlike the notification mechanisms for queue and job specific action, a {@link SimQueueListener} also get notifications
+ * Unlike the notification mechanism for job specific actions, a {@link SimQueueListener} also get notifications
  * right <i>before</i> a state change in the queue occurs, e.g., right before a job departure.
  * Such notifications are named <i>updates</i>, see {@link SimQueueListener#notifyUpdate}.
  * 
  * <p>
- * If a job is successfully revoked, or if it is dropped, none of the departure actions are
- * called. Also, be aware that there is no guarantee that a start-service
+ * If a job is successfully revoked, or if it is dropped, none of the departure events are fired.
+ * Also, be aware that there is no guarantee that a start-service
  * or a departure event is ever called for a {@link SimJob} at all.
  *
  * <p>Although not explicitly enforced by this interface, typical {@link SimQueue}s should probably rely
@@ -228,6 +210,12 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
 public interface SimQueue<J extends SimJob, Q extends SimQueue>
 extends SimEventListListener
 {
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // LISTENERS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Registers a listener to events related to this queue.
    * 
@@ -246,6 +234,121 @@ extends SimEventListListener
    * 
    */
   public void unregisterQueueListener (SimQueueListener<J, Q> listener);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Creates a functional copy of this {@link SimQueue}.
+   *
+   * <p>
+   * The new object has the same (concrete) type as the original, but starts without jobs and without external listeners.
+   * Its initial state must be as if {@link #reset} was invoked on the queue.
+   * 
+   * <p>
+   * Note that the semantics of this method are much less strict than the <code>Object.clone ()</code> method.
+   * Typically, concrete classes will implement this by returning a <code>new (...)</code> object.
+   * This way, we circumvent the problem of cloning objects with final (for good reasons) fields.
+   * 
+   * @return A functional copy of this {@link SimQueue}.
+   * 
+   * @throws UnsupportedOperationException If the operation is not supported yet; this should be considered a software error.
+   * 
+   */
+  public SimQueue<J, Q> getCopySimQueue () throws UnsupportedOperationException;
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME/toString
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns a default, type-specific name for this {@link SimQueue}.
+   * 
+   * <p>
+   * The string is used as a fallback return value for <code>Object.toString ()</code>
+   * in case the user did not set an instance-specific name
+   * through {@link #setName}.
+   * 
+   * <p>
+   * To be overridden in subclasses.
+   * 
+   * @return A default, type-specific name for this {@link SimQueue}.
+   * 
+   * @see #setName
+   * 
+   */
+  public String toStringDefault ();
+  
+  /** Sets the name of this {@link SimQueue}, to be returned by subsequent calls to <code>Object.toString ()</code>.
+   * 
+   * @param name The new name of this queue; if non-<code>null</code>, the string will be supplied by subsequent calls
+   *               to <code>Object.toString ()</code>; otherwise, the type-specific default will be used for that.
+   * 
+   * @see #toStringDefault
+   * 
+   */
+  public void setName (String name);
+ 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // STATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Gets the number of jobs currently residing at the queue, either waiting or executing.
+   *
+   * @return The number of jobs at the queue, zero or positive.
+   * 
+   */
+  public int getNumberOfJobs ();
+  
+  /** Gets the number of jobs currently being executed at the queue (i.e., not waiting).
+   *
+   * @return The number of jobs currently being executed at the queue (i.e., not waiting).
+   * 
+   */
+  public int getNumberOfJobsExecuting ();
+
+  /** Returns whether or not the queue is on queue-access vacation.
+   * 
+   * This method does nothing if the queue is not on queue-access vacation.
+   * and overrules all settings as to the (remaining) duration of the vacation.
+   * 
+   * @see #startQueueAccessVacation()
+   * @see #startQueueAccessVacation(double)
+   * @see #stopQueueAccessVacation
+   * 
+   */
+  public boolean isQueueAccessVacation ();
+  
+  /** Gets the (remaining) server-access credits.
+   *
+   * The value {@link Integer#MAX_VALUE} is treated as infinity.
+   * 
+   * @return The remaining server-access credits, non-negative, with {@link Integer#MAX_VALUE} treated as infinity.
+   */
+  public int getServerAccessCredits ();
+  
+  /** Returns whether the next arriving is guaranteed to suffer zero-waiting time before starting service or departing.
+   * 
+   * The return value is <i>independent</i> of queue-access and server-access vacations.
+   * 
+   * @return True if the next arriving is guaranteed to suffer zero-waiting time before starting service or departing,
+   *         in the absence of queue-access and server-access vacations.
+   * 
+   * @see SimQueueListener#notifyNewNoWaitArmed
+   * 
+   */
+  public boolean isNoWaitArmed ();
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // MAIN OPERATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /** Puts the queue in the empty state, removes all jobs without notifications, and reset its internal time to "undetermined".
    *
@@ -328,26 +431,6 @@ extends SimEventListListener
    */
   public void stopQueueAccessVacation ();
   
-  /** Returns whether or not the queue is on queue-access vacation.
-   * 
-   * This method does nothing if the queue is not on queue-access vacation.
-   * and overrules all settings as to the (remaining) duration of the vacation.
-   * 
-   * @see #startQueueAccessVacation()
-   * @see #startQueueAccessVacation(double)
-   * @see #stopQueueAccessVacation
-   * 
-   */
-  public boolean isQueueAccessVacation ();
-  
-  /** Gets the (remaining) server-access credits.
-   *
-   * The value {@link Integer#MAX_VALUE} is treated as infinity.
-   * 
-   * @return The remaining server-access credits, non-negative, with {@link Integer#MAX_VALUE} treated as infinity.
-   */
-  public int getServerAccessCredits ();
-  
   /** Sets the server-access credits.
    * 
    * @param credits The new remaining server-access credits, non-negative, with {@link Integer#MAX_VALUE} treated as infinity.
@@ -356,166 +439,5 @@ extends SimEventListListener
    * 
    */
   public void setServerAccessCredits (int credits);
-  
-  /** Returns whether the next arriving is guaranteed to suffer zero-waiting time before starting service or departing.
-   * 
-   * The return value is <i>independent</i> of queue-access and server-access vacations.
-   * 
-   * @return True if the next arriving is guaranteed to suffer zero-waiting time before starting service or departing,
-   *         in the absence of queue-access and server-access vacations.
-   * 
-   * @see SimQueueListener#notifyNewNoWaitArmed
-   * 
-   */
-  public boolean isNoWaitArmed ();
-  
-  /** Add an action to be invoked upon job arrivals.
-   *
-   * This method silently ignores actions that have already been registered.
-   *
-   * @param action The action to add.
-   *
-   */
-  public void addArrivalAction (SimEventAction action);
-
-  /** Remove an action to be invoked upon job arrivals.
-   *
-   * This method silently ignores actions that have not been registered.
-   *
-   * @param action The action to remove.
-   *
-   */
-  public void removeArrivalAction (SimEventAction action);
-
-  /** Add an action to be invoked upon (re)starting servicing a job.
-   *
-   * This method silently ignores actions that have already been registered.
-   *
-   * @param action The action to add.
-   *
-   */
-  public void addStartAction (SimEventAction action);
-
-  /** Remove an action to be invoked upon (re)starting servicing a job.
-   *
-   * This method silently ignores actions that have not been registered.
-   *
-   * @param action The action to remove.
-   *
-   */
-  public void removeStartAction (SimEventAction action);
-
-  /** Add an action to be invoked upon job drops.
-   *
-   * This method silently ignores actions that have already been registered.
-   *
-   * @param action The action to add.
-   *
-   */
-  public void addDropAction (SimEventAction action);
-
-  /** Remove an action to be invoked upon job drops.
-   *
-   * This method silently ignores actions that have not been registered.
-   *
-   * @param action The action to remove.
-   *
-   */
-  public void removeDropAction (SimEventAction action);
-
-  /** Add an action to be invoked upon (successful) job revocations.
-   *
-   * This method silently ignores actions that have already been registered.
-   *
-   * @param action The action to add.
-   *
-   */
-  public void addRevocationAction (SimEventAction action);
-
-  /** Remove an action to be invoked upon (successful) job revocations.
-   *
-   * This method silently ignores actions that have not been registered.
-   *
-   * @param action The action to remove.
-   *
-   */
-  public void removeRevocationAction (SimEventAction action);
-
-  /** Add an action to be invoked upon job departures.
-   *
-   * This method silently ignores actions that have already been registered.
-   *
-   * @param action The action to add.
-   *
-   */
-  public void addDepartureAction (SimEventAction action);
-
-  /** Remove an action to be invoked upon job departures.
-   *
-   * This method silently ignores actions that have not been registered.
-   *
-   * @param action The action to remove.
-   *
-   */
-  public void removeDepartureAction (SimEventAction action);
-
-  /** Gets the number of jobs currently residing at the queue, either waiting or executing.
-   *
-   * @return The number of jobs at the queue, zero or positive.
-   * 
-   */
-  public int getNumberOfJobs ();
-  
-  /** Gets the number of jobs currently being executed at the queue (i.e., not waiting).
-   *
-   * @return The number of jobs currently being executed at the queue (i.e., not waiting).
-   * 
-   */
-  public int getNumberOfJobsExecuting ();
-  
-  /** Returns a default, type-specific name for this {@link SimQueue}.
-   * 
-   * <p>
-   * The string is used as a fallback return value for <code>Object.toString ()</code>
-   * in case the user did not set an instance-specific name
-   * through {@link #setName}.
-   * 
-   * <p>
-   * To be overridden in subclasses.
-   * 
-   * @return A default, type-specific name for this {@link SimQueue}.
-   * 
-   * @see #setName
-   * 
-   */
-  public String toStringDefault ();
-  
-  /** Sets the name of this {@link SimQueue}, to be returned by subsequent calls to <code>Object.toString ()</code>.
-   * 
-   * @param name The new name of this queue; if non-<code>null</code>, the string will be supplied by subsequent calls
-   *               to <code>Object.toString ()</code>; otherwise, the type-specific default will be used for that.
-   * 
-   * @see #toStringDefault
-   * 
-   */
-  public void setName (String name);
- 
-  /** Creates a functional copy of this {@link SimQueue}.
-   *
-   * <p>
-   * The new object has the same (concrete) type as the original, but starts without jobs and without external listeners.
-   * Its initial state must be as if {@link #reset} was invoked on the queue.
-   * 
-   * <p>
-   * Note that the semantics of this method are much less strict than the <code>Object.clone ()</code> method.
-   * Typically, concrete classes will implement this by returning a <code>new (...)</code> object.
-   * This way, we circumvent the problem of cloning objects with final (for good reasons) fields.
-   * 
-   * @return A functional copy of this {@link SimQueue}.
-   * 
-   * @throws UnsupportedOperationException If the operation is not supported yet; this should be considered a software error.
-   * 
-   */
-  public SimQueue<J, Q> getCopySimQueue () throws UnsupportedOperationException;
   
 }

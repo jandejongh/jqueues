@@ -7,15 +7,15 @@ import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
 import nl.jdj.jsimulation.r4.SimEventListListener;
 
-/** A partial implementation of a {@link SimQueue}, taking listener and event-list management.
+/** A partial implementation of a {@link SimQueue}, taking care of listener and event-list management.
  * 
  * <p>All concrete subclasses of {@link AbstractSimQueueBase} take
  * the {@link SimEventList} used for event scheduling and processing as one of their arguments upon construction.
  * It is up to the caller to properly start processing the event list.
  * 
  * <p>
- * This class takes care of storing the (final) event list, and doing all listener management,
- * management of registered actions, and firing events upon request from concrete subclasses.
+ * This class takes care of storing the (final) event list, doing all listener management,
+ * and firing events upon request from concrete subclasses.
  * It also implements a rudimentary (and override-able) {@link SimEventListListener},
  * invoking {@link SimQueue#reset} when the event list resets.
  * 
@@ -105,112 +105,6 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // REGISTERED EVENT ACTIONS
-  //  - arrival
-  //  - start
-  //  - drop
-  //  - revocation
-  //  - departure
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  private final List<SimEventAction> arrivalActions
-    = new ArrayList<> ();
-
-  @Override
-  public final void addArrivalAction (final SimEventAction action)
-  {
-    if (action == null)
-      return;
-    if (this.arrivalActions.contains (action))
-      return;
-    this.arrivalActions.add (action);
-  }
-
-  @Override
-  public final void removeArrivalAction (final SimEventAction action)
-  {
-    this.arrivalActions.remove (action);
-  }
-
-  private final List<SimEventAction> startActions
-    = new ArrayList<> ();
-
-  @Override
-  public final void addStartAction (final SimEventAction action)
-  {
-    if (action == null)
-      return;
-    if (this.startActions.contains (action))
-      return;
-    this.startActions.add (action);
-  }
-
-  @Override
-  public final void removeStartAction (final SimEventAction action)
-  {
-    this.startActions.remove (action);
-  }
-
-  private final List<SimEventAction> dropActions
-    = new ArrayList<> ();
-
-  @Override
-  public final void addDropAction (final SimEventAction action)
-  {
-    if (action == null)
-      return;
-    if (this.dropActions.contains (action))
-      return;
-    this.dropActions.add (action);
-  }
-
-  @Override
-  public final void removeDropAction (final SimEventAction action)
-  {
-    this.dropActions.remove (action);
-  }
-
-  private final List<SimEventAction> revocationActions
-    = new ArrayList<> ();
-
-  @Override
-  public final void addRevocationAction (final SimEventAction action)
-  {
-    if (action == null)
-      return;
-    if (this.revocationActions.contains (action))
-      return;
-    this.revocationActions.add (action);
-  }
-
-  @Override
-  public final void removeRevocationAction (final SimEventAction action)
-  {
-    this.revocationActions.remove (action);
-  }
-
-  private final List<SimEventAction> departureActions
-    = new ArrayList<> ();
-
-  @Override
-  public final void addDepartureAction (final SimEventAction action)
-  {
-    if (action == null)
-      return;
-    if (this.departureActions.contains (action))
-      return;
-    this.departureActions.add (action);
-  }
-
-  @Override
-  public final void removeDepartureAction (final SimEventAction action)
-  {
-    this.departureActions.remove (action);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
   // EVENT NOTIFICATIONS
   //  - reset
   //  - update
@@ -250,24 +144,20 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
       l.notifyUpdate (time, (Q) this);
   }
   
-  /** Notifies all listeners and invoke all queue and job specific actions upon a job arrival at this queue.
+  /** Notifies all listeners and invokes job specific actions upon a job arrival at this queue.
    *
-   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
-   * actions.
+   * This method first informs the queue listeners and then invokes job-specific actions.
    *
    * @param time The current time.
    * @param job The job.
    * 
    * @see SimQueue#arrive
-   * @see #addArrivalAction
    * @see SimQueueListener#notifyArrival
    * @see SimJob#getQueueArriveAction
    *
    */
   protected final void fireArrival (final double time, final J job)
   {
-    for (SimEventAction<J> action: this.arrivalActions)
-      action.action (new SimEvent (time, job, action));
     for (SimQueueListener<J, Q> l : this.queueListeners)
       l.notifyArrival (time, job, (Q) this);
     final SimEventAction<J> aAction = job.getQueueArriveAction ();
@@ -275,23 +165,19 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
       aAction.action (new SimEvent (time, job, aAction));
   }
   
-  /** Notifies all listeners and invoke all queue and job specific actions upon a job starting at this queue.
+  /** Notifies all listeners and invokes job specific actions upon a job starting at this queue.
    *
-   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
-   * actions.
+   * This method first informs the queue listeners and then invokes job-specific actions.
    *
    * @param time The current time.
    * @param job The job.
    *
-   * @see #addStartAction
    * @see SimQueueListener#notifyStart
    * @see SimJob#getQueueStartAction
    * 
    */
   protected final void fireStart (final double time, final J job)
   {
-    for (SimEventAction<J> action: this.startActions)
-      action.action (new SimEvent (time, job, action));
     for (SimQueueListener<J, Q> l : this.queueListeners)
       l.notifyStart (time, job, (Q) this);
     final SimEventAction<J> sAction = job.getQueueStartAction ();
@@ -299,23 +185,19 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
       sAction.action (new SimEvent (time, job, sAction));
   }
   
-  /** Notifies all listeners and invoke all queue and job specific actions upon a job drop at this queue.
+  /** Notifies all listeners and invokes job specific actions upon a job drop at this queue.
    *
-   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
-   * actions.
+   * This method first informs the queue listeners and then invokes job-specific actions.
    *
    * @param time The current time.
    * @param job The job.
    *
-   * @see #addDropAction
    * @see SimQueueListener#notifyDrop
    * @see SimJob#getQueueDropAction
    * 
    */
   protected final void fireDrop (final double time, final J job)
   {
-    for (SimEventAction<J> action: this.dropActions)
-      action.action (new SimEvent (time, job, action));
     for (SimQueueListener<J, Q> l : this.queueListeners)
       l.notifyDrop (time, job, (Q) this);
     final SimEventAction<J> sAction = job.getQueueDropAction ();
@@ -323,24 +205,20 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
       sAction.action (new SimEvent (time, job, sAction));    
   }
   
-  /** Notifies all listeners and invoke all queue and job specific actions upon a successful job revocation at this queue.
+  /** Notifies all listeners and invokes job specific actions upon a successful job revocation at this queue.
    *
-   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
-   * actions.
+   * This method first informs the queue listeners and then invokes job-specific actions.
    *
    * @param time The current time.
    * @param job The job.
    *
    * @see SimQueue#revoke
-   * @see #addRevocationAction
    * @see SimQueueListener#notifyRevocation
    * @see SimJob#getQueueRevokeAction
    * 
    */
   protected final void fireRevocation (final double time, final J job)
   {
-    for (SimEventAction<J> action: this.revocationActions)
-      action.action (new SimEvent (time, job, action));
     for (SimQueueListener<J, Q> l : this.queueListeners)
       l.notifyRevocation (time, job, (Q) this);
     final SimEventAction<J> rAction = job.getQueueRevokeAction ();
@@ -348,23 +226,19 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
       rAction.action (new SimEvent<> (time, job, rAction));
   }
   
-  /** Notifies all listeners and invoke all queue and job specific actions of a job departure at this queue.
+  /** Notifies all listeners and invokes job specific actions of a job departure at this queue.
    *
-   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
-   * actions.
+   * This method first informs the queue listeners and then invokes job-specific actions.
    *
    * @param job The job.
    * @param event The event causing the departure.
    *
-   * @see #addDepartureAction
    * @see SimQueueListener#notifyDeparture
    * @see SimJob#getQueueDepartAction
    * 
    */
   protected final void fireDeparture (final J job, final SimEvent event)
   {
-    for (SimEventAction<J> action: this.departureActions)
-      action.action (event);
     for (SimQueueListener<J, Q> l : this.queueListeners)
       l.notifyDeparture (event.getTime (), job, (Q) this);
     final SimEventAction<J> dAction = job.getQueueDepartAction ();
@@ -372,23 +246,19 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
       dAction.action (event);
   }
 
-  /** Notifies all listeners and invoke all queue and job specific actions of a job departure at this queue.
+  /** Notifies all listeners and invokes job specific actions of a job departure at this queue.
    *
-   * This method first invokes any queue-specific actions, then informs the queue listeners and finally invokes job-specific
-   * actions.
+   * This method first informs the queue listeners and then invokes job-specific actions.
    *
    * @param time The current time.
    * @param job The job.
    *
-   * @see #addDepartureAction
    * @see SimQueueListener#notifyDeparture
    * @see SimJob#getQueueDepartAction
    * 
    */
   protected final void fireDeparture (final double time, final J job)
   {
-    for (SimEventAction<J> action: this.departureActions)
-      action.action (new SimEvent (time, job, action));
     for (SimQueueListener<J, Q> l : this.queueListeners)
       l.notifyDeparture (time, job, (Q) this);
     final SimEventAction<J> dAction = job.getQueueDepartAction ();
