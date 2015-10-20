@@ -10,15 +10,6 @@ import nl.jdj.jsimulation.r4.SimEventList;
  *
  * <p>
  * This {@link SimQueue} is server-less.
- * 
- * <p>
- * Obviously, the {@link SINK} queue does not schedule any events on the
- * {@link #eventList} and never fires start or departure events.
- * It does support job revocations though.
- * 
- * <p>
- * A {@link SINK} queue is <i>never</i> <code>noWaitArmed</code>,
- * see {@link SimQueue#isNoWaitArmed} and its final implementation in this class {@link #isNoWaitArmed}.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -27,6 +18,12 @@ import nl.jdj.jsimulation.r4.SimEventList;
 public class SINK<J extends SimJob, Q extends SINK> extends AbstractSimQueue<J, Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Creates a SINK queue given an event list.
    *
    * @param eventList The event list to use.
@@ -50,6 +47,29 @@ public class SINK<J extends SimJob, Q extends SINK> extends AbstractSimQueue<J, 
     return new SINK<> (getEventList ());
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME/toString
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns "SINK".
+   * 
+   * @return "SINK".
+   * 
+   */
+  @Override
+  public final String toStringDefault ()
+  {
+    return "SINK";
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // STATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Returns <code>false</code>.
    * 
    * @return False.
@@ -61,6 +81,36 @@ public class SINK<J extends SimJob, Q extends SINK> extends AbstractSimQueue<J, 
     return false;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // UPDATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // MAIN OPERATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void reset ()
+  {
+    super.reset ();
+  }  
+  
   /** Adds the job to the tail of the {@link #jobQueue}.
    * 
    */
@@ -153,33 +203,10 @@ public class SINK<J extends SimJob, Q extends SINK> extends AbstractSimQueue<J, 
     /* EMPTY */
   }
 
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void reset ()
-  {
-    super.reset ();
-  }  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "SINK".
-   * 
-   * @return "SINK".
-   * 
-   */
-  @Override
-  public final String toStringDefault ()
-  {
-    return "SINK";
-  }
-
 }

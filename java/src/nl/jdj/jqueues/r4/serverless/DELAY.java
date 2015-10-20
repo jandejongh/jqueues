@@ -10,10 +10,6 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * <p>
  * This {@link SimQueue} is server-less.
  * 
- * <p>
- * A {@link DELAY} queue is <i>only</i> <code>noWaitArmed</code> if the fixed delay time is zero,
- * see {@link SimQueue#isNoWaitArmed} and its final implementation in this class {@link #isNoWaitArmed}.
- *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
@@ -21,6 +17,12 @@ import nl.jdj.jsimulation.r4.SimEventList;
 public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J, Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Creates a DELAY queue given an event list and (fixed) wait time.
    *
    * @param eventList The event list to use.
@@ -51,6 +53,30 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
     return new DELAY<> (getEventList (), getWaitTime ());
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME/toString
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns "DELAY[wait time]".
+   * 
+   * @return "DELAY[wait time]".
+   * 
+   */
+  @Override
+  public final String toStringDefault ()
+  {
+    return "DELAY[" + getWaitTime () + "]";
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // PROPERTIES:
+  //   - waitTime
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   private final double waitTime;
   
   /** Returns the wait time for all jobs.
@@ -63,6 +89,12 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
     return this.waitTime;
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // STATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Returns <code>true</code> if and only if the wait-time for all jobs is zero.
    * 
    * @return True if and only if the wait-time for all jobs is zero.
@@ -74,6 +106,36 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
     return getWaitTime () == 0;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // UPDATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // MAIN OPERATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void reset ()
+  {
+    super.reset ();
+  }  
+  
   /** Adds the job to the tail of the {@link #jobQueue}.
    * 
    */
@@ -185,33 +247,10 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
     /* EMPTY */
   }
 
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void reset ()
-  {
-    super.reset ();
-  }  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "DELAY[wait time]".
-   * 
-   * @return "DELAY[wait time]".
-   * 
-   */
-  @Override
-  public final String toStringDefault ()
-  {
-    return "DELAY[" + getWaitTime () + "]";
-  }
-
 }

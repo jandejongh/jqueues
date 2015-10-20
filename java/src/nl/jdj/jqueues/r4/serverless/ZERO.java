@@ -10,10 +10,6 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * <p>
  * This {@link SimQueue} is server-less.
  * 
- * <p>
- * A {@link ZERO} queue is <i>always</i> <code>noWaitArmed</code>,
- * see {@link SimQueue#isNoWaitArmed} and its final implementation in this class {@link #isNoWaitArmed}.
- *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
@@ -25,6 +21,12 @@ import nl.jdj.jsimulation.r4.SimEventList;
 public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Creates a ZERO queue given an event list.
    *
    * @param eventList The event list to use.
@@ -48,6 +50,29 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
     return new ZERO<> (getEventList ());
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME/toString
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns "ZERO".
+   * 
+   * @return "ZERO".
+   * 
+   */
+  @Override
+  public final String toStringDefault ()
+  {
+    return "ZERO";
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // STATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Returns <code>true</code>.
    * 
    * @return True.
@@ -59,6 +84,36 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
     return true;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // UPDATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // MAIN OPERATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void reset ()
+  {
+    super.reset ();
+  }  
+  
   /** Adds the job to the tail of the {@link #jobQueue}.
    * 
    * @see #arrive
@@ -160,33 +215,10 @@ public class ZERO<J extends SimJob, Q extends ZERO> extends AbstractSimQueue<J, 
     /* EMPTY */
   }
 
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void reset ()
-  {
-    super.reset ();
-  }  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "ZERO".
-   * 
-   * @return "ZERO".
-   * 
-   */
-  @Override
-  public final String toStringDefault ()
-  {
-    return "ZERO";
-  }
-
 }
