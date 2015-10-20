@@ -636,7 +636,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     // NOTHING MORE TO DO.
   }
   
-  /** *  Does nothing, called from {@link #notifyStart} for special treatment by subclasses.
+  /** Does nothing, called from {@link #notifyStart} for special treatment by subclasses.
    * 
    */
   protected void startForSubClass (final double t, final DJ job, final DQ queue)
@@ -661,20 +661,8 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     if (! this.jobsExecuting.contains (realJob))
     {
       this.jobsExecuting.add (realJob);
-      // Use a separate event for start notifications,
-      // because the start at the delegate queue hasn't completed yet (e.g., in terms of notifications).
       fireStart (t, realJob);
       startForSubClass (t, job, queue);
-      //getEventList ().add (new SimEvent (t, null, new SimEventAction ()
-      //{
-      //  @Override
-      //  public void action (SimEvent event)
-      //  {
-      //    fireStart (t, realJob);
-      //    AbstractBlackSimQueueNetwork.this.startForSubClass (t, job, queue);
-      //  }
-      //}
-      //));
       
     }
   }
@@ -738,7 +726,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     }
   }
 
-  /** *  Checks if the job is a known delegate job, and calls {@link #update}.
+  /** Checks if the job is a known delegate job, and calls {@link #update}.
    * 
    * {@inheritDoc}
    * 
