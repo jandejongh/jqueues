@@ -961,9 +961,33 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     cancelDepartureEvent (set.iterator ().next ());
   }
   
-  /** Gets all (should be at most one) departure event for given job.
+  /** Gets all departure events.
    * 
    * The (final) implementation returns all {@link DefaultDepartureEvent}s in {@link #eventsScheduled}.
+   * 
+   * @return A non-<code>null</code> {@link Set} holding all future departure events.
+   * 
+   */
+  protected final Set<DefaultDepartureEvent> getDepartureEvents ()
+  {
+    final Set<DefaultDepartureEvent> set = new LinkedHashSet<> ();
+    for (SimEvent<J> e : this.eventsScheduled)
+      if (e == null)
+        throw new IllegalStateException ();
+      // JdJ20150913: I have no clue why the next statement does not work...
+      // XXX TBD
+      // else if (! (e instanceof DefaultDepartureEvent))
+      //  continue;
+      else if (! DefaultDepartureEvent.class.isAssignableFrom (e.getClass ()))
+        /* continue */ ;
+      else
+        set.add ((DefaultDepartureEvent) e);
+    return set;
+  }
+  
+  /** Gets all (should be at most one) departure events for given job.
+   * 
+   * The (final) implementation returns all {@link DefaultDepartureEvent}s for the given job in {@link #eventsScheduled}.
    * 
    * @param job The job.
    * 
@@ -976,9 +1000,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalArgumentException ();
     if (! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
-    // The following check is an error; jobs may depart without receiving any service at all!
-    // if (! this.jobsExecuting.contains (job))
-    //   throw new IllegalArgumentException ();
     final Set<DefaultDepartureEvent> set = new LinkedHashSet<> ();
     for (SimEvent<J> e : this.eventsScheduled)
       if (e == null)
