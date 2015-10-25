@@ -71,6 +71,11 @@ public enum KnownSimQueue
                IntegerParameterProfile.IPP_ALWAYS_INFINITE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
   
+  // processorsharing
+  PS          ("PS", false, nl.jdj.jqueues.r4.processorsharing.PS.class, GeneratorProfile.SE,
+               IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+               DoubleParameterProfile.DPP_IRRELEVANT),
+  
   // composite
   ENCAPSULATOR   ("Encapsulator", true, nl.jdj.jqueues.r4.composite.BlackEncapsulatorSimQueue.class,
                   GeneratorProfile.SE_Q_DSJF,

@@ -146,7 +146,7 @@ public final class Main
    */
   public static void main (String[] args)
   {
-    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues PACKAGE ===");
+    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.nonpreemptive PACKAGE ===");
     System.out.println ("-> Creating jobs...");
     final List<TestJob> jobList = new ArrayList<>  ();
     for (int n = 1; n <= 10; n++)
