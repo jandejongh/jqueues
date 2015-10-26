@@ -70,9 +70,22 @@ public class ProcessorSharingTest
     return jobList;
   }
   
+  private void scheduleQueueAccessVacation
+  (final SimEventList el, final SimQueue queue, final double startTime, final double duration)
+  {
+    el.add (new SimEvent (startTime, null, new SimEventAction ()
+    {
+      @Override
+      public void action (SimEvent event)
+      {
+        queue.startQueueAccessVacation (duration);
+      }
+    }));
+  }
+  
   private final void queuePredictorPS (final Set<TestJob> jobs,
     final SimQueue queue,
-    final TreeMap<Double, Boolean> queueAccessVacation)
+    final TreeMap<Double, Boolean> queueAccessVacationMap)
   {
     if (queue == null || ! (queue instanceof PS))
       throw new IllegalArgumentException ();
@@ -93,13 +106,13 @@ public class ProcessorSharingTest
       j.predictedDepartureTime = Double.NaN;
     }
     final Set<TestJob> jobsCopy = new HashSet<> (jobs);
-    if (queueAccessVacation != null)
+    if (queueAccessVacationMap != null)
     {
       final Set<TestJob> jobsToRemove = new HashSet ();
       for (final TestJob j : jobsCopy)
       {
         final double predictedArrivalTime = j.predictedArrivalTime;
-        final Map.Entry<Double, Boolean> entry = queueAccessVacation.floorEntry (predictedArrivalTime);
+        final Map.Entry<Double, Boolean> entry = queueAccessVacationMap.floorEntry (predictedArrivalTime);
         if (entry != null && entry.getValue ())
         {
           j.predictedStarted = false;
@@ -181,18 +194,6 @@ public class ProcessorSharingTest
       }
       jPresent.pollFirstEntry ();
     }
-  }
-  
-  private void scheduleQueueAccessVacation (SimEventList el, final SimQueue queue, double startTime, final double duration)
-  {
-    el.add (new SimEvent (startTime, null, new SimEventAction ()
-    {
-      @Override
-      public void action (SimEvent event)
-      {
-        queue.startQueueAccessVacation (duration);
-      }
-    }));
   }
   
   private final double ACCURACY = 1.0E-12;

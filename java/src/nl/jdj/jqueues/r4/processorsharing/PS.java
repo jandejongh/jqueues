@@ -360,7 +360,6 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
    * 
    * <p>
    * This method
-   * 
    * <ul>
    * <li>Removes any pending departure event for an exiting job (if any).
    *     This is not necessary for departing jobs, but <i>it is</i> for revoked jobs, and this method cannot tell the difference
