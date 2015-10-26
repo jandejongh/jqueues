@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
-import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.TestJob;
 import nl.jdj.jsimulation.r4.SimEvent;
@@ -16,7 +14,6 @@ import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -73,7 +70,9 @@ public class ProcessorSharingTest
     return jobList;
   }
   
-  private final void queuePredictorPS (final Set<TestJob> jobs, final SimQueue queue)
+  private final void queuePredictorPS (final Set<TestJob> jobs,
+    final SimQueue queue,
+    final TreeMap<Double, Boolean> queueAccessVacation)
   {
     if (queue == null || ! (queue instanceof PS))
       throw new IllegalArgumentException ();
@@ -94,7 +93,27 @@ public class ProcessorSharingTest
       j.predictedDepartureTime = Double.NaN;
     }
     final Set<TestJob> jobsCopy = new HashSet<> (jobs);
-    final TreeMap<Double, Set<TestJob>> jPresent = new TreeMap ();
+    if (queueAccessVacation != null)
+    {
+      final Set<TestJob> jobsToRemove = new HashSet ();
+      for (final TestJob j : jobsCopy)
+      {
+        final double predictedArrivalTime = j.predictedArrivalTime;
+        final Map.Entry<Double, Boolean> entry = queueAccessVacation.floorEntry (predictedArrivalTime);
+        if (entry != null && entry.getValue ())
+        {
+          j.predictedStarted = false;
+          j.predictedStartTime = Double.NaN;
+          j.predictedDropped = true;
+          j.predictedDropTime = j.predictedArrivalTime;
+          j.predictedDeparted = false;
+          j.predictedDepartureTime = Double.NaN;
+          jobsToRemove.add (j);
+        }
+      }
+      jobsCopy.removeAll (jobsToRemove);
+    }
+    final TreeMap<Double, Set<TestJob>> jPresent = new TreeMap ();      
     for (final TestJob j : jobsCopy)
     {
       if (! jPresent.containsKey (j.predictedArrivalTime))
@@ -159,9 +178,21 @@ public class ProcessorSharingTest
         }
         for (final TestJob j : jobSet)
           rS.put (j, rS.get (j) - ((nextTime - time) / jobSetSize));
-        jPresent.pollFirstEntry ();
       }
+      jPresent.pollFirstEntry ();
     }
+  }
+  
+  private void scheduleQueueAccessVacation (SimEventList el, final SimQueue queue, double startTime, final double duration)
+  {
+    el.add (new SimEvent (startTime, null, new SimEventAction ()
+    {
+      @Override
+      public void action (SimEvent event)
+      {
+        queue.startQueueAccessVacation (duration);
+      }
+    }));
   }
   
   private final double ACCURACY = 1.0E-12;
@@ -178,97 +209,22 @@ public class ProcessorSharingTest
     System.out.println ("==");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final PS queue = new PS (el);
+    queue.registerStdOutSimQueueVacationListener ();
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
       final List<TestJob> jobs = scheduleJobArrivals (true, 40, el, queue);
-      queuePredictorPS (new HashSet<> (jobs), queue);
-      el.run ();
-      assert el.isEmpty ();
-      // assertEquals (56.0, el.getTime (), ACCURACY);
-      for (TestJob j : jobs)
-        j.testPrediction (ACCURACY);
-      // Test reset on the fly...
-      el.reset ();
-    }
-  }
-
-  private void scheduleQueueAccessVacation (SimEventList el, final SimQueue queue, double startTime, final double duration)
-  {
-    el.add (new SimEvent (startTime, null, new SimEventAction ()
-    {
-
-      @Override
-      public void action (SimEvent event)
-      {
-        queue.startQueueAccessVacation (duration);
-      }
-    }));
-  }
-  
-  /**
-   * Test of queue-access vacation.
-   * 
-   */
-  @Test
-  public void testQueueAccessVacation ()
-  {
-    System.out.println ("======================");
-    System.out.println ("Queue Access Vacation ");
-    System.out.println ("======================");
-    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
-    final PS queue = new PS (el);
-    queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
-    {
-
-      @Override
-      public void notifyStartQueueAccessVacation (double t, SimQueue queue)
-      {
-        System.out.println ("t = " + t + ": Queue " + queue + " STARTS queue-access vacation!");
-      }
-      
-      @Override
-      public void notifyStopQueueAccessVacation (double t, SimQueue queue)
-      {
-        System.out.println ("t = " + t + ": Queue " + queue + " ENDS queue-access vacation!");
-      }
-
-    });
-    for (int i = 0; i <= 1; i++)
-    {
-      System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
       // Schedule vacation from 1.5 to 5.5.
       // Jobs 2, 3, 4, and 5 should be dropped.
       scheduleQueueAccessVacation (el, queue, 1.5, 4.0);
+      final TreeMap<Double, Boolean> queueAccessVacationMap = new TreeMap<> ();
+      queueAccessVacationMap.put (1.5, true);
+      queueAccessVacationMap.put (5.5, false);
+      queuePredictorPS (new HashSet<> (jobs), queue, queueAccessVacationMap);
       el.run ();
       assert el.isEmpty ();
-      assertEquals (46.0, el.getTime (), 0.0);
       for (TestJob j : jobs)
-      {
-        assert j.arrived;
-        assertEquals ((double) j.n, j.arrivalTime, 0.0);
-        if (j.n == 1)
-        {
-          assert ! j.dropped;
-          assert j.started;
-          assert j.departed;          
-          assertEquals (j.departureTime, j.arrivalTime + (double) j.n, 0.0);
-        }
-        else if (j.n >= 2 && j.n <= 5)
-        {
-          assert j.dropped;
-          assert ! j.started;
-          assert ! j.departed;
-          assertEquals (j.dropTime, j.arrivalTime, 0.0);
-        }
-        else
-        {
-          assert ! j.dropped;
-          assert j.started;
-          assert j.departed;
-        }
-      }
+        j.testPrediction (ACCURACY);
       // Test reset on the fly...
       el.reset ();
     }
