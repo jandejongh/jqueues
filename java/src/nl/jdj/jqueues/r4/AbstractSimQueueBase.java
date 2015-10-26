@@ -103,6 +103,42 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
     this.queueListeners.remove (listener);
   }  
 
+  /** A private instance of a {@link StdOutSimQueueVacationListener}.
+   * 
+   * @see #registerStdOutSimQueueVacationListener
+   * @see #unregisterStdOutSimQueueVacationListener
+   * 
+   */
+  private final StdOutSimQueueVacationListener<J, Q> stdOutSimQueueVacationListener =
+    new StdOutSimQueueVacationListener<> ();
+  
+  /** Registers a {@link StdOutSimQueueVacationListener} as listener (convenience method).
+   * 
+   * <p>
+   * This method provides protection against multiple invocations, i.e.,
+   * at most one {@link StdOutSimQueueVacationListener} is registered through this method at all times.
+   * 
+   * @see #unregisterStdOutSimQueueVacationListener
+   * @see #registerQueueListener
+   * 
+   */
+  public final void registerStdOutSimQueueVacationListener ()
+  {
+    if (! this.queueListeners.contains (this.stdOutSimQueueVacationListener))
+      registerQueueListener (this.stdOutSimQueueVacationListener);
+  }
+  
+  /** Unregisters the {@link StdOutSimQueueVacationListener} as listener, if registered (convenience method).
+   * 
+   * @see #registerStdOutSimQueueVacationListener
+   * @see #unregisterQueueListener
+   * 
+   */
+  public final void unregisterStdOutSimQueueVacationListener ()
+  {
+    unregisterQueueListener (this.stdOutSimQueueVacationListener);
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // EVENT NOTIFICATIONS
