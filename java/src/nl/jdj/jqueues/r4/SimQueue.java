@@ -302,16 +302,35 @@ extends SimEventListListener
    *
    * @return The number of jobs at the queue, zero or positive.
    * 
+   * @see #getNumberOfJobsExecuting
+   * @see #getNumberOfJobsWaiting
+   * 
    */
   public int getNumberOfJobs ();
   
+  /** Gets the number of jobs waiting (i.e., <i>not</i> executing).
+   * 
+   * @return The number of jobs waiting.
+   * 
+   * @see #getNumberOfJobs
+   * @see #getNumberOfJobsExecuting
+   * 
+   */
+  public default int getNumberOfJobsWaiting ()
+  {
+    return getNumberOfJobs () - getNumberOfJobsExecuting ();
+  }
+
   /** Gets the number of jobs currently being executed at the queue (i.e., not waiting).
    *
    * @return The number of jobs currently being executed at the queue (i.e., not waiting).
    * 
+   * @see #getNumberOfJobs
+   * @see #getNumberOfJobsWaiting
+   * 
    */
   public int getNumberOfJobsExecuting ();
-
+  
   /** Returns whether or not the queue is on queue-access vacation.
    * 
    * This method does nothing if the queue is not on queue-access vacation.

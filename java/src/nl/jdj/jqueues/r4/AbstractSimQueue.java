@@ -78,14 +78,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     return set;
   }
 
-  /** Returns the number of jobs waiting.
-   * 
-   * @return The number of jobs waiting.
-   * 
-   */
+  @Override
   public final int getNumberOfJobsWaiting ()
   {
-    return this.jobQueue.size () - this.jobsExecuting.size ();
+    return SimQueue.super.getNumberOfJobsWaiting ();
   }
   
   /** Returns whether or not this queue has at least one job waiting.
