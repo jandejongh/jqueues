@@ -7,6 +7,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
@@ -19,6 +20,7 @@ import nl.jdj.jqueues.r4.swing.JSimQueueCreationDialog;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r4.SimEventListListener;
 import nl.jdj.jsimulation.r4.swing.JSimEventList;
 
 /**
@@ -53,12 +55,12 @@ public final class Main
         
         private JBlackSimQueueNetwork jQueue;
           
-        private final SimQueue getQueue ()
+        private SimQueue getQueue ()
         {
           return this.queue;
         }
         
-        private final void setQueue (final SimQueue queue)
+        private void setQueue (final SimQueue queue)
         {
           //final boolean isQueueAccessVacation = queue.isQueueAccessVacation ();
           //final int serverAccessCredits = queue.getServerAccessCredits ();
@@ -75,6 +77,7 @@ public final class Main
           frame.pack ();
         }
         
+        @Override
         public void run ()
         {
           frame = new JFrame ("JSimQueue and JSimEventList demonstration.");
@@ -83,6 +86,27 @@ public final class Main
           topPanel.setLayout (new BoxLayout (topPanel, BoxLayout.PAGE_AXIS));
           frame.getContentPane ().add (topPanel);
           this.eventList = new SimEventList (SimEvent.class);
+          final JLabel timeLabel = new JLabel ("Time: " + this.eventList.getTime ());
+          this.eventList.addListener (new SimEventListListener ()
+          {
+            @Override
+            public final void notifyEventListReset (final SimEventList eventList)
+            {
+              timeLabel.setText ("Time: " + eventList.getTime ());
+            }
+            @Override
+            public final void notifyEventListUpdate (final SimEventList eventList, final double time)
+            {
+              timeLabel.setText ("Time: " + time);
+            }
+            @Override
+            public final void notifyEventListEmpty (final SimEventList eventList, final double time)
+            {
+              /* EMPTY */
+            }
+          });
+          topPanel.add (Box.createRigidArea (new Dimension (0, 10)));
+          topPanel.add (timeLabel);
           final JSimEventList jSimEventList = new JSimEventList (this.eventList);
           // final SimQueue is1 = new IS (this.eventList);
           final SimQueue fcfs1 = new FCFS (this.eventList);
@@ -143,20 +167,16 @@ public final class Main
             @Override
             public void actionPerformed (ActionEvent ae)
             {
-              eventList.scheduleNow (new SimEventAction ()
+              eventList.scheduleNow ((SimEventAction) (SimEvent event) ->
               {
-                @Override
-                public void action (SimEvent event)
+                getQueue ().arrive (new AbstractSimJob ()
                 {
-                  getQueue ().arrive (new AbstractSimJob ()
+                  @Override
+                  public double getServiceTime (SimQueue queue1) throws IllegalArgumentException
                   {
-                    @Override
-                    public double getServiceTime (SimQueue queue) throws IllegalArgumentException
-                    {
-                      return 10.0;
-                    }
-                  }, eventList.getTime ());
-                } 
+                    return 10.0;
+                  }
+                }, eventList.getTime ()); 
               });
               jSimEventList.eventListChangedNotification ();
             }
