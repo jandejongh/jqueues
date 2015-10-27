@@ -13,8 +13,6 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
- * @see DROP
- * @see SINK
  * @see DELAY
  * 
  */

@@ -13,6 +13,8 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
+ * @see ZERO
+ * 
  */
 public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J, Q>
 {
