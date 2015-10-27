@@ -108,12 +108,12 @@ public enum KnownSimQueue
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   FB_PROB        ("FB_Prob", true, nl.jdj.jqueues.r4.composite.BlackProbabilisticFeedbackSimQueue.class,
-                  GeneratorProfile.UNKNOWN,
+                  GeneratorProfile.SE_Q_PFB_RNG_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   FB_VISITS      ("FB_NumVisits", true, nl.jdj.jqueues.r4.composite.BlackNumVisitsFeedbackSimQueue.class,
-                  GeneratorProfile.UNKNOWN,
+                  GeneratorProfile.SE_Q_NUMV_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
@@ -130,6 +130,30 @@ public enum KnownSimQueue
            IntegerParameterProfile.IPP_IRRELEVANT,
            DoubleParameterProfile.DPP_IRRELEVANT);
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private KnownSimQueue
+  (final String defaultName,
+    final boolean composite,
+    final Class<? extends SimQueue> queueClass,
+    final GeneratorProfile generatorProfile,
+    final IntegerParameterProfile numberOfServersProfile,
+    final IntegerParameterProfile bufferSizeProfile,
+    final DoubleParameterProfile waitServiceTimeProfile)
+  {
+    this.queueClass = queueClass;
+    this.defaultName = defaultName;
+    this.composite = composite;
+    this.generatorProfile = generatorProfile;
+    this.numberOfServersProfile = numberOfServersProfile;
+    this.bufferSizeProfile = bufferSizeProfile;
+    this.waitServiceTimeProfile = waitServiceTimeProfile;
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // QUEUE CLASS
@@ -185,15 +209,17 @@ public enum KnownSimQueue
   public enum GeneratorProfile
   {
     
-    SE                    (true,  true,  false, false, false, false, 0, 0,                 false),
-    SE_WST                (true,  true,  true,  false, false, false, 0, 0,                 false),
-    SE_c                  (true,  true,  false, true,  false, false, 0, 0,                 false),
-    SE_B                  (true,  true,  false, false, true,  false, 0, 0,                 false),
-    SE_Q_DSJF             (true,  true,  false, false, false, true,  1, 1,                 false),
-    SE_Q1_Q2_DSJF         (true,  true,  false, false, false, true,  2, 2,                 false),
-    SE_QSET_DSJF          (true,  true,  false, false, false, true,  0, Integer.MAX_VALUE, false),
-    SE_QSET_DSJF_OWJ_RNG  (true,  true,  false, false, false, true,  0, Integer.MAX_VALUE, true),
-    UNKNOWN               (false, false, false, false, false, false, 0, 0,                 false);
+    SE                    (true,  true,  false, false, false, false, 0, 0,                 false, false, false),
+    SE_WST                (true,  true,  true,  false, false, false, 0, 0,                 false, false, false),
+    SE_c                  (true,  true,  false, true,  false, false, 0, 0,                 false, false, false),
+    SE_B                  (true,  true,  false, false, true,  false, 0, 0,                 false, false, false),
+    SE_Q_DSJF             (true,  true,  false, false, false, true,  1, 1,                 false, false, false),
+    SE_Q1_Q2_DSJF         (true,  true,  false, false, false, true,  2, 2,                 false, false, false),
+    SE_QSET_DSJF          (true,  true,  false, false, false, true,  0, Integer.MAX_VALUE, false, false, false),
+    SE_QSET_DSJF_OWJ_RNG  (true,  true,  false, false, false, true,  0, Integer.MAX_VALUE, true,  false, false),
+    SE_Q_PFB_RNG_DSJF     (true,  true,  false, false, false, true,  1, 1,                 false, true,  false),
+    SE_Q_NUMV_DSJF        (true,  true,  false, false, false, true,  1, 1,                 false, false, true),
+    UNKNOWN               (false, false, false, false, false, false, 0, 0,                 false, false, false);
     
     private final boolean canInstantiate;
     
@@ -213,6 +239,10 @@ public enum KnownSimQueue
     
     private final boolean requiresOnlyWaitingJobs;
     
+    private final boolean requiresFeedbackProbability;
+    
+    private final boolean requiresNumberOfVists;
+    
     private GeneratorProfile
       (final boolean canInstatiate,
        final boolean requiresSimEventList,
@@ -222,7 +252,9 @@ public enum KnownSimQueue
        final boolean requiresSubQueues,
        final int     minSubQueues,
        final int     maxSubQueues,
-       final boolean requiresOnlyWaitingJobs)
+       final boolean requiresOnlyWaitingJobs,
+       final boolean requiresFeedbackProbability,
+       final boolean requiresNumberOfVisits)
     {
       this.canInstantiate = canInstatiate;
       this.requiresSimEventList = requiresSimEventList;
@@ -233,6 +265,8 @@ public enum KnownSimQueue
       this.minSubQueues = minSubQueues;
       this.maxSubQueues = maxSubQueues;
       this.requiresOnlyWaitingJobs = requiresOnlyWaitingJobs;
+      this.requiresFeedbackProbability = requiresFeedbackProbability;
+      this.requiresNumberOfVists = requiresNumberOfVisits;
     }
     
     private SimQueue newInstance (final Class<? extends SimQueue> queueClass, final Parameters parameters)
@@ -332,6 +366,23 @@ public enum KnownSimQueue
           final Constructor constructor = queueClass.getConstructor
             (SimEventList.class, Set.class, DelegateSimJobFactory.class, Boolean.TYPE, Random.class);
           return (SimQueue) constructor.newInstance (parameters.eventList, copiedQueues, null, parameters.onlyWaitingJobs, null);
+        }
+        else if (this == SE_Q_PFB_RNG_DSJF)
+        {
+          final Constructor constructor = queueClass.getConstructor
+            (SimEventList.class, SimQueue.class, Double.TYPE, Random.class, DelegateSimJobFactory.class);
+          final Iterator<SimQueue> iterator = copiedQueues.iterator ();
+          final SimQueue q = iterator.next ();
+          return (SimQueue) constructor.newInstance (parameters.eventList, q, parameters.feedbackProbability, null, null);
+          
+        }
+        else if (this == SE_Q_NUMV_DSJF)
+        {
+          final Constructor constructor = queueClass.getConstructor
+            (SimEventList.class, SimQueue.class, Integer.TYPE, DelegateSimJobFactory.class);
+          final Iterator<SimQueue> iterator = copiedQueues.iterator ();
+          final SimQueue q = iterator.next ();
+          return (SimQueue) constructor.newInstance (parameters.eventList, q, parameters.numberOfVisits, null);    
         }
         else
         {
@@ -522,30 +573,6 @@ public enum KnownSimQueue
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  private KnownSimQueue
-  (final String defaultName,
-    final boolean composite,
-    final Class<? extends SimQueue> queueClass,
-    final GeneratorProfile generatorProfile,
-    final IntegerParameterProfile numberOfServersProfile,
-    final IntegerParameterProfile bufferSizeProfile,
-    final DoubleParameterProfile waitServiceTimeProfile)
-  {
-    this.queueClass = queueClass;
-    this.defaultName = defaultName;
-    this.composite = composite;
-    this.generatorProfile = generatorProfile;
-    this.numberOfServersProfile = numberOfServersProfile;
-    this.bufferSizeProfile = bufferSizeProfile;
-    this.waitServiceTimeProfile = waitServiceTimeProfile;
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
   // newInstance
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -615,6 +642,10 @@ public enum KnownSimQueue
     public double startTime = Double.NEGATIVE_INFINITY;
     
     public boolean onlyWaitingJobs = false;
+    
+    public double feedbackProbability = 0.5;
+    
+    public int numberOfVisits = 1;
     
   }
   

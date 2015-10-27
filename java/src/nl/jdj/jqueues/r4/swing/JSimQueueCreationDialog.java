@@ -99,6 +99,10 @@ implements ItemListener
   
   final JCheckBox onlyWaitingJobsCheckBox = new JCheckBox ();
   
+  final JTextField feedbackProbabilityTextField = new JTextField ("Feedback Probability Value");
+  
+  final JTextField numberOfVisitsTextField = new JTextField ("Number of Visits Value");
+  
   private void setQueueType (final KnownSimQueue queueType)
   {
     if (queueType != null)
@@ -163,7 +167,7 @@ implements ItemListener
     this.parameters.eventList = this.eventList;
     this.queueTypeComboBox = new JComboBox (KnownSimQueue.values ());
     if (queue != null)
-      // XXX What is we have an unknown queue?
+      // XXX What if we have a null queue?
       this.queueTypeComboBox.setSelectedItem (KnownSimQueue.valueOf (queue));
     this.parameters.queues = new LinkedHashSet<> ();
     if (queue != null && (queue instanceof BlackSimQueueNetwork))
@@ -1029,8 +1033,26 @@ implements ItemListener
       final JLabel onlyWaitingJobsLabel = new JLabel ("Only Waiting Jobs");
       JSimQueueCreationDialog.this.onlyWaitingJobsCheckBox.setSelected (JSimQueueCreationDialog.this.parameters.onlyWaitingJobs);
       JSimQueueCreationDialog.this.onlyWaitingJobsCheckBox.addItemListener (new OnlyWaitingJobsBoxCheckBoxListener ());
-      final GroupLayout layout = new GroupLayout (getContentPane ());
-      getContentPane ().setLayout (layout);
+      final JLabel feedbackProbabilityLabel = new JLabel ("Feedback Probability");
+      JSimQueueCreationDialog.this.feedbackProbabilityTextField.setText
+        (Double.toString (JSimQueueCreationDialog.this.parameters.feedbackProbability));
+      final FeedbackProbabilityTextFieldListener feedbackProbabilityTextFieldListener
+        = new FeedbackProbabilityTextFieldListener ();
+      JSimQueueCreationDialog.this.feedbackProbabilityTextField.addActionListener (feedbackProbabilityTextFieldListener);
+      JSimQueueCreationDialog.this.feedbackProbabilityTextField.addFocusListener (feedbackProbabilityTextFieldListener);
+      final JLabel numberOfVisitsLabel = new JLabel ("Number of Visits");
+      JSimQueueCreationDialog.this.numberOfVisitsTextField.setText
+        (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfVisits));
+      final NumberOfVisitsTextFieldListener numberOfVisitsTextFieldListener = new NumberOfVisitsTextFieldListener ();
+      JSimQueueCreationDialog.this.numberOfVisitsTextField.addActionListener (numberOfVisitsTextFieldListener);
+      JSimQueueCreationDialog.this.numberOfVisitsTextField.addFocusListener (numberOfVisitsTextFieldListener);
+      final JPanel jPanel = new JPanel ();
+      getContentPane ().add (jPanel);
+      jPanel.setBorder
+        (BorderFactory.createTitledBorder
+          (BorderFactory.createLineBorder (Color.orange, 4, true), "Other Parameters"));
+      final GroupLayout layout = new GroupLayout (jPanel);
+      jPanel.setLayout (layout);
       layout.setAutoCreateGaps (true);
       layout.setAutoCreateContainerGaps (true);
       layout.setHorizontalGroup
@@ -1038,12 +1060,14 @@ implements ItemListener
           .addGroup
             (layout.createParallelGroup (GroupLayout.Alignment.LEADING)
               .addComponent (onlyWaitingJobsLabel)
-              //.addComponent (bufferSizeLabel)
+              .addComponent (feedbackProbabilityLabel)
+              .addComponent (numberOfVisitsLabel)
             )
           .addGroup
             (layout.createParallelGroup (GroupLayout.Alignment.LEADING)
               .addComponent (JSimQueueCreationDialog.this.onlyWaitingJobsCheckBox)
-              //.addComponent (this.bufferSizeTextField)
+              .addComponent (JSimQueueCreationDialog.this.feedbackProbabilityTextField)
+              .addComponent (JSimQueueCreationDialog.this.numberOfVisitsTextField)
             )
         );
       layout.setVerticalGroup
@@ -1053,11 +1077,16 @@ implements ItemListener
               .addComponent (onlyWaitingJobsLabel)
               .addComponent (JSimQueueCreationDialog.this.onlyWaitingJobsCheckBox)
             )
-          //.addGroup
-          //  (layout.createParallelGroup (GroupLayout.Alignment.BASELINE)
-          //    .addComponent (bufferSizeLabel)
-          //    .addComponent (bufferSizeTextField)
-          //  )
+          .addGroup
+            (layout.createParallelGroup (GroupLayout.Alignment.BASELINE)
+              .addComponent (feedbackProbabilityLabel)
+              .addComponent (JSimQueueCreationDialog.this.feedbackProbabilityTextField)
+            )
+          .addGroup
+            (layout.createParallelGroup (GroupLayout.Alignment.BASELINE)
+              .addComponent (numberOfVisitsLabel)
+              .addComponent (JSimQueueCreationDialog.this.numberOfVisitsTextField)
+            )
         );
     }
     
@@ -1098,6 +1127,121 @@ implements ItemListener
     public final void itemStateChanged (final ItemEvent ie)
     {
       JSimQueueCreationDialog.this.parameters.onlyWaitingJobs = (ie.getStateChange () == ItemEvent.SELECTED);
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // FEEDBACK PROBABILITY TEXTFIELD LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class FeedbackProbabilityTextFieldListener
+  implements ActionListener, FocusListener
+  {
+
+    @Override
+    public final void focusGained (final FocusEvent fe)
+    {
+    }
+
+    @Override
+    public final void focusLost (final FocusEvent fe)
+    {
+      actionPerformed ();
+    }
+
+    
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      actionPerformed ();
+    }
+    
+    private void actionPerformed ()
+    {
+      final String text = JSimQueueCreationDialog.this.feedbackProbabilityTextField.getText ();
+      if (text != null)
+      {
+        final double feedbackProbabilityDouble;
+        try
+        {
+          feedbackProbabilityDouble = Double.parseDouble (text);
+          if (feedbackProbabilityDouble >= 0.0 && feedbackProbabilityDouble <= 1.0)
+          {
+            JSimQueueCreationDialog.this.parameters.feedbackProbability = feedbackProbabilityDouble;
+            return;
+          }
+        }
+        catch (NumberFormatException nfe)
+        {
+        }
+      }
+      JSimQueueCreationDialog.this.feedbackProbabilityTextField.setText
+        (Double.toString (JSimQueueCreationDialog.this.parameters.feedbackProbability));
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NUMBER OF VISITS TEXTFIELD LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private final class NumberOfVisitsTextFieldListener
+  implements ActionListener, FocusListener
+  {
+
+    @Override
+    public final void focusGained (final FocusEvent fe)
+    {
+    }
+
+    @Override
+    public final void focusLost (final FocusEvent fe)
+    {
+      actionPerformed ();
+    }
+
+    
+    @Override
+    public final void actionPerformed (final ActionEvent ae)
+    {
+      actionPerformed ();
+    }
+    
+    private void actionPerformed ()
+    {
+//      final KnownSimQueue knownQueue = (KnownSimQueue) JSimQueueCreationDialog.this.queueTypeComboBox.getSelectedItem ();
+//      if (knownQueue == null)
+//      {
+//        JSimQueueCreationDialog.this.numberOfServersTextField.setText ("0");
+//        JSimQueueCreationDialog.this.parameters.numberOfServers = 0;
+//        return;
+//      }
+      final String text = JSimQueueCreationDialog.this.numberOfVisitsTextField.getText ();
+      if (text != null)
+      {
+        try
+        {
+          final int numberOfVisitsInt = Integer.parseInt (text);
+//          if (knownQueue.getNumberOfVisitsProfile ().isValidValue (numberOfVisitsInt))
+          if (numberOfVisitsInt >= 0)
+          {
+            JSimQueueCreationDialog.this.parameters.numberOfVisits = numberOfVisitsInt;
+            return;
+          }
+        }
+        catch (NumberFormatException nfe)
+        {
+        }
+      }
+      //if (! knownQueue.getNumberOfServersProfile ().isValidValue (JSimQueueCreationDialog.this.parameters.numberOfServers))
+      //  JSimQueueCreationDialog.this.parameters.numberOfServers = knownQueue.getNumberOfServersProfile ().getDefValue ();
+      JSimQueueCreationDialog.this.numberOfVisitsTextField.setText
+        (Integer.toString (JSimQueueCreationDialog.this.parameters.numberOfVisits));
     }
     
   }
