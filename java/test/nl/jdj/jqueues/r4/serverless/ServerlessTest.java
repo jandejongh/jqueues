@@ -197,6 +197,66 @@ public class ServerlessTest
     }
   }
   
+  /**
+   * Test of GATE.
+   * 
+   */
+  @Test
+  public void testGATE ()
+  {
+    System.out.println ("====");
+    System.out.println ("GATE");
+    System.out.println ("====");
+    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final GATE queue = new GATE (el);
+    for (int i = 0; i <= 1; i++)
+    {
+      System.out.println ("===== PASS " + i + " =====");
+      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      // Close gate between t = 2.5 and t = 3.5.
+      el.schedule (2.5, (SimEventAction) (SimEvent event) ->
+      {
+        queue.closeGate (event.getTime ());
+      });
+      el.schedule (3.5, (SimEventAction) (SimEvent event) ->
+      {
+        queue.openGate (event.getTime ());
+      });
+      // Open gate for two jobs at t=5.5.
+      el.schedule (5.5, (SimEventAction) (SimEvent event) ->
+      {
+        queue.openGate (event.getTime (), 2);
+      });
+      // Open gate t=11.5.    
+      el.schedule (11.5, (SimEventAction) (SimEvent event) ->
+      {
+        queue.openGate (event.getTime ());
+      });
+      el.run ();
+      assert el.isEmpty ();
+      assertEquals (11.5, el.getTime (), 0.0);
+      for (TestJob j : jobs)
+      {
+        assert j.arrived;
+        assertEquals ((double) j.n, j.arrivalTime, 0.0);
+        assert ! j.started;
+        assert ! j.dropped;
+        assert ! j.revoked;
+        assert j.departed;
+        if (j.n == 1 || j.n == 2)
+          assertEquals (j.arrivalTime, j.departureTime, 0.0);
+        else if (j.n == 3)
+          assertEquals (3.5, j.departureTime, 0.0);
+        else if (j.n >= 4 && j.n <= 7)
+          assertEquals (j.arrivalTime, j.departureTime, 0.0);
+        else
+          assertEquals (11.5, j.departureTime, 0.0);
+      }
+      // Test reset on the fly...
+      el.reset ();
+    }
+  }
+  
   private void scheduleQueueAccessVacation (SimEventList el, final SimQueue queue, double startTime, final double duration)
   {
     el.add (new SimEvent (startTime, null, new SimEventAction ()
