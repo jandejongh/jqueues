@@ -7,6 +7,7 @@ import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.serverless.DELAY;
 import nl.jdj.jqueues.r4.serverless.DROP;
+import nl.jdj.jqueues.r4.serverless.GATE;
 import nl.jdj.jqueues.r4.serverless.SINK;
 import nl.jdj.jqueues.r4.serverless.ZERO;
 import nl.jdj.jsimulation.r4.SimEvent;
@@ -242,6 +243,45 @@ public final class Main
         }
       }));
     }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Creating GATE queue...");
+    final SimQueue gateQueue = new GATE (el);
+    System.out.println ("-> Submitting jobs to GATE queue...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + 1;
+      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      {
+        @Override
+        public void action (final SimEvent event)
+        {
+          gateQueue.arrive (j, arrTime);
+        }
+      }));
+    }
+    // Close gate between t = 2.5 and t = 3.5.
+    el.schedule (2.5, (SimEventAction) (SimEvent event) ->
+    {
+      ((GATE) gateQueue).closeGate (event.getTime ());
+    });
+    el.schedule (3.5, (SimEventAction) (SimEvent event) ->
+    {
+      ((GATE) gateQueue).openGate (event.getTime ());
+    });
+    // Open gate for two jobs at t=5.5.
+    el.schedule (5.5, (SimEventAction) (SimEvent event) ->
+    {
+      ((GATE) gateQueue).openGate (event.getTime (), 2);
+    });
+    // Open gate t=11.5.    
+    el.schedule (11.5, (SimEventAction) (SimEvent event) ->
+    {
+      ((GATE) gateQueue).openGate (event.getTime ());
+    });
     System.out.println ("-> Executing event list...");
     el.run ();
     System.out.println ("-> Resetting event list...");
