@@ -35,6 +35,9 @@ public enum KnownSimQueue
   ZERO    ("ZERO",  false, nl.jdj.jqueues.r4.serverless.ZERO.class,  GeneratorProfile.SE,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
            DoubleParameterProfile.DPP_IRRELEVANT),
+  GATE    ("GATE",  false, nl.jdj.jqueues.r4.serverless.GATE.class,  GeneratorProfile.SE,
+           IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
+           DoubleParameterProfile.DPP_IRRELEVANT),
   
   // nonpreemptive
   NO_BUFFER_c ("NoBuffer_c", false, nl.jdj.jqueues.r4.nonpreemptive.NoBuffer_c.class, GeneratorProfile.SE_c,
