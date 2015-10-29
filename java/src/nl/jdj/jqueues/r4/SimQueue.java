@@ -5,6 +5,7 @@ import nl.jdj.jqueues.r4.serverless.SINK;
 import nl.jdj.jsimulation.r4.SimEventList;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventListListener;
+import nl.jdj.jsimulation.r4.SimEventListResetListener;
 
 /** A (generic) queueing system capable of serving jobs ({@link SimJob}s).
  *
@@ -208,7 +209,7 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  *
  */
 public interface SimQueue<J extends SimJob, Q extends SimQueue>
-extends SimEventListListener
+extends SimEntity<J, Q>, SimEventListResetListener
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -259,39 +260,6 @@ extends SimEventListListener
    */
   public SimQueue<J, Q> getCopySimQueue () throws UnsupportedOperationException;
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // NAME/toString
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns a default, type-specific name for this {@link SimQueue}.
-   * 
-   * <p>
-   * The string is used as a fallback return value for <code>Object.toString ()</code>
-   * in case the user did not set an instance-specific name
-   * through {@link #setName}.
-   * 
-   * <p>
-   * To be overridden in subclasses.
-   * 
-   * @return A default, type-specific name for this {@link SimQueue}.
-   * 
-   * @see #setName
-   * 
-   */
-  public String toStringDefault ();
-  
-  /** Sets the name of this {@link SimQueue}, to be returned by subsequent calls to <code>Object.toString ()</code>.
-   * 
-   * @param name The new name of this queue; if non-<code>null</code>, the string will be supplied by subsequent calls
-   *               to <code>Object.toString ()</code>; otherwise, the type-specific default will be used for that.
-   * 
-   * @see #toStringDefault
-   * 
-   */
-  public void setName (String name);
- 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // STATE

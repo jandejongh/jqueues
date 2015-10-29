@@ -13,6 +13,7 @@ import nl.jdj.jsimulation.r4.SimEventAction;
  * 
  */
 public interface SimJob<J extends SimJob, Q extends SimQueue>
+extends SimEntity<J, Q>
 {
 
   /** The queue this job is currently visiting.

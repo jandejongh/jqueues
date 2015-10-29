@@ -22,6 +22,7 @@ public class TestJob extends AbstractSimJob
     this.reported = reported;
     this.n = n;
     this.scheduledArrivalTime = this.n;
+    setName ("TestJob[" + this.n + "]");
   }
 
   public final double scheduledArrivalTime;
@@ -187,12 +188,6 @@ public class TestJob extends AbstractSimJob
   public SimEventAction<SimJob> getQueueDepartAction ()
   {
     return this.QUEUE_DEPART_ACTION;
-  }
-
-  @Override
-  public String toString ()
-  {
-    return "TestJob[" + this.n + "]";
   }
 
 }

@@ -55,6 +55,7 @@ public final class Main
         throw new IllegalArgumentException ();
       this.reported = reported;
       this.n = n;
+      setName ("" + this.n);
     }
 
     @Override
@@ -64,12 +65,6 @@ public final class Main
         return 0.0;
       else
         return (double) n;
-    }
-    
-    @Override
-    public final String toString ()
-    {
-      return "" + this.n;
     }
     
   }
@@ -91,6 +86,7 @@ public final class Main
       this.n = realSimJob.n;
       if (n < 0)
         throw new IllegalArgumentException ();
+      setName ("DJ_" + this.n);
     }
 
     @Override
@@ -106,12 +102,6 @@ public final class Main
         throw new IllegalStateException ();
     }
 
-    @Override
-    public final String toString ()
-    {
-      return "DJ_" + this.n;
-    }
-    
   }
   
   /** Main method.

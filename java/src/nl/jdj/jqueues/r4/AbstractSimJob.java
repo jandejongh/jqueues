@@ -14,6 +14,7 @@ import nl.jdj.jsimulation.r4.SimEventAction;
  * 
  */
 public abstract class AbstractSimJob<J extends SimJob, Q extends SimQueue>
+extends AbstractSimEntity<J, Q>
 implements SimJob<J, Q>
 {
 

@@ -39,6 +39,7 @@ public final class Main
         throw new IllegalArgumentException ();
       this.reported = reported;
       this.n = n;
+      setName ("TestJob_" + this.n);
     }
 
     public final SimEventAction QUEUE_ARRIVE_ACTION = new SimEventAction ()
@@ -87,12 +88,6 @@ public final class Main
     public SimEventAction getQueueStartAction ()
     {
       return this.QUEUE_START_ACTION;
-    }
-
-    @Override
-    public String toString ()
-    {
-      return "TestJob_" + this.n;
     }
 
   }

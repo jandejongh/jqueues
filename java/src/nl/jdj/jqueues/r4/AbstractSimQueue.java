@@ -1105,51 +1105,15 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private String name = null;
-
-  /** Sets the internal name to the supplied name.
+  /** Returns "AbstractSimQueue".
    * 
-   * @param name The new name of this queue, if <code>null</code>, the queue-type default will be used.
-   * 
-   * @see #toString
-   * @see #toStringDefault
-   * 
-   */
-  @Override
-  public final void setName (final String name)
-  {
-    this.name = name;
-  }
-  
-  /** Returns a reasonable, type-specific name for this (kind of) {@link SimQueue}.
-   * 
-   * <p>
-   * To be overridden in subclasses, this default implementation returns "AbstractSimQueue";
-   * 
-   * @return A reasonable, type-specific name for this (kind of) {@link SimQueue}.
+   * @return "AbstractSimQueue".
    * 
    */
   @Override
   public String toStringDefault ()
   {
     return "AbstractSimQueue";
-  }
-  
-  /** Returns the internally stored user-supplied name, if non-<code>null</code>, or the type specific default.
-   * 
-   * @return The internally stored user-supplied name, if non-<code>null</code>, or the type specific default.
-   * 
-   * @see #setName
-   * @see #toStringDefault
-   * 
-   */
-  @Override
-  public final String toString ()
-  {
-    if (this.name != null)
-      return this.name;
-    else
-      return toStringDefault ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1168,7 +1132,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   protected AbstractSimQueue (final SimEventList eventList)
   {
     super (eventList);
-    getEventList ().addListener (this);
   }
 
 }

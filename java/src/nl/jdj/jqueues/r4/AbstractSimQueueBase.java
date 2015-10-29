@@ -27,6 +27,7 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  *
  */
 public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractSimQueueBase>
+  extends AbstractSimEntity<J, Q>
   implements SimQueue<J, Q>
 {
   
@@ -383,7 +384,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // SimEventListListener
+  // SimEventListResetListener
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -401,24 +402,4 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
     reset ();
   }
 
-  /** Does nothing.
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public final void notifyEventListUpdate (final SimEventList eventList, final double time)
-  {
-  }
-
-  /** Does nothing.
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public final void notifyEventListEmpty (final SimEventList eventList, final double time)
-  {
-  }
-  
 }
