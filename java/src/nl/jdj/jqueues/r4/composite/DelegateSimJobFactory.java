@@ -3,7 +3,10 @@ package nl.jdj.jqueues.r4.composite;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 
-/** A delegate job visits {@link SimQueue}s on behalf of another job.
+/** A factory for delegate {@link SimJob}s.
+ * 
+ * <p>
+ * A delegate job visits {@link SimQueue}s on behalf of another job, the "real" job.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -14,11 +17,11 @@ import nl.jdj.jqueues.r4.SimQueue;
 public interface DelegateSimJobFactory<DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends SimQueue>
 {
   
-  /** Creates a new delegate {@link SimJob} for given {@link SimJob}.
+  /** Creates a new delegate {@link SimJob} for given "real" {@link SimJob}.
    * 
    * @param time  The current time.
-   * @param job   The job for which a delegate job is to be created.
-   * @param queue The queue the job is visiting and for which creation of a delegate job is required.
+   * @param job   The "real" job for which a delegate job is to be created.
+   * @param queue The queue "real" the job is visiting and for which creation of a delegate job is required.
    * 
    * @return The delegate job.
    * 
