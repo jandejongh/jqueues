@@ -58,4 +58,32 @@ implements SimEntity<J, Q>
       return toStringDefault ();
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTORS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Creates a new {@link SimEntity} with given name.
+   * 
+   * @param name The name of the job or queue, may be <code>null</code>.
+   * 
+   * @see #setName
+   * 
+   */
+  public AbstractSimEntity (final String name)
+  {
+    setName (name);
+  }
+    
+  /** Creates a new {@link SimEntity} with <code>null</code> (initial) name.
+   * 
+   * @see #setName
+   * 
+   */
+  public AbstractSimEntity ()
+  {
+    this (null);
+  }
+  
 }
