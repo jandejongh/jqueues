@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.TestJob;
+import nl.jdj.jqueues.r4.TestJob1;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -50,13 +50,13 @@ public class ProcessorSharingTest
   {
   }
 
-  public static List<TestJob> scheduleJobArrivals
+  public static List<TestJob1> scheduleJobArrivals
   (final boolean reported, final int n, final SimEventList eventList, final SimQueue queue)
   {
-    final List<TestJob> jobList = new ArrayList<>  ();
+    final List<TestJob1> jobList = new ArrayList<>  ();
     for (int i = 1; i <= n; i++)
     {
-      final TestJob j = new TestJob (reported, i);
+      final TestJob1 j = new TestJob1 (reported, i);
       jobList.add (j);
       final double arrTime = i;
       eventList.add (new SimEvent ("ARRIVAL_" + i, arrTime, null, new SimEventAction ()
@@ -97,8 +97,8 @@ public class ProcessorSharingTest
     }));
   }
   
-  private final void queuePredictorPS (final Set<TestJob> jobs,
-    final SimQueue queue,
+  private final void queuePredictorPS (final Set<TestJob1> jobs,
+    final PS queue,
     final TreeMap<Double, Boolean> queueAccessVacationMap,
     final TreeMap<Double, Integer> serverAccessCreditsMap)
   {
@@ -106,7 +106,7 @@ public class ProcessorSharingTest
       throw new IllegalArgumentException ();
     if (jobs == null)
       return;
-    for (TestJob j : jobs)
+    for (TestJob1 j : jobs)
     {
       j.predicted = true;
       j.predictedArrived = true;
@@ -120,11 +120,11 @@ public class ProcessorSharingTest
       j.predictedDeparted = false;
       j.predictedDepartureTime = Double.NaN;
     }
-    final Set<TestJob> jobsCopy = new HashSet<> (jobs);
+    final Set<TestJob1> jobsCopy = new HashSet<> (jobs);
     if (queueAccessVacationMap != null)
     {
-      final Set<TestJob> jobsToRemove = new HashSet ();
-      for (final TestJob j : jobsCopy)
+      final Set<TestJob1> jobsToRemove = new HashSet ();
+      for (final TestJob1 j : jobsCopy)
       {
         final double predictedArrivalTime = j.predictedArrivalTime;
         final Map.Entry<Double, Boolean> entry = queueAccessVacationMap.floorEntry (predictedArrivalTime);
@@ -137,20 +137,20 @@ public class ProcessorSharingTest
       }
       jobsCopy.removeAll (jobsToRemove);
     }
-    final TreeMap<Double, Set<TestJob>> arrivals = new TreeMap<> ();      
-    for (final TestJob j : jobsCopy)
+    final TreeMap<Double, Set<TestJob1>> arrivals = new TreeMap<> ();      
+    for (final TestJob1 j : jobsCopy)
     {
       if (! arrivals.containsKey (j.predictedArrivalTime))
-        arrivals.put (j.predictedArrivalTime, new HashSet<TestJob> ());
+        arrivals.put (j.predictedArrivalTime, new HashSet<> ());
       arrivals.get (j.predictedArrivalTime).add (j);
     }
     final TreeMap<Double, Integer> serverAccessCreditsMapCopy =
-      ((serverAccessCreditsMap != null) ? new TreeMap<> (serverAccessCreditsMap) : new TreeMap<Double, Integer> ());
-    final TreeMap<Double, Set<TestJob>> starts = new TreeMap<> ();
+      ((serverAccessCreditsMap != null) ? new TreeMap<> (serverAccessCreditsMap) : new TreeMap<> ());
+    final TreeMap<Double, Set<TestJob1>> starts = new TreeMap<> ();
     for (final double arrivalTime : arrivals.keySet ())
     {
-      final Set<TestJob> arrivals_t = arrivals.get (arrivalTime);
-      for (TestJob j : arrivals_t)
+      final Set<TestJob1> arrivals_t = arrivals.get (arrivalTime);
+      for (TestJob1 j : arrivals_t)
       {
         final Map.Entry<Double, Integer> entry = serverAccessCreditsMapCopy.floorEntry (arrivalTime);
         final int serverAccessCredits = ((entry != null) ? entry.getValue () : Integer.MAX_VALUE);
@@ -159,7 +159,7 @@ public class ProcessorSharingTest
           j.predictedStarted = true;
           j.predictedStartTime = arrivalTime;
           if (! starts.containsKey (j.predictedStartTime))
-            starts.put (j.predictedStartTime, new LinkedHashSet<TestJob> ());
+            starts.put (j.predictedStartTime, new LinkedHashSet<> ());
           starts.get (j.predictedStartTime).add (j);
           if (serverAccessCredits < Integer.MAX_VALUE)
             serverAccessCreditsMapCopy.put (arrivalTime, serverAccessCredits - 1);
@@ -174,7 +174,7 @@ public class ProcessorSharingTest
             j.predictedStarted = true;
             j.predictedStartTime = nextEntry.getKey ();
             if (! starts.containsKey (j.predictedStartTime))
-              starts.put (j.predictedStartTime, new LinkedHashSet<TestJob> ());
+              starts.put (j.predictedStartTime, new LinkedHashSet<> ());
             starts.get (j.predictedStartTime).add (j);
             if (nextEntry.getValue () < Integer.MAX_VALUE)
               serverAccessCreditsMapCopy.put (nextEntry.getKey (), nextEntry.getValue () - 1);
@@ -184,19 +184,19 @@ public class ProcessorSharingTest
         }
       }
     }
-    final TreeMap<Double, Set<TestJob>> running = new TreeMap<> ();
+    final TreeMap<Double, Set<TestJob1>> running = new TreeMap<> ();
     for (final double tStart : starts.keySet ())
     {
       final boolean runningIsEmpty = running.isEmpty ();
-      running.put (tStart, new LinkedHashSet<TestJob> ());
+      running.put (tStart, new LinkedHashSet<> ());
       if (! runningIsEmpty)
         running.get (tStart).addAll (running.lowerEntry (tStart).getValue ());
       running.get (tStart).addAll (starts.get (tStart));
     }
     if (running.containsKey (Double.NEGATIVE_INFINITY))
     {
-      final Set<TestJob> jobsAtNegativeInfinity = running.get (Double.NEGATIVE_INFINITY);
-      for (final TestJob j : jobsAtNegativeInfinity)
+      final Set<TestJob1> jobsAtNegativeInfinity = running.get (Double.NEGATIVE_INFINITY);
+      for (final TestJob1 j : jobsAtNegativeInfinity)
       {
         j.predictedDeparted = true;
         if (j.getServiceTime (queue) != Double.POSITIVE_INFINITY)
@@ -209,8 +209,8 @@ public class ProcessorSharingTest
     }
     if (running.containsKey (Double.POSITIVE_INFINITY))
     {
-      final Set<TestJob> jobsAtPositiveInfinity = running.get (Double.POSITIVE_INFINITY);
-      for (final TestJob j : jobsAtPositiveInfinity)
+      final Set<TestJob1> jobsAtPositiveInfinity = running.get (Double.POSITIVE_INFINITY);
+      for (final TestJob1 j : jobsAtPositiveInfinity)
       {
         j.predictedDeparted = true;
         j.predictedDepartureTime = Double.POSITIVE_INFINITY;
@@ -218,25 +218,25 @@ public class ProcessorSharingTest
       jobsCopy.removeAll (jobsAtPositiveInfinity);
       running.remove (Double.POSITIVE_INFINITY);
     }
-    final Map<TestJob, Double> rS = new HashMap<> ();
-    for (final TestJob j : jobsCopy)
+    final Map<TestJob1, Double> rS = new HashMap<> ();
+    for (final TestJob1 j : jobsCopy)
       rS.put (j, j.getServiceTime (queue));
     while (! jobsCopy.isEmpty ())
     {
       final double time = running.firstKey ();
-      final Set<TestJob> jobSet = running.get (time);
+      final Set<TestJob1> jobSet = running.get (time);
       if (! jobSet.isEmpty ())
       {        
         final int jobSetSize = jobSet.size ();
         double nextTime = running.higherKey (time) != null ? running.higherKey (time) : Double.POSITIVE_INFINITY;
-        final TreeMap<Double, TestJob> departureTimes = new TreeMap<> ();
-        for (final TestJob j : jobSet)
+        final TreeMap<Double, TestJob1> departureTimes = new TreeMap<> ();
+        for (final TestJob1 j : jobSet)
           departureTimes.put (time + (rS.get (j) * jobSet.size ()), j);
         if (departureTimes.firstKey () <= nextTime)
         {
           nextTime = departureTimes.firstKey ();
-          final TestJob jDepart = departureTimes.get (nextTime);
-          for (final Set<TestJob> stj : running.values ())
+          final TestJob1 jDepart = departureTimes.get (nextTime);
+          for (final Set<TestJob1> stj : running.values ())
             stj.remove (jDepart);
           jobsCopy.remove (jDepart);
           jDepart.predictedDeparted = true;
@@ -245,7 +245,7 @@ public class ProcessorSharingTest
           if (! running.containsKey (nextTime))
             running.put (nextTime, new HashSet<> (jobSet));
         }
-        for (final TestJob j : jobSet)
+        for (final TestJob1 j : jobSet)
           rS.put (j, rS.get (j) - ((nextTime - time) / jobSetSize));
       }
       running.pollFirstEntry ();
@@ -273,7 +273,7 @@ public class ProcessorSharingTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (! this.quiet, 40, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (! this.quiet, 40, el, queue);
       // Schedule vacation from 1.5 to 5.5.
       // Jobs 2, 3, 4, and 5 should be dropped.
       scheduleQueueAccessVacation (el, queue, 1.5, 4.0);
@@ -297,7 +297,7 @@ public class ProcessorSharingTest
       queuePredictorPS (new HashSet<> (jobs), queue, queueAccessVacationMap, serverAccessCreditsMap);
       el.run ();
       assert el.isEmpty ();
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
         j.testPrediction (ACCURACY);
       // Test reset on the fly...
       el.reset ();

@@ -6,7 +6,7 @@ import java.util.List;
 import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.TestJob;
+import nl.jdj.jqueues.r4.TestJob1;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -49,13 +49,13 @@ public class NonPreemptiveTest
   {
   }
 
-  public static List<TestJob> scheduleJobArrivals
+  public static List<TestJob1> scheduleJobArrivals
   (final boolean reported, final int n, final SimEventList eventList, final SimQueue queue)
   {
-    final List<TestJob> jobList = new ArrayList<>  ();
+    final List<TestJob1> jobList = new ArrayList<>  ();
     for (int i = 1; i <= n; i++)
     {
-      final TestJob j = new TestJob (reported, i);
+      final TestJob1 j = new TestJob1 (reported, i);
       jobList.add (j);
       final double arrTime = i;
       eventList.add (new SimEvent ("ARRIVAL_" + i, arrTime, null, new SimEventAction ()
@@ -70,13 +70,13 @@ public class NonPreemptiveTest
     return jobList;
   }
   
-  public static List<TestJob> scheduleJobArrivals2
+  public static List<TestJob1> scheduleJobArrivals2
   (final boolean reported, final int n, final SimEventList eventList, final SimQueue queue)
   {
-    final List<TestJob> jobList = new ArrayList<>  ();
+    final List<TestJob1> jobList = new ArrayList<>  ();
     for (int i = 1; i <= n; i++)
     {
-      final TestJob j = new TestJob (reported, i);
+      final TestJob1 j = new TestJob1 (reported, i);
       jobList.add (j);
       final double arrTime = i + i*0.1;
       eventList.add (new SimEvent ("ARRIVAL_" + i, arrTime, null, new SimEventAction ()
@@ -115,11 +115,11 @@ public class NonPreemptiveTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
       el.run ();
       assert el.isEmpty ();
       assertEquals (56.0, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -148,7 +148,7 @@ public class NonPreemptiveTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals2 (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals2 (true, 10, el, queue);
       // Arrival times:     Service   Waiting upon arrival
       //  1:  1.1           1.1-2.1   0
       //                    2.1: 1 departs
@@ -170,7 +170,7 @@ public class NonPreemptiveTest
       el.run ();
       assert el.isEmpty ();
       assertEquals (23.2, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n + j.n * 0.1, j.arrivalTime, 0.0);
@@ -225,7 +225,7 @@ public class NonPreemptiveTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
       // Arrival times:     Service   Serving upon arrival
       //  1:  1             1-2       0
       //  2:  2             2-4       0
@@ -241,7 +241,7 @@ public class NonPreemptiveTest
       el.run ();
       assert el.isEmpty ();
       assertEquals (25.0, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -279,7 +279,7 @@ public class NonPreemptiveTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals2 (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals2 (true, 10, el, queue);
       // Arrival times:     Service   Present upon arrival
       //  1:  1.1           1.1-2.1   0
       //                    2.1: 1 departs
@@ -301,7 +301,7 @@ public class NonPreemptiveTest
       el.run ();
       assert el.isEmpty ();
       assertEquals (16.8, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n + j.n * 0.1, j.arrivalTime, 0.0);
@@ -339,11 +339,11 @@ public class NonPreemptiveTest
     System.out.println ("====");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final LCFS queue = new LCFS (el);
-    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+    final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
     assertEquals (56.0, el.getTime (), 0.0);
-    for (TestJob j : jobs)
+    for (TestJob1 j : jobs)
     {
       assert j.arrived;
       assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -508,11 +508,11 @@ public class NonPreemptiveTest
     System.out.println ("======");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final RANDOM queue = new RANDOM (el);
-    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+    final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
     assertEquals (56.0, el.getTime (), 0.0);
-    for (TestJob j : jobs)
+    for (TestJob1 j : jobs)
     {
       assert j.arrived;
       assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -524,10 +524,10 @@ public class NonPreemptiveTest
     }
   }
 
-  private List<TestJob> scheduleJobArrivalsSJF (final boolean reported, final int n, final SimEventList eventList, final AbstractNonPreemptiveSingleServerSimQueue queue)
+  private List<TestJob1> scheduleJobArrivalsSJF (final boolean reported, final int n, final SimEventList eventList, final AbstractNonPreemptiveSingleServerSimQueue queue)
   {
     // Job 1 is scheduled at t = 1, req service time = 1.
-    final TestJob j1 = new TestJob (reported, 1);
+    final TestJob1 j1 = new TestJob1 (reported, 1);
     eventList.add (new SimEvent ("ARRIVAL_" + 1, 1.0, null, new SimEventAction ()
     {
       @Override
@@ -536,16 +536,16 @@ public class NonPreemptiveTest
         queue.arrive (j1, 1.0);
       }
     }));
-    final List<TestJob> jobList = new ArrayList<>  ();
+    final List<TestJob1> jobList = new ArrayList<>  ();
     for (int i = 2; i <= n; i++)
     {
-      final TestJob j = new TestJob (reported, i);
+      final TestJob1 j = new TestJob1 (reported, i);
       jobList.add (j);
     }
     Collections.shuffle (jobList);
     for (int i = 0; i < (n - 1); i++)
     {
-      final TestJob j = jobList.get (i);
+      final TestJob1 j = jobList.get (i);
       final double startTime = 1.5 + 0.05*i;
       eventList.add (new SimEvent ("ARRIVAL_" + j.n, startTime, null, new SimEventAction ()
       {
@@ -572,11 +572,11 @@ public class NonPreemptiveTest
     System.out.println ("===");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final SJF queue = new SJF (el);
-    final List<TestJob> jobs = scheduleJobArrivalsSJF (true, 10, el, queue);
+    final List<TestJob1> jobs = scheduleJobArrivalsSJF (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
     assertEquals (56.0, el.getTime (), 0.0);
-    for (TestJob j : jobs)
+    for (TestJob1 j : jobs)
     {
       assert j.arrived;
       if (j.n == 1)
@@ -590,7 +590,7 @@ public class NonPreemptiveTest
     }
   }
 
-  private List<TestJob> scheduleJobArrivalsLJF (final boolean reported, final int n, final SimEventList eventList, final AbstractNonPreemptiveSingleServerSimQueue queue)
+  private List<TestJob1> scheduleJobArrivalsLJF (final boolean reported, final int n, final SimEventList eventList, final AbstractNonPreemptiveSingleServerSimQueue queue)
   {
     return scheduleJobArrivalsSJF (reported, n, eventList, queue);
   }
@@ -607,11 +607,11 @@ public class NonPreemptiveTest
     System.out.println ("===");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final LJF queue = new LJF (el);
-    final List<TestJob> jobs = scheduleJobArrivalsLJF (true, 10, el, queue);
+    final List<TestJob1> jobs = scheduleJobArrivalsLJF (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
     assertEquals (56.0, el.getTime (), 0.0);
-    for (TestJob j : jobs)
+    for (TestJob1 j : jobs)
     {
       assert j.arrived;
       if (j.n == 1)
@@ -681,11 +681,11 @@ public class NonPreemptiveTest
     System.out.println ("==");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final IS queue = new IS (el);
-    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+    final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
     assertEquals (20.0, el.getTime (), 0.0);
-    for (TestJob j : jobs)
+    for (TestJob1 j : jobs)
     {
       assert j.arrived;
       assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -708,11 +708,11 @@ public class NonPreemptiveTest
     System.out.println ("======");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final IS_CST queue = new IS_CST (el, 4.0);
-    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+    final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
     assertEquals (14.0, el.getTime (), 0.0);
-    for (TestJob j : jobs)
+    for (TestJob1 j : jobs)
     {
       assert j.arrived;
       assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -735,11 +735,11 @@ public class NonPreemptiveTest
     System.out.println ("==");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final IC queue = new IC (el);
-    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+    final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
     assertEquals (10.0, el.getTime (), 0.0);
-    for (TestJob j : jobs)
+    for (TestJob1 j : jobs)
     {
       assert j.arrived;
       assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -794,7 +794,7 @@ public class NonPreemptiveTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
       // Schedule vacation from 1.5 to 5.5.
       // Jobs 2, 3, 4, and 5 should be dropped.
       // Job 1 should depart at t = 2.
@@ -808,7 +808,7 @@ public class NonPreemptiveTest
       el.run ();
       assert el.isEmpty ();
       assertEquals (46.0, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -882,7 +882,7 @@ public class NonPreemptiveTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
       // At t = 1.5, set remaining credits to 2.
       // Job 1 starts at t=1, leaves at t=2.
       // Job 2             2              4
@@ -902,7 +902,7 @@ public class NonPreemptiveTest
       el.run ();
       assert el.isEmpty ();
       assertEquals (117.0, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assert ! j.dropped;

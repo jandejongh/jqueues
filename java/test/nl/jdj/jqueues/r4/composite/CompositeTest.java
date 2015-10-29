@@ -4,7 +4,7 @@ import nl.jdj.jqueues.r4.nonpreemptive.*;
 import java.util.ArrayList;
 import java.util.List;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.TestJob;
+import nl.jdj.jqueues.r4.TestJob1;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -47,13 +47,13 @@ public class CompositeTest
   {
   }
   
-  public static List<TestJob> scheduleJobArrivals
+  public static List<TestJob1> scheduleJobArrivals
   (final boolean reported, final int n, final SimEventList eventList, final SimQueue queue)
   {
-    final List<TestJob> jobList = new ArrayList<>  ();
+    final List<TestJob1> jobList = new ArrayList<>  ();
     for (int i = 1; i <= n; i++)
     {
-      final TestJob j = new TestJob (reported, i);
+      final TestJob1 j = new TestJob1 (reported, i);
       jobList.add (j);
       final double arrTime = i;
       eventList.add (new SimEvent ("ARRIVAL_" + i, arrTime, null, new SimEventAction ()
@@ -92,11 +92,11 @@ public class CompositeTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
       el.run ();
       assert el.isEmpty ();
       assertEquals (56.0, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -122,11 +122,11 @@ public class CompositeTest
     System.out.println ("==========================================");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final BlackCompressedTandem2SimQueue queue = new BlackCompressedTandem2SimQueue (el, new LCFS (el), new FCFS (el), null);
-    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+    final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
     assertEquals (56.0, el.getTime (), 0.0);
-    for (TestJob j : jobs)
+    for (TestJob1 j : jobs)
     {
       assert j.arrived;
       assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -295,7 +295,7 @@ public class CompositeTest
 //    el.run ();
 //    assert el.isEmpty ();
 //    assertEquals (56.0, el.getTime (), 0.0);
-//    for (TestJob j : jobs)
+//    for (TestJob1 j : jobs)
 //    {
 //      assert j.arrived;
 //      assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -310,7 +310,7 @@ public class CompositeTest
 //  private List<TestJob> scheduleJobArrivalsSJF (final boolean reported, final int n, final SimEventList eventList, final AbstractNonPreemptiveSingleServerSimQueue queue)
 //  {
 //    // Job 1 is scheduled at t = 1, req service time = 1.
-//    final TestJob j1 = new TestJob (reported, 1);
+//    final TestJob1 j1 = new TestJob1 (reported, 1);
 //    eventList.add (new SimEvent ("ARRIVAL_" + 1, 1.0, null, new SimEventAction ()
 //    {
 //      @Override
@@ -322,13 +322,13 @@ public class CompositeTest
 //    final List<TestJob> jobList = new ArrayList<>  ();
 //    for (int i = 2; i <= n; i++)
 //    {
-//      final TestJob j = new TestJob (reported, i);
+//      final TestJob1 j = new TestJob1 (reported, i);
 //      jobList.add (j);
 //    }
 //    Collections.shuffle (jobList);
 //    for (int i = 0; i < (n - 1); i++)
 //    {
-//      final TestJob j = jobList.get (i);
+//      final TestJob1 j = jobList.get (i);
 //      final double startTime = 1.5 + 0.05*i;
 //      eventList.add (new SimEvent ("ARRIVAL_" + j.n, startTime, null, new SimEventAction ()
 //      {
@@ -359,7 +359,7 @@ public class CompositeTest
 //    el.run ();
 //    assert el.isEmpty ();
 //    assertEquals (56.0, el.getTime (), 0.0);
-//    for (TestJob j : jobs)
+//    for (TestJob1 j : jobs)
 //    {
 //      assert j.arrived;
 //      if (j.n == 1)
@@ -394,7 +394,7 @@ public class CompositeTest
 //    el.run ();
 //    assert el.isEmpty ();
 //    assertEquals (56.0, el.getTime (), 0.0);
-//    for (TestJob j : jobs)
+//    for (TestJob1 j : jobs)
 //    {
 //      assert j.arrived;
 //      if (j.n == 1)
@@ -468,7 +468,7 @@ public class CompositeTest
 //    el.run ();
 //    assert el.isEmpty ();
 //    assertEquals (20.0, el.getTime (), 0.0);
-//    for (TestJob j : jobs)
+//    for (TestJob1 j : jobs)
 //    {
 //      assert j.arrived;
 //      assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -495,7 +495,7 @@ public class CompositeTest
 //    el.run ();
 //    assert el.isEmpty ();
 //    assertEquals (14.0, el.getTime (), 0.0);
-//    for (TestJob j : jobs)
+//    for (TestJob1 j : jobs)
 //    {
 //      assert j.arrived;
 //      assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -522,7 +522,7 @@ public class CompositeTest
 //    el.run ();
 //    assert el.isEmpty ();
 //    assertEquals (10.0, el.getTime (), 0.0);
-//    for (TestJob j : jobs)
+//    for (TestJob1 j : jobs)
 //    {
 //      assert j.arrived;
 //      assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -591,7 +591,7 @@ public class CompositeTest
 //      el.run ();
 //      assert el.isEmpty ();
 //      assertEquals (46.0, el.getTime (), 0.0);
-//      for (TestJob j : jobs)
+//      for (TestJob1 j : jobs)
 //      {
 //        assert j.arrived;
 //        assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -685,7 +685,7 @@ public class CompositeTest
 //      el.run ();
 //      assert el.isEmpty ();
 //      assertEquals (117.0, el.getTime (), 0.0);
-//      for (TestJob j : jobs)
+//      for (TestJob1 j : jobs)
 //      {
 //        assert j.arrived;
 //        assert ! j.dropped;

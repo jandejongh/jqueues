@@ -8,14 +8,14 @@ import static org.junit.Assert.fail;
 /**
  *
  */
-public class TestJob extends AbstractSimJob
+public class TestJob1 extends AbstractSimJob
 {
 
   private final boolean reported;
 
   public final int n;
 
-  public TestJob (boolean reported, int n)
+  public TestJob1 (boolean reported, int n)
   {
     if (n <= 0)
       throw new IllegalArgumentException ();
@@ -103,12 +103,12 @@ public class TestJob extends AbstractSimJob
     @Override
     public void action (final SimEvent event)
     {
-      if (TestJob.this.reported)
-        System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " arrives.");
-      if (TestJob.this.arrived)
+      if (TestJob1.this.reported)
+        System.out.println ("t = " + event.getTime () + ": Job " + TestJob1.this.n + " arrives.");
+      if (TestJob1.this.arrived)
         fail ("Already arrived!");
-      TestJob.this.arrived = true;
-      TestJob.this.arrivalTime = event.getTime ();
+      TestJob1.this.arrived = true;
+      TestJob1.this.arrivalTime = event.getTime ();
     }
   };
 
@@ -123,20 +123,20 @@ public class TestJob extends AbstractSimJob
     @Override
     public void action (final SimEvent event)
     {
-      if (TestJob.this.reported)
-        System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " starts.");
-      if (TestJob.this.started)
+      if (TestJob1.this.reported)
+        System.out.println ("t = " + event.getTime () + ": Job " + TestJob1.this.n + " starts.");
+      if (TestJob1.this.started)
         fail ("Already started!");
-      if (! TestJob.this.arrived)
+      if (! TestJob1.this.arrived)
         fail ("Starting before arrival!");
-      if (TestJob.this.dropped)
+      if (TestJob1.this.dropped)
         fail ("Starting after drop!");
-      if (TestJob.this.revoked)
+      if (TestJob1.this.revoked)
         fail ("Starting after revocation!");
-      if (TestJob.this.departed)
+      if (TestJob1.this.departed)
         fail ("Starting after departure!");
-      TestJob.this.started = true;
-      TestJob.this.startTime = event.getTime ();
+      TestJob1.this.started = true;
+      TestJob1.this.startTime = event.getTime ();
     }
   };
 
@@ -151,14 +151,14 @@ public class TestJob extends AbstractSimJob
     @Override
     public void action (final SimEvent event)
     {
-      if (TestJob.this.reported)
-        System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " dropped.");
-      if (! TestJob.this.arrived)
+      if (TestJob1.this.reported)
+        System.out.println ("t = " + event.getTime () + ": Job " + TestJob1.this.n + " dropped.");
+      if (! TestJob1.this.arrived)
         fail ("Dropped before arrival!");
-      if (TestJob.this.departed)
+      if (TestJob1.this.departed)
         fail ("Dropped after departure!");
-      TestJob.this.dropped = true;
-      TestJob.this.dropTime = event.getTime ();
+      TestJob1.this.dropped = true;
+      TestJob1.this.dropTime = event.getTime ();
     }
   };
 
@@ -173,14 +173,14 @@ public class TestJob extends AbstractSimJob
     @Override
     public void action (final SimEvent event)
     {
-      if (TestJob.this.reported)
-        System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " departs.");
-      if (TestJob.this.departed)
+      if (TestJob1.this.reported)
+        System.out.println ("t = " + event.getTime () + ": Job " + TestJob1.this.n + " departs.");
+      if (TestJob1.this.departed)
         fail ("Already departed!");
-      if (! TestJob.this.arrived)
+      if (! TestJob1.this.arrived)
         fail ("Departure before arrival!");
-      TestJob.this.departed = true;
-      TestJob.this.departureTime = event.getTime ();
+      TestJob1.this.departed = true;
+      TestJob1.this.departureTime = event.getTime ();
     }
   };
 

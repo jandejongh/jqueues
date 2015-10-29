@@ -5,7 +5,7 @@ import java.util.List;
 import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.TestJob;
+import nl.jdj.jqueues.r4.TestJob1;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -47,13 +47,13 @@ public class ServerlessTest
   {
   }
 
-  public static List<TestJob> scheduleJobArrivals
+  public static List<TestJob1> scheduleJobArrivals
   (final boolean reported, final int n, final SimEventList eventList, final SimQueue queue)
   {
-    final List<TestJob> jobList = new ArrayList<>  ();
+    final List<TestJob1> jobList = new ArrayList<>  ();
     for (int i = 1; i <= n; i++)
     {
-      final TestJob j = new TestJob (reported, i);
+      final TestJob1 j = new TestJob1 (reported, i);
       jobList.add (j);
       final double arrTime = i;
       eventList.add (new SimEvent ("ARRIVAL_" + i, arrTime, null, new SimEventAction ()
@@ -83,11 +83,11 @@ public class ServerlessTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
       el.run ();
       assert el.isEmpty ();
       assertEquals (10.0, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -115,11 +115,11 @@ public class ServerlessTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
       el.run ();
       assert el.isEmpty ();
       assertEquals (15.0, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -147,11 +147,11 @@ public class ServerlessTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
       el.run ();
       assert el.isEmpty ();
       assertEquals (10.0, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -179,11 +179,11 @@ public class ServerlessTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
       el.run ();
       assert el.isEmpty ();
       assertEquals (10.0, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -212,7 +212,7 @@ public class ServerlessTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
       // Close gate between t = 2.5 and t = 3.5.
       el.schedule (2.5, (SimEventAction) (SimEvent event) ->
       {
@@ -235,7 +235,7 @@ public class ServerlessTest
       el.run ();
       assert el.isEmpty ();
       assertEquals (11.5, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n, j.arrivalTime, 0.0);
@@ -301,7 +301,7 @@ public class ServerlessTest
     for (int i = 0; i <= 1; i++)
     {
       System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
+      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
       // Schedule vacation from 1.5 to 5.5.
       // Jobs 2, 3, 4, and 5 should be dropped.
       // The other jobs should remain in the system, but may not start nor depart.
@@ -309,7 +309,7 @@ public class ServerlessTest
       el.run ();
       assert el.isEmpty ();
       assertEquals (10.0, el.getTime (), 0.0);
-      for (TestJob j : jobs)
+      for (TestJob1 j : jobs)
       {
         assert j.arrived;
         assertEquals ((double) j.n, j.arrivalTime, 0.0);
