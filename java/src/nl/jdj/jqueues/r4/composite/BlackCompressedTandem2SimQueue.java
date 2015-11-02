@@ -24,10 +24,16 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * 
  */
 public class BlackCompressedTandem2SimQueue
-  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackTandemSimQueue>
-  extends BlackTandemSimQueue<DJ, DQ, J, Q>
+  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackCompressedTandem2SimQueue>
+  extends AbstractBlackTandemSimQueue<DJ, DQ, J, Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Auxiliary method to create the required {@link Set} of {@link SimQueue}s in the constructor.
    * 
    * @param waitQueue  The wait queue.
@@ -45,25 +51,6 @@ public class BlackCompressedTandem2SimQueue
     set.add (serveQueue);
     return set;
   }
-  
-  private /* final */ DQ getWaitQueue ()
-  {
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    return iterator.next ();
-  }
-  
-  private /* final */ DQ getServeQueue ()
-  {
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    iterator.next ();
-    return iterator.next ();
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // CONSTRUCTOR(S)
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Creates a black compressed tandem queue given an event list, a wait queue and a serve queue.
    *
@@ -110,28 +97,41 @@ public class BlackCompressedTandem2SimQueue
     return new BlackCompressedTandem2SimQueue<> (getEventList (), waitQueueCopy, serveQueueCopy, getDelegateSimJobFactory ());
   }
   
-  @Override
-  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // WAIT AND SERVE QUEUES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Gets the wait (first) queue.
+   * 
+   * @return The wait (first) queue.
+   * 
+   */
+  protected final DQ getWaitQueue ()
   {
-    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
-    if (! getQueues ().contains (queue))
-      throw new IllegalArgumentException ();
-    if (queue == getServeQueue ())
-      getWaitQueue ().setServerAccessCredits (noWaitArmed ? 1 : 0);
+    final Iterator<DQ> iterator = getQueues ().iterator ();
+    return iterator.next ();
   }
-
-  @Override
-  protected final void startForSubClass (final double time, final DJ job, final DQ queue)
+  
+  /** Gets the serve (second, last) queue.
+   * 
+   * @return The serve (second, last) queue.
+   * 
+   */
+  protected final DQ getServeQueue ()
   {
-    super.startForSubClass (time, job, queue);
-    if (queue == getWaitQueue ())
-    {
-      if (! getWaitQueue ().revoke (job, time, true))
-        throw new RuntimeException ();
-      getServeQueue ().arrive (job, time);
-    }
+    final Iterator<DQ> iterator = getQueues ().iterator ();
+    iterator.next ();
+    return iterator.next ();
   }
-
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Returns "ComprTandem2[waitQueue,serveQueue]".
    * 
    * @return "ComprTandem2[waitQueue,serveQueue]".
@@ -143,5 +143,127 @@ public class BlackCompressedTandem2SimQueue
     return "ComprTandem2[" + getWaitQueue () + "," + getServeQueue () + "]";
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // allowDelegateJobRevocations
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns {@code true}.
+   * 
+   * @return {@code true}.
+   * 
+   */
+  @Override
+  protected final boolean getAllowDelegateJobRevocations ()
+  {
+    return true;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // UPDATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void resetEntitySubClass ()
+  {
+    super.resetEntitySubClass ();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DROP DESTINATION QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final DQ getDropDestinationQueue (final double time, final DJ job, final DQ queue)
+  {
+    return super.getDropDestinationQueue (time, job, queue);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // startForSubClass
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** If the delegate job started on the {@link #getWaitQueue},
+   * revoke it immediately and let it arrive at the {@link #getServeQueue}.
+   * 
+   * <p>
+   * Always calls the super method first.
+   * Jobs starting on the {@link #getServeQueue} are otherwise ignored.
+   * 
+   * @throws RuntimeException If the delegate jobs cannot be revoked from the wait queue.
+   * 
+   * @see SimQueue#revoke
+   * @see SimQueue#arrive
+   * 
+   */
+  @Override
+  protected final void startForSubClass (final double time, final DJ job, final DQ queue)
+  {
+    super.startForSubClass (time, job, queue);
+    if (! getQueues ().contains (queue))
+      throw new IllegalArgumentException ();
+    if (queue == getWaitQueue ())
+    {
+      if (! getWaitQueue ().revoke (job, time, true))
+        throw new RuntimeException ();
+      getServeQueue ().arrive (job, time);
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // notifyNewNoWaitArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Updates the server-access credits on the {@link #getWaitQueue} if the {@code noWaitArmed} state changes on the
+   *  {@link #getServeQueue}.
+   * 
+   * <p>
+   * Always calls the super method first.
+   * Updates from the {@link #getWaitQueue} are otherwise ignored.
+   * 
+   * <p>
+   * If the {@link #getServeQueue} is {@code noWaitArmed}, it sets the server-access credits on the {@link #getWaitQueue}
+   * to one, otherwise (<i>not</i> {@code noWaitArmed}) it sets it to zero.
+   * 
+   */
+  @Override
+  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  {
+    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
+    if (! getQueues ().contains (queue))
+      throw new IllegalArgumentException ();
+    if (queue == getServeQueue ())
+      getWaitQueue ().setServerAccessCredits (noWaitArmed ? 1 : 0);
+  }
 
 }
