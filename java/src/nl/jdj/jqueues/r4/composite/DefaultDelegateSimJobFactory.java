@@ -4,7 +4,11 @@ import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 
-/**
+/** A {@link DelegateSimJobFactory} for any (real) {@link SimJob}.
+ * 
+ * <p>
+ * It generates delegate jobs of type {@link AbstractSimJob} that redirect requests for
+ * their required service time to a request of the corresponding real job at the real queue.
  *
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
@@ -18,7 +22,8 @@ implements DelegateSimJobFactory<AbstractSimJob, DQ, J, Q>
 
   /** Returns a new {@link AbstractSimJob} requesting the service time from the real job.
    * 
-   * {@inheritDoc}
+   * <p>
+   * The name has empty (i.e. default) name and is not attached to the underlying event list (there is no need to).
    * 
    * @see AbstractSimJob#getServiceTime
    * 
@@ -26,7 +31,7 @@ implements DelegateSimJobFactory<AbstractSimJob, DQ, J, Q>
   @Override
   public AbstractSimJob newInstance (final double time, final J job, final Q queue)
   {
-    return new AbstractSimJob ()
+    return new AbstractSimJob (null, null)
     {
       @Override
       public final double getServiceTime (final SimQueue delegateQueue) throws IllegalArgumentException

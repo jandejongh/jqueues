@@ -25,7 +25,7 @@ public interface SimQueueFeedbackController<J extends SimJob, DJ extends SimJob,
    * @param realQueue     The "real" queue, i.e., the queue being visited by the real job.
    * @param visits        The number of visits of the delegate job to the (delegate) queue thus far.
    * 
-   * @return True if the delegate job is to be fed back into the queue.
+   * @return True if the delegate job is to be fed back into the (delegate) queue.
    * 
    */
   public boolean feedback (double time, DJ delegateJob, DQ delegateQueue, J realJob, Q realQueue, int visits);
