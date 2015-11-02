@@ -16,23 +16,14 @@ import nl.jdj.jsimulation.r4.SimEventList;
  */
 public class BlackProbabilisticFeedbackSimQueue
 <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackProbabilisticFeedbackSimQueue>
-  extends BlackGeneralFeedbackSimQueue<DJ, DQ, J, Q>
+  extends AbstractBlackFeedbackSimQueue<DJ, DQ, J, Q>
 {
   
-  /** The feedback probability (in [0, 1]).
-   * 
-   */
-  private final double p_feedback;
-  
-  /** Returns the feedback probability.
-   * 
-   * @return The feedback probability, between zero and unity inclusive.
-   * 
-   */
-  public final double getFeedbackProbability ()
-  {
-    return this.p_feedback;
-  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Creates a suitable {@link SimQueueFeedbackController}.
    * 
@@ -106,18 +97,12 @@ public class BlackProbabilisticFeedbackSimQueue
       (getEventList (), (DQ) queueCopy, getFeedbackProbability (), null, getDelegateSimJobFactory ());
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
   /** Returns "FB_p_feedback*100%[embedded queue]".
    * 
    * @return "FB_p_feedback*100%[embedded queue]".
@@ -129,4 +114,25 @@ public class BlackProbabilisticFeedbackSimQueue
     return "FB_" + this.p_feedback * 100.0 + "%[" + getQueues ().iterator ().next () + "]";
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // FEEDBACK PROBABILITY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The feedback probability (in [0, 1]).
+   * 
+   */
+  private final double p_feedback;
+  
+  /** Returns the feedback probability.
+   * 
+   * @return The feedback probability, between zero and unity inclusive.
+   * 
+   */
+  public final double getFeedbackProbability ()
+  {
+    return this.p_feedback;
+  }
+  
 }

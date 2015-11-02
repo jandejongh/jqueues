@@ -1,14 +1,24 @@
 package nl.jdj.jqueues.r4.composite;
 
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-/** A composite queue with two queues, a main one and one collecting all dropped jobs from the main queue.
+/** Abstract (general) Feedback queue.
+ * 
+ * <p>
+ * Under the hood, a delegate job for each {@link SimJob} visits the (single) embedded {@link SimQueue},
+ * and upon departing from that queue, the delegate job is optionally fed back to the embedded queue's input.
+ * Feedback is controlled through a {@link SimQueueFeedbackController}, allowing maximum flexibility.
+ * 
+ * <p>
+ * After the delegate job departs the embedded queue and is not fed back, the "real" job departs
+ * from the {@link AbstractBlackGeneralFeedbackSimQueue}.
  *
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -16,114 +26,74 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <Q>  The queue type for jobs.
  * 
  */
-public class BlackDropCollectorSimQueue
-  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackDropCollectorSimQueue>
+public abstract class AbstractBlackFeedbackSimQueue
+<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends AbstractBlackFeedbackSimQueue>
   extends AbstractBlackSimQueueNetwork<DJ, DQ, J, Q>
 {
-
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR(S) / FACTORY
+  // CONSTRUCTOR(S)
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Auxiliary method to create the required {@link Set} of {@link SimQueue}s in the constructor.
    * 
-   * Note that the mainQueue and the dropQueue arguments may be equal!
+   * @param queue  The queue.
    * 
-   * @param mainQueue The wait queue.
-   * @param dropQueue The serve queue.
-   * 
-   * @return A {@link LinkedHashSet} holding both {@link SimQueue}s in the proper order.
+   * @return A {@link LinkedHashSet} holding the {@link SimQueue}.
    * 
    */
-  private static Set<SimQueue> createQueuesSet (final SimQueue mainQueue, final SimQueue dropQueue)
+  private static Set<SimQueue> createQueuesSet (final SimQueue queue)
   {
-    if (mainQueue == null || dropQueue == null)
+    if (queue == null)
       throw new IllegalArgumentException ();
     final Set<SimQueue> set = new LinkedHashSet<> ();
-    set.add (mainQueue);
-    set.add (dropQueue);
+    set.add (queue);
     return set;
   }
   
-  /** Creates a black drop-collector queue given an event list, a main queue and a drop (collector) queue.
+  /** Creates an (abstract) black feedback queue given an event list, a queue and a feedback controller.
    *
-   * @param eventList The event list to use.
-   * @param mainQueue  The wait queue.
-   * @param dropQueue The serve queue.
+   * @param eventList             The event list to use.
+   * @param queue                 The queue, non-<code>null</code>.
+   * @param feedbackController    The feedback controller, non-<code>null</code>.
    * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
    *
-   * @throws IllegalArgumentException If the event list is <code>null</code>,
-   *                                  one of or both queues are <code>null</code>.
+   * @throws IllegalArgumentException If the event list, queue or feedback controller is <code>null</code>.
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
    * 
    */
-  public BlackDropCollectorSimQueue
+  protected AbstractBlackFeedbackSimQueue
   (final SimEventList eventList,
-   final SimQueue<DJ, DQ> mainQueue,
-   final SimQueue<DJ, DQ> dropQueue,
-   final DelegateSimJobFactory delegateSimJobFactory)
+    final DQ queue,
+    final SimQueueFeedbackController<J, DJ, Q, DQ> feedbackController,
+    final DelegateSimJobFactory delegateSimJobFactory)
   {
-    super (eventList, (Set<DQ>) createQueuesSet (mainQueue, dropQueue), delegateSimJobFactory);
+    super (eventList, (Set<DQ>) createQueuesSet (queue), delegateSimJobFactory);
+    if (feedbackController == null)
+      throw new IllegalArgumentException ();
+    this.feedbackController = feedbackController;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ENCAPSULATED QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the encapsulated queue.
+   * 
+   * @return The encapsulated queue, non-<code>null</code>.
+   * 
+   */
+  public final SimQueue<DJ, DQ> getEncapsulatedQueue ()
+  {
+    return getQueues ().iterator ().next ();
   }
 
-  /** Returns a new {@link BlackDropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and
-   *  drop queues and the same delegate-job factory.
-   * 
-   * @return A new {@link BlackDropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and
-   * drop queues and the same delegate-job factory.
-   * 
-   * @throws UnsupportedOperationException If the main or drop queues could not be copied through {@link SimQueue#getCopySimQueue}.
-   * 
-   * @see #getEventList
-   * @see #getMainQueue
-   * @see #getDropQueue
-   * @see #getDelegateSimJobFactory
-   * 
-   */
-  @Override
-  public BlackDropCollectorSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
-  {
-    final SimQueue<DJ, DQ> mainQueueCopy = getMainQueue ().getCopySimQueue ();
-    final SimQueue<DJ, DQ> dropQueueCopy = getDropQueue ().getCopySimQueue ();
-    return new BlackDropCollectorSimQueue<> (getEventList (), mainQueueCopy, dropQueueCopy, getDelegateSimJobFactory ());
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // MAIN AND DROP QUEUES
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns the main (first) queue.
-   * 
-   * @return The main (first) queue.
-   * 
-   */
-  protected final DQ getMainQueue ()
-  {
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    return iterator.next ();
-  }
-  
-  /** Returns the drop (second, last) queue.
-   * 
-   * @return The drop (second, last) queue.
-   * 
-   */
-  protected final DQ getDropQueue ()
-  {
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    final DQ firstQueue = iterator.next ();
-    if (! iterator.hasNext ())
-      return firstQueue;
-    else
-      return iterator.next ();
-  }
-  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // AbstractBlackSimQueueNetwork
@@ -131,35 +101,95 @@ public class BlackDropCollectorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  @Override
-  protected final SimQueue<DJ, DQ> getFirstQueue (final double time, final J job)
-  {
-    return getMainQueue ();
-  }
-
-  @Override
-  protected final SimQueue<DJ, DQ> getNextQueue (final double time, final J job, final DQ previousQueue)
-  {
-    if (previousQueue == null || ! getQueues ().contains (previousQueue))
-      throw new IllegalStateException ();
-    return null;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // NAME
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns "DropCol[mainQueue,dropQueue]".
+  /** Returns the embedded queue.
    * 
-   * @return "DropCol[mainQueue,dropQueue]".
+   * <p>
+   * Updates the visits administration.
+   * 
+   * @return The embedded {@link SimQueue}.
    * 
    */
   @Override
-  public final String toStringDefault ()
+  protected final SimQueue<DJ, DQ> getFirstQueue (final double time, final J job)
   {
-    return "DropCol[" + getMainQueue () + "," + getDropQueue () + "]";
+    if (job == null)
+      throw new IllegalArgumentException ();
+    if (this.visits.containsKey (job))
+      throw new IllegalStateException ();
+    if (getQueues ().isEmpty ())
+      throw new IllegalStateException ();
+    this.visits.put (job, 0);
+    return getQueues ().iterator ().next ();
+  }
+
+  /** Returns the embedded queue if the delegate job is to be fed back, {@code null} otherwise.
+   * 
+   * <p>
+   * Updates the visits administration.
+   * 
+   * @return If consultation of the feedback controller indicates a new feedback is needed,
+   *         returns the embedded {@link SimQueue},
+   *         <code>null</code> otherwise.
+   * 
+   * @see SimQueueFeedbackController
+   * @see #getFeedbackController
+   * 
+   */
+  @Override
+  protected final SimQueue<DJ, DQ> getNextQueue (final double time, final J job, final DQ previousQueue)
+  {
+    if (getQueues ().isEmpty ())
+      throw new IllegalStateException ();
+    if (previousQueue != getQueues ().iterator ().next ())
+      throw new IllegalStateException ();
+    if (! this.visits.containsKey (job) || this.visits.get (job) == null)
+      throw new IllegalStateException ();
+    this.visits.put (job, this.visits.get (job) + 1);
+    if (this.feedbackController.feedback (time, getDelegateJob (job), previousQueue, job, (Q) this, this.visits.get (job)))
+      return previousQueue;
+    else
+    {
+      this.visits.remove (job);
+      return null;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // FEEDBACK CONTROLLER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The feedback controller.
+   * 
+   */
+  private final SimQueueFeedbackController<J, DJ, Q, DQ> feedbackController;
+  
+  /** Returns the feedback controller.
+   * 
+   * @return The feedback controller, non-<code>null</code>.
+   * 
+   */
+  public final SimQueueFeedbackController<J, DJ, Q, DQ> getFeedbackController ()
+  {
+    return this.feedbackController;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DROP DESTINATION QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * {@inheritDoc}
+   * 
+   */
+  @Override
+  protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
+  {
+    return super.getDropDestinationQueue (t, job, queue);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -181,17 +211,43 @@ public class BlackDropCollectorSimQueue
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // allowSubQueueAccessVacationChanges
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns {@code false}.
+   * 
+   * @return {@code false}.
+   * 
+   */
+  @Override
+  protected final boolean getAllowSubQueueAccessVacationChanges ()
+  {
+    return false;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // VISITS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final Map<J, Integer> visits = new HashMap<> ();
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and clear the administration of visits.
    * 
    */
   @Override
   public final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
+    this.visits.clear ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,66 +267,19 @@ public class BlackDropCollectorSimQueue
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // DROP DESTINATION QUEUE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns the drop queue if the jobs was dropped from the main queue, <code>null</code> if dropped from the drop queue,
-   * and throws an {@link IllegalArgumentException} otherwise.
-   * 
-   * @return The drop queue if the jobs was dropped from the main queue, <code>null</code> if dropped from the drop queue,
-   * and throws an {@link IllegalArgumentException} otherwise.
-   * 
-   * @see #getMainQueue
-   * @see #getDropQueue
-   * 
-   * @throws IllegalArgumentException If <code>queue == null</code> or not equal to the main queue or the drop queue.
-   * 
-   */
-  @Override
-  protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
-  {
-    if (queue == null)
-      throw new IllegalArgumentException ();
-    if (queue == getMainQueue ())
-      return getDropQueue ();
-    if (queue == getDropQueue ())
-      return null;
-    throw new IllegalArgumentException ();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // allowSubQueueAccessVacationChanges
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns {@code false}.
-   * 
-   * @return {@code false}.
-   * 
-   */
-  @Override
-  protected final boolean getAllowSubQueueAccessVacationChanges ()
-  {
-    return false;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
   // noWaitArmed
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns the {@code noWaitArmed} state of the main queue.
+  /** Calls super method (in order to make implementation final).
    * 
-   * @return The {@code noWaitArmed} state of the main queue.
+   * {@inheritDoc}
    * 
    */
   @Override
   public final boolean isNoWaitArmed ()
   {
-    return getMainQueue ().isNoWaitArmed ();
+    return super.isNoWaitArmed ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

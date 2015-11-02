@@ -15,23 +15,14 @@ import nl.jdj.jsimulation.r4.SimEventList;
  */
 public class BlackNumVisitsFeedbackSimQueue
 <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackNumVisitsFeedbackSimQueue>
-  extends BlackGeneralFeedbackSimQueue<DJ, DQ, J, Q>
+  extends AbstractBlackFeedbackSimQueue<DJ, DQ, J, Q>
 {
   
-  /** The required number of visits to the embedded queue,
-   * 
-   */
-  private final int numberOfVisits;
-  
-  /** Returns the required number of visits to the embedded queue.
-   * 
-   * @return The required number of visits to the embedded queue.
-   * 
-   */
-  public final int getNumberOfVisits ()
-  {
-    return this.numberOfVisits;
-  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Creates a suitable {@link SimQueueFeedbackController}.
    * 
@@ -101,17 +92,12 @@ public class BlackNumVisitsFeedbackSimQueue
       (getEventList (), (DQ) queueCopy, getNumberOfVisits (), getDelegateSimJobFactory ());
   }
   
-  /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Returns "FB_numVisits[embedded queue]".
    * 
    * @return "FB_numVisits[embedded queue]".
@@ -123,4 +109,25 @@ public class BlackNumVisitsFeedbackSimQueue
     return "FB_" + this.numberOfVisits + "[" + getQueues ().iterator ().next () + "]";
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NUMBER OF VISITS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The required number of visits to the embedded queue,
+   * 
+   */
+  private final int numberOfVisits;
+  
+  /** Returns the required number of visits to the embedded queue.
+   * 
+   * @return The required number of visits to the embedded queue.
+   * 
+   */
+  public final int getNumberOfVisits ()
+  {
+    return this.numberOfVisits;
+  }
+  
 }
