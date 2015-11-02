@@ -1,6 +1,5 @@
 package nl.jdj.jqueues.r4.serverless;
 
-import nl.jdj.jqueues.r4.AbstractSimQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -14,7 +13,8 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, Q>
+public class DROP<J extends SimJob, Q extends DROP>
+extends AbstractServerlessSimQueue<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,9 +105,9 @@ public class DROP<J extends SimJob, Q extends DROP> extends AbstractSimQueue<J, 
    * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
   }  
   
   /** Does nothing (effectively forcing the job to be dropped).

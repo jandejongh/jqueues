@@ -2,7 +2,6 @@ package nl.jdj.jqueues.r4.serverless;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import nl.jdj.jqueues.r4.AbstractSimQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -26,7 +25,8 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @see DELAY
  * 
  */
-public class GATE<J extends SimJob, Q extends GATE> extends AbstractSimQueue<J, Q>
+public class GATE<J extends SimJob, Q extends GATE>
+extends AbstractServerlessSimQueue<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +135,7 @@ public class GATE<J extends SimJob, Q extends GATE> extends AbstractSimQueue<J, 
       job.setQueue (null);
     this.jobQueue.clear ();
     for (final J job : jobsReleased)
-      fireDeparture (time, job);
+      fireDeparture (time, job, (Q) this);
     fireNewNoWaitArmed (time, isNoWaitArmed ());
   }
   
@@ -176,7 +176,7 @@ public class GATE<J extends SimJob, Q extends GATE> extends AbstractSimQueue<J, 
       for (final J job : jobsReleased)
         job.setQueue (null);
       for (final J job : jobsReleased)
-        fireDeparture (time, job);
+        fireDeparture (time, job, (Q) this);
       fireNewNoWaitArmed (time, isNoWaitArmed ());
     }
   }
@@ -218,9 +218,9 @@ public class GATE<J extends SimJob, Q extends GATE> extends AbstractSimQueue<J, 
    * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
     this.gateState = GateState.OPEN;
   }  
   
@@ -262,7 +262,7 @@ public class GATE<J extends SimJob, Q extends GATE> extends AbstractSimQueue<J, 
     }
     this.jobQueue.remove (job);
     job.setQueue (null);
-    fireDeparture (time, job);
+    fireDeparture (time, job, (Q) this);
     fireNewNoWaitArmed (time, isNoWaitArmed ());
   }
 

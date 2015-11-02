@@ -1,6 +1,5 @@
 package nl.jdj.jqueues.r4.serverless;
 
-import nl.jdj.jqueues.r4.AbstractSimQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -16,7 +15,8 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @see ZERO
  * 
  */
-public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J, Q>
+public class DELAY<J extends SimJob, Q extends DELAY>
+extends AbstractServerlessSimQueue<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,9 +133,9 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
    * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
   }  
   
   /** Adds the job to the tail of the {@link #jobQueue}.
@@ -168,7 +168,7 @@ public class DELAY<J extends SimJob, Q extends DELAY> extends AbstractSimQueue<J
     {
       this.jobQueue.remove (job);
       job.setQueue (null);
-      fireDeparture (time, job);
+      fireDeparture (time, job, (Q) this);
     }
   }
 

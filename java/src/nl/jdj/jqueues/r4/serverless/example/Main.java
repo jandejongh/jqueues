@@ -2,9 +2,9 @@ package nl.jdj.jqueues.r4.serverless.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.example.DefaultExampleSimJob;
 import nl.jdj.jqueues.r4.serverless.DELAY;
 import nl.jdj.jqueues.r4.serverless.DROP;
 import nl.jdj.jqueues.r4.serverless.GATE;
@@ -27,103 +27,6 @@ public final class Main
   {
   }
   
-  /** SimJob implementation used in the examples.
-   * 
-   * Each job has a public index 'n', set upon construction.
-   * The requested service time for the job equals its index.
-   * This is merely to create interesting examples.
-   * 
-   */
-  public static class TestJob extends AbstractSimJob
-  {
-    
-    private final boolean reported;
-    
-    public final int n;
-    
-    public TestJob (boolean reported, int n)
-    {
-      if (n <= 0)
-        throw new IllegalArgumentException ();
-      this.reported = reported;
-      this.n = n;
-    }
-
-    @Override
-    public double getServiceTime (SimQueue queue) throws IllegalArgumentException
-    {
-      if (queue == null && getQueue () == null)
-        return 0.0;
-      else
-        return (double) n;
-    }
-    
-    public final SimEventAction<SimJob> QUEUE_ARRIVE_ACTION = new SimEventAction<SimJob> ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestJob.this.reported)
-          System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " arrives.");      
-      }
-    };
-    
-    @Override
-    public SimEventAction<SimJob> getQueueArriveAction ()
-    {
-      return this.QUEUE_ARRIVE_ACTION;
-    }
-    
-    public final SimEventAction<SimJob> QUEUE_DEPART_ACTION = new SimEventAction<SimJob> ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestJob.this.reported)
-          System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " departs.");      
-      }
-    };
-    
-    @Override
-    public SimEventAction<SimJob> getQueueDropAction ()
-    {
-      return this.QUEUE_DROP_ACTION;
-    }
-    
-    public final SimEventAction<SimJob> QUEUE_DROP_ACTION = new SimEventAction<SimJob> ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestJob.this.reported)
-          System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " dropped!");      
-      }
-    };
-    
-    @Override
-    public SimEventAction<SimJob> getQueueDepartAction ()
-    {
-      return this.QUEUE_DEPART_ACTION;
-    }
-
-    public final SimEventAction<SimJob> QUEUE_START_ACTION = new SimEventAction<SimJob> ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestJob.this.reported)
-          System.out.println ("t = " + event.getTime () + ": Job " + TestJob.this.n + " starts.");      
-      }
-    };
-    
-    @Override
-    public SimEventAction<SimJob> getQueueStartAction ()
-    {
-      return this.QUEUE_START_ACTION;
-    }
-
-  }
-  
   /** Main method.
    * 
    * Creates a (reusable) event list, some queues and jobs and shows the main feature of the package.
@@ -142,9 +45,9 @@ public final class Main
   {
     System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues PACKAGE ===");
     System.out.println ("-> Creating jobs...");
-    final List<TestJob> jobList = new ArrayList<>  ();
+    final List<DefaultExampleSimJob> jobList = new ArrayList<>  ();
     for (int n = 1; n <= 10; n++)
-      jobList.add (new TestJob (true, n));
+      jobList.add (new DefaultExampleSimJob (true, n));
     System.out.println ("-> Creating event list...");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     System.out.println ("-> Creating SINK queue...");
