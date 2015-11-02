@@ -1,11 +1,11 @@
 package nl.jdj.jqueues.r4;
 
-import nl.jdj.jsimulation.r4.SimEventAction;
+import nl.jdj.jsimulation.r4.SimEventList;
 
 /** Convenience class with a basic (yet still abstract) implementation of {@link SimJob}.
  *
+ * <p>
  * This class maintains an internal reference to the {@link SimQueue} being visited.
- * All methods returning {@link SimEventAction}s return <code>null</code>.
  * The method {@link #getServiceTime} is kept abstract on purpose, as forgetting to override a default implementation is
  * considered too risky.
  * 
@@ -26,26 +26,18 @@ implements SimJob<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a new {@link SimJob} with given name.
+  /** Creates a new {@link SimJob} with given event list and name.
    * 
+   * @param eventList The event list to use, may be {@code null}.
    * @param name The name of the job, may be <code>null</code>.
    * 
+   * @see #getEventList
    * @see #setName
    * 
    */
-  public AbstractSimJob (final String name)
+  public AbstractSimJob (final SimEventList eventList, final String name)
   {
-    super (name);
-  }
-    
-  /** Creates a new {@link SimJob} with <code>null</code> (initial) name.
-   * 
-   * @see #setName
-   * 
-   */
-  public AbstractSimJob ()
-  {
-    this (null);
+    super (eventList, name);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,67 +78,6 @@ implements SimJob<J, Q>
   
   @Override
   public abstract double getServiceTime (Q queue) throws IllegalArgumentException;
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // QUEUE ACTIONS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns <code>null</code>.
-   * 
-   * @return <code>null</code>.
-   * 
-   */
-  @Override
-  public SimEventAction<J> getQueueArriveAction ()
-  {
-    return null;
-  }
-
-  /** Returns <code>null</code>.
-   * 
-   * @return <code>null</code>.
-   * 
-   */
-  @Override
-  public SimEventAction<J> getQueueStartAction ()
-  {
-    return null;
-  }
-
-  /** Returns <code>null</code>.
-   * 
-   * @return <code>null</code>.
-   * 
-   */
-  @Override
-  public SimEventAction<J> getQueueDropAction ()
-  {
-    return null;
-  }
-
-  /** Returns <code>null</code>.
-   * 
-   * @return <code>null</code>.
-   * 
-   */
-  @Override
-  public SimEventAction<J> getQueueRevokeAction ()
-  {
-    return null;
-  }
-
-  /** Returns <code>null</code>.
-   * 
-   * @return <code>null</code>.
-   * 
-   */
-  @Override
-  public SimEventAction<J> getQueueDepartAction ()
-  {
-    return null;
-  }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //

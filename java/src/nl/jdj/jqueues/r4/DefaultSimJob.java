@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r4;
 
 import java.util.HashMap;
 import java.util.Map;
+import nl.jdj.jsimulation.r4.SimEventList;
 
 /** A reasonable first-order implementation of {@link SimJob} with support for naming, per-queue requested service times
  *  and a default service time.
@@ -20,6 +21,12 @@ public class DefaultSimJob<J extends DefaultSimJob, Q extends SimQueue>
 extends AbstractSimJob<J, Q>
 implements SimJob<J, Q>
 {
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // REQUESTED SERVICE TIME
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** The mapping of {@link SimQueue}s visited onto requested service times.
    * 
@@ -73,27 +80,6 @@ implements SimJob<J, Q>
     this.fallbackRequestedServiceTime = fallbackRequestedServiceTime;
   }
   
-  /** Creates a new {@link DefaultSimJob}.
-   *
-   * <p>
-   * Note that an internal copy is made of the <code>requestedServiceTimeMap</code>.
-   * 
-   * @param name                    The name of the new job; may be <code>null</code>.
-   * @param requestedServiceTimeMap The requested service time for each key {@link SimQueue},
-   *                                a <code>null</code> key can be used for unlisted {@link SimQueue}s.
-   *                                If the map is <code>null</code> or no value could be found,
-   *                                {@link  #getFallbackRequestedServiceTime} is used for the requested service time.
-   * 
-   */
-  public DefaultSimJob (final String name, final Map<Q, Double> requestedServiceTimeMap)
-  {
-    super (name);
-    if (requestedServiceTimeMap != null)
-      this.requestedServiceTimeMap = new HashMap<> (requestedServiceTimeMap);
-    else
-      this.requestedServiceTimeMap = null;
-  }
-
   /** Returns the service-time for this job for a queue visit.
    * 
    * <p>
@@ -125,4 +111,51 @@ implements SimJob<J, Q>
       return this.fallbackRequestedServiceTime;
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTORS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Creates a new {@link DefaultSimJob}.
+   *
+   * <p>
+   * Note that an internal copy is made of the <code>requestedServiceTimeMap</code>.
+   * 
+   * @param eventList               The event list to use, may be {@code null}.
+   * @param name                    The name of the new job; may be <code>null</code>.
+   * @param requestedServiceTimeMap The requested service time for each key {@link SimQueue},
+   *                                a <code>null</code> key can be used for unlisted {@link SimQueue}s.
+   *                                If the map is <code>null</code> or no value could be found,
+   *                                {@link  #getFallbackRequestedServiceTime} is used for the requested service time.
+   * 
+   */
+  public DefaultSimJob (final SimEventList eventList, final String name, final Map<Q, Double> requestedServiceTimeMap)
+  {
+    super (eventList, name);
+    if (requestedServiceTimeMap != null)
+      this.requestedServiceTimeMap = new HashMap<> (requestedServiceTimeMap);
+    else
+      this.requestedServiceTimeMap = null;
+  }
+
+  /** Creates a new {@link DefaultSimJob} with fixed service time request at any {@link SimQueue}.
+   * 
+   * <p>
+   * Set the fallback requested service time, so actually,
+   * you can later change the requested service time through {@link #setFallbackRequestedServiceTime}.
+   * 
+   * @param eventList            The event list to use, may be {@code null}.
+   * @param name                 The name of the new job; may be <code>null</code>.
+   * @param requestedServiceTime The fixed requested service time of this job at any queue.
+   * 
+   * @throws IllegalArgumentException If the requested service time is (strictly) negative.
+   * 
+   */
+  public DefaultSimJob (final SimEventList eventList, final String name, final double requestedServiceTime)
+  {
+    this (eventList, name, null);
+    setFallbackRequestedServiceTime (requestedServiceTime);
+  }
+
 }
