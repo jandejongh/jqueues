@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r4;
 
 import java.util.Map;
+import nl.jdj.jsimulation.r4.SimEventList;
 
 /** A factory for {@link DefaultSimJob}s.
  *
@@ -17,13 +18,13 @@ implements SimJobFactory<DefaultSimJob, Q>
    * 
    * @return A new {@link DefaultSimJob} with given parameters.
    * 
-   * @see DefaultSimJob#DefaultSimJob(java.lang.String, java.util.Map)
+   * @see DefaultSimJob#DefaultSimJob
    * 
    */
   @Override
-  public DefaultSimJob newInstance (final String name, final Map<Q, Double> requestedServiceTimeMap)
+  public DefaultSimJob newInstance (final SimEventList eventList, final String name, final Map<Q, Double> requestedServiceTimeMap)
   {
-    return new DefaultSimJob (name, requestedServiceTimeMap);
+    return new DefaultSimJob (eventList, name, requestedServiceTimeMap);
   }
   
 }
