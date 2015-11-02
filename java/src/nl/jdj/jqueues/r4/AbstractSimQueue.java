@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r4;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -10,10 +11,6 @@ import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** A partial implementation of a {@link SimQueue}.
- * 
- * <p>All concrete subclasses of {@link AbstractSimQueue} take
- * the {@link SimEventList} used for event scheduling and processing as one of their arguments upon construction.
- * It is up to the caller to properly start processing the event list.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -42,6 +39,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   protected final List<J> jobQueue = new ArrayList<> ();
 
   @Override
+  public final Set<J> getJobs ()
+  {
+    return Collections.unmodifiableSet (new LinkedHashSet (this.jobQueue));
+  }
+
+  @Override
   public final int getNumberOfJobs ()
   {
     return this.jobQueue.size ();
@@ -54,6 +57,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    */
   protected final Set<J> jobsExecuting
     = new HashSet<> ();
+
+  @Override
+  public final Set<J> getJobsExecuting ()
+  {
+    return Collections.unmodifiableSet (new LinkedHashSet (this.jobsExecuting));
+  }
 
   @Override
   public final int getNumberOfJobsExecuting ()
@@ -127,17 +136,18 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // RESET
+  // RESET ENTITY
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
-  /** Resets the last update time to negative infinity, removes all jobs without notifications,
-   * and ends all vacations.
+  /** Invokes super method, resets the last update time to negative infinity, removes all jobs without notifications,
+   *  ends all vacations, and notifies listeners.
    * 
    */
   @Override
-  public void reset ()
+  public void resetEntitySubClass ()
   {
+    super.resetEntitySubClass ();
     final double oldTime = this.lastUpdateTime;
     this.lastUpdateTime = Double.NEGATIVE_INFINITY;
     for (SimJob j : this.jobQueue)
@@ -150,7 +160,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     getEventList ().remove (this.END_QUEUE_ACCESS_VACATION_EVENT);
     this.isQueueAccessVacation = false;
     this.serverAccessCredits = Integer.MAX_VALUE;
-    fireReset (oldTime);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -271,9 +280,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     if (this.jobQueue.contains (job) || this.jobsExecuting.contains (job))
       throw new RuntimeException ();
     update (time);
-    fireArrival (time, job);
+    fireArrival (time, job, (Q) this);
     if (this.isQueueAccessVacation)
-      fireDrop (time, job);
+      fireDrop (time, job, (Q) this);
     else
     {
       insertJobInQueueUponArrival (job, time);
@@ -282,7 +291,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
         if (this.jobsExecuting.contains (job))
           throw new IllegalStateException ();
         job.setQueue (null);  // Just in case it was erroneously set by our subclass...
-        fireDrop (time, job);
+        fireDrop (time, job, (Q) this);
       }
       else
       {
@@ -571,7 +580,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     if (this.jobQueue.contains (job) || this.jobsExecuting.contains (job))
       throw new IllegalStateException ();
     job.setQueue (null);
-    fireDrop (time, job);
+    fireDrop (time, job, (Q) this);
     rescheduleAfterDrop (job, time);
   }
 
@@ -648,8 +657,15 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     final double time,
     final boolean interruptService)
   {
-    if (job == null || job.getQueue () != this || ! this.jobQueue.contains (job))
+    if (job == null)
       throw new IllegalArgumentException ();
+    if (! this.jobQueue.contains (job))
+    {
+      if (job.getQueue () == this)
+        throw new IllegalStateException ();
+      else
+        return false;
+    }
     update (time);
     final boolean revoked = removeJobFromQueueUponRevokation (job, time, interruptService);
     if (! revoked)
@@ -657,7 +673,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     if (this.jobQueue.contains (job) || this.jobsExecuting.contains (job))
       throw new IllegalStateException ();    
     job.setQueue (null);
-    fireRevocation (time, job);
+    fireRevocation (time, job, (Q) this);
     rescheduleAfterRevokation (job, time);
     return true;
   }
@@ -1052,7 +1068,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       || this.jobsExecuting.contains (job))
       throw new IllegalStateException ();
     rescheduleAfterDeparture (job, time);    
-    fireDeparture (job, event);
+    fireDeparture (time, job, (Q) this);
   }
   
   /** Removes a job from the internal queues upon departure.

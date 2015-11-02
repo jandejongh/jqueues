@@ -1,13 +1,22 @@
 package nl.jdj.jqueues.r4;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import nl.jdj.jqueues.r4.composite.BlackSimQueueNetwork;
 import nl.jdj.jqueues.r4.nonpreemptive.AbstractNonPreemptiveSimQueue;
+import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r4.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r4.nonpreemptive.SJF;
+import nl.jdj.jqueues.r4.processorsharing.PS;
+import nl.jdj.jqueues.r4.serverless.AbstractServerlessSimQueue;
 import nl.jdj.jqueues.r4.serverless.SINK;
+import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventList;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventListListener;
-import nl.jdj.jsimulation.r4.SimEventListResetListener;
 
-/** A (generic) queueing system capable of serving jobs ({@link SimJob}s).
+/** A (generic) queueing system capable of hosting and optionally serving jobs ({@link SimJob}s).
  *
  * <p> A {@link SimQueue} is an abstraction of a <i>queueing system</i> from queueing theory.
  * Such a system has an input accepting <i>jobs</i> (in our case {@link SimJob}s), each of which resides for a certain
@@ -64,7 +73,8 @@ import nl.jdj.jsimulation.r4.SimEventListResetListener;
  * 
  * A queue may also choose to drop a job, whether in service or not.
  * Note the difference between a revocation (at the caller's discretion) and a drop (at the queue's discretion).
- * If a job is neither dropped nor revoked, receive sufficient service from the queue and depart from it (a departure).
+ * If a job is neither dropped nor revoked, and receives sufficient service from the queue,
+ * it will depart from it (a departure).
  *
  * <p>
  * Despite the large number of freedom degrees for {@link SimQueue}s, there is also a number of (obvious) restrictions
@@ -110,7 +120,7 @@ import nl.jdj.jsimulation.r4.SimEventListResetListener;
  * a particular queue.
  * 
  * <p>
- * From release 3 onwards, a {@link SimQueue} supports two types of <i>vacations</i>:
+ * A {@link SimQueue} supports two types of <i>vacations</i>:
  * <ul>
  * <li>During a <i>queue-access vacation</i>, access to the <i>SimQueue</i> is prohibited and
  *     all jobs are dropped immediately upon arrival,
@@ -129,50 +139,28 @@ import nl.jdj.jsimulation.r4.SimEventListResetListener;
  * </ul>
  * 
  * <p>
- * From release 5 onwards, each {@link SimQueue} maintains and reports changes to the state in which it <i>guarantees</i> that
+ * Each {@link SimQueue} maintains and reports changes to the state in which it <i>guarantees</i> that
  * the next arriving job will
  * <ul>
  * <li>start service immediately without waiting, or,
  * <li>departs immediately, without service and without waiting.
  * </ul>
+ * 
+ * <p>
  * If either condition is met, the queueing system is said to be in <i>noWaitArmed</i> state.
  * Note that this state setting ignores queue and server-access vacations.
  * 
  * <p>
- * A {@link SimQueue} respects the various per job actions to be performed by
- * the queue as specified by
- * <ul>
- * <li>{@link SimJob#getQueueArriveAction},
- * <li>{@link SimJob#getQueueStartAction},
- * <li>{@link SimJob#getQueueDropAction},
- * <li>{@link SimJob#getQueueRevokeAction}, and
- * <li>{@link SimJob#getQueueDepartAction}.
- * </ul>
- *
- * <p>
- * Except for arrival notifications, all {@link SimEventAction}s described above are called only <i>after</i> the
- * {@link SimQueue} has updated all relevant fields in the
- * {@link SimQueue} and {@link SimJob} objects,
- * i.e., <i>after</i> both objects truly reflect the new state of the queue
- * and the job, respectively.
- *
- * <p>
+ * A convenient queue-centric way to be notified of {@link SimQueue} events is by registering as a {@link SimQueueListener}
+ * or as a {@link SimEntityListener} through {@link #registerSimEntityListener}.
  * Arrival-related notifications are always issued immediately at the time a job arrives at a queue,
  * in other words, at a point where the queue does not even know yet about the existence of the job
  * (and vice versa, for that matter).
+ * All other notifications are issued at the point where the queue has reached a consistent state (e.g.,
+ * <i>after</i> a departure).
  * 
  * <p>
- * A convenient queue-centric way to be notified of {@link SimQueue} events is by registering as a {@link SimQueueListener} through
- * {@link #registerQueueListener}. The relevant methods of a {@link SimQueueListener} are invoked before the jobs-specific actions.
- * This order should not be relied upon though.
- * 
- * <p>
- * If the {@link SimQueueListener} is also a {@link SimQueueVacationListener},
- * the {@link SimQueue} will also notify the start and end of the various vacation types,
- * see {@link SimQueueVacationListener} for more details.
- * 
- * <p>
- * Unlike the notification mechanism for job specific actions, a {@link SimQueueListener} also get notifications
+ * A {@link SimQueueListener} also get notifications
  * right <i>before</i> a state change in the queue occurs, e.g., right before a job departure.
  * Such notifications are named <i>updates</i>, see {@link SimQueueListener#notifyUpdate}.
  * 
@@ -181,19 +169,21 @@ import nl.jdj.jsimulation.r4.SimEventListResetListener;
  * Also, be aware that there is no guarantee that a start-service
  * or a departure event is ever called for a {@link SimJob} at all.
  *
- * <p>Although not explicitly enforced by this interface, typical {@link SimQueue}s should probably rely
- * on an underlying {@link SimEventList} for scheduling events in time and invoking the actions.
- * Implementations should clearly state how the interaction with a {@link SimEventList} works, for instance, whether or not the
- * caller is responsible for starting the processing of the event list.
- * 
+ * <p>A {@link SimQueue}s relies
+ * on an underlying {@link SimEventList} for scheduling events ({@link SimEvent})
+ * in time and invoking the actions ({@link SimEventAction}).
+ * Implementations must also listen to the underlying event list for resets,
+ * see {@link SimEventListListener#notifyEventListReset}.
+ *
  * <p>
  * Basic implementations of the most important non-preemptive
  * queueing disciplines are provided in the {@link AbstractNonPreemptiveSimQueue} class
- * and its concrete implementations in the same package.
+ * and its concrete implementations in the same package like {@link FCFS}, {@link LCFS} and {@link SJF}.
+ * For the processor-sharing queue see {@link PS}, and for various server-less queues
+ * see {@link AbstractServerlessSimQueue} and descendants.
+ * For composite queues like Jackson networks and the like, see {@link BlackSimQueueNetwork}
+ * and its implementations.
  * 
- * <p>
- * Implementations must listen to the underlying event list for resets, see {@link SimEventListListener#notifyEventListReset}.
- *
  * <p>
  * Partial utility implementations of {@link SimQueue} are available in this package through 
  * {@link AbstractSimQueueBase} and its descendant {@link AbstractSimQueue}.
@@ -202,39 +192,16 @@ import nl.jdj.jsimulation.r4.SimEventListResetListener;
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
  * @see SimJob
+ * @see SimEntityListener
  * @see SimQueueListener
- * @see SimQueueVacationListener
+ * @see AbstractSimQueueBase
  * @see AbstractSimQueue
  * @see AbstractNonPreemptiveSimQueue
  *
  */
 public interface SimQueue<J extends SimJob, Q extends SimQueue>
-extends SimEntity<J, Q>, SimEventListResetListener
+extends SimEntity<J, Q>
 {
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // LISTENERS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Registers a listener to events related to this queue.
-   * 
-   * @param listener The listener; ignored if already registered or <code>null</code>.
-   * 
-   * @see #unregisterQueueListener
-   * 
-   */
-  public void registerQueueListener (SimQueueListener<J, Q> listener);
-  
-  /** Unregisters a listener to events related to this queue.
-   * 
-   * @param listener The listener; ignored if not registered or <code>null</code>.
-   * 
-   * @see #registerQueueListener
-   * 
-   */
-  public void unregisterQueueListener (SimQueueListener<J, Q> listener);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -246,7 +213,7 @@ extends SimEntity<J, Q>, SimEventListResetListener
    *
    * <p>
    * The new object has the same (concrete) type as the original, but starts without jobs and without external listeners.
-   * Its initial state must be as if {@link #reset} was invoked on the queue.
+   * Its initial state must be as if {@link #resetEntity} was invoked on the queue.
    * 
    * <p>
    * Note that the semantics of this method are much less strict than the <code>Object.clone ()</code> method.
@@ -266,20 +233,66 @@ extends SimEntity<J, Q>, SimEventListResetListener
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  /** Get the set of jobs currently residing at the queue, either waiting or executing.
+   *
+   * <p>
+   * Callers should not attempt to modify the set.
+   * Implementors are encouraged to return read-only views on the collection.
+   * 
+   * @return The set of jobs residing at the queue, non-{@code null}.
+   * 
+   * @see #getNumberOfJobs
+   * @see #getJobsWaiting
+   * @see #getJobsExecuting
+   * 
+   */
+  public Set<J> getJobs ();
+
   /** Gets the number of jobs currently residing at the queue, either waiting or executing.
    *
+   * <p>
+   * Typically, this method is more efficient than {@code getJobs ().size ()}.
+   * 
    * @return The number of jobs at the queue, zero or positive.
    * 
-   * @see #getNumberOfJobsExecuting
+   * @see #getJobs
    * @see #getNumberOfJobsWaiting
+   * @see #getNumberOfJobsExecuting
    * 
    */
   public int getNumberOfJobs ();
   
+  /** Get the set of jobs waiting (i.e., <i>not</i> executing).
+   *
+   * <p>
+   * Callers should not attempt to modify the set.
+   * Implementors are encouraged to return read-only views on the collection.
+   * 
+   * <p>
+   * The default implementation in this interface returns an unmodifiable set.
+   * 
+   * @return The set of jobs waiting at the queue, non-{@code null}.
+   * 
+   * @see #getNumberOfJobsWaiting
+   * @see #getJobs
+   * @see #getJobsExecuting
+   * 
+   */
+  public default Set<J> getJobsWaiting ()
+  {
+    final Set<J> set = new LinkedHashSet<> (getJobs ());
+    set.removeAll (getJobsExecuting ());
+    return Collections.unmodifiableSet (set);
+  }
+
   /** Gets the number of jobs waiting (i.e., <i>not</i> executing).
    * 
-   * @return The number of jobs waiting.
+   * <p>
+   * Typically, this method is more efficient than {@code getJobsWaiting ().size ()}.
    * 
+   * @return The number of jobs waiting at the queue.
+   * 
+   * @see #getJobsWaiting
    * @see #getNumberOfJobs
    * @see #getNumberOfJobsExecuting
    * 
@@ -289,10 +302,29 @@ extends SimEntity<J, Q>, SimEventListResetListener
     return getNumberOfJobs () - getNumberOfJobsExecuting ();
   }
 
+  /** Get the set of jobs currently being executed at the queue (i.e., not waiting).
+   *
+   * <p>
+   * Callers should not attempt to modify the set.
+   * Implementors are encouraged to return read-only views on the collection.
+   * 
+   * @return The set of jobs currently being executed at the queue (i.e., not waiting).
+   * 
+   * @see #getNumberOfJobsExecuting
+   * @see #getJobs
+   * @see #getJobsWaiting
+   * 
+   */
+  public Set<J> getJobsExecuting ();
+
   /** Gets the number of jobs currently being executed at the queue (i.e., not waiting).
    *
+   * <p>
+   * Typically, this method is more efficient than {@code getJobsExecuting ().size ()}.
+   * 
    * @return The number of jobs currently being executed at the queue (i.e., not waiting).
    * 
+   * @see #getJobsExecuting
    * @see #getNumberOfJobs
    * @see #getNumberOfJobsWaiting
    * 
@@ -337,14 +369,6 @@ extends SimEntity<J, Q>, SimEventListResetListener
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Puts the queue in the empty state, removes all jobs without notifications, and reset its internal time to "undetermined".
-   *
-   * This method is used in order to restart a simulation.
-   * By contract, a {@link SimQueue} must reset if its underlying {@link SimEventList} resets.
-   * 
-   */
-  public void reset ();
-  
   /** Arrival of a job at the queue.
    *
    * This methods should be called from the {@link SimEventList} as a result of scheduling the job arrival.
@@ -364,8 +388,11 @@ extends SimEntity<J, Q>, SimEventListResetListener
    */
   public void arrive (J job, double time);
 
-  /** Revocation of a job at a queue.
+  /** Revocation (attempt) of a job at a queue.
    *
+   * <p>
+   * If the job is not currently present at this {@link SimQueue}, {@code false} is returned.
+   * 
    * @param job  The job to be revoked from the queue.
    * @param time The time at which the request is issued
    *               (i.e., the current time).
@@ -374,7 +401,7 @@ extends SimEntity<J, Q>, SimEventListResetListener
    *                         If false, revocation will only succeed if the
    *                           job has not received any service yet.
    *
-   * @return True if revocation succeeded.
+   * @return True if revocation succeeded (returns {@code false} if the job is not present).
    *
    */
   public boolean revoke (J job, double time, boolean interruptService);
@@ -408,8 +435,8 @@ extends SimEntity<J, Q>, SimEventListResetListener
   
   /** Immediately stops a queue-access vacation.
    * 
-   * This method does nothing if the queue is not on queue-access vacation.
-   * and overrules all settings as to the (remaining) duration of the vacation.
+   * This method does nothing if the queue is not on queue-access vacation,
+   * and it overrules all settings as to the (remaining) duration of the vacation.
    * 
    * @see #startQueueAccessVacation()
    * @see #startQueueAccessVacation(double)

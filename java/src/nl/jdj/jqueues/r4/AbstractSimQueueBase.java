@@ -1,11 +1,6 @@
 package nl.jdj.jqueues.r4;
 
-import java.util.ArrayList;
-import java.util.List;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
-import nl.jdj.jsimulation.r4.SimEventListListener;
 
 /** A partial implementation of a {@link SimQueue}, taking care of listener and event-list management.
  * 
@@ -14,10 +9,9 @@ import nl.jdj.jsimulation.r4.SimEventListListener;
  * It is up to the caller to properly start processing the event list.
  * 
  * <p>
- * This class takes care of storing the (final) event list, doing all listener management,
- * and firing events upon request from concrete subclasses.
- * It also implements a rudimentary (and override-able) {@link SimEventListListener},
- * invoking {@link SimQueue#reset} when the event list resets.
+ * This class (helped by its ancestor {@link AbstractSimEntity}))
+ * takes care of storing the (final) event list, doing all listener management,
+ * and firing all generic {@link SimQueue}-related events upon request from concrete subclasses.
  * 
  * <p>
  * For a more complete (though still partial) implementation, see {@link AbstractSimQueue}.
@@ -30,32 +24,6 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
   extends AbstractSimEntity<J, Q>
   implements SimQueue<J, Q>
 {
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // eventList
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** The underlying event list for {@link SimQueue} operations
-   *  (to be supplied and fixed in the constructor).
-   *
-   * Non-<code>null</code>.
-   * 
-   */
-  private final SimEventList eventList;
-  
-  /** Returns the underlying event list for {@link SimQueue} operations.
-   * 
-   * The event list is fixed, non-<code>null</code> and supplied in the constructor.
-   * 
-   * @return The underlying event list, immutable and non-<code>null</code>.
-   * 
-   */
-  public final SimEventList getEventList ()
-  {
-    return this.eventList;
-  }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -72,10 +40,9 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    */
   protected AbstractSimQueueBase (final SimEventList eventList)
   {
+    super (eventList);
     if (eventList == null)
       throw new IllegalArgumentException ();
-    this.eventList = eventList;
-    this.eventList.addListener (this);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,89 +51,41 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** The {@link SimQueueListener}s (including {@link SimQueueVacationListener}s) of this queue.
+  /** A private instance of a {@link StdOutSimQueueListener}.
+   * 
+   * @see #registerStdOutSimQueueListener
+   * @see #unregisterStdOutSimQueueListener
    * 
    */
-  private final List<SimQueueListener<J, Q>> queueListeners = new ArrayList<> ();
-
-  @Override
-  public final void registerQueueListener (final SimQueueListener<J, Q> listener)
-  {
-    if (listener == null)
-      return;
-    if (! this.queueListeners.contains (listener))
-      this.queueListeners.add (listener);
-  }
-
-  @Override
-  public final void unregisterQueueListener (final SimQueueListener<J, Q> listener)
-  {
-    this.queueListeners.remove (listener);
-  }  
-
-  /** A private instance of a {@link StdOutSimQueueVacationListener}.
-   * 
-   * @see #registerStdOutSimQueueVacationListener
-   * @see #unregisterStdOutSimQueueVacationListener
-   * 
-   */
-  private final StdOutSimQueueVacationListener<J, Q> stdOutSimQueueVacationListener =
-    new StdOutSimQueueVacationListener<> ();
+  private final StdOutSimQueueListener<J, Q> stdOutSimQueueListener = new StdOutSimQueueListener<> ();
   
-  /** Registers a {@link StdOutSimQueueVacationListener} as listener (convenience method).
+  /** Registers the (private) {@link StdOutSimQueueListener} as listener (convenience method).
    * 
-   * <p>
-   * This method provides protection against multiple invocations, i.e.,
-   * at most one {@link StdOutSimQueueVacationListener} is registered through this method at all times.
-   * 
-   * @see #unregisterStdOutSimQueueVacationListener
-   * @see #registerQueueListener
+   * @see #unregisterStdOutSimQueueListener
+   * @see #registerSimEntityListener
    * 
    */
-  public final void registerStdOutSimQueueVacationListener ()
+  public final void registerStdOutSimQueueListener ()
   {
-    if (! this.queueListeners.contains (this.stdOutSimQueueVacationListener))
-      registerQueueListener (this.stdOutSimQueueVacationListener);
+    registerSimEntityListener (this.stdOutSimQueueListener);
   }
   
-  /** Unregisters the {@link StdOutSimQueueVacationListener} as listener, if registered (convenience method).
+  /** Unregisters the (private) {@link StdOutSimQueueListener} as listener, if registered (convenience method).
    * 
-   * @see #registerStdOutSimQueueVacationListener
-   * @see #unregisterQueueListener
+   * @see #registerStdOutSimQueueListener
+   * @see #unregisterSimEntityListener
    * 
    */
-  public final void unregisterStdOutSimQueueVacationListener ()
+  public final void unregisterStdOutSimQueueListener ()
   {
-    unregisterQueueListener (this.stdOutSimQueueVacationListener);
+    unregisterSimEntityListener (this.stdOutSimQueueListener);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // EVENT NOTIFICATIONS
-  //  - reset
-  //  - update
-  //  - arrival
-  //  - start
-  //  - drop
-  //  - revocation
-  //  - departure
-  //  - queue-access vacation
-  //  - server-access credits
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Notifies all listeners of a reset.
-   *
-   * @param oldTime The (old) time of the reset.
-   *
-   * @see SimQueueListener#notifyReset
-   * 
-   */
-  protected final void fireReset (final double oldTime)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.notifyReset (oldTime, (Q) this);
-  }
   
   /** Notifies all listeners upon an immediate upcoming update at this queue.
    *
@@ -177,145 +96,25 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    */
   protected final void fireUpdate (final double time)
   {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.notifyUpdate (time, (Q) this);
-  }
-  
-  /** Notifies all listeners and invokes job specific actions upon a job arrival at this queue.
-   *
-   * This method first informs the queue listeners and then invokes job-specific actions.
-   *
-   * @param time The current time.
-   * @param job The job.
-   * 
-   * @see SimQueue#arrive
-   * @see SimQueueListener#notifyArrival
-   * @see SimJob#getQueueArriveAction
-   *
-   */
-  protected final void fireArrival (final double time, final J job)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.notifyArrival (time, job, (Q) this);
-    final SimEventAction<J> aAction = job.getQueueArriveAction ();
-    if (aAction != null)
-      aAction.action (new SimEvent (time, job, aAction));
-  }
-  
-  /** Notifies all listeners and invokes job specific actions upon a job starting at this queue.
-   *
-   * This method first informs the queue listeners and then invokes job-specific actions.
-   *
-   * @param time The current time.
-   * @param job The job.
-   *
-   * @see SimQueueListener#notifyStart
-   * @see SimJob#getQueueStartAction
-   * 
-   */
-  protected final void fireStart (final double time, final J job)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.notifyStart (time, job, (Q) this);
-    final SimEventAction<J> sAction = job.getQueueStartAction ();
-    if (sAction != null)
-      sAction.action (new SimEvent (time, job, sAction));
-  }
-  
-  /** Notifies all listeners and invokes job specific actions upon a job drop at this queue.
-   *
-   * This method first informs the queue listeners and then invokes job-specific actions.
-   *
-   * @param time The current time.
-   * @param job The job.
-   *
-   * @see SimQueueListener#notifyDrop
-   * @see SimJob#getQueueDropAction
-   * 
-   */
-  protected final void fireDrop (final double time, final J job)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.notifyDrop (time, job, (Q) this);
-    final SimEventAction<J> sAction = job.getQueueDropAction ();
-    if (sAction != null)
-      sAction.action (new SimEvent (time, job, sAction));    
-  }
-  
-  /** Notifies all listeners and invokes job specific actions upon a successful job revocation at this queue.
-   *
-   * This method first informs the queue listeners and then invokes job-specific actions.
-   *
-   * @param time The current time.
-   * @param job The job.
-   *
-   * @see SimQueue#revoke
-   * @see SimQueueListener#notifyRevocation
-   * @see SimJob#getQueueRevokeAction
-   * 
-   */
-  protected final void fireRevocation (final double time, final J job)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.notifyRevocation (time, job, (Q) this);
-    final SimEventAction<J> rAction = job.getQueueRevokeAction ();
-    if (rAction != null)
-      rAction.action (new SimEvent<> (time, job, rAction));
-  }
-  
-  /** Notifies all listeners and invokes job specific actions of a job departure at this queue.
-   *
-   * This method first informs the queue listeners and then invokes job-specific actions.
-   *
-   * @param job The job.
-   * @param event The event causing the departure.
-   *
-   * @see SimQueueListener#notifyDeparture
-   * @see SimJob#getQueueDepartAction
-   * 
-   */
-  protected final void fireDeparture (final J job, final SimEvent event)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.notifyDeparture (event.getTime (), job, (Q) this);
-    final SimEventAction<J> dAction = job.getQueueDepartAction ();
-    if (dAction != null)
-      dAction.action (event);
-  }
-
-  /** Notifies all listeners and invokes job specific actions of a job departure at this queue.
-   *
-   * This method first informs the queue listeners and then invokes job-specific actions.
-   *
-   * @param time The current time.
-   * @param job The job.
-   *
-   * @see SimQueueListener#notifyDeparture
-   * @see SimJob#getQueueDepartAction
-   * 
-   */
-  protected final void fireDeparture (final double time, final J job)
-  {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.notifyDeparture (time, job, (Q) this);
-    final SimEventAction<J> dAction = job.getQueueDepartAction ();
-    if (dAction != null)
-      dAction.action (new SimEvent (time, job, dAction));
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueListener)
+        ((SimQueueListener) l).notifyUpdate (time, (Q) this);
   }
   
   /** Notifies all listeners of a change in the <code>noWaitArmed</code> property.
    * 
-   * @param t The current time.
+   * @param time        The current time.
    * @param noWaitArmed The new value of the <code>noWaitArmed</code> property.
    * 
    * @see SimQueue#isNoWaitArmed
    * @see SimQueueListener#notifyNewNoWaitArmed
    * 
    */
-  protected final void fireNewNoWaitArmed (final double t, final boolean noWaitArmed)
+  protected final void fireNewNoWaitArmed (final double time, final boolean noWaitArmed)
   {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      l.notifyNewNoWaitArmed (t, (Q) this, noWaitArmed);
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueListener)
+        ((SimQueueListener) l).notifyNewNoWaitArmed (time, (Q) this, noWaitArmed);
   }
 
   /** Notifies all vacation listeners of the start of a queue-access vacation.
@@ -323,14 +122,14 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * @param time The current time.
    * 
    * @see SimQueue#startQueueAccessVacation
-   * @see SimQueueVacationListener#notifyStartQueueAccessVacation
+   * @see SimQueueListener#notifyStartQueueAccessVacation
    * 
    */
   protected final void fireStartQueueAccessVacation (final double time)
   {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      if (l instanceof SimQueueVacationListener)
-        ((SimQueueVacationListener) l).notifyStartQueueAccessVacation (time, this);
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueListener)
+        ((SimQueueListener) l).notifyStartQueueAccessVacation (time, this);
   }
   
   /** Notifies all vacation listeners of the end of a queue-access vacation.
@@ -338,14 +137,14 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * @param time The current time.
    * 
    * @see SimQueue#stopQueueAccessVacation
-   * @see SimQueueVacationListener#notifyStopQueueAccessVacation
+   * @see SimQueueListener#notifyStopQueueAccessVacation
    * 
    */
   protected final void fireStopQueueAccessVacation (final double time)
   {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      if (l instanceof SimQueueVacationListener)
-        ((SimQueueVacationListener) l).notifyStopQueueAccessVacation (time, this);
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueListener)
+        ((SimQueueListener) l).notifyStopQueueAccessVacation (time, this);
   }
   
   /** Notifies all vacation listeners if this queue has run out of server-access credits.
@@ -356,15 +155,15 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * 
    * @see #getServerAccessCredits
    * @see SimQueue#setServerAccessCredits
-   * @see SimQueueVacationListener#notifyOutOfServerAccessCredits
+   * @see SimQueueListener#notifyOutOfServerAccessCredits
    * 
    */
   protected final void fireIfOutOfServerAccessCredits (final double time)
   {
     if (getServerAccessCredits () == 0)
-      for (SimQueueListener<J, Q> l : this.queueListeners)
-        if (l instanceof SimQueueVacationListener)
-          ((SimQueueVacationListener) l).notifyOutOfServerAccessCredits (time, this);    
+      for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+        if (l instanceof SimQueueListener)
+          ((SimQueueListener) l).notifyOutOfServerAccessCredits (time, this);    
   }
   
   /** Notifies all vacation listeners that this queue has regained server-access credits.
@@ -372,34 +171,14 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * @param time The current time.
    * 
    * @see SimQueue#setServerAccessCredits
-   * @see SimQueueVacationListener#notifyRegainedServerAccessCredits
+   * @see SimQueueListener#notifyRegainedServerAccessCredits
    * 
    */
   protected final void fireRegainedServerAccessCredits (final double time)
   {
-    for (SimQueueListener<J, Q> l : this.queueListeners)
-      if (l instanceof SimQueueVacationListener)
-        ((SimQueueVacationListener) l).notifyRegainedServerAccessCredits (time, this);    
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SimEventListResetListener
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls {@link #reset}.
-   * 
-   * {@inheritDoc}
-   *
-   * <p>
-   * This method is <code>final</code>; use {@link #reset} to override/augment behavior.
-   * 
-   */
-  @Override
-  public final void notifyEventListReset (final SimEventList eventList)
-  {
-    reset ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueListener)
+        ((SimQueueListener) l).notifyRegainedServerAccessCredits (time, this);    
   }
 
 }
