@@ -14,7 +14,7 @@ import java.util.TreeMap;
  * Note that <code>null</code> values are not allowed in this implementation.
  * 
  */
-public class HashMapWithPreImageAndOrderedValueSet<K, V>
+class HashMapWithPreImageAndOrderedValueSet<K, V>
 extends HashMap<K, V>
 {
 

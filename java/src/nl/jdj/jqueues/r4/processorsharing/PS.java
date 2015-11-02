@@ -163,9 +163,9 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
    * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
     this.virtualTime = 0;
     this.virtualDepartureTime.clear ();
   }
@@ -445,7 +445,7 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
     for (J j : startedJobs)
       // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
       if (this.jobsExecuting.contains (j))
-        fireStart (time, j);
+        fireStart (time, j, (Q) this);
     fireIfOutOfServerAccessCredits (time);
   }
   
