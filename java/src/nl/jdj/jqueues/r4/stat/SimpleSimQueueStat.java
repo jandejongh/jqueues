@@ -119,8 +119,6 @@ extends AbstractSimQueueStat<J, Q>
   
   /** Resets all the statistics.
    * 
-   * {@inheritDoc}
-   * 
    * <p>
    * This method must be overridden with a call to <code>super</code> if you want to add performance measures in a subclass.
    * Unfortunately, you must reset the statistics yourself upon construction, because this class avoids the trickery of
@@ -135,8 +133,6 @@ extends AbstractSimQueueStat<J, Q>
   
   /** Updates all the statistics from the state of the queue.
    * 
-   * {@inheritDoc}
-   * 
    * <p>
    * This method must be overridden with a call to <code>super</code> if you want to add performance measures in a subclass.
    * 
@@ -148,8 +144,6 @@ extends AbstractSimQueueStat<J, Q>
   }
   
   /** Calculates all the statistics from the accumulated updates.
-   * 
-   * {@inheritDoc}
    * 
    * <p>
    * This method must be overridden with a call to <code>super</code> if you want to add performance measures in a subclass.

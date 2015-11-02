@@ -1,5 +1,6 @@
 package nl.jdj.jqueues.r4.stat;
 
+import nl.jdj.jqueues.r4.SimEntity;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.SimQueueListener;
@@ -196,8 +197,8 @@ implements SimQueueListener<J, Q>
    * @param queue The new queue to monitor (may be <code>null</code>).
    * 
    * @see #getQueue
-   * @see SimQueue#registerQueueListener
-   * @see SimQueue#unregisterQueueListener
+   * @see SimQueue#registerSimEntityListener
+   * @see SimQueue#unregisterSimEntityListener
    * @see #reset
    * 
    */
@@ -221,12 +222,12 @@ implements SimQueueListener<J, Q>
     {
       if (this.queue != null)
       {
-        this.queue.unregisterQueueListener (this);
+        this.queue.unregisterSimEntityListener (this);
       }
       this.queue = queue;
       if (this.queue != null)
       {
-        this.queue.registerQueueListener (this);
+        this.queue.registerSimEntityListener (this);
       }
     }    
   }
@@ -310,89 +311,105 @@ implements SimQueueListener<J, Q>
   
   /** Invokes {@link #reset}.
    *
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public void notifyReset (double oldTime, Q queue)
+  public void notifyResetEntity (final SimEntity entity)
   {
     reset ();
   }
   
   /** Checks the queue argument and invokes {@link #update(double)}.
    * 
-   * {@inheritDoc}
-   *
    * @throws IllegalArgumentException If the queue is <code>null</code> or not the queue we monitor.
    * 
    * @see #getQueue
    * 
    */
   @Override
-  public void notifyUpdate (double t, Q queue)
+  public void notifyUpdate (final double time, final Q queue)
   {
     if (queue == null || queue != getQueue ())
       throw new IllegalArgumentException ();
-    update (t);
+    update (time);
   }
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public void notifyArrival (double t, J job, Q queue)
+  public void notifyArrival (final double time, final J job, final Q queue)
   {
   }
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public void notifyStart (double t, J job, Q queue)
+  public void notifyStart (final double time, final J job, final Q queue)
   {
   }
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public void notifyDrop (double t, J job, Q queue)
+  public void notifyDrop (final double time, final J job, final Q queue)
   {
   }
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public void notifyRevocation (double t, J job, Q queue)
+  public void notifyRevocation (final double time, final J job, final Q queue)
   {
   }
 
   /** Does nothing.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public void notifyDeparture (double t, J job, Q queue)
+  public void notifyDeparture (final double time, final J job, final Q queue)
   {
   }
   
   /** Does nothing.
    * 
-   * {@inheritDoc}
+   */
+  @Override
+  public void notifyNewNoWaitArmed (final double time, final Q queue, final boolean noWaitArmed)
+  {
+  }
+
+  /** Does nothing.
    * 
    */
   @Override
-  public void notifyNewNoWaitArmed (double t, Q queue, boolean noWaitArmed)
+  public void notifyStartQueueAccessVacation (final double time, final Q queue)
+  {
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public void notifyStopQueueAccessVacation (final double time, final Q queue)
+  {
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public void notifyOutOfServerAccessCredits (final double time, final Q queue)
+  {
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public void notifyRegainedServerAccessCredits (final double time, final Q queue)
   {
   }
 

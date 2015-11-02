@@ -2,13 +2,12 @@ package nl.jdj.jqueues.r4.stat.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r4.nonpreemptive.AbstractNonPreemptiveSingleServerSimQueue;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.example.DefaultExampleSimJob;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r4.nonpreemptive.IS;
 import nl.jdj.jqueues.r4.nonpreemptive.LCFS;
-import nl.jdj.jqueues.r4.nonpreemptive.example.Main.TestJob;
 import nl.jdj.jqueues.r4.stat.AutoSimQueueStat;
 import nl.jdj.jqueues.r4.stat.AutoSimQueueStatEntry;
 import nl.jdj.jqueues.r4.stat.SimQueueProbe;
@@ -17,7 +16,7 @@ import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-/** Example code for <code>nl.jdj.jqueues</code>.
+/** Example code for <code>nl.jdj.jqueues.stat</code>.
  * 
  */
 public final class Main
@@ -87,9 +86,9 @@ public final class Main
     System.out.println ("   Requesting service times 1, 2, 3, ...");
     System.out.println ("   Taking statistics over the busy period.");
     System.out.println ("-> FCFS...");
-    final List<TestJob> jobList = new ArrayList<>  ();
+    final List<DefaultExampleSimJob> jobList = new ArrayList<>  ();
     for (int n = 1; n <= N; n++)
-      jobList.add (new TestJob (false, n));
+      jobList.add (new DefaultExampleSimJob (false, n));
     final SimpleSimQueueStat fcfsStat = new SimpleSimQueueStat (FCFS_QUEUE, 1.0);
     final MyAutoSimQueueStat autoFcfsStat = new MyAutoSimQueueStat (FCFS_QUEUE, 1.0);
     for (int i = 0; i < jobList.size (); i++)

@@ -32,8 +32,6 @@ extends AbstractSimQueueStat<J, Q>
   
   /** Resets all the statistics.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void resetStatistics ()
@@ -46,8 +44,6 @@ extends AbstractSimQueueStat<J, Q>
   
   /** Updates all the statistics from the state of the queue.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void updateStatistics (double time, double dt)
@@ -59,8 +55,6 @@ extends AbstractSimQueueStat<J, Q>
   }
   
   /** Calculates all the statistics from the accumulated updates.
-   * 
-   * {@inheritDoc}
    * 
    * <p>
    * This method must be overridden with a call to <code>super</code> if you want to add performance measures in a subclass.
