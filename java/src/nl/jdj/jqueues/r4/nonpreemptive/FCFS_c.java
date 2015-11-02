@@ -53,8 +53,6 @@ public class FCFS_c<J extends SimJob, Q extends FCFS_c> extends AbstractNonPreem
   
   /** Inserts the job at the tail of the job queue.
    * 
-   * {@inheritDoc}
-   * 
    * @see #jobQueue
    * 
    */
@@ -66,8 +64,6 @@ public class FCFS_c<J extends SimJob, Q extends FCFS_c> extends AbstractNonPreem
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void update (final double time)
@@ -77,13 +73,11 @@ public class FCFS_c<J extends SimJob, Q extends FCFS_c> extends AbstractNonPreem
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
   }  
   
   /** Returns "FCFS_c".

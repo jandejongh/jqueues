@@ -16,8 +16,8 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * This class {@link AbstractNonPreemptiveMultipleServerSimQueue} implements most remaining abstract methods of
  * {@link AbstractNonPreemptiveSimQueue},
  * and takes care of maintenance of the internal data structures {@link AbstractSimQueue#jobQueue} and
- * {@link AbstractSimQueue#jobsExecuting}, by automatically taking into service the first job(s) in {@link AbstractSimQueue#jobQueue}
- * and serve them until completion repeatedly.
+ * {@link AbstractSimQueue#jobsExecuting}, by automatically taking into service the first job(s) in
+ * {@link AbstractSimQueue#jobQueue} and serve them until completion repeatedly.
  * Concrete implementations only have to insert an arriving job into {@link AbstractSimQueue#jobQueue} by
  * implementing {@link #insertJobInQueueUponArrival}.
  * Note that this restricts the use of this class to those non-preemptive multiple-server queueing disciplines
@@ -81,8 +81,6 @@ public abstract class AbstractNonPreemptiveMultipleServerSimQueue
 
   /** Returns true if there are strictly fewer jobs than servers present in the system.
    * 
-   * {@inheritDoc}
-   * 
    * @return True if there are strictly fewer jobs than servers present in the system.
    * 
    * @see #getNumberOfJobs
@@ -96,9 +94,6 @@ public abstract class AbstractNonPreemptiveMultipleServerSimQueue
   }
 
   /** Invokes {@link #rescheduleAfterDeparture} passing <code>null</code> as job argument.
-   * 
-   * <p>
-   * {@inheritDoc}
    * 
    * @see #rescheduleAfterDeparture
    * 
@@ -115,9 +110,6 @@ public abstract class AbstractNonPreemptiveMultipleServerSimQueue
     
   /** Invokes {@link #rescheduleAfterDeparture} passing <code>null</code> as job argument.
    * 
-   * <p>
-   * {@inheritDoc}
-   * 
    * @see #rescheduleAfterDeparture
    * 
    */
@@ -128,9 +120,6 @@ public abstract class AbstractNonPreemptiveMultipleServerSimQueue
   }
 
   /** Invokes {@link #rescheduleAfterDeparture} passing revoked job as argument.
-   * 
-   * <p>
-   * {@inheritDoc}
    * 
    * @see #rescheduleAfterDeparture
    * 
@@ -144,9 +133,6 @@ public abstract class AbstractNonPreemptiveMultipleServerSimQueue
   }
 
   /** Takes as many jobs into service as there are servers idle and server-access credits available.
-   * 
-   * <p>
-   * {@inheritDoc}
    * 
    * <p>
    * In the current implementation, this method serves as the central point for rescheduling,
@@ -211,7 +197,7 @@ public abstract class AbstractNonPreemptiveMultipleServerSimQueue
     for (J j : startedJobs)
       // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
       if (this.jobsExecuting.contains (j))
-        fireStart (time, j);
+        fireStart (time, j, (Q) this);
     fireIfOutOfServerAccessCredits (time);
     if (departedJob != null || ! startedJobs.isEmpty ())
       fireNewNoWaitArmed (time, isNoWaitArmed ());

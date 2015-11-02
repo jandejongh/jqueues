@@ -53,8 +53,6 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
   
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void update (final double time)
@@ -64,17 +62,14 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
   }  
   
-  /**
-   * {@inheritDoc}
+  /** Returns zero.
    * 
    * @return 0
    * 

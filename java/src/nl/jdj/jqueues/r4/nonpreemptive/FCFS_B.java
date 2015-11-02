@@ -57,9 +57,6 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
    * {@link #insertJobInQueueUponArrival} and {@link #rescheduleAfterArrival} there can be no event handling from the event list
    * or from notifications from elsewhere.
    * 
-   * <p>
-   * {@inheritDoc}
-   * 
    * @see #hasServerAcccessCredits
    * @see #isNoWaitArmed
    * @see #getNumberOfJobsWaiting
@@ -77,8 +74,6 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void update (final double time)
@@ -88,13 +83,11 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
   }  
   
   /** Returns "FCFS_B[buffer size]".

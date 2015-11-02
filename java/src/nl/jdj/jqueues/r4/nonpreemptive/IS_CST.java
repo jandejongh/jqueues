@@ -41,8 +41,6 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
   
   /** Returns the service time for all jobs.
    * 
-   * {@inheritDoc}
-   * 
    * @return The service time for all jobs as obtained through {@link #getServiceTime()}.
    * 
    */
@@ -84,8 +82,6 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
   
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void update (final double time)
@@ -95,13 +91,11 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
   }  
   
   /** Returns "IS_CST[service time]".

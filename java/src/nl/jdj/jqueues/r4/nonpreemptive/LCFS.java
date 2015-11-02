@@ -44,8 +44,6 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
   
   /** Inserts the job at the head of the job queue.
    * 
-   * {@inheritDoc}
-   * 
    * @see #jobQueue
    * 
    */
@@ -57,8 +55,6 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
   
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void update (final double time)
@@ -68,13 +64,11 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
   }  
   
   /** Returns "LCFS".

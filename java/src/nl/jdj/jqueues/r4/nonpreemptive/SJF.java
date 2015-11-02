@@ -42,8 +42,6 @@ public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveS
   
   /** Inserts the job in the job queue maintaining non-decreasing service-time ordering.
    * 
-   * {@inheritDoc}
-   * 
    * In case of ties, jobs are scheduled for service in order of arrival from the underlying event list.
    * 
    * @see #jobQueue
@@ -62,8 +60,6 @@ public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveS
   
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void update (final double time)
@@ -73,13 +69,11 @@ public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveS
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
   }  
   
   /** Returns "SJF".

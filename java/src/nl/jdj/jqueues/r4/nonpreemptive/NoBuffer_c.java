@@ -52,8 +52,6 @@ public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends Abstract
   
   /** Inserts the job at the tail of the job queue if a server is available and there are server-access credits.
    * 
-   * {@inheritDoc}
-   * 
    * @see #getNumberOfJobs
    * @see #getNumberOfServers
    * @see #hasServerAcccessCredits
@@ -69,8 +67,6 @@ public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends Abstract
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void update (final double time)
@@ -80,13 +76,11 @@ public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends Abstract
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
   }  
   
   /** Returns "NoBuffer_c".

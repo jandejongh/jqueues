@@ -70,8 +70,6 @@ public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreem
   
   /** Inserts the job at a random position the job queue.
    * 
-   * {@inheritDoc}
-   * 
    * @see #jobQueue
    * @see #getRNG
    * 
@@ -85,8 +83,6 @@ public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreem
   
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void update (final double time)
@@ -96,13 +92,11 @@ public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreem
 
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public final void reset ()
+  public final void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
   }  
   
   /** Returns "RANDOM".

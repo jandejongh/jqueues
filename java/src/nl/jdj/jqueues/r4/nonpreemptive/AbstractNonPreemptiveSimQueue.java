@@ -48,8 +48,6 @@ public abstract class AbstractNonPreemptiveSimQueue
 
   /** Invokes {@link #removeJobFromQueueUponRevokation}, requesting <code>interruptService</code>.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
@@ -59,8 +57,6 @@ public abstract class AbstractNonPreemptiveSimQueue
 
   /** Invokes {@link #rescheduleAfterRevokation}.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void rescheduleAfterDrop (final J job, final double time)
@@ -69,8 +65,6 @@ public abstract class AbstractNonPreemptiveSimQueue
   }
 
   /** If possible, removes the job from the internal data structures, and cancels a pending departure event.
-   * 
-   * {@inheritDoc}
    * 
    * If the job is already in service, and the <code>interruptService</code> argument is set to <code>false</code>,
    * this method returns <code>false</code>, by contract of {@link SimQueue}.
@@ -105,8 +99,6 @@ public abstract class AbstractNonPreemptiveSimQueue
 
   /** Checks the presence of the departing job in {@link #jobQueue} and {@link #jobsExecuting},
    * and removes the job from those lists.
-   * 
-   * {@inheritDoc}
    * 
    * @throws IllegalStateException If the <code>departingJob</code> is not in one of the lists.
    * 

@@ -54,8 +54,6 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
 
   /** Returns <code>true</code>.
    * 
-   * {@inheritDoc}
-   * 
    * @return True.
    * 
    */
@@ -67,8 +65,6 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
   
   /** Inserts the job at the tail of {@link #jobQueue}.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
@@ -77,8 +73,6 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
   }
 
   /** Takes the arrived job into service immediately, provided there are server-access credits.
-   * 
-   * {@inheritDoc}
    * 
    * <p>
    * If server-access credits are present, one credit is taken and the job's service time is requested through
@@ -110,13 +104,11 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
       if (jobServiceTime < 0)
         throw new RuntimeException ();
       scheduleDepartureEvent (time + jobServiceTime, job);
-      fireStart (time, job);
+      fireStart (time, job, (Q) this);
     }
   }
 
   /** Repeatedly starts jobs waiting as long as there are server-access credits.
-   * 
-   * {@inheritDoc}
    * 
    * <p>
    * As long as there are service-access credits,
@@ -148,8 +140,6 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
    * 
    * No rescheduling is required after a successful revocation.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final void rescheduleAfterRevokation (final J job, final double time)
@@ -160,8 +150,6 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
   /** Does nothing.
    * 
    * No rescheduling is required after a departure.
-   * 
-   * {@inheritDoc}
    * 
    */
   @Override
