@@ -8,26 +8,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
-    <div>A small package for simulation of queueing systems.
+    <div>A package for simulation of queueing systems.
       <p>
         A (far more) detailed description of this package is available in the javadoc of <code>SimQueue</code> in this package.
-        It uses two important concepts:
+        It uses three important concepts:
       <ul>
         <li>Jobs (<code>interface SimJob</code>): a job represents an amount of work to be carried out by one or more servers
         <li>Queues (<code>interface SimQueue</code>): a queue is an abstract waiting line holding jobs
-          to be served by one or more servers associated with the queue
+          to be served by one or more servers associated with the queue;
+        <li>Entities (<code>interface SimEntity</code>): the common part of jobs and queues.
       </ul>
       The so-called queue discipline determines in what order jobs are served by the server(s).
       <p>
-        An important class of queueing disciplines are the non-preemptive ones, in which jobs, once taken into service,
-        cannot be preempted (and, for instance, later resumed) in favor of another job.
-      <p>
-        A convenience class with an almost complete implementation of the <code>SimJob</code> interface is also
-        provided in <code>class AbstractSimJob</code>.
-      <p>
-        Example code is available in the <code>jqueues.example</code> package.
-      <p>
-        Note: this package depends on the <code>jsimulation</code> package.
+        Notes:
+      <ul>
+        <li>This package depends on the <code>jsimulation</code> package.
+        <li>This package focuses exclusively on modeling and simulation of the queueing systems themselves;
+            it currently does not feature adequate random-number and stochastic-process generation
+            and only basic statistics
+            (mostly because we believe there are extremely good Java libraries for that already).
+      </ul>
     </div>
   </body>
 </html>
