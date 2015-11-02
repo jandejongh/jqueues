@@ -142,7 +142,7 @@ implements SimJob<J, Q>
   /** Creates a new {@link DefaultSimJob} with fixed service time request at any {@link SimQueue}.
    * 
    * <p>
-   * Set the fallback requested service time, so actually,
+   * Sets the fallback requested service time, so actually,
    * you can later change the requested service time through {@link #setFallbackRequestedServiceTime}.
    * 
    * @param eventList            The event list to use, may be {@code null}.
