@@ -2,62 +2,55 @@ package nl.jdj.jqueues.r4;
 
 /** A {@link SimQueueListener} logging events on <code>System.out</code>.
  * 
- * @see StdOutSimQueueVacationListener
- *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
- * 
+ *
  */
 public class StdOutSimQueueListener<J extends SimJob, Q extends SimQueue>
+extends StdOutSimEntityListener<J, Q>
 implements SimQueueListener<J, Q>
 {
 
   @Override
-  public void notifyReset (double oldTime, Q queue)
+  public void notifyUpdate (final double time, final Q queue)
   {
-    System.out.println ("[StdOutSimQueueListener] t=" + oldTime + ", queue=" + queue + ": RESET.");
+    System.out.print (getHeaderString () + " ");
+    System.out.println ("t=" + time + ", queue=" + queue + ": UPDATE.");
   }
 
   @Override
-  public void notifyUpdate (double t, Q queue)
+  public void notifyNewNoWaitArmed (final double time, final Q queue, final boolean noWaitArmed)
   {
-    System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": UPDATE.");
+    System.out.print (getHeaderString () + " ");
+    System.out.println ("t=" + time + ", queue=" + queue + ": NO_WAIT_ARMED -> " + noWaitArmed + ".");
+  }
+  
+  @Override
+  public void notifyStartQueueAccessVacation (final double time, final Q queue)
+  {
+    System.out.print (getHeaderString () + " ");
+    System.out.println ("t=" + time + ", queue=" + queue + ": START OF QUEUE-ACCESS VACATION.");
   }
 
   @Override
-  public void notifyArrival (double t, J job, Q queue)
+  public void notifyStopQueueAccessVacation (final double time, final Q queue)
   {
-    System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": ARRIVAL of job " + job + ".");
+    System.out.print (getHeaderString () + " ");
+    System.out.println ("t=" + time + ", queue=" + queue + ": END OF QUEUE-ACCESS VACATION.");
   }
 
   @Override
-  public void notifyStart (double t, J job, Q queue)
+  public void notifyOutOfServerAccessCredits (final double time, final Q queue)
   {
-    System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": START of job " + job + ".");
+    System.out.print (getHeaderString () + " ");
+    System.out.println ("t=" + time + ", queue=" + queue + ": OUT OF SERVER-ACCESS CREDITS.");
   }
 
   @Override
-  public void notifyDrop (double t, J job, Q queue)
+  public void notifyRegainedServerAccessCredits (final double time, final Q queue)
   {
-    System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": DROP of job " + job + ".");
-  }
-
-  @Override
-  public void notifyRevocation (double t, J job, Q queue)
-  {
-    System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": REVOCATION of job " + job + ".");
-  }
-
-  @Override
-  public void notifyDeparture (double t, J job, Q queue)
-  {
-    System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": DEPARTURE of job " + job + ".");
-  }
-
-  @Override
-  public void notifyNewNoWaitArmed (double t, Q queue, boolean noWaitArmed)
-  {
-    System.out.println ("[StdOutSimQueueListener] t=" + t + ", queue=" + queue + ": NO_WAIT_ARMED -> " + noWaitArmed + ".");
+    System.out.print (getHeaderString () + " ");
+    System.out.println ("t=" + time + ", queue=" + queue + ": REGAINED SERVER-ACCESS CREDITS.");
   }
   
 }

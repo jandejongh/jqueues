@@ -9,94 +9,55 @@ package nl.jdj.jqueues.r4;
  * 
  */
 public class DefaultSimQueueListener<J extends SimJob, Q extends SimQueue>
+extends DefaultSimEntityListener<J, Q>
 implements SimQueueListener<J, Q>
 {
 
-  /**
-   * {@inheritDoc}
-   * 
-   * Does nothing.
+  /** Does nothing.
    * 
    */
   @Override
-  public void notifyReset (final double oldTime, final Q queue)
+  public void notifyUpdate (final double time, final Q queue)
   {
   }
 
-  /**
-   * {@inheritDoc}
-   * 
-   * Does nothing.
+  /** Does nothing.
    * 
    */
   @Override
-  public void notifyUpdate (double t, Q queue)
+  public void notifyNewNoWaitArmed (final double time, final Q queue, final boolean noWaitArmed)
+  {
+  }
+  
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public void notifyStartQueueAccessVacation (final double time, final Q queue)
   {
   }
 
-  /**
-   * {@inheritDoc}
-   * 
-   * Does nothing.
+  /** Does nothing.
    * 
    */
   @Override
-  public void notifyArrival (double t, J job, Q queue)
+  public void notifyStopQueueAccessVacation (final double time, final Q queue)
   {
   }
 
-  /**
-   * {@inheritDoc}
-   * 
-   * Does nothing.
+  /** Does nothing.
    * 
    */
   @Override
-  public void notifyStart (double t, J job, Q queue)
+  public void notifyOutOfServerAccessCredits (final double time, final Q queue)
   {
   }
 
-  /**
-   * {@inheritDoc}
-   * 
-   * Does nothing.
+  /** Does nothing.
    * 
    */
   @Override
-  public void notifyDrop (double t, J job, Q queue)
-  {
-  }
-
-  /**
-   * {@inheritDoc}
-   * 
-   * Does nothing.
-   * 
-   */
-  @Override
-  public void notifyRevocation (double t, J job, Q queue)
-  {
-  }
-
-  /**
-   * {@inheritDoc}
-   * 
-   * Does nothing.
-   * 
-   */
-  @Override
-  public void notifyDeparture (double t, J job, Q queue)
-  {
-  }
-
-  /**
-   * {@inheritDoc}
-   * 
-   * Does nothing.
-   * 
-   */
-  @Override
-  public void notifyNewNoWaitArmed (double t, Q queue, boolean noWaitArmed)
+  public void notifyRegainedServerAccessCredits (final double time, final Q queue)
   {
   }
   
