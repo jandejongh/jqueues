@@ -21,6 +21,12 @@ public class BlackDropCollectorSimQueue
   extends AbstractBlackSimQueueNetwork<DJ, DQ, J, Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Auxiliary method to create the required {@link Set} of {@link SimQueue}s in the constructor.
    * 
    * Note that the mainQueue and the dropQueue arguments may be equal!
@@ -41,29 +47,7 @@ public class BlackDropCollectorSimQueue
     return set;
   }
   
-  protected final DQ getMainQueue ()
-  {
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    return iterator.next ();
-  }
-  
-  protected final DQ getDropQueue ()
-  {
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    final DQ firstQueue = iterator.next ();
-    if (! iterator.hasNext ())
-      return firstQueue;
-    else
-      return iterator.next ();
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // CONSTRUCTOR(S)
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Creates a black drop-coolector queue given an event list, a main queue and a drop (collector) queue.
+  /** Creates a black drop-collector queue given an event list, a main queue and a drop (collector) queue.
    *
    * @param eventList The event list to use.
    * @param mainQueue  The wait queue.
@@ -108,6 +92,45 @@ public class BlackDropCollectorSimQueue
     return new BlackDropCollectorSimQueue<> (getEventList (), mainQueueCopy, dropQueueCopy, getDelegateSimJobFactory ());
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // MAIN AND DROP QUEUES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the main (first) queue.
+   * 
+   * @return The main (first) queue.
+   * 
+   */
+  protected final DQ getMainQueue ()
+  {
+    final Iterator<DQ> iterator = getQueues ().iterator ();
+    return iterator.next ();
+  }
+  
+  /** Returns the drop (second, last) queue.
+   * 
+   * @return The drop (second, last) queue.
+   * 
+   */
+  protected final DQ getDropQueue ()
+  {
+    final Iterator<DQ> iterator = getQueues ().iterator ();
+    final DQ firstQueue = iterator.next ();
+    if (! iterator.hasNext ())
+      return firstQueue;
+    else
+      return iterator.next ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // AbstractBlackSimQueueNetwork
+  // ABSTRACT METHODS FOR (SUB-)QUEUE SELECTION IN SUBCLASSES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   @Override
   protected final SimQueue<DJ, DQ> getFirstQueue (final double time, final J job)
   {
@@ -115,13 +138,83 @@ public class BlackDropCollectorSimQueue
   }
 
   @Override
-  protected SimQueue<DJ, DQ> getNextQueue (final double time, final J job, final DQ previousQueue)
+  protected final SimQueue<DJ, DQ> getNextQueue (final double time, final J job, final DQ previousQueue)
   {
     if (previousQueue == null || ! getQueues ().contains (previousQueue))
       throw new IllegalStateException ();
     return null;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns "DropCol[mainQueue,dropQueue]".
+   * 
+   * @return "DropCol[mainQueue,dropQueue]".
+   * 
+   */
+  @Override
+  public final String toStringDefault ()
+  {
+    return "DropCol[" + getMainQueue () + "," + getDropQueue () + "]";
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // allowDelegateJobRevocations
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns {@code false}.
+   * 
+   * @return {@code false}.
+   * 
+   */
+  @Override
+  protected final boolean getAllowDelegateJobRevocations ()
+  {
+    return false;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // UPDATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void resetEntitySubClass ()
+  {
+    super.resetEntitySubClass ();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DROP DESTINATION QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Returns the drop queue if the jobs was dropped from the main queue, <code>null</code> if dropped from the drop queue,
    * and throws an {@link IllegalArgumentException} otherwise.
    * 
@@ -146,45 +239,68 @@ public class BlackDropCollectorSimQueue
     throw new IllegalArgumentException ();
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // allowSubQueueAccessVacationChanges
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns {@code false}.
+   * 
+   * @return {@code false}.
+   * 
+   */
   @Override
-  public final void reset ()
+  protected final boolean getAllowSubQueueAccessVacationChanges ()
   {
-    super.reset ();
+    return false;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // noWaitArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the {@code noWaitArmed} state of the main queue.
+   * 
+   * @return The {@code noWaitArmed} state of the main queue.
+   * 
+   */
   @Override
   public final boolean isNoWaitArmed ()
   {
     return getMainQueue ().isNoWaitArmed ();
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // startForSubClass
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  @Override
-  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
-  {
-    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
-  }
-
-  @Override
-  public final void update (double time)
-  {
-    super.update (time);
-  }
-
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
   @Override
   protected final void startForSubClass (final double time, final DJ job, final DQ queue)
   {
     super.startForSubClass (time, job, queue);
   }
 
-  /** Returns "DropCol[mainQueue,dropQueue]".
-   * 
-   * @return "DropCol[mainQueue,dropQueue]".
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // notifyNewNoWaitArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
   {
-    return "DropCol[" + getMainQueue () + "," + getDropQueue () + "]";
+    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
   }
 
 }
