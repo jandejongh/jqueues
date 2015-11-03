@@ -18,7 +18,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * 
  * <p>
  * After the delegate job departs the embedded queue and is not fed back, the "real" job departs
- * from the {@link AbstractBlackGeneralFeedbackSimQueue}.
+ * from the {@link AbstractBlackFeedbackSimQueue}.
  *
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.

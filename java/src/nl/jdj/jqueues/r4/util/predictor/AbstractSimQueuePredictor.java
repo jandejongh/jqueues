@@ -38,10 +38,10 @@ implements SimQueuePredictor<J, Q>
    * Copies the map and the sets, not the objects.
    * The method allows {@code null} values for the sets as well as in the sets.
    * 
-   * @param map The original, if {@link null}, {@link null} is returned.
+   * @param map The original, if {@code null}, {@code null} is returned.
    * @return    A copy.
    * 
-   * @param <C>The object type in the sets.
+   * @param <C> The object type in the sets.
    * 
    */
   protected static <C> TreeMap<Double, LinkedHashSet<C>> copy (final Map<Double, ? extends Set<C>> map)
@@ -57,7 +57,7 @@ implements SimQueuePredictor<J, Q>
     return copyMap;
   }
   
-  /** Adds an entry to a {@link TreeMap<Double, LinkedHashSet<C>>} mapping from time to ordered objects.
+  /** Adds an entry to a {@code TreeMap<Double, LinkedHashSet<C>>} mapping from time to ordered objects.
    * 
    * <p>
    * The entry must not be present already!
@@ -66,9 +66,9 @@ implements SimQueuePredictor<J, Q>
    * @param time  The time (key) at which to insert the object.
    * @param entry The object.
    * 
-   * @param <C>The object type in the sets.
+   * @param <C> The object type in the sets.
    * 
-   * @throws IllegalArgumentException If the map or entry is {@code null}, or if it contains {@link null} values,
+   * @throws IllegalArgumentException If the map or entry is {@code null}, or if it contains {@code null} values,
    *                                  or if the entry is already preset (at any time!).
    * 
    */
@@ -84,14 +84,14 @@ implements SimQueuePredictor<J, Q>
     map.get (time).add (entry);
   }
   
-  /** Replaces an object in a {@link TreeMap<Double, LinkedHashSet<C>>} mapping from time to ordered objects.
+  /** Replaces an object in a {@code TreeMap<Double, LinkedHashSet<C>>} mapping from time to ordered objects.
    * 
    * @param map      The map.
    * @param time     The time (key) at which to replace the object.
    * @param oldEntry The old object.
    * @param newEntry The new object.
    * 
-   * @param <C>The object type in the sets.
+   * @param <C> The object type in the sets.
    * 
    * @throws IllegalArgumentException If the map or one of the entries is {@code null},
    *                                  or if the old entry is not present,
@@ -522,7 +522,7 @@ implements SimQueuePredictor<J, Q>
    * 
    * @return The sets of jobs running, indexed by time (of change); the jobs in the returned set are ordered by start time.
    * 
-   * @throws IllegalArgumentException If the argument is {@code null}, or if it contains {@link null} keys or values.
+   * @throws IllegalArgumentException If the argument is {@code null}, or if it contains {@code null} keys or values.
    * 
    */
   protected TreeMap<Double, LinkedHashSet<J>> predictRunningJobs (final Map<J, Double> startTimes)
