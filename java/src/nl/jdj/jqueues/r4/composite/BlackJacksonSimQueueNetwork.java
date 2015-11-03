@@ -27,40 +27,11 @@ public class BlackJacksonSimQueueNetwork
   implements BlackSimQueueNetwork<DJ, DQ, J, Q>
 {
   
-  /** The arrival probabilities (as probability distribution function).
-   * 
-   */
-  private final double[] pdfArrival;
-  
-  /** The arrival probabilities (as cumulative distribution function).
-   * 
-   */
-  private final double[] cdfArrival;
-  
-  /** The transition probabilities for each (source) queue in turn (as probability distribution function).
-   * 
-   */
-  private final double[][] pdfTransition;
-  
-  /** The transition probabilities for each (source) queue in turn (as cumulative distribution function).
-   * 
-   */
-  private final double[][] cdfTransition;
-  
-  /** The Random Number Generator used for arrivals and transitions.
-   * 
-   */
-  private final Random rng;
-  
-  /** Returns the Random Number Generator used for arrivals and transitions.
-   * 
-   * @return The Random Number Generator used for arrivals and transitions (non-<code>null</code>).
-   * 
-   */
-  public final Random getRNG ()
-  {
-    return this.rng;
-  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Checks a probability-distribution array for dimension and values.
    * 
@@ -102,29 +73,6 @@ public class BlackJacksonSimQueueNetwork
       throw new IllegalArgumentException ();
     for (final double[] p_row : pdfMatrix)
       checkPdfArray (p_row, requiredSize);    
-  }
-  
-  /** Selects a (sub-)queue by drawing from {@link #getRNG} and respecting the given cumulative distribution function,
-   * with an entry for each (sub-)queue.
-   * 
-   * @param cdfArray The cumulative distribution function for queue selection, with an entry for each (sub-)queue.
-   * 
-   * @return The selected queue, may be <code>null</code>.
-   * 
-   * @see #getRNG
-   * 
-   */
-  private DQ draw (final double[] cdfArray)
-  {
-    if (cdfArray == null || cdfArray.length != getQueues ().size ())
-      throw new IllegalArgumentException ();
-    final double sample = this.rng.nextDouble ();
-    if (sample < 0 || sample >= 1)
-      throw new RuntimeException ();
-    for (int q = 0; q < getQueues ().size (); q++)
-      if (sample < cdfArray[q])
-        return getQueue (q);
-    return null;
   }
   
   /** Creates a black Jackson queueing network.
@@ -206,12 +154,39 @@ public class BlackJacksonSimQueueNetwork
       (getEventList (), queuesCopy, this.pdfArrival, this.pdfTransition, null, getDelegateSimJobFactory ());
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // AbstractBlackSimQueueNetwork
+  // ABSTRACT METHODS FOR (SUB-)QUEUE SELECTION IN SUBCLASSES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Selects a (sub-)queue by drawing from {@link #getRNG} and respecting the given cumulative distribution function,
+   * with an entry for each (sub-)queue.
+   * 
+   * @param cdfArray The cumulative distribution function for queue selection, with an entry for each (sub-)queue.
+   * 
+   * @return The selected queue, may be <code>null</code>.
+   * 
+   * @see #getRNG
+   * 
+   */
+  private DQ draw (final double[] cdfArray)
+  {
+    if (cdfArray == null || cdfArray.length != getQueues ().size ())
+      throw new IllegalArgumentException ();
+    final double sample = this.rng.nextDouble ();
+    if (sample < 0 || sample >= 1)
+      throw new RuntimeException ();
+    for (int q = 0; q < getQueues ().size (); q++)
+      if (sample < cdfArray[q])
+        return getQueue (q);
+    return null;
+  }
+  
   /** Returns the queue selected (or <code>null</code> implying an immediate departure)
    * from a probabilistic experiment governed by the <code>pdfArrival</code>
    * array passed in the constructor.
-   * 
-   * <p>
-   * {@inheritDoc}
    * 
    * @see #draw
    * 
@@ -226,9 +201,6 @@ public class BlackJacksonSimQueueNetwork
    * from a probabilistic experiment governed by the <code>pdfTransition</code>
    * matrix passed in the constructor.
    * 
-   * <p>
-   * {@inheritDoc}
-   * 
    * @throws IllegalStateException If the previous queue argument is <code>null</code> or not a member of {@link #getQueues}.
    * 
    * @see #draw
@@ -240,77 +212,12 @@ public class BlackJacksonSimQueueNetwork
     return draw (this.cdfTransition[getIndex (previousQueue)]);
   }
   
-  /** Calls super method (in order to make implementation final).
-   * 
-   * <p>
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
-  {
-    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
-  {
-    return super.getDropDestinationQueue (t, job, queue);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * <p>
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public final boolean isNoWaitArmed ()
-  {
-    return super.isNoWaitArmed ();
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * <p>
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  protected final void startForSubClass (final double t, final DJ job, final DQ queue)
-  {
-    super.startForSubClass (t, job, queue);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * <p>
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public final void reset ()
-  {
-    super.reset ();
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * <p>
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Returns "Jackson[queue list]".
    * 
    * @return "Jackson[queue list]".
@@ -331,6 +238,177 @@ public class BlackJacksonSimQueueNetwork
     }
     string += "]";
     return string;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ARRIVAL AND TRANSITION PROBABILITIES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The arrival probabilities (as probability distribution function).
+   * 
+   */
+  private final double[] pdfArrival;
+  
+  /** The arrival probabilities (as cumulative distribution function).
+   * 
+   */
+  private final double[] cdfArrival;
+  
+  /** The transition probabilities for each (source) queue in turn (as probability distribution function).
+   * 
+   */
+  private final double[][] pdfTransition;
+  
+  /** The transition probabilities for each (source) queue in turn (as cumulative distribution function).
+   * 
+   */
+  private final double[][] cdfTransition;
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RANDOM NUMBER GENERATOR
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The Random Number Generator used for arrivals and transitions.
+   * 
+   */
+  private final Random rng;
+  
+  /** Returns the Random Number Generator used for arrivals and transitions.
+   * 
+   * @return The Random Number Generator used for arrivals and transitions (non-<code>null</code>).
+   * 
+   */
+  public final Random getRNG ()
+  {
+    return this.rng;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DROP DESTINATION QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
+  {
+    return super.getDropDestinationQueue (t, job, queue);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // allowDelegateJobRevocations
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns {@code false}.
+   * 
+   * @return {@code false}.
+   * 
+   */
+  @Override
+  protected final boolean getAllowDelegateJobRevocations ()
+  {
+    return false;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // allowSubQueueAccessVacationChanges
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns {@code false}.
+   * 
+   * @return {@code false}.
+   * 
+   */
+  @Override
+  protected final boolean getAllowSubQueueAccessVacationChanges ()
+  {
+    return false;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method and clear the administration of visits.
+   * 
+   */
+  @Override
+  public final void resetEntitySubClass ()
+  {
+    super.resetEntitySubClass ();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // UPDATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void update (final double time)
+  {
+    super.update (time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // noWaitArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final boolean isNoWaitArmed ()
+  {
+    return super.isNoWaitArmed ();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // startForSubClass
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void startForSubClass (final double time, final DJ job, final DQ queue)
+  {
+    super.startForSubClass (time, job, queue);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // notifyNewNoWaitArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  {
+    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
   }
 
 }
