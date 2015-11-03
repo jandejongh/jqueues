@@ -33,7 +33,9 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
    * 
    * @throws SimQueuePredictionException           If a prediction is (e.g.) too complex to generate
    *                                               ({@link SimQueuePredictionComplexityException},
-   *                                               or if it is not unique
+   *                                               if invalid input has been supplied to the predictor
+   *                                               ({@link SimQueuePredictionInvalidInputException}),
+   *                                               or if a <i>unique</i> prediction cannot be generated
    *                                               ({@link SimQueuePredictionAmbiguityException}).
    * 
    */
