@@ -184,8 +184,6 @@ public abstract class AbstractBlackParallelSimQueues
   
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   public final void resetEntitySubClass ()
