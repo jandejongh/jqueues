@@ -558,7 +558,7 @@ public class CompositeTest
 //    System.out.println ("======================");
 //    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
 //    final FCFS queue = new FCFS (el);
-//    queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
+//    queue.registerSimEntityListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
 //    {
 //
 //      @Override
@@ -646,7 +646,7 @@ public class CompositeTest
 //    System.out.println ("======================");
 //    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
 //    final FCFS queue = new FCFS (el);
-//    queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
+//    queue.registerSimEntityListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
 //    {
 //
 //      @Override

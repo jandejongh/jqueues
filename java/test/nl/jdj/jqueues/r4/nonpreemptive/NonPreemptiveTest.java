@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r4.nonpreemptive;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
+import nl.jdj.jqueues.r4.DefaultSimQueueListener;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.TestJob1;
@@ -775,7 +775,7 @@ public class NonPreemptiveTest
     System.out.println ("======================");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final FCFS queue = new FCFS (el);
-    queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
+    queue.registerSimEntityListener (new DefaultSimQueueListener<SimJob, SimQueue> ()
     {
 
       @Override
@@ -863,7 +863,7 @@ public class NonPreemptiveTest
     System.out.println ("======================");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final FCFS queue = new FCFS (el);
-    queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
+    queue.registerSimEntityListener (new DefaultSimQueueListener<SimJob, SimQueue> ()
     {
 
       @Override

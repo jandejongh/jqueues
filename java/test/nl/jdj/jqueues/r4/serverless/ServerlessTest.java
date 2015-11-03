@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r4.serverless;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r4.DefaultSimQueueVacationListener;
+import nl.jdj.jqueues.r4.DefaultSimQueueListener;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.TestJob1;
@@ -282,7 +282,7 @@ public class ServerlessTest
     System.out.println ("======================");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     final SINK queue = new SINK (el);
-    queue.registerQueueListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
+    queue.registerSimEntityListener (new DefaultSimQueueListener<SimJob, SimQueue> ()
     {
 
       @Override

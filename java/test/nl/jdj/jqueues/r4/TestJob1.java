@@ -1,28 +1,22 @@
 package nl.jdj.jqueues.r4;
 
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
+import nl.jdj.jqueues.r4.example.DefaultExampleSimJob;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
  *
  */
-public class TestJob1 extends AbstractSimJob
+public class TestJob1<J extends TestJob1, Q extends SimQueue>
+extends DefaultExampleSimJob<J, Q>
+implements SimJobListener<J, Q>
 {
-
-  private final boolean reported;
-
-  public final int n;
 
   public TestJob1 (boolean reported, int n)
   {
-    if (n <= 0)
-      throw new IllegalArgumentException ();
-    this.reported = reported;
-    this.n = n;
+    super (reported, n);
     this.scheduledArrivalTime = this.n;
-    setName ("TestJob[" + this.n + "]");
+    registerSimEntityListener (this);
   }
 
   public final double scheduledArrivalTime;
@@ -98,96 +92,113 @@ public class TestJob1 extends AbstractSimJob
       return (double) n;
   }
 
-  public final SimEventAction<SimJob> QUEUE_ARRIVE_ACTION = new SimEventAction<SimJob> ()
-  {
-    @Override
-    public void action (final SimEvent event)
-    {
-      if (TestJob1.this.reported)
-        System.out.println ("t = " + event.getTime () + ": Job " + TestJob1.this.n + " arrives.");
-      if (TestJob1.this.arrived)
-        fail ("Already arrived!");
-      TestJob1.this.arrived = true;
-      TestJob1.this.arrivalTime = event.getTime ();
-    }
-  };
-
   @Override
-  public SimEventAction<SimJob> getQueueArriveAction ()
+  public void notifyResetEntity (final SimEntity entity)
   {
-    return this.QUEUE_ARRIVE_ACTION;
   }
 
-  public final SimEventAction<SimJob> QUEUE_START_ACTION = new SimEventAction<SimJob> ()
+  @Override
+  public void notifyArrival (final double time, final J job, final Q queue)
   {
-    @Override
-    public void action (final SimEvent event)
+    if (job == null || queue == null)
+      throw new IllegalArgumentException ();
+    if (job == this)
     {
-      if (TestJob1.this.reported)
-        System.out.println ("t = " + event.getTime () + ": Job " + TestJob1.this.n + " starts.");
-      if (TestJob1.this.started)
-        fail ("Already started!");
-      if (! TestJob1.this.arrived)
+      if (this.arrived)
+        fail ("Already arrived!");
+      if (this.started)
+        fail ("Arriving after start!");
+      if (this.dropped)
+        fail ("Arriving after drop!");
+      if (this.revoked)
+        fail ("Arriving after revocation!");
+      if (this.departed)
+        fail ("Arriving after departure!");
+      this.arrived = true;
+      this.arrivalTime = time;
+    }
+  }
+
+  @Override
+  public void notifyStart (final double time, final J job, final Q queue)
+  {
+    if (job == null || queue == null)
+      throw new IllegalArgumentException ();
+    if (job == this)
+    {
+      if (! this.arrived)
         fail ("Starting before arrival!");
-      if (TestJob1.this.dropped)
+      if (this.started)
+        fail ("Already started!");
+      if (this.dropped)
         fail ("Starting after drop!");
-      if (TestJob1.this.revoked)
+      if (this.revoked)
         fail ("Starting after revocation!");
-      if (TestJob1.this.departed)
+      if (this.departed)
         fail ("Starting after departure!");
       TestJob1.this.started = true;
-      TestJob1.this.startTime = event.getTime ();
+      TestJob1.this.startTime = time;
     }
-  };
-
-  @Override
-  public SimEventAction<SimJob> getQueueStartAction ()
-  {
-    return this.QUEUE_START_ACTION;
   }
 
-  public final SimEventAction<SimJob> QUEUE_DROP_ACTION = new SimEventAction<SimJob> ()
+  @Override
+  public void notifyDrop (final double time, final J job, final Q queue)
   {
-    @Override
-    public void action (final SimEvent event)
+    if (job == null || queue == null)
+      throw new IllegalArgumentException ();
+    if (job == this)
     {
-      if (TestJob1.this.reported)
-        System.out.println ("t = " + event.getTime () + ": Job " + TestJob1.this.n + " dropped.");
-      if (! TestJob1.this.arrived)
+      if (! this.arrived)
         fail ("Dropped before arrival!");
-      if (TestJob1.this.departed)
+      if (this.dropped)
+        fail ("Already dropped!");
+      if (this.revoked)
+        fail ("Dropped after revocation!");
+      if (this.departed)
         fail ("Dropped after departure!");
       TestJob1.this.dropped = true;
-      TestJob1.this.dropTime = event.getTime ();
+      TestJob1.this.dropTime = time;
     }
-  };
-
-  @Override
-  public SimEventAction<SimJob> getQueueDropAction ()
-  {
-    return this.QUEUE_DROP_ACTION;
   }
 
-  public final SimEventAction<SimJob> QUEUE_DEPART_ACTION = new SimEventAction<SimJob> ()
+  @Override
+  public void notifyRevocation (final double time, final J job, final Q queue)
   {
-    @Override
-    public void action (final SimEvent event)
+    if (job == null || queue == null)
+      throw new IllegalArgumentException ();
+    if (job == this)
     {
-      if (TestJob1.this.reported)
-        System.out.println ("t = " + event.getTime () + ": Job " + TestJob1.this.n + " departs.");
-      if (TestJob1.this.departed)
-        fail ("Already departed!");
-      if (! TestJob1.this.arrived)
-        fail ("Departure before arrival!");
-      TestJob1.this.departed = true;
-      TestJob1.this.departureTime = event.getTime ();
+      if (! this.arrived)
+        fail ("Revocation before arrival!");
+      if (this.dropped)
+        fail ("Revocation after drop!");
+      if (this.revoked)
+        fail ("Already revoked!");
+      if (this.departed)
+        fail ("Revocation after departure!");
+      TestJob1.this.revoked= true;
+      TestJob1.this.revocationTime = time;
     }
-  };
+  }
 
   @Override
-  public SimEventAction<SimJob> getQueueDepartAction ()
+  public void notifyDeparture (final double time, final J job, final Q queue)
   {
-    return this.QUEUE_DEPART_ACTION;
+    if (job == null || queue == null)
+      throw new IllegalArgumentException ();
+    if (job == this)
+    {
+      if (! this.arrived)
+        fail ("Departure before arrival!");
+      if (this.dropped)
+        fail ("Departure after drop!");
+      if (this.revoked)
+        fail ("Departure after revocation!");
+      if (this.departed)
+        fail ("Already departed!");
+      this.departed = true;
+      this.departureTime = time;
+    }
   }
 
 }
