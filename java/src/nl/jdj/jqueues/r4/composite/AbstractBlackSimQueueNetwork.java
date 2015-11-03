@@ -36,6 +36,36 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // CONSTRUCTOR(S)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Creates an abstract black network of queues.
+   * 
+   * @param eventList The event list to be shared between this queue and the inner queues.
+   * @param queues A set holding the "inner" queues.
+   * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
+   * 
+   * @throws IllegalArgumentException If the <code>queue</code> argument is <code>null</code> or has <code>null</code> members.
+   * 
+   * @see DelegateSimJobFactory
+   * @see DefaultDelegateSimJobFactory
+   * 
+   */
+  protected AbstractBlackSimQueueNetwork
+  (final SimEventList eventList, final Set<DQ> queues, final DelegateSimJobFactory delegateSimJobFactory)
+  {
+    super (eventList);
+    if (queues == null || queues.contains (null))
+      throw new IllegalArgumentException ();
+    this.queues = queues;
+    for (DQ queue : this.queues)
+      queue.registerSimEntityListener (this);
+    this.delegateSimJobFactory = ((delegateSimJobFactory == null) ? new DefaultDelegateSimJobFactory () : delegateSimJobFactory);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // (SUB)QUEUES
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,6 +171,64 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // ABSTRACT METHODS FOR (SUB-)QUEUE SELECTION IN SUBCLASSES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the first queue to visit for an arriving job.
+   * 
+   * @param time The time of arrival of the job.
+   * @param job The job, non-<code>null</code>.
+   * 
+   * @return The first queue to visit, if <code>null</code>, the job is to depart from this {@link AbstractBlackSimQueueNetwork}.
+   * 
+   */
+  protected abstract SimQueue<DJ, DQ> getFirstQueue (double time, J job);
+  
+  /** Returns the next queue to visit for a job.
+   * 
+   * @param time The current time, i.e., the departure time of the job at its previous queue.
+   * @param job The job, non-<code>null</code>.
+   * @param previousQueue The previous queue the job visited, and just departed from.
+   * 
+   * @return The next queue to visit, if <code>null</code>, the job is to depart from this {@link AbstractBlackSimQueueNetwork}.
+   * 
+   */
+  protected abstract SimQueue<DJ, DQ> getNextQueue (double time, J job, DQ previousQueue);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DROP DESTINATION QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns an optional destination (delegate) {@link SimQueue} for dropped jobs.
+   * 
+   * <p>
+   * Normally, dropping a delegate job as noted by {@link #notifyDrop} results in dropping the corresponding real job.
+   * By overriding this method the default behavior can be changed, and such jobs can be sent to one of the
+   * sub-queues as an arrival.
+   * 
+   * <p>
+   * The default implementation return <code>null</code>, implying that the real job is to be dropped as well.
+   * 
+   * @param t The time the delegate job was dropped, i.e., the current time.
+   * @param job The (delegate) job that was dropped.
+   * @param queue The queue at which it was dropped.
+   * 
+   * @return Any {@link SimQueue} in {@link #getQueues} to which the dropped job is to be sent as an arrival, or <code>null</code>
+   *           if the corresponding real job is to be dropped as well.
+   * 
+   * @see #notifyDrop
+   * 
+   */
+  protected DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
+  {
+    return null;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // DELEGATE SIMJOBS AND REAL/DELEGATE SIMJOB MAPPINGS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,63 +326,6 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     this.realSimJobMap.remove (delegateJob);    
   }
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // ABSTRACT METHODS FOR (SUB-)QUEUE SELECTION IN SUBCLASSES
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns the first queue to visit for an arriving job.
-   * 
-   * @param time The time of arrival of the job.
-   * @param job The job, non-<code>null</code>.
-   * 
-   * @return The first queue to visit, if <code>null</code>, the job is to depart from this {@link AbstractBlackSimQueueNetwork}.
-   * 
-   */
-  protected abstract SimQueue<DJ, DQ> getFirstQueue (double time, J job);
-  
-  /** Returns the next queue to visit for a job.
-   * 
-   * @param time The current time, i.e., the departure time of the job at its previous queue.
-   * @param job The job, non-<code>null</code>.
-   * @param previousQueue The previous queue the job visited, and just departed from.
-   * 
-   * @return The next queue to visit, if <code>null</code>, the job is to depart from this {@link AbstractBlackSimQueueNetwork}.
-   * 
-   */
-  protected abstract SimQueue<DJ, DQ> getNextQueue (double time, J job, DQ previousQueue);
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // CONSTRUCTOR(S)
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Creates an abstract black network of queues.
-   * 
-   * @param eventList The event list to be shared between this queue and the inner queues.
-   * @param queues A set holding the "inner" queues.
-   * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
-   * 
-   * @throws IllegalArgumentException If the <code>queue</code> argument is <code>null</code> or has <code>null</code> members.
-   * 
-   * @see DelegateSimJobFactory
-   * @see DefaultDelegateSimJobFactory
-   * 
-   */
-  protected AbstractBlackSimQueueNetwork
-  (final SimEventList eventList, final Set<DQ> queues, final DelegateSimJobFactory delegateSimJobFactory)
-  {
-    super (eventList);
-    if (queues == null || queues.contains (null))
-      throw new IllegalArgumentException ();
-    this.queues = queues;
-    for (DQ queue : this.queues)
-      queue.registerSimEntityListener (this);
-    this.delegateSimJobFactory = ((delegateSimJobFactory == null) ? new DefaultDelegateSimJobFactory () : delegateSimJobFactory);
-  }
-
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // SimQueue.isNoWaitArmed
@@ -647,31 +678,6 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     }
   }
 
-  /** Returns an optional destination (delegate) {@link SimQueue} for dropped jobs.
-   * 
-   * <p>
-   * Normally, dropping a delegate job as noted by {@link #notifyDrop} results in dropping the corresponding real job.
-   * By overriding this method the default behavior can be changed, and such jobs can be sent to one of the
-   * sub-queues as an arrival.
-   * 
-   * <p>
-   * The default implementation return <code>null</code>, implying that the real job is to be dropped as well.
-   * 
-   * @param t The time the delegate job was dropped, i.e., the current time.
-   * @param job The (delegate) job that was dropped.
-   * @param queue The queue at which it was dropped.
-   * 
-   * @return Any {@link SimQueue} in {@link #getQueues} to which the dropped job is to be sent as an arrival, or <code>null</code>
-   *           if the corresponding real job is to be dropped as well.
-   * 
-   * @see #notifyDrop
-   * 
-   */
-  protected DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
-  {
-    return null;
-  }
-  
   /** Notification of the dropping of a delegate job.
    * 
    * <p>
