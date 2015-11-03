@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimQueue;
+import nl.jdj.jqueues.r4.SimEntity;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.SimQueueListener;
@@ -290,7 +291,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
       throw new IllegalArgumentException ();
     this.queues = queues;
     for (DQ queue : this.queues)
-      queue.registerQueueListener (this);
+      queue.registerSimEntityListener (this);
     this.delegateSimJobFactory = ((delegateSimJobFactory == null) ? new DefaultDelegateSimJobFactory () : delegateSimJobFactory);
   }
 
@@ -303,8 +304,6 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   /** Returns <code>true</code> if and only if all queues in {@link #getQueues} are in <code>noWaitArmed</code> state.
    * 
    * This is a default implementation, and may be overridden by subclasses.
-   * 
-   * {@inheritDoc}
    * 
    * @return True if and only if all queues in {@link #getQueues} are in <code>noWaitArmed</code> state.
    * 
@@ -364,21 +363,22 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // AbstractSimQueue.reset
+  // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method,
+  /** Resets this {@link AbstractBlackSimQueueNetwork}.
+   * 
+   * <p>
+   * Calls super method,
    * clears the internal mapping between real and delegate {@link SimJob}s,
    * and clears the internal cache of the <code>noWaitArmed</code> state.
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
-  public void reset ()
+  public void resetEntitySubClass ()
   {
-    super.reset ();
+    super.resetEntitySubClass ();
     this.delegateSimJobMap.clear ();
     this.realSimJobMap.clear ();
     this.previousNoWaitArmedSet = false;
@@ -392,10 +392,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /**
-   * {@inheritDoc}
-   * 
-   * Creates the delegate job, administers it and puts the job into {@link #jobQueue}.
+  /** Creates the delegate job, administers it and puts the job into {@link #jobQueue}.
    * 
    */
   @Override
@@ -418,9 +415,9 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     this.jobQueue.add (job);
   }
 
-  /**
-   * {@inheritDoc}
+  /** Reschedules after an arrival.
    * 
+   * <p>
    * Checks the server-access credits and if passed,
    * lets the delegate job arrive at the queue returned by
    * {@link #getFirstQueue}.
@@ -458,15 +455,12 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
         // So we depart; without having been executed!
         exitJobFromQueues (job, delegateJob);
         job.setQueue (null);
-        fireDeparture (time, job);
+        fireDeparture (time, job, (Q) this);
       }
     }
   }
 
-  /**
-   * {@inheritDoc}
-   * 
-   * Removes the real and delegate jobs from the internal administration.
+  /** Removes the real and delegate jobs from the internal administration.
    * 
    */
   @Override
@@ -477,10 +471,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     // XXX Should check for getQueue on delegateJob??
   }
 
-  /**
-   * {@inheritDoc}
-   * 
-   * Empty, nothing to do.
+  /** Empty, nothing to do.
    * 
    */
   @Override
@@ -489,9 +480,9 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     // EMPTY
   }
 
-  /**
-   * {@inheritDoc}
+  /** Removes a job after successful revocation.
    * 
+   * <p>
    * Checks if the delegate job can be revoked (if present at a queue);
    * returns <code>false</code> if not.
    * Otherwise, if the delegate job is not currently visiting a {@link SimQueue},
@@ -510,10 +501,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     return true;
   }
 
-  /**
-   * {@inheritDoc}
-   * 
-   * Empty, nothing to do.
+  /** Empty, nothing to do.
    * 
    */
   @Override
@@ -522,10 +510,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     // EMPTY
   }
 
-  /**
-   * {@inheritDoc}
-   * 
-   * Schedules delegate jobs for arrival at their first queue until the
+  /** Schedules delegate jobs for arrival at their first queue until the
    * (new) server-access credits are exhausted.
    * 
    */
@@ -553,7 +538,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
             // We do not get a queue to arrive at.
             // So we depart; without having been executed!
             exitJobFromQueues (realJob, delegateJob);
-            fireDeparture (time, realJob);
+            fireDeparture (time, realJob, (Q) this);
           }
         }
       }
@@ -561,8 +546,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     }
   }
 
-  /**
-   * {@inheritDoc}
+  /** Throws {@link IllegalStateException}.
    * 
    * Should never be called.
    * 
@@ -575,8 +559,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     throw new IllegalStateException ();
   }
 
-  /**
-   * {@inheritDoc}
+  /** Throws {@link IllegalStateException}.
    * 
    * Should never be called.
    * 
@@ -597,21 +580,15 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /**
-   * {@inheritDoc}
-   * 
-   * Does nothing; assumes will have been reset or will soon be reset as well.
+  /** Does nothing; assumes will have been reset or will soon be reset as well.
    * 
    */
   @Override
-  public final void notifyReset (final double oldTime, final DQ queue)
+  public final void notifyResetEntity (final SimEntity entity)
   {
   }
   
-  /**
-   * {@inheritDoc}
-   * 
-   * Calls super method.
+  /** Calls super method.
    * 
    */
   @Override
@@ -622,10 +599,10 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     super.update (t);
   }
   
-  /**
-   * {@inheritDoc}
+  /** Checks if the job is a known delegate job, and calls {@link #update}.
    * 
-   * Checks if the job is a known delegate job, and calls {@link #update}.
+   * <p>
+   * This implementation does not allow the arrival of foreign delegate jobs.
    * 
    */
   @Override
@@ -643,12 +620,15 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   {
   }
   
-  /**
-   * {@inheritDoc}
+  /** Notification of the start of a delegate job.
    * 
+   * <p>
    * Calls {@link #update}.
    * If needed, fires a start event for the real job, and
    * puts that job in {@link #jobsExecuting}.
+   * 
+   * <p>
+   * This implementation does not allow the start of foreign delegate jobs.
    * 
    * @see #fireStart
    * 
@@ -661,7 +641,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     if (! this.jobsExecuting.contains (realJob))
     {
       this.jobsExecuting.add (realJob);
-      fireStart (t, realJob);
+      fireStart (t, realJob, (Q) this);
       startForSubClass (t, job, queue);
       
     }
@@ -669,6 +649,7 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
 
   /** Returns an optional destination (delegate) {@link SimQueue} for dropped jobs.
    * 
+   * <p>
    * Normally, dropping a delegate job as noted by {@link #notifyDrop} results in dropping the corresponding real job.
    * By overriding this method the default behavior can be changed, and such jobs can be sent to one of the
    * sub-queues as an arrival.
@@ -691,9 +672,9 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     return null;
   }
   
-  /**
-   * {@inheritDoc}
+  /** Notification of the dropping of a delegate job.
    * 
+   * <p>
    * Calls {@link #update}.
    * Starts the dropped job on a valid non-<code>null</code> result from {@link #getDropDestinationQueue};
    * otherwise it gets the real job, sets its queue to <code>null</code> and drops it as well.
@@ -722,28 +703,63 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     {
       exitJobFromQueues (realJob, job);
       realJob.setQueue (null);
-      fireDrop (t, realJob);
+      fireDrop (t, realJob, (Q) this);
     }
   }
 
-  /** Checks if the job is a known delegate job, and calls {@link #update}.
+  /** Returns whether revocations on delegate jobs are allowed.
    * 
-   * {@inheritDoc}
+   * <p>
+   * The default implementation returns {@code false}.
+   * 
+   * <p>
+   * By default, a {@link AbstractBlackSimQueueNetwork} does not allow revocations of delegate jobs,
+   * and it will throw an exception if it detects this.
+   * By overriding this method and returning {@code true}, a subclass indicates that it uses
+   * revocations on delegate jobs in order to meet its requirements,
+   * and that relevant notifications are to be ignored.
+   * 
+   * <p>
+   * We want to stress that this method concerns revocations of <i>delegate jobs</i> on <i>sub-queues</i>,
+   * not on "real" jobs on this {@link AbstractBlackSimQueueNetwork} itself.
+   * 
+   * @return Whether revocations on delegate jobs are allowed.
+   * 
+   * @see #notifyRevocation
+   * 
+   */
+  protected boolean getAllowDelegateJobRevocations ()
+  {
+    return false;
+  }
+  
+  /** Checks if the job is a known delegate job and revocations are allowed, and if so, calls {@link #update}.
+   * 
+   * <p>
+   * Otherwise, this method throw an {@link IllegalStateException}.
+   * 
+   * <p>
+   * This implementation does not allow the revocation of foreign delegate jobs.
+   * 
+   * @throws IllegalStateException If delegate-job revocations are not allowed.
+   * 
+   * @see #getAllowDelegateJobRevocations
    * 
    */
   @Override
   public final void notifyRevocation (final double t, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
-    update (t);
-    // NOTHING MORE TO DO.
+    if (getAllowDelegateJobRevocations ())
+      update (t);
+    else
+      throw new IllegalStateException ();
   }
 
-  /**
-   * {@inheritDoc}
+  /** Notification of the departure of a delegate job.
    * 
+   * <p>
    * Calls {@link #update}.
-   * 
    * Finds the next queue to visit by the delegate job.
    * If found, schedules the arrival of the delegate job at the next queue.
    * Otherwise, removes both real and delegate job,
@@ -763,34 +779,15 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
     {
       exitJobFromQueues (realJob, job);
       realJob.setQueue (null);
-      fireDeparture (t, realJob);  
+      fireDeparture (t, realJob, (Q) this);  
     }
     else
-      // OLD CODE FRAGMENT:
-      // Use a separate event for arrival at nextQueue,
-      // because the departure at the current queue hasn't completed yet (e.g., in terms of notifications).
-      // getEventList ().add (new SimEvent (t, null, new SimEventAction ()
-      // {
-      //   @Override
-      //   public void action (SimEvent event)
-      //   {
-      //     nextQueue.arrive (job, t);
-      //   }
-      // }
-      // ));
-      // END OLD CODE FRAGMENT.
-      // Directly invoke arrive on the destination queue instead of event-list scheduling,
-      // otherwise we may expose an inconsistent queue state in which the job has departed from DQ,
-      // but is not yet at nextQueue.
-      // We must accept possible out-of-sequence notifications from the sub-queues here;
-      // there seems to be no ideal solution.
       nextQueue.arrive (job, t);
   }
 
-  /**
-   * {@inheritDoc}
+  /** Calls {@link #update} and {@link #reassessNoWaitArmed}.
    * 
-   * Calls {@link #update} and {@link #reassessNoWaitArmed}.
+   * <p>
    * May be overridden.
    *
    * @see #update
@@ -803,6 +800,85 @@ implements BlackSimQueueNetwork<DJ, DQ, J, Q>,
   {
     update (time);
     reassessNoWaitArmed (time);
+  }
+
+  /** Returns whether (changes to) queue-access vacations are allowed on sub-queues.
+   * 
+   * <p>
+   * The default implementation returns {@code false}.
+   * 
+   * <p>
+   * By default, a {@link AbstractBlackSimQueueNetwork} does not allow changes to the state of
+   * queue-access vacations from a foreign entity, and it will throw an exception if it detects this.
+   * By overriding this method and returning {@code true}, a subclass indicates that it uses
+   * queue-access vacation on sub-queues in order to meet its requirements,
+   * and that relevant notifications are to be ignored.
+   * 
+   * <p>
+   * We want to stress that this method concerns queue-access vacations on <i>sub-queues</i>,
+   * not on this {@link AbstractBlackSimQueueNetwork} itself.
+   * 
+   * @return Whether (changes to) queue-access vacations are allowed on sub-queues.
+   * 
+   * @see #notifyStartQueueAccessVacation
+   * @see #notifyStopQueueAccessVacation
+   * 
+   */
+  protected boolean getAllowSubQueueAccessVacationChanges ()
+  {
+    return false;
+  }
+  
+  /** Throws {@link IllegalStateException} unless (changes to) sub-queue-access vacations are allowed by the subclasses.
+   * 
+   * <p>
+   * Otherwise, this implementation does nothing.
+   * 
+   * @throws IllegalStateException Unless (changes to) sub-queue-access vacations are allowed by the subclasses.
+   * 
+   * @see #getAllowSubQueueAccessVacationChanges
+   * 
+   */
+  @Override
+  public final void notifyStartQueueAccessVacation (final double time, final DQ queue)
+  {
+    if (! getAllowSubQueueAccessVacationChanges ())
+      throw new IllegalStateException ();
+  }
+
+  /** Throws {@link IllegalStateException} unless (changes to) sub-queue-access vacations are allowed by the subclasses.
+   * 
+   * <p>
+   * Otherwise, this implementation does nothing.
+   * 
+   * @throws IllegalStateException Unless (changes to) sub-queue-access vacations are allowed by the subclasses.
+   * 
+   * @see #getAllowSubQueueAccessVacationChanges
+   * 
+   */
+  @Override
+  public final void notifyStopQueueAccessVacation (final double time, final DQ queue)
+  {
+    if (! getAllowSubQueueAccessVacationChanges ())
+      throw new IllegalStateException ();
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public final void notifyOutOfServerAccessCredits (final double time, final DQ queue)
+  {
+    /* EMPTY */
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public final void notifyRegainedServerAccessCredits (final double time, final DQ queue)
+  {
+    /* EMPTY */
   }
 
 }

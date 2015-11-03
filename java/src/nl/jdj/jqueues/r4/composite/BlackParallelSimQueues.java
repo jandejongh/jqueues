@@ -23,14 +23,15 @@ import nl.jdj.jsimulation.r4.SimEventList;
  */
 public class BlackParallelSimQueues
 <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackParallelSimQueues>
-  extends AbstractBlackSimQueueNetwork<DJ, DQ, J, Q>
+  extends AbstractBlackParallelSimQueues<DJ, DQ, J, Q>
   implements BlackSimQueueNetwork<DJ, DQ, J, Q>
 {
   
-  /** The {@link SimQueueSelector} for selecting the internal queue to visit.
-   * 
-   */
-  private final SimQueueSelector<J, DJ, DQ> simQueueSelector;
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Creates a black parallel queue given an event list and a list of queues to put in parallel.
    *
@@ -57,15 +58,7 @@ public class BlackParallelSimQueues
     final DelegateSimJobFactory delegateSimJobFactory,
     final SimQueueSelector simQueueSelector)
   {
-    super (eventList, queues, delegateSimJobFactory);
-    if (simQueueSelector == null)
-    {
-      if (! (this instanceof SimQueueSelector))
-        throw new IllegalArgumentException ();
-      this.simQueueSelector = (SimQueueSelector) this;
-    }
-    else
-      this.simQueueSelector = simQueueSelector;
+    super (eventList, queues, delegateSimJobFactory, simQueueSelector);
   }
 
   /** Returns a new {@link BlackParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
@@ -80,6 +73,7 @@ public class BlackParallelSimQueues
    * 
    * @see #getEventList
    * @see #getCopySubSimQueues
+   * @see #getSimQueueSelector
    * @see #getDelegateSimJobFactory
    * 
    */
@@ -87,107 +81,24 @@ public class BlackParallelSimQueues
   public BlackParallelSimQueues<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final Set<DQ> queuesCopy = getCopySubSimQueues ();
-    final SimQueueSelector simQueueSelectorCopy = (this.simQueueSelector == this ? null : this.simQueueSelector);
+    final SimQueueSelector simQueueSelectorCopy = (getSimQueueSelector () == this ? null : getSimQueueSelector ());
     return new BlackParallelSimQueues<>
       (getEventList (), queuesCopy, getDelegateSimJobFactory (), simQueueSelectorCopy);
   }
   
-  /**
-   * {@inheritDoc}
-   * 
-   * @return The first {@link SimQueue} returned by an iterator over the set obtained from {@link #getQueues},
-   *         or <code>null</code> if that set is empty.
-   * 
-   */
-  @Override
-  protected final SimQueue<DJ, DQ> getFirstQueue (final double time, final J job)
-  {
-    return this.simQueueSelector.selectFirstQueue (time, job);
-  }
-
-  /**
-   * {@inheritDoc}
-   * 
-   * @return The next {@link SimQueue} after the <code>previousQueue</code> in an iterator
-   *         over the set obtained from {@link #getQueues},
-   *         or <code>null</code> if no such exists
-   *         (i.e., <code>previousQueue</code> is the last element returned from the iterator).
-   * 
-   * @throws IllegalStateException If the previous queue argument is <code>null</code> or not a member of {@link #getQueues}.
-   * 
-   */
-  @Override
-  protected final SimQueue<DJ, DQ> getNextQueue (final double time, final J job, final DQ previousQueue)
-  {
-    if (getQueues ().isEmpty ())
-      throw new IllegalStateException ();
-    if (previousQueue == null)
-      throw new IllegalStateException ();
-    return null;
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
-  {
-    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  protected final void startForSubClass (final double t, final DJ job, final DQ queue)
-  {
-    super.startForSubClass (t, job, queue);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public final void reset ()
-  {
-    super.reset ();
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
-  {
-    return super.getDropDestinationQueue (t, job, queue);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Returns "Par[queue list]".
    * 
    * @return "Par[queue list]".
    * 
    */
   @Override
-  public /* final */ String toStringDefault ()
+  public final String toStringDefault ()
   {
     String string = "Par[";
     boolean first = true;
@@ -201,6 +112,21 @@ public class BlackParallelSimQueues
     }
     string += "]";
     return string;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // noWaitArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final boolean isNoWaitArmed ()
+  {
+    return super.isNoWaitArmed ();
   }
 
 }

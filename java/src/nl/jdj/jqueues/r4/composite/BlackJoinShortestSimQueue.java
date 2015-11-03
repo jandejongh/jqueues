@@ -32,89 +32,15 @@ import nl.jdj.jsimulation.r4.SimEventList;
  */
 public class BlackJoinShortestSimQueue
 <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackJoinShortestSimQueue>
-  extends BlackParallelSimQueues<DJ, DQ, J, Q>
+  extends AbstractBlackParallelSimQueues<DJ, DQ, J, Q>
   implements BlackSimQueueNetwork<DJ, DQ, J, Q>
 {
 
-  private final boolean onlyWaitingJobs;
-  
-  /** Returns whether only waiting jobs are considered in queue selection.
-   * 
-   * @return <code>True</code> if only waiting jobs are considered in queue selection,
-   *         <code>false</code> if <i>all</i> jobs present are considered.
-   * 
-   */
-  public final boolean isOnlyWaitingJobs ()
-  {
-    return this.onlyWaitingJobs;
-  }
-  
-  /** Returns a subset holding the queues with shortest queue length from a set of {@link SimQueue}s.
-   * 
-   * @param queues           The queues, if empty, an empty set is returned.
-   * @param onlyWaitingJobs  Whether only waiting jobs are considered in determining the queue length
-   *                           (instead of all jobs present).
-   * 
-   * @return A non-<code>null</code> new subset holding the queues with shortest queue length (may be empty).
-   * 
-   * @throws IllegalArgumentException If the <code>queues</code> argument is <code>null</code> or contains <code>null</code>.
-   * 
-   */
-  private static Set<SimQueue> selectShortestQueues (final Set<SimQueue> queues, final boolean onlyWaitingJobs)
-  {
-    if (queues == null || queues.contains (null))
-      throw new IllegalArgumentException ();
-    final Set<SimQueue> set = new LinkedHashSet<> ();
-    int currentNrOfJobs = 0;
-    for (SimQueue q : queues)
-    {
-      final int nrOfJobs = (onlyWaitingJobs ? (q.getNumberOfJobs () - q.getNumberOfJobsExecuting ()) : q.getNumberOfJobs ());
-      if (set.isEmpty ())
-      {
-        set.add (q);
-        currentNrOfJobs = nrOfJobs;
-      }
-      else if (nrOfJobs < currentNrOfJobs)
-      {
-        set.clear ();
-        set.add (q);
-        currentNrOfJobs = nrOfJobs;
-      }
-      else if (nrOfJobs == currentNrOfJobs)
-        set.add (q);
-    }
-    return set;
-  }
-  
-  /** Selects a queue at random (with equal probabilities) from a set of queues.
-   * 
-   * @param queues The queues, non-<code>null</code>.
-   * @param rng    The random-number generator to use, non-<code>null</code>.
-   * 
-   * @return A random member in the set, or <code>null</code> if the set was empty.
-   * 
-   * @throws IllegalArgumentException If the <code>queues</code> argument is <code>null</code>, contains <code>null</code>,
-   *                                    or the <code>rng</code> argument is <code>null</code>.
-   * 
-   */
-  private static SimQueue getRandomSimQueueFromSet (final Set<SimQueue> queues, final Random rng)
-  {
-    if (queues == null || queues.contains (null) || rng == null)
-      throw new IllegalArgumentException ();
-    if (queues.isEmpty ())
-      return null;
-    if (queues.size () == 1)
-      return queues.iterator ().next ();
-    final int draw = rng.nextInt (queues.size ());
-    int i_q = 0;
-    for (final SimQueue q : queues)
-    {
-       if (i_q == draw)
-        return q;
-       i_q++;
-    }
-    throw new RuntimeException ();
-  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Creates a {@link SimQueueSelector} that selects the queue with the shortest-queue length,
    * either in terms of jobs waiting or in terms of jobs present, as the queue to visit by a job upon arrival.
@@ -213,25 +139,12 @@ public class BlackJoinShortestSimQueue
       (getEventList (), queuesCopy, getDelegateSimJobFactory (), isOnlyWaitingJobs (), null);
   }
   
-  /** Returns <code>true</code> if {@link #getQueues} is empty
-   *  or all members in it with the shortest queue length are in <code>noWaitArmed</code> state.
-   * 
-   * @return <code>True</code> if {@link #getQueues} is empty
-   *           or all members in it with the shortest queue length are in <code>noWaitArmed</code> state.
-   * 
-   */
-  @Override
-  public final boolean isNoWaitArmed ()
-  {
-    final Set<SimQueue> shortestQueues = selectShortestQueues ((Set<SimQueue>) getQueues (), isOnlyWaitingJobs ());
-    if (shortestQueues.isEmpty ())
-      return true;
-    for (SimQueue q : shortestQueues)
-      if (! q.isNoWaitArmed ())
-        return false;
-    return true;
-  }
-
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Returns "JSQ[queue list]".
    * 
    * @return "JSQ[queue list]".
@@ -252,6 +165,123 @@ public class BlackJoinShortestSimQueue
     }
     string += "]";
     return string;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // onlyWaitingJobs
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final boolean onlyWaitingJobs;
+  
+  /** Returns whether only waiting jobs are considered in queue selection.
+   * 
+   * @return <code>True</code> if only waiting jobs are considered in queue selection,
+   *         <code>false</code> if <i>all</i> jobs present are considered.
+   * 
+   */
+  public final boolean isOnlyWaitingJobs ()
+  {
+    return this.onlyWaitingJobs;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // UTILITY METHODS FOR SHORTEST-QUEUE SELECTION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns a subset holding the queues with shortest queue length from a set of {@link SimQueue}s.
+   * 
+   * @param queues           The queues, if empty, an empty set is returned.
+   * @param onlyWaitingJobs  Whether only waiting jobs are considered in determining the queue length
+   *                           (instead of all jobs present).
+   * 
+   * @return A non-<code>null</code> new subset holding the queues with shortest queue length (may be empty).
+   * 
+   * @throws IllegalArgumentException If the <code>queues</code> argument is <code>null</code> or contains <code>null</code>.
+   * 
+   */
+  private static Set<SimQueue> selectShortestQueues (final Set<SimQueue> queues, final boolean onlyWaitingJobs)
+  {
+    if (queues == null || queues.contains (null))
+      throw new IllegalArgumentException ();
+    final Set<SimQueue> set = new LinkedHashSet<> ();
+    int currentNrOfJobs = 0;
+    for (SimQueue q : queues)
+    {
+      final int nrOfJobs = (onlyWaitingJobs ? (q.getNumberOfJobs () - q.getNumberOfJobsExecuting ()) : q.getNumberOfJobs ());
+      if (set.isEmpty ())
+      {
+        set.add (q);
+        currentNrOfJobs = nrOfJobs;
+      }
+      else if (nrOfJobs < currentNrOfJobs)
+      {
+        set.clear ();
+        set.add (q);
+        currentNrOfJobs = nrOfJobs;
+      }
+      else if (nrOfJobs == currentNrOfJobs)
+        set.add (q);
+    }
+    return set;
+  }
+  
+  /** Selects a queue at random (with equal probabilities) from a set of queues.
+   * 
+   * @param queues The queues, non-<code>null</code>.
+   * @param rng    The random-number generator to use, non-<code>null</code>.
+   * 
+   * @return A random member in the set, or <code>null</code> if the set was empty.
+   * 
+   * @throws IllegalArgumentException If the <code>queues</code> argument is <code>null</code>, contains <code>null</code>,
+   *                                    or the <code>rng</code> argument is <code>null</code>.
+   * 
+   */
+  private static SimQueue getRandomSimQueueFromSet (final Set<SimQueue> queues, final Random rng)
+  {
+    if (queues == null || queues.contains (null) || rng == null)
+      throw new IllegalArgumentException ();
+    if (queues.isEmpty ())
+      return null;
+    if (queues.size () == 1)
+      return queues.iterator ().next ();
+    final int draw = rng.nextInt (queues.size ());
+    int i_q = 0;
+    for (final SimQueue q : queues)
+    {
+       if (i_q == draw)
+        return q;
+       i_q++;
+    }
+    throw new RuntimeException ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // noWaitArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns <code>true</code> if {@link #getQueues} is empty
+   *  or all members in it with the shortest queue length are in <code>noWaitArmed</code> state.
+   * 
+   * @return <code>True</code> if {@link #getQueues} is empty
+   *           or all members in it with the shortest queue length are in <code>noWaitArmed</code> state.
+   * 
+   */
+  @Override
+  public final boolean isNoWaitArmed ()
+  {
+    final Set<SimQueue> shortestQueues = selectShortestQueues ((Set<SimQueue>) getQueues (), isOnlyWaitingJobs ());
+    if (shortestQueues.isEmpty ())
+      return true;
+    for (SimQueue q : shortestQueues)
+      if (! q.isNoWaitArmed ())
+        return false;
+    return true;
   }
 
 }
