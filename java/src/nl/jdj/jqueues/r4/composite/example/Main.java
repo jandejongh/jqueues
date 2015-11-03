@@ -7,7 +7,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.StdOutSimQueueVacationListener;
+import nl.jdj.jqueues.r4.StdOutSimQueueListener;
 import nl.jdj.jqueues.r4.composite.BlackJacksonSimQueueNetwork;
 import nl.jdj.jqueues.r4.composite.BlackNumVisitsFeedbackSimQueue;
 import nl.jdj.jqueues.r4.composite.BlackParallelSimQueues;
@@ -15,6 +15,7 @@ import nl.jdj.jqueues.r4.composite.BlackProbabilisticFeedbackSimQueue;
 import nl.jdj.jqueues.r4.composite.BlackTandemSimQueue;
 import nl.jdj.jqueues.r4.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r4.composite.SimQueueSelector;
+import nl.jdj.jqueues.r4.example.DefaultExampleSimJob;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r4.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r4.nonpreemptive.RANDOM;
@@ -35,40 +36,6 @@ public final class Main
   {
   }
   
-  /** SimJob implementation used in the examples.
-   * 
-   * Each job has a public index 'n', set upon construction.
-   * The requested service time for the job equals its index.
-   * This is merely to create interesting examples.
-   * 
-   */
-  public static class TestJob extends AbstractSimJob
-  {
-    
-    private final boolean reported;
-    
-    public final int n;
-    
-    public TestJob (boolean reported, int n)
-    {
-      if (n <= 0)
-        throw new IllegalArgumentException ();
-      this.reported = reported;
-      this.n = n;
-      setName ("" + this.n);
-    }
-
-    @Override
-    public double getServiceTime (SimQueue queue) throws IllegalArgumentException
-    {
-      if (queue == null && getQueue () == null)
-        return 0.0;
-      else
-        return (double) n;
-    }
-    
-  }
-  
   /** DelegateSimJob implementation used in the examples.
    * 
    */
@@ -79,9 +46,9 @@ public final class Main
     
     private final int n;
     
-    public TestDelegateSimJob (TestJob realSimJob, boolean reported)
+    public TestDelegateSimJob (DefaultExampleSimJob realSimJob, boolean reported)
     {
-      super ();
+      super (null, null);
       this.reported = reported;
       this.n = realSimJob.n;
       if (n < 0)
@@ -113,32 +80,32 @@ public final class Main
   {
     System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.composite PACKAGE ===");
     System.out.println ("-> Creating jobs...");
-    final List<TestJob> jobList = new ArrayList<>  ();
+    final List<DefaultExampleSimJob> jobList = new ArrayList<>  ();
     for (int n = 1; n <= 10; n++)
-      jobList.add (new TestJob (true, n));
+      jobList.add (new DefaultExampleSimJob (true, n));
     System.out.println ("-> Creating event list...");
     final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
     System.out.println ("-> Creating FCFS queue...");
     final SimQueue fcfsQueue = new FCFS (el);
-    fcfsQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    fcfsQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Creating LCFS queue...");
     final SimQueue lcfsQueue = new LCFS (el);
-    lcfsQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    lcfsQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Creating Tandem queue...");
     final Set<SimQueue> set = new LinkedHashSet<> ();
     set.add (fcfsQueue);
     set.add (lcfsQueue);
     final DelegateSimJobFactory delegateSimJobFactory =
-      new DelegateSimJobFactory<TestDelegateSimJob, SimQueue, TestJob, SimQueue> ()
+      new DelegateSimJobFactory<TestDelegateSimJob, SimQueue, DefaultExampleSimJob, SimQueue> ()
       {
         @Override
-        public TestDelegateSimJob newInstance (double time, TestJob job, SimQueue queue)
+        public TestDelegateSimJob newInstance (double time, DefaultExampleSimJob job, SimQueue queue)
         {
           return new TestDelegateSimJob (job, true);
         }
       };
     final SimQueue tandemQueue = new BlackTandemSimQueue (el, set, delegateSimJobFactory);
-    tandemQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    tandemQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to Tandem queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -159,10 +126,10 @@ public final class Main
     el.reset ();
     System.out.println ("-> Creating FCFS queue...");
     final SimQueue fcfsQueue2 = new FCFS (el);
-    fcfsQueue2.registerQueueListener (new StdOutSimQueueVacationListener ());
+    fcfsQueue2.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Creating LCFS queue...");
     final SimQueue lcfsQueue2 = new LCFS (el);
-    lcfsQueue2.registerQueueListener (new StdOutSimQueueVacationListener ());
+    lcfsQueue2.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Creating Parallel queue...");
     final Set<SimQueue> set2 = new LinkedHashSet<> ();
     set2.add (fcfsQueue2);
@@ -187,7 +154,7 @@ public final class Main
         return null;
       }
     });
-    parallelQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    parallelQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to Parallel queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -208,10 +175,10 @@ public final class Main
     el.reset ();
     System.out.println ("-> Creating FCFS queue...");
     final SimQueue fcfsQueue3 = new FCFS (el);
-    fcfsQueue3.registerQueueListener (new StdOutSimQueueVacationListener ());
+    fcfsQueue3.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Creating NumVisits feedback queue (5 visits)...");
     final SimQueue numVisitsFBQueue = new BlackNumVisitsFeedbackSimQueue (el, fcfsQueue3, 5, delegateSimJobFactory);
-    numVisitsFBQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    numVisitsFBQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to NumVisitsFB queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -232,10 +199,10 @@ public final class Main
     el.reset ();
     System.out.println ("-> Creating RANDOM queue...");
     final SimQueue randomQueue = new RANDOM (el);
-    randomQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    randomQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Creating probabilistic feedback queue (p=50%)...");
     final SimQueue pFBQueue = new BlackProbabilisticFeedbackSimQueue (el, randomQueue, 0.5, null, delegateSimJobFactory);
-    pFBQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    pFBQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to probabilistic feedback queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -257,16 +224,16 @@ public final class Main
     System.out.println ("-> Creating 4 FCFS queues and putting them into a LinkedHashSet...");
     final SimQueue jFcfsQueue1 = new FCFS (el);
     jFcfsQueue1.setName (jFcfsQueue1.toStringDefault () + "1");
-    jFcfsQueue1.registerQueueListener (new StdOutSimQueueVacationListener ());
+    jFcfsQueue1.registerSimEntityListener (new StdOutSimQueueListener ());
     final SimQueue jFcfsQueue2 = new FCFS (el);
     jFcfsQueue2.setName (jFcfsQueue2.toStringDefault () + "2");
-    jFcfsQueue2.registerQueueListener (new StdOutSimQueueVacationListener ());
+    jFcfsQueue2.registerSimEntityListener (new StdOutSimQueueListener ());
     final SimQueue jFcfsQueue3 = new FCFS (el);
     jFcfsQueue3.setName (jFcfsQueue3.toStringDefault () + "3");
-    jFcfsQueue3.registerQueueListener (new StdOutSimQueueVacationListener ());
+    jFcfsQueue3.registerSimEntityListener (new StdOutSimQueueListener ());
     final SimQueue jFcfsQueue4 = new FCFS (el);
     jFcfsQueue3.setName (jFcfsQueue4.toStringDefault () + "4");
-    jFcfsQueue4.registerQueueListener (new StdOutSimQueueVacationListener ());
+    jFcfsQueue4.registerSimEntityListener (new StdOutSimQueueListener ());
     final Set<SimQueue> jacksonQueues = new LinkedHashSet<> ();
     jacksonQueues.add (jFcfsQueue1);
     jacksonQueues.add (jFcfsQueue2);
@@ -281,7 +248,7 @@ public final class Main
     System.out.println ("-> Creating Jackson queueing network...");
     final SimQueue jacksonQueue =
       new BlackJacksonSimQueueNetwork (el, jacksonQueues, pdfArrival, pdfTransition, null, delegateSimJobFactory);
-    jacksonQueue.registerQueueListener (new StdOutSimQueueVacationListener ());
+    jacksonQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to Jackson queueing network...");
     for (int i = 0; i < jobList.size (); i++)
     {
