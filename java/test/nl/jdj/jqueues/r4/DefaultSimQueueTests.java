@@ -8,7 +8,7 @@ import nl.jdj.jqueues.r4.util.jobfactory.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r4.util.jobfactory.DefaultVisitsLoggingSimJobFactory;
 import nl.jdj.jqueues.r4.util.jobfactory.JobQueueVisitLog;
 import nl.jdj.jqueues.r4.util.loadfactory.pattern.LoadFactorySingleQueueSingleVisit_01;
-import nl.jdj.jqueues.r4.util.predictor.SimQueuePredictionAmbiguityException;
+import nl.jdj.jqueues.r4.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r4.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r4.util.schedule.QueueExternalEvent;
 import nl.jdj.jsimulation.r4.SimEvent;
@@ -29,7 +29,7 @@ public class DefaultSimQueueTests
      final SimQueuePredictor<DefaultVisitsLoggingSimJob, Q> predictor,
      final int numberOfJobs,
      final boolean silent)
-  throws SimQueuePredictionAmbiguityException
+  throws SimQueuePredictionException
   {
     if (queue == null || predictor == null || numberOfJobs < 0 || queue.getEventList () == null)
       throw new IllegalArgumentException ();

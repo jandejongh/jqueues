@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r4.processorsharing;
 
 import nl.jdj.jqueues.r4.DefaultSimQueueTests;
 import nl.jdj.jqueues.r4.util.jobfactory.DefaultVisitsLoggingSimJob;
-import nl.jdj.jqueues.r4.util.predictor.SimQueuePredictionAmbiguityException;
+import nl.jdj.jqueues.r4.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r4.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r4.util.predictor.queues.SimQueuePredictor_PS;
 import nl.jdj.jsimulation.r4.SimEvent;
@@ -49,7 +49,7 @@ public class ProcessorSharingTest
    * 
    */
   @Test
-  public void testPS () throws SimQueuePredictionAmbiguityException
+  public void testPS () throws SimQueuePredictionException
   {
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final PS queue = new PS (eventList);
