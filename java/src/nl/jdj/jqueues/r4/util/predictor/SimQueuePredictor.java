@@ -19,7 +19,7 @@ import nl.jdj.jqueues.r4.util.schedule.QueueExternalEvent;
 public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
 {
 
-  /** Creates the unique prediction of job-visits (at most one) to a given queue.
+  /** Creates the unique prediction, if possible, of job-visits (at most one) to a given queue.
    * 
    * @param queue               The queue, non-{@code null}.
    * @param queueExternalEvents The external events, indexed by event time and for a given event time,
