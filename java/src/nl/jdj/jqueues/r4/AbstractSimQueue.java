@@ -218,8 +218,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /**
-   * {@inheritDoc}
+  /** Handles an arrival at this queue.
    * 
    * <p>
    * This (final) implementation is as follows:
@@ -391,8 +390,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   private boolean isQueueAccessVacation = false;
   
-  /**
-   * {@inheritDoc}
+  /** Returns whether or not this queue is on queue-access vacation (from an internal flag).
    * 
    * <p>
    * Note that queue-access vacations are entirely dealt with by the base class {@link AbstractSimQueue}; there is
@@ -425,8 +423,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   protected final SimEvent END_QUEUE_ACCESS_VACATION_EVENT
     = new SimEvent (0.0, null, this.END_QUEUE_ACCESS_VACATION_ACTION);
 
-  /**
-   * {@inheritDoc}
+  /** Starts a queue-access vacation.
    * 
    * <p>
    * This final implementation just removes any scheduled {@link #END_QUEUE_ACCESS_VACATION_EVENT} from the event list,
@@ -451,8 +448,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       fireStartQueueAccessVacation (getEventList ().getTime ());
   }
 
-  /**
-   * {@inheritDoc}
+  /** Starts a queue-access vacation of given duration.
    * 
    * <p>
    * This final implementation just (re)schedules {@link #END_QUEUE_ACCESS_VACATION_EVENT} on the event list,
@@ -481,8 +477,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       fireStartQueueAccessVacation (getEventList ().getTime ());
   }
 
-  /**
-   * {@inheritDoc}
+  /** Stops a queue-access vacation.
    * 
    * <p>
    * This final implementation just removes {@link #END_QUEUE_ACCESS_VACATION_EVENT} from the event list,
@@ -621,8 +616,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /**
-   * {@inheritDoc}
+  /** Revokes a job from this queue.
    * 
    * The final implementation makes sanity checks (e.g., job present),
    * and invokes {@link #update}.
@@ -732,8 +726,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     return this.serverAccessCredits;
   }
   
-  /**
-   * {@inheritDoc}
+  /** Sets the remaining number of server-access credits.
    * 
    * This final implementation invokes {@link #update} if the number of credits passed in the argument differs from the
    * current number of credits, to serve statistics on the number of server-access credits.
