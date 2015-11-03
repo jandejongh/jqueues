@@ -336,6 +336,8 @@ extends SimEntity<J, Q>
    * This method does nothing if the queue is not on queue-access vacation.
    * and overrules all settings as to the (remaining) duration of the vacation.
    * 
+   * @return Whether or not the queue is on queue-access vacation.
+   * 
    * @see #startQueueAccessVacation()
    * @see #startQueueAccessVacation(double)
    * @see #stopQueueAccessVacation
@@ -425,10 +427,14 @@ extends SimEntity<J, Q>
    * If the queue is already on queue-access vacation, this method will overrule previous 
    * settings as to the (remaining) duration of the vacation.
    * 
+   * @param duration The duration of the vacation (non-negative).
+   * 
    * @see #arrive
    * @see #startQueueAccessVacation()
    * @see #stopQueueAccessVacation
    * @see #isQueueAccessVacation
+   * 
+   * @throws IllegalArgumentException If the duration is (strictly) negative.
    * 
    */
   public void startQueueAccessVacation (double duration);
