@@ -183,8 +183,6 @@ public abstract class AbstractBlackFeedbackSimQueue
   
   /** Calls super method (in order to make implementation final).
    * 
-   * {@inheritDoc}
-   * 
    */
   @Override
   protected final DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
@@ -272,8 +270,6 @@ public abstract class AbstractBlackFeedbackSimQueue
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Calls super method (in order to make implementation final).
-   * 
-   * {@inheritDoc}
    * 
    */
   @Override

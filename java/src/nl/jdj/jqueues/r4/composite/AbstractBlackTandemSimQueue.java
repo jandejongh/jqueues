@@ -138,8 +138,6 @@ public abstract class AbstractBlackTandemSimQueue
    * This overrides the default implementation {@link AbstractBlackSimQueueNetwork#isNoWaitArmed} which demands <i>all</i> queues
    * to be in <code>noWaitArmed</code> state.
    * 
-   * {@inheritDoc}
-   * 
    * @return True if there are no queues in {@link #getQueues}
    *           or if the first queue in that list is in <code>noWaitArmed</code> state.
    * 
