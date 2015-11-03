@@ -7,9 +7,10 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.Set;
 import javax.swing.JComponent;
+import nl.jdj.jqueues.r4.SimEntity;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.SimQueueVacationListener;
+import nl.jdj.jqueues.r4.SimQueueListener;
 import nl.jdj.jqueues.r4.composite.BlackSimQueueNetwork;
 import nl.jdj.jsimulation.r4.SimEventList;
 
@@ -18,7 +19,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  */
 public class JSimQueue
 extends JComponent
-implements SimQueueVacationListener
+implements SimQueueListener
 {
   
   private final SimEventList eventList;
@@ -32,7 +33,7 @@ implements SimQueueVacationListener
       throw new IllegalArgumentException ();
     this.eventList = eventList;
     this.queue = queue;
-    this.queue.registerQueueListener (this);
+    this.queue.registerSimEntityListener (this);
     if (this.queue instanceof BlackSimQueueNetwork)
     {
       for (final SimQueue q : (Set<SimQueue>) ((BlackSimQueueNetwork) this.queue).getQueues ())
@@ -222,21 +223,24 @@ implements SimQueueVacationListener
   }
 
   @Override
-  public void notifyReset (final double oldTime, final SimQueue queue)
+  public void notifyResetEntity (final SimEntity entity)
   {
-    this.arrivalInfo.job = null;
-    this.arrivalInfo.time = Double.NEGATIVE_INFINITY;
-    this.arrivalInfo.counter = 0;
-    this.dropInfo.job = null;
-    this.dropInfo.time = Double.NEGATIVE_INFINITY;
-    this.dropInfo.counter = 0;
-    this.revocationInfo.job = null;
-    this.revocationInfo.time = Double.NEGATIVE_INFINITY;
-    this.revocationInfo.counter = 0;    
-    this.departureInfo.job = null;
-    this.departureInfo.time = Double.NEGATIVE_INFINITY;
-    this.departureInfo.counter = 0;
-    notifyQueueChanged (oldTime, queue);    
+    if (entity != null && (entity instanceof SimQueue) && ((SimQueue) entity) == this.queue)
+    {
+      this.arrivalInfo.job = null;
+      this.arrivalInfo.time = Double.NEGATIVE_INFINITY;
+      this.arrivalInfo.counter = 0;
+      this.dropInfo.job = null;
+      this.dropInfo.time = Double.NEGATIVE_INFINITY;
+      this.dropInfo.counter = 0;
+      this.revocationInfo.job = null;
+      this.revocationInfo.time = Double.NEGATIVE_INFINITY;
+      this.revocationInfo.counter = 0;    
+      this.departureInfo.job = null;
+      this.departureInfo.time = Double.NEGATIVE_INFINITY;
+      this.departureInfo.counter = 0;
+      notifyQueueChanged (this.eventList.getTime (), this.queue);
+    }
   }
   
   @Override

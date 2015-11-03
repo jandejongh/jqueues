@@ -1,8 +1,8 @@
 package nl.jdj.jqueues.r4.mac.example;
 
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.StdOutSimEntityListener;
 import nl.jdj.jqueues.r4.StdOutSimQueueListener;
-import nl.jdj.jqueues.r4.StdOutSimQueueVacationListener;
 import nl.jdj.jqueues.r4.mac.DCF;
 import nl.jdj.jqueues.r4.mac.DCFSimJob;
 import nl.jdj.jqueues.r4.mac.MediumPhyState;
@@ -40,54 +40,7 @@ public final class Main
       this.reported = reported;
       this.n = n;
       setName ("TestJob_" + this.n);
-    }
-
-    public final SimEventAction QUEUE_ARRIVE_ACTION = new SimEventAction ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestJob.this.reported)
-          System.out.println ("[TestJob] t=" + event.getTime () + ": ARRIVAL of " + TestJob.this + ".");      
-      }
-    };
-    
-    @Override
-    public SimEventAction<DCFSimJob> getQueueArriveAction ()
-    {
-      return this.QUEUE_ARRIVE_ACTION;
-    }
-    
-    public final SimEventAction QUEUE_DEPART_ACTION = new SimEventAction ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestJob.this.reported)
-          System.out.println ("[TestJob] t=" + event.getTime () + ": DEPARTURE of " + TestJob.this + ".");      
-      }
-    };
-    
-    @Override
-    public SimEventAction getQueueDepartAction ()
-    {
-      return this.QUEUE_DEPART_ACTION;
-    }
-
-    public final SimEventAction QUEUE_START_ACTION = new SimEventAction ()
-    {
-      @Override
-      public void action (final SimEvent event)
-      {
-        if (TestJob.this.reported)
-          System.out.println ("[TestJob] t=" + event.getTime () + ": START of " + TestJob.this + ".");      
-      }
-    };
-    
-    @Override
-    public SimEventAction getQueueStartAction ()
-    {
-      return this.QUEUE_START_ACTION;
+      registerSimEntityListener (new StdOutSimEntityListener<> ());
     }
 
   }
@@ -152,9 +105,9 @@ public final class Main
     final double eifs_mus = 2.0;
     final int cw = 16;
     final DCF dcfQueue = new DCF (el, mediumPhyStateMonitor, slotTime_s, aifs_slots, difs_mus, eifs_mus, cw);
-    dcfQueue.registerQueueListener (new StdOutSimQueueListener<DCFSimJob, DCF> ());
+    dcfQueue.registerSimEntityListener (new StdOutSimQueueListener<DCFSimJob, DCF> ());
     for (SimQueue queue : dcfQueue.getQueues ())
-      queue.registerQueueListener (new StdOutSimQueueVacationListener ());
+      queue.registerSimEntityListener (new StdOutSimQueueListener ());
     dcfQueue.registerDCFStateListener (new StdOutDCFStateListener ());
     System.out.println ("-> Submitting job to DCF queue at t = 10.0...");
     dcfQueue.scheduleJobArrival (10.0, job);

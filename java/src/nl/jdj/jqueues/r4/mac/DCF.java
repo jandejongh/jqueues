@@ -7,7 +7,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r4.AbstractSimJob;
 import nl.jdj.jqueues.r4.DefaultSimQueueListener;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.composite.BlackTandemSimQueue;
+import nl.jdj.jqueues.r4.composite.AbstractBlackTandemSimQueue;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
@@ -17,7 +17,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  *
  */
 public class DCF
-extends BlackTandemSimQueue<AbstractSimJob, FCFS, DCFSimJob, DCF>
+extends AbstractBlackTandemSimQueue<AbstractSimJob, FCFS, DCFSimJob, DCF>
 implements MediumPhyStateObserver
 {
 
@@ -79,7 +79,7 @@ implements MediumPhyStateObserver
     final Iterator<FCFS> iterator = getQueues ().iterator ();
     this.waitQueue = iterator.next ();
     this.contentionQueue = iterator.next ();
-    this.contentionQueue.registerQueueListener (new DefaultSimQueueListener<AbstractSimJob, SimQueue> ()
+    this.contentionQueue.registerSimEntityListener (new DefaultSimQueueListener<AbstractSimJob, SimQueue> ()
     {
       @Override
       public void notifyArrival (double t, AbstractSimJob job, SimQueue queue)
@@ -87,7 +87,7 @@ implements MediumPhyStateObserver
         DCF.this.contentionQueueArrival (t);
       }
     });
-    this.registerQueueListener (new DefaultSimQueueListener<DCFSimJob, DCF> ()
+    this.registerSimEntityListener (new DefaultSimQueueListener<DCFSimJob, DCF> ()
     {
       @Override
       public void notifyDeparture (double t, DCFSimJob job, DCF queue)

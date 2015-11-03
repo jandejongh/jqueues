@@ -150,7 +150,7 @@ public final class Main
             @Override
             public final void actionPerformed (ActionEvent ae)
             {
-              getQueue ().arrive (new AbstractSimJob ()
+              getQueue ().arrive (new AbstractSimJob (null, null)
               {
                 @Override
                 public double getServiceTime (SimQueue queue) throws IllegalArgumentException
@@ -169,7 +169,7 @@ public final class Main
             {
               eventList.scheduleNow ((SimEventAction) (SimEvent event) ->
               {
-                getQueue ().arrive (new AbstractSimJob ()
+                getQueue ().arrive (new AbstractSimJob (null, null)
                 {
                   @Override
                   public double getServiceTime (SimQueue queue1) throws IllegalArgumentException

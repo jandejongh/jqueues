@@ -14,5 +14,10 @@ extends AbstractSimJob<DCFSimJob, DCF>
   {
     return 0.0;
   }
+
+  public DCFSimJob ()
+  {
+    super (null, null);
+  }
   
 }
