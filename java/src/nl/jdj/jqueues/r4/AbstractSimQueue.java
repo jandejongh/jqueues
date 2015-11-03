@@ -843,9 +843,13 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       (final double time,
       final J job)
     {
-      super (time, job, (SimEventAction<J>) (final SimEvent<J> event) ->
+      super (time, job, (SimEventAction<J>) new SimEventAction<J> ()
       {
-        AbstractSimQueue.this.departureFromEventList (event);
+        @Override
+        public void action (final SimEvent<J> event)
+        {
+          AbstractSimQueue.this.departureFromEventList (event);
+        }
       });
     }
   }
