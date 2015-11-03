@@ -344,7 +344,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * method. However, the only exception is that the callee may remove the jobs from {@link #jobQueue}, <i>leaving all
    * other jobs untouched</i>, which is considered by the caller {@link #arrive} that the job is to depart immediately.
    * Note that in that particular case, the caller assumes that <i>no</i> departure events have been scheduled for this job,
-   * and it does </not> invoke {@link #rescheduleAfterDeparture} or {@link #removeJobFromQueueUponDeparture} for this job.
+   * and it does <i>not</i> invoke {@link #rescheduleAfterDeparture} or {@link #removeJobFromQueueUponDeparture} for this job.
    * 
    * @param job The job that arrived (and is present in {@link #jobQueue}).
    * @param time  The current time (i.e., the arrival time of the job).
@@ -375,13 +375,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   {
     if (time < this.lastUpdateTime || time < getEventList ().getTime () || job == null)
       throw new IllegalArgumentException ();
-    final SimEvent arrivalEvent = new SimEvent<> (time, null, new SimEventAction ()
+    final SimEvent arrivalEvent = new SimEvent<> (time, null, (SimEventAction) (SimEvent event) ->
     {
-      @Override
-      public void action (SimEvent event)
-      {
-        AbstractSimQueue.this.arrive (job, time);
-      }
+      AbstractSimQueue.this.arrive (job, time);
     });
     getEventList ().add (arrivalEvent);
     return arrivalEvent;
@@ -416,15 +412,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    */
   protected final SimEventAction END_QUEUE_ACCESS_VACATION_ACTION
-    = new SimEventAction<J> ()
-          {
-            @Override
-            public void action
-              (final SimEvent<J> event)
-            {
-              AbstractSimQueue.this.stopQueueAccessVacationFromEventList (event.getTime ());
-            }
-          };
+    = (SimEventAction<J>) (final SimEvent<J> event) ->
+  {
+    AbstractSimQueue.this.stopQueueAccessVacationFromEventList (event.getTime ());
+  };
 
   /** The single {@link SimEvent} used to wakeup the queue from queue-access vacations.
    * 
@@ -859,17 +850,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       (final double time,
       final J job)
     {
-      super (time, job,
-        new SimEventAction<J> ()
-          {
-            @Override
-            public void action
-              (final SimEvent<J> event)
-            {
-              AbstractSimQueue.this.departureFromEventList (event);
-            }
-          }
-      );
+      super (time, job, (SimEventAction<J>) (final SimEvent<J> event) ->
+      {
+        AbstractSimQueue.this.departureFromEventList (event);
+      });
     }
   }
 
