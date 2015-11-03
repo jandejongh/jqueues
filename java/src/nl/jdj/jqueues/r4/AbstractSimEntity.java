@@ -32,6 +32,46 @@ implements SimEntity<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // CONSTRUCTORS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Creates a new {@link SimEntity} with given event list and name.
+   * 
+   * @param eventList The event list to use, may be {@code null}.
+   * @param name The name of the entity, may be <code>null</code>.
+   * 
+   * @see #getEventList
+   * @see #setName
+   * 
+   * @throws IllegalArgumentException If this object is both a {@link SimQueue} <i>and</i> a {@link SimJob}.
+   * 
+   */
+  public AbstractSimEntity (final SimEventList eventList, final String name)
+  {
+    this.eventList = eventList;
+    setName (name);
+    if (this.eventList != null)
+      this.eventList.addListener (this);
+    if ((this instanceof SimQueue) && (this instanceof SimJob))
+      throw new IllegalArgumentException ();
+  }
+    
+  /** Creates a new {@link SimEntity} with given event list and <code>null</code> (initial) name.
+   * 
+   * @param eventList The event list, may be {@code null}.
+   * 
+   * @see #getEventList
+   * @see #setName
+   * 
+   */
+  public AbstractSimEntity (final SimEventList eventList)
+  {
+    this (eventList, null);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // EVENT LIST
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,42 +224,6 @@ implements SimEntity<J, Q>
     resetEntity ();
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // CONSTRUCTORS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Creates a new {@link SimEntity} with given event list and name.
-   * 
-   * @param eventList The event list to use, may be {@code null}.
-   * @param name The name of the entity, may be <code>null</code>.
-   * 
-   * @see #getEventList
-   * @see #setName
-   * 
-   */
-  public AbstractSimEntity (final SimEventList eventList, final String name)
-  {
-    this.eventList = eventList;
-    setName (name);
-    if (this.eventList != null)
-      this.eventList.addListener (this);  
-  }
-    
-  /** Creates a new {@link SimEntity} with given event list and <code>null</code> (initial) name.
-   * 
-   * @param eventList The event list, may be {@code null}.
-   * 
-   * @see #getEventList
-   * @see #setName
-   * 
-   */
-  public AbstractSimEntity (final SimEventList eventList)
-  {
-    this (eventList, null);
-  }
-  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // EVENT NOTIFICATIONS
