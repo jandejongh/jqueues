@@ -10,7 +10,7 @@ import nl.jdj.jqueues.r4.util.jobfactory.JobQueueVisitLog;
 import nl.jdj.jqueues.r4.util.loadfactory.pattern.LoadFactorySingleQueueSingleVisit_01;
 import nl.jdj.jqueues.r4.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r4.util.predictor.SimQueuePredictor;
-import nl.jdj.jqueues.r4.util.schedule.QueueExternalEvent;
+import nl.jdj.jqueues.r4.event.SimEntityEvent;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventList;
 
@@ -45,13 +45,13 @@ public class DefaultSimQueueTests
         System.out.println ("===== PASS " + pass + " =====");
       final SimJobFactory<DefaultVisitsLoggingSimJob, Q> jobFactory
         = new DefaultVisitsLoggingSimJobFactory<> ();
-      final TreeMap<Double, Set<QueueExternalEvent<DefaultVisitsLoggingSimJob, Q>>> queueExternalEvents
+      final TreeMap<Double, Set<SimEntityEvent<DefaultVisitsLoggingSimJob, Q>>> queueEvents
         = new TreeMap<> ();
       final Set<DefaultVisitsLoggingSimJob> jobs = 
         (new LoadFactorySingleQueueSingleVisit_01 ()).generate
-          (el, false, queue, jobFactory, numberOfJobs, true, 0.0, queueExternalEvents);
+          (el, false, queue, jobFactory, numberOfJobs, true, 0.0, queueEvents);
       final Map<DefaultVisitsLoggingSimJob, JobQueueVisitLog<DefaultVisitsLoggingSimJob, Q>> predictedJobQueueVisitLogs
-        = predictor.predictUniqueJobQueueVisitLogs_SingleVisit (queue, queueExternalEvents);
+        = predictor.predictUniqueJobQueueVisitLogs_SingleVisit (queue, queueEvents);
       el.run ();
       if (! el.isEmpty ())
         return false;
