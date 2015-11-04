@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import nl.jdj.jqueues.r4.event.SimQueueJobDepartureEvent;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -828,27 +829,29 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   /** The default {@link SimEvent} used internally for scheduling {@link SimJob} departures.
    * 
    * <p>The {@link DefaultDepartureEvent} (actually, its {@link SimEventAction}), once activated,
-   * calls {@link AbstractSimQueue#departureFromEventList}.
+   * calls {@link #departureFromEventList}.
    * The event puts the jobs passed in the constructor in its user object
    * {{@link SimEvent#getObject}).
    * 
    * <p>
    * Implementations are encouraged to avoid creation of {@link DefaultDepartureEvent}s
-   * for each departure, but instead reuse instances.
+   * for each departure, but instead reuse instances whenever possible.
    * 
    */
-  protected final class DefaultDepartureEvent extends SimEvent<J>
+  protected final static class DefaultDepartureEvent<J extends SimJob, Q extends AbstractSimQueue>
+  extends SimQueueJobDepartureEvent<J, Q>
   {
     public DefaultDepartureEvent
-      (final double time,
+      (final double departureTime,
+      final Q queue,
       final J job)
     {
-      super (time, job, (SimEventAction<J>) new SimEventAction<J> ()
+      super (job, queue, departureTime, new SimEventAction<J> ()
       {
         @Override
-        public void action (final SimEvent<J> event)
+        public final void action (final SimEvent<J> event)
         {
-          AbstractSimQueue.this.departureFromEventList (event);
+          queue.departureFromEventList (event);
         }
       });
     }
@@ -882,7 +885,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     // The following check is an error; jobs may depart without receiving any service at all!
     // if (! this.jobsExecuting.contains (job))
     //   throw new IllegalArgumentException ();
-    final DefaultDepartureEvent event = new DefaultDepartureEvent (time, job);
+    final DefaultDepartureEvent event = new DefaultDepartureEvent (time, this, job);
     this.eventsScheduled.add (event);
     getEventList ().add (event);
     return event;
