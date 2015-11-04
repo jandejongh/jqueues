@@ -14,7 +14,7 @@ import nl.jdj.jqueues.r4.util.jobfactory.JobQueueVisitLog;
 import nl.jdj.jqueues.r4.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r4.util.predictor.SimQueuePredictionAmbiguityException;
 import nl.jdj.jqueues.r4.util.predictor.SimQueuePredictor;
-import nl.jdj.jqueues.r4.util.schedule.QueueExternalEvent;
+import nl.jdj.jqueues.r4.event.SimEntityEvent;
 
 /** A {@link SimQueuePredictor} for {@link PS}.
  *
@@ -28,7 +28,7 @@ extends AbstractSimQueuePredictor<J, PS>
   /** XXX To be documented.
    * 
    * @param queue
-   * @param queueExternalEvents
+   * @param queueEvents
    * 
    * @return
    * 
@@ -37,18 +37,18 @@ extends AbstractSimQueuePredictor<J, PS>
    */
   @Override
   public Map<J, JobQueueVisitLog<J, PS>> predictUniqueJobQueueVisitLogs_SingleVisit
-  (final PS queue, final TreeMap<Double, Set<QueueExternalEvent<J, PS>>> queueExternalEvents)
+  (final PS queue, final TreeMap<Double, Set<SimEntityEvent<J, PS>>> queueEvents)
     throws SimQueuePredictionAmbiguityException
   {
     if (queue == null)
       throw new IllegalArgumentException ();
-    final TreeMap<Double, ? extends Set<QueueExternalEvent<J, PS>>> queueExternalEventsCopy
-      = filterSimQueueEventsForRelevance (queue, AbstractSimQueuePredictor.copy (queueExternalEvents));
+    final TreeMap<Double, ? extends Set<SimEntityEvent<J, PS>>> queueEventsCopy
+      = filterSimQueueEventsForRelevance (queue, AbstractSimQueuePredictor.copy (queueEvents));
     final Map<J, JobQueueVisitLog<J, PS>> visitLogs = new HashMap<> ();
     final LinkedHashMap<J, Double> revocationTime = new LinkedHashMap<> ();
     final LinkedHashMap<J, Double> jobArrivalTimes
-      = getNonDroppedArrivals_SingleVisit (queue, queueExternalEventsCopy, visitLogs, revocationTime);
-    final TreeMap<Double, Integer> sacMap = predictInitialServerAccessCredits (queue, queueExternalEventsCopy);
+      = getNonDroppedArrivals_SingleVisit (queue, queueEventsCopy, visitLogs, revocationTime);
+    final TreeMap<Double, Integer> sacMap = predictInitialServerAccessCredits (queue, queueEventsCopy);
     final LinkedHashMap<J, Double> startTimes =
       predictStartTimes_SingleVisit (queue, jobArrivalTimes, revocationTime, sacMap, visitLogs);
     final TreeMap<Double, LinkedHashSet<J>> runningJobs = predictRunningJobs (startTimes);
