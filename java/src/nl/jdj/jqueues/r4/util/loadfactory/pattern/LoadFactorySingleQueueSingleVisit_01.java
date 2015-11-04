@@ -10,9 +10,9 @@ import nl.jdj.jqueues.r4.SimJobFactory;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.util.loadfactory.AbstractLoadFactorySingleQueueSingleVisit;
 import nl.jdj.jqueues.r4.util.loadfactory.LoadFactorySingleQueueSingleVisit;
-import nl.jdj.jqueues.r4.util.schedule.JobQueueVisitArrivalSchedule;
-import nl.jdj.jqueues.r4.util.schedule.QueueExternalEvent;
-import nl.jdj.jqueues.r4.util.schedule.Scheduler;
+import nl.jdj.jqueues.r4.event.SimQueueJobArrivalEvent;
+import nl.jdj.jqueues.r4.event.SimEntityEvent;
+import nl.jdj.jqueues.r4.event.SimEntityEventScheduler;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** A concrete {@link LoadFactorySingleQueueSingleVisit}, pattern 01.
@@ -54,7 +54,7 @@ extends AbstractLoadFactorySingleQueueSingleVisit<J, Q>
    * <p>
    * Jobs are returned in a {@link LinkedHashSet}, preserving the creation order of the jobs.
    * 
-   * @see Scheduler#schedule
+   * @see SimEntityEventScheduler#schedule
    * 
    */
   @Override
@@ -66,28 +66,28 @@ extends AbstractLoadFactorySingleQueueSingleVisit<J, Q>
     final int numberOfJobs,
     final boolean reset,
     final double resetTime,
-    final TreeMap<Double, LinkedHashSet<QueueExternalEvent<J, Q>>> queueExternalEvents)
+    final TreeMap<Double, LinkedHashSet<SimEntityEvent<J, Q>>> queueExternalEvents)
   {
     if (eventList == null || queue == null || jobFactory == null)
       throw new IllegalArgumentException ();
     if (numberOfJobs < 0)
       throw new IllegalArgumentException ();
     final Set<J> jobs = new LinkedHashSet<> ();
-    final TreeMap<Double, LinkedHashSet<QueueExternalEvent<J, Q>>> realQueueExternalEvents =
+    final TreeMap<Double, LinkedHashSet<SimEntityEvent<J, Q>>> realQueueExternalEvents =
       ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
-    final Set<QueueExternalEvent> eventsToSchedule = new LinkedHashSet<> ();
+    final Set<SimEntityEvent> eventsToSchedule = new LinkedHashSet<> ();
     final SimEventList jobEventList = (attachSimJobsToEventList ? eventList : null);
     for (int i = 1; i <= numberOfJobs; i++)
     {
       final J job = jobFactory.newInstance (jobEventList, Integer.toString (i), generateRequestedServiceTimeMap (queue, i));
-      final QueueExternalEvent<J, Q> arrivalSchedule = new JobQueueVisitArrivalSchedule (job, queue, (double) i);
+      final SimEntityEvent<J, Q> arrivalSchedule = new SimQueueJobArrivalEvent (job, queue, (double) i);
       if (! realQueueExternalEvents.containsKey ((double) i))
         realQueueExternalEvents.put ((double) i, new LinkedHashSet<> ());
       realQueueExternalEvents.get ((double) i).add (arrivalSchedule);
       eventsToSchedule.add (arrivalSchedule);
       jobs.add (job);
     }
-    Scheduler.schedule (eventList, reset, resetTime, eventsToSchedule);
+    SimEntityEventScheduler.schedule (eventList, reset, resetTime, eventsToSchedule);
     return jobs;
   }
   
