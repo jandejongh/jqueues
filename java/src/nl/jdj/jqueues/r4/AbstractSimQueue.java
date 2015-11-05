@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import nl.jdj.jqueues.r4.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r4.event.SimQueueJobDepartureEvent;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
@@ -22,6 +23,24 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   implements SimQueue<J, Q>
 {
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTORS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+  /** Creates an abstract queue given an event list.
+   *
+   * @param eventList The event list to use.
+   *
+   * @throws IllegalArgumentException If the event list is <code>null</code>.
+   * 
+   */
+  protected AbstractSimQueue (final SimEventList eventList)
+  {
+    super (eventList);
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // INTERNAL STORAGE OF JOBS IN SYSTEM AND JOBS EXECUTING
@@ -362,8 +381,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param time The arrival time of the job, which must be in the future.
    * @param job The job to arrive.
    * 
-   * @return The event created (and already scheduled).
-   * 
    * @throws IllegalArgumentException If <code>time</code> is in the past, or <code>job</code> is <code>null</code>.
    * 
    * @see #arrive
@@ -371,16 +388,17 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see SimEventList#getTime
    * 
    */
-  public final SimEvent<J> scheduleJobArrival (final double time, final J job)
+  public final void scheduleJobArrival (final double time, final J job)
   {
     if (time < this.lastUpdateTime || time < getEventList ().getTime () || job == null)
       throw new IllegalArgumentException ();
-    final SimEvent arrivalEvent = new SimEvent<> (time, null, (SimEventAction) (SimEvent event) ->
-    {
-      AbstractSimQueue.this.arrive (job, time);
-    });
-    getEventList ().add (arrivalEvent);
-    return arrivalEvent;
+    SimEntityEventScheduler.scheduleJobArrival (job, this, time);
+//    final SimEvent arrivalEvent = new SimEvent<> (time, null, (SimEventAction) (SimEvent event) ->
+//    {
+//      AbstractSimQueue.this.arrive (job, time);
+//    });
+//    getEventList ().add (arrivalEvent);
+//    return arrivalEvent;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -886,8 +904,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     // if (! this.jobsExecuting.contains (job))
     //   throw new IllegalArgumentException ();
     final DefaultDepartureEvent event = new DefaultDepartureEvent (time, this, job);
+    SimEntityEventScheduler.schedule (getEventList (), event);
     this.eventsScheduled.add (event);
-    getEventList ().add (event);
+//    getEventList ().add (event);
     return event;
   }
   
@@ -1111,22 +1130,4 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     return "AbstractSimQueue";
   }
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // CONSTRUCTORS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-  /** Creates an abstract queue given an event list.
-   *
-   * @param eventList The event list to use.
-   *
-   * @throws IllegalArgumentException If the event list is <code>null</code>.
-   * 
-   */
-  protected AbstractSimQueue (final SimEventList eventList)
-  {
-    super (eventList);
-  }
-
 }

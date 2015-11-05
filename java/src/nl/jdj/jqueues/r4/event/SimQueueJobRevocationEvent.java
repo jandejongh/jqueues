@@ -15,6 +15,12 @@ public class SimQueueJobRevocationEvent<J extends SimJob, Q extends SimQueue>
 extends SimEntityEvent<J, Q>
 {
  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   private static
   <J extends SimJob, Q extends SimQueue>
   SimEventAction<J>
@@ -48,6 +54,25 @@ extends SimEntityEvent<J, Q>
   (final J job, final Q queue, final double revocationTime, final boolean interruptService)
   {
     super ("Rev[" + job + "]@" + queue, revocationTime, queue, job, createAction (job, queue, interruptService));
+    this.interruptService = interruptService;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // INTERRUPT SERVICE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final boolean interruptService;
+
+  /** Returns whether to request interruption of service (if applicable).
+   * 
+   * @return Whether to request interruption of service (if applicable).
+   * 
+   */
+  public final boolean isInterruptService ()
+  {
+    return this.interruptService;
   }
   
 }

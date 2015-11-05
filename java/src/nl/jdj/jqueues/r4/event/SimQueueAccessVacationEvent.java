@@ -15,6 +15,12 @@ public class SimQueueAccessVacationEvent<J extends SimJob, Q extends SimQueue>
 extends SimEntityEvent<J, Q>
 {
  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   private static
   <J extends SimJob, Q extends SimQueue>
   SimEventAction<J>
@@ -51,6 +57,25 @@ extends SimEntityEvent<J, Q>
   (final Q queue, final double time, final boolean vacation)
   {
     super ("QAV[" + vacation + "]@" + queue, time, queue, null, createAction (queue, vacation));
+    this.vacation = vacation;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // VACATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  final boolean vacation;
+  
+  /** Returns whether the vacation starts or ends.
+   * 
+   * @return Whether the queue-access vacation starts (<code>true</code>) or ends (<code>false</code>).
+   * 
+   */
+  public final boolean getVacation ()
+  {
+    return this.vacation;
   }
   
 }

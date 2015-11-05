@@ -18,10 +18,16 @@ public class SimQueueJobDepartureEvent<J extends SimJob, Q extends SimQueue>
 extends SimEntityEvent<J, Q>
 {
  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Creates a job-departure event at a specific queue.
    * 
    * <p>
-   * Do not <i>ever</i> schedule this yourself; it is for private use by {@link SimQueue} implementations.
+   * Do not schedule this yourself; it is for private use by {@link SimQueue} implementations.
    * 
    * @param job           The job that is to depart.
    * @param queue         The queue at which the job departs.

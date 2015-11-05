@@ -19,35 +19,11 @@ public abstract class SimEntityEvent<J extends SimJob, Q extends SimQueue>
 extends SimEvent<J>
 {
   
-  /** The queue at which the event occurs, non-{@code null}.
-   * 
-   */
-  private final Q queue;
-  
-  /** Gets the queue at which the event occurs.
-   * 
-   * @return The queue at which the event occurs, non-{@code null}.
-   * 
-   */
-  public final Q getQueue ()
-  {
-    return this.queue;
-  }
-  
-  /** Gets the job (if applicable) to which the event applies.
-   * 
-   * <p>
-   * The job is stored as user object on the {@link SimEvent}.
-   * 
-   * @return The job (if applicable) to which the event applies, may be {@code null}.
-   * 
-   * @see SimEvent#getObject
-   * 
-   */
-  public final J getJob ()
-  {
-    return getObject ();
-  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Creates a new event for a queue.
    * 
@@ -66,6 +42,48 @@ extends SimEvent<J>
     if (queue == null)
       throw new IllegalArgumentException ();
     this.queue = queue;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The queue at which the event occurs, non-{@code null}.
+   * 
+   */
+  private final Q queue;
+  
+  /** Gets the queue at which the event occurs.
+   * 
+   * @return The queue at which the event occurs, non-{@code null}.
+   * 
+   */
+  public final Q getQueue ()
+  {
+    return this.queue;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Gets the job (if applicable) to which the event applies.
+   * 
+   * <p>
+   * The job is stored as user object on the {@link SimEvent}.
+   * 
+   * @return The job (if applicable) to which the event applies, may be {@code null}.
+   * 
+   * @see SimEvent#getObject
+   * 
+   */
+  public final J getJob ()
+  {
+    return getObject ();
   }
   
 }

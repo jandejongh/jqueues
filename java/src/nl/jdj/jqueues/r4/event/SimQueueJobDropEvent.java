@@ -8,7 +8,7 @@ import nl.jdj.jsimulation.r4.SimEventAction;
 /** A drop {@link SimEvent} of a job at a queue.
  * 
  * <p>
- * Do not <i>ever</i> schedule this yourself; it is for private use by {@link SimQueue} implementations.
+ * Do not schedule this yourself; it is for private use by {@link SimQueue} implementations.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -18,6 +18,12 @@ public class SimQueueJobDropEvent<J extends SimJob, Q extends SimQueue>
 extends SimEntityEvent<J, Q>
 {
  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Creates a job-drop event at a specific queue.
    * 
    * <p>
