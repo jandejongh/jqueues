@@ -75,7 +75,7 @@ extends AbstractLoadFactorySingleQueueSingleVisit<J, Q>
     final Set<J> jobs = new LinkedHashSet<> ();
     final TreeMap<Double, LinkedHashSet<SimEntityEvent<J, Q>>> realQueueExternalEvents =
       ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
-    final Set<SimEntityEvent> eventsToSchedule = new LinkedHashSet<> ();
+    final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
     final SimEventList jobEventList = (attachSimJobsToEventList ? eventList : null);
     for (int i = 1; i <= numberOfJobs; i++)
     {
