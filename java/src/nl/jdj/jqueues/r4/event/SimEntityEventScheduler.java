@@ -68,7 +68,7 @@ public abstract class SimEntityEventScheduler
   /** Schedules a single queue event on a given event list.
    * 
    * @param eventList  The event list, non-{@code null}.
-   * @param queueEvent The queue event, non-{@linkl null}.
+   * @param queueEvent The queue event, non-{@code null}.
    * 
    * @param <J> The type of {@link SimJob}s supported.
    * @param <Q> The type of {@link SimQueue}s supported.
