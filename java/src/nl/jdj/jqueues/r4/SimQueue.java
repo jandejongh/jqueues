@@ -333,9 +333,6 @@ extends SimEntity<J, Q>
   
   /** Returns whether or not the queue is on queue-access vacation.
    * 
-   * This method does nothing if the queue is not on queue-access vacation.
-   * and overrules all settings as to the (remaining) duration of the vacation.
-   * 
    * @return Whether or not the queue is on queue-access vacation.
    * 
    * @see #startQueueAccessVacation()
@@ -370,43 +367,6 @@ extends SimEntity<J, Q>
   // MAIN OPERATIONS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Arrival of a job at the queue.
-   *
-   * This methods should be called from the {@link SimEventList} as a result of scheduling the job arrival.
-   * Implementations can rely on the fact that the time argument supplied is actually the current time in the simulation.
-   * 
-   * <p>
-   * Do not use this method to schedule job arrivals on the event list!
-   * 
-   * <p>
-   * Note that during a <i>queue-access vacation</i>, all jobs will be dropped upon arrival.
-   * 
-   * @param job  The job.
-   * @param time The time at which the job arrives, i.c., the current time.
-   * 
-   * @see #isQueueAccessVacation
-   *
-   */
-  public void arrive (J job, double time);
-
-  /** Revocation (attempt) of a job at a queue.
-   *
-   * <p>
-   * If the job is not currently present at this {@link SimQueue}, {@code false} is returned.
-   * 
-   * @param job  The job to be revoked from the queue.
-   * @param time The time at which the request is issued
-   *               (i.e., the current time).
-   * @param interruptService Whether to allow interruption of the job's
-   *                           service if already started.
-   *                         If false, revocation will only succeed if the
-   *                           job has not received any service yet.
-   *
-   * @return True if revocation succeeded (returns {@code false} if the job is not present).
-   *
-   */
-  public boolean revoke (J job, double time, boolean interruptService);
 
   /** Start a queue-access vacation of undetermined duration (i.e., until explicit ending the vacation).
    * 
@@ -451,6 +411,43 @@ extends SimEntity<J, Q>
    */
   public void stopQueueAccessVacation ();
   
+  /** Arrival of a job at the queue.
+   *
+   * This methods should be called from the {@link SimEventList} as a result of scheduling the job arrival.
+   * Implementations can rely on the fact that the time argument supplied is actually the current time in the simulation.
+   * 
+   * <p>
+   * Do not use this method to schedule job arrivals on the event list!
+   * 
+   * <p>
+   * Note that during a <i>queue-access vacation</i>, all jobs will be dropped upon arrival.
+   * 
+   * @param job  The job.
+   * @param time The time at which the job arrives, i.c., the current time.
+   * 
+   * @see #isQueueAccessVacation
+   *
+   */
+  public void arrive (J job, double time);
+
+  /** Revocation (attempt) of a job at a queue.
+   *
+   * <p>
+   * If the job is not currently present at this {@link SimQueue}, {@code false} is returned.
+   * 
+   * @param job  The job to be revoked from the queue.
+   * @param time The time at which the request is issued
+   *               (i.e., the current time).
+   * @param interruptService Whether to allow interruption of the job's
+   *                           service if already started.
+   *                         If false, revocation will only succeed if the
+   *                           job has not received any service yet.
+   *
+   * @return True if revocation succeeded (returns {@code false} if the job is not present).
+   *
+   */
+  public boolean revoke (J job, double time, boolean interruptService);
+
   /** Sets the server-access credits.
    * 
    * @param credits The new remaining server-access credits, non-negative, with {@link Integer#MAX_VALUE} treated as infinity.
