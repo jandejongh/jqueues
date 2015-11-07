@@ -333,7 +333,7 @@ public interface WorkloadSchedule<J extends SimJob, Q extends SimQueue>
           eventDuplicates += (l.size () - 1);
       eventTimes.addAll (getServerAccessCreditsMap (q).keySet ());
     }
-    return eventTimes.size () < (getProcessedQueueEvents ().size () - eventDuplicates);
+    return eventTimes.size () == (getProcessedQueueEvents ().size () - eventDuplicates);
   }
   
 }
