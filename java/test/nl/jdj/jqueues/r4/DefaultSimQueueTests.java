@@ -51,7 +51,7 @@ public class DefaultSimQueueTests
         (new LoadFactorySingleQueueSingleVisit_01 ()).generate
           (el, false, queue, jobFactory, numberOfJobs, true, 0.0, queueEvents);
       final Map<DefaultVisitsLoggingSimJob, JobQueueVisitLog<DefaultVisitsLoggingSimJob, Q>> predictedJobQueueVisitLogs
-        = predictor.predictUniqueJobQueueVisitLogs_SingleVisit (queue, queueEvents);
+        = predictor.predictVisitLogs_SQ_SV_U (queue, queueEvents);
       el.run ();
       if (! el.isEmpty ())
         return false;
@@ -59,7 +59,7 @@ public class DefaultSimQueueTests
         actualJobQueueVisitLogs = new HashMap<> ();
       for (final DefaultVisitsLoggingSimJob j : jobs) 
         actualJobQueueVisitLogs.put (j, j.getVisitLogs ());
-      if (! predictor.matchUniqueJobQueueVisitLogs_SingleVisit
+      if (! predictor.matchVisitLogs_SQ_SV
         (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, DefaultSimQueueTests.ACCURACY))
         return false;
       el.reset ();
