@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r4.util.loadfactory.pattern;
 import java.util.LinkedHashSet;
 import java.util.NavigableMap;
 import java.util.Set;
+import java.util.TreeMap;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimJobFactory;
 import nl.jdj.jqueues.r4.SimQueue;
@@ -52,13 +53,23 @@ extends LoadFactory_SQ_SV_001<J, Q>
   {
     final Set<J> jobs = super.generate (eventList, attachSimJobsToEventList,
       queue, jobFactory, numberOfJobs, reset, resetTime, queueExternalEvents);
+    final NavigableMap<Double, Set<SimEntityEvent<J, Q>>> realQueueExternalEvents =
+      ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
     final int numberOfQavToSchedule = Math.min (1, jobs.size () / 3);
     final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
     for (int i = 1; i <= numberOfQavToSchedule; i++)
     {
-      final SimEntityEvent<J, Q> qavOnSchedule = new SimQueueAccessVacationEvent<> (queue, 3.0 * i - 0.5, true);
+      final double startQavTime = 3.0 * i - 0.5;
+      final double endQavTime  = 3.0 * i + 0.5;
+      final SimEntityEvent<J, Q> qavOnSchedule = new SimQueueAccessVacationEvent<> (queue, startQavTime, true);
+      if (! realQueueExternalEvents.containsKey (startQavTime))
+        realQueueExternalEvents.put (startQavTime, new LinkedHashSet<> ());
+      realQueueExternalEvents.get (startQavTime).add (qavOnSchedule);
       eventsToSchedule.add (qavOnSchedule);
-      final SimEntityEvent<J, Q> qavOffSchedule = new SimQueueAccessVacationEvent<> (queue, 3.0 * i + 0.5, false);
+      final SimEntityEvent<J, Q> qavOffSchedule = new SimQueueAccessVacationEvent<> (queue, endQavTime, false);
+      if (! realQueueExternalEvents.containsKey (endQavTime))
+        realQueueExternalEvents.put (endQavTime, new LinkedHashSet<> ());
+      realQueueExternalEvents.get (endQavTime).add (qavOffSchedule);
       eventsToSchedule.add (qavOffSchedule);
     }
     // Be careful not to reset the event list (again) here!
