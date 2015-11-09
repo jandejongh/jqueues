@@ -61,7 +61,8 @@ extends LoadFactory_SQ_SV_001<J, Q>
       final SimEntityEvent<J, Q> qavOffSchedule = new SimQueueAccessVacationEvent<> (queue, 10.0 * i + 0.5, false);
       eventsToSchedule.add (qavOffSchedule);
     }
-    SimEntityEventScheduler.schedule (eventList, reset, resetTime, eventsToSchedule);
+    // Be careful not to reset the event list (again) here!
+    SimEntityEventScheduler.schedule (eventList, false, Double.NaN, eventsToSchedule);
     return jobs;
   }
   
