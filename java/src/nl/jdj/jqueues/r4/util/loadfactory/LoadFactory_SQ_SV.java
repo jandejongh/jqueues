@@ -1,8 +1,8 @@
 package nl.jdj.jqueues.r4.util.loadfactory;
 
 import java.util.LinkedHashSet;
+import java.util.NavigableMap;
 import java.util.Set;
-import java.util.TreeMap;
 import nl.jdj.jqueues.r4.SimEntity;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimJobFactory;
@@ -16,7 +16,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public interface LoadFactorySingleQueueSingleVisit<J extends SimJob, Q extends SimQueue>
+public interface LoadFactory_SQ_SV<J extends SimJob, Q extends SimQueue>
 extends LoadFactory<J, Q>
 {
 
@@ -50,6 +50,6 @@ extends LoadFactory<J, Q>
     int numberOfJobs,
     boolean reset,
     double resetTime,
-    TreeMap<Double, LinkedHashSet<SimEntityEvent<J, Q>>> queueEvents);
+    NavigableMap<Double, Set<SimEntityEvent<J, Q>>> queueEvents);
 
 }

@@ -17,10 +17,10 @@ import org.junit.Test;
  *
  *
  */
-public class Test_PS
+public class PSTest
 {
   
-  public Test_PS ()
+  public PSTest ()
   {
   }
   
@@ -56,7 +56,7 @@ public class Test_PS
     final SimQueuePredictor<DefaultVisitsLoggingSimJob, PS> predictor = new SimQueuePredictor_PS<> ();
     final int numberOfJobs = 100;
     final boolean silent = false;
-    DefaultSimQueueTests.doTest_01 (queue, predictor, numberOfJobs, silent);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, silent, null);
   }
 
 }

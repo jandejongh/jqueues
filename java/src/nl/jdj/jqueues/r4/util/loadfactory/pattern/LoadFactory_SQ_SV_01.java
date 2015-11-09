@@ -3,25 +3,29 @@ package nl.jdj.jqueues.r4.util.loadfactory.pattern;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimJobFactory;
 import nl.jdj.jqueues.r4.SimQueue;
-import nl.jdj.jqueues.r4.util.loadfactory.AbstractLoadFactorySingleQueueSingleVisit;
-import nl.jdj.jqueues.r4.util.loadfactory.LoadFactorySingleQueueSingleVisit;
+import nl.jdj.jqueues.r4.util.loadfactory.AbstractLoadFactory_SQ_SV;
+import nl.jdj.jqueues.r4.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jqueues.r4.event.SimQueueJobArrivalEvent;
 import nl.jdj.jqueues.r4.event.SimEntityEvent;
 import nl.jdj.jqueues.r4.event.SimEntityEventScheduler;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-/** A concrete {@link LoadFactorySingleQueueSingleVisit}, pattern 01.
+/** A concrete {@link LoadFactory_SQ_SV}, pattern 01.
  *
  * @see #generate
  * 
+ * @param <J> The type of {@link SimJob}s supported.
+ * @param <Q> The type of {@link SimQueue}s supported.
+ *
  */
-public class LoadFactorySingleQueueSingleVisit_01<J extends SimJob, Q extends SimQueue>
-extends AbstractLoadFactorySingleQueueSingleVisit<J, Q>
+public class LoadFactory_SQ_SV_01<J extends SimJob, Q extends SimQueue>
+extends AbstractLoadFactory_SQ_SV<J, Q>
 {
 
   /** Creates a suitable map for the requested service time for a job visit to a queue.
@@ -66,14 +70,14 @@ extends AbstractLoadFactorySingleQueueSingleVisit<J, Q>
     final int numberOfJobs,
     final boolean reset,
     final double resetTime,
-    final TreeMap<Double, LinkedHashSet<SimEntityEvent<J, Q>>> queueExternalEvents)
+    final NavigableMap<Double, Set<SimEntityEvent<J, Q>>> queueExternalEvents)
   {
     if (eventList == null || queue == null || jobFactory == null)
       throw new IllegalArgumentException ();
     if (numberOfJobs < 0)
       throw new IllegalArgumentException ();
     final Set<J> jobs = new LinkedHashSet<> ();
-    final TreeMap<Double, LinkedHashSet<SimEntityEvent<J, Q>>> realQueueExternalEvents =
+    final NavigableMap<Double, Set<SimEntityEvent<J, Q>>> realQueueExternalEvents =
       ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
     final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
     final SimEventList jobEventList = (attachSimJobsToEventList ? eventList : null);
