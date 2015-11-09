@@ -14,7 +14,9 @@ import nl.jdj.jqueues.r4.util.loadfactory.LoadFactory_SQ_SV;
 public enum KnownLoadFactory_SQ_SV
 {
 
-  KLF_01 (new LoadFactory_SQ_SV_01 ());
+  KLF_001 (new LoadFactory_SQ_SV_001 ()),
+  KLF_002 (new LoadFactory_SQ_SV_002 ()),
+    ;
   
   /** Creates the entry in this enumeration.
    * 

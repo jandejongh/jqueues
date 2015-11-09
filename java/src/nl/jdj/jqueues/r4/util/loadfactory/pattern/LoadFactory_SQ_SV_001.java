@@ -16,7 +16,7 @@ import nl.jdj.jqueues.r4.event.SimEntityEvent;
 import nl.jdj.jqueues.r4.event.SimEntityEventScheduler;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-/** A concrete {@link LoadFactory_SQ_SV}, pattern 01.
+/** A concrete {@link LoadFactory_SQ_SV}, pattern 001.
  *
  * @see #generate
  * 
@@ -24,7 +24,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public class LoadFactory_SQ_SV_01<J extends SimJob, Q extends SimQueue>
+public class LoadFactory_SQ_SV_001<J extends SimJob, Q extends SimQueue>
 extends AbstractLoadFactory_SQ_SV<J, Q>
 {
 
