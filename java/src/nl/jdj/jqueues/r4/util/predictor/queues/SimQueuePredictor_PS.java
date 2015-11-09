@@ -101,7 +101,7 @@ extends AbstractSimQueuePredictor<J, PS>
       final Set<J> arrivals = new HashSet<> ();
       arrivals.add (job);
       queueState.doArrivals (nextWorkloadEventTime, arrivals, visitLogsSet);
-      if (queueState.getServerAccessCredits () >= 1)
+      if ((! queueState.isQueueAccessVacation ()) && queueState.getServerAccessCredits () >= 1)
         queueState.doStarts (nextWorkloadEventTime, arrivals);
     }
     else if (eventType == SimEntitySimpleEventType.REVOCATION)
