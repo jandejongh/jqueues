@@ -1,5 +1,6 @@
 package nl.jdj.jqueues.r4.util.predictor;
 
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -68,10 +69,12 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
    *                  are (to be) ignored.
    * @param actual    The actual {@link JobQueueVisitLog}s, see above.
    * @param accuracy  The accuracy (maximum  deviation of times in a {@link JobQueueVisitLog}, non-negative.
+   * @param stream    An optional stream for mismatch reporting.
    * 
    * @return Whether the predicted and actual maps map within the given accuracy.
    * 
-   * @throws IllegalArgumentException If any of the arguments has {@code null} value, is illegally structured, or if the
+   * @throws IllegalArgumentException If any of the arguments except the stream has {@code null} value,
+   *                                  is illegally structured, or if the
    *                                  accuracy argument is negative.
    * 
    */
@@ -79,7 +82,8 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
     (final Q queue,
       final Map<J, JobQueueVisitLog<J, Q>> predicted,
       final Map<J, TreeMap<Double, TreeMap<Integer, JobQueueVisitLog<J, Q>>>> actual,
-      final double accuracy)
+      final double accuracy,
+      final PrintStream stream)
   {
     if (queue == null || predicted == null || actual == null || accuracy < 0)
       throw new IllegalArgumentException ();
@@ -101,7 +105,13 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
           if (sequenceEntry.getValue ().queue == queue)
           {
             if (actualAtQueue.containsKey (job))
+            {
+              if (stream != null)
+              {
+                stream.println ("[matchVisitLogs_SQ_SV] Found multiple visits of job " + job + " to queue " + queue +".");
+              }
               return false;
+            }
             else
               actualAtQueue.put (job, sequenceEntry.getValue ());
           }
@@ -110,9 +120,29 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
     for (final J job : predictedAtQueue.keySet ())
     {
       final JobQueueVisitLog<J, Q> predictedVisitLog = predictedAtQueue.get (job);
+      if (! actualAtQueue.containsKey (job))
+      {
+        if (stream != null)
+        {
+          stream.println ("[matchVisitLogs_SQ_SV] Absent predicted visit of job " + job + " to queue " + queue +":");
+          stream.println ("Predicted visit log: ");
+          predictedVisitLog.print (stream);
+        }
+        return false;        
+      }
       final JobQueueVisitLog<J, Q> actualVisitLog = actualAtQueue.get (job);
       if (! actualVisitLog.equals (predictedVisitLog, accuracy))
+      {
+        if (stream != null)
+        {
+          stream.println ("[matchVisitLogs_SQ_SV] Found mismatch for visit of job " + job + " to queue " + queue +":");
+          stream.println ("Accuracy = " + accuracy + ".");
+          stream.println ("Predicted and actual visit logs: ");
+          predictedVisitLog.print (stream);
+          actualVisitLog.print (stream);
+        }
         return false;
+      }
     }
     return true;
   }
