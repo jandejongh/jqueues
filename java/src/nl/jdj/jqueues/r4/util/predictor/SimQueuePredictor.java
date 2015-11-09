@@ -1,14 +1,16 @@
 package nl.jdj.jqueues.r4.util.predictor;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.util.jobfactory.JobQueueVisitLog;
-import nl.jdj.jqueues.r4.util.schedule.QueueExternalEvent;
+import nl.jdj.jqueues.r4.event.SimEntityEvent;
 
 /** An object capable of predicting the behavior of one or more {@link SimQueue}s under user-supplied workload and conditions.
  *
@@ -19,35 +21,45 @@ import nl.jdj.jqueues.r4.util.schedule.QueueExternalEvent;
 public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
 {
 
-  /** Creates the unique prediction, if possible, of job-visits (at most one) to a given queue.
+  /** Creates the unique prediction, if possible, of job-visits (at most one) to a given queue under a Random-Order Event List.
    * 
-   * @param queue               The queue, non-{@code null}.
-   * @param queueExternalEvents The external events, indexed by event time and for a given event time,
-   *                            ordered by occurrence on the event list;
-   *                            events related to other queues are allowed and are to be ignored.
+   * @param queue       The queue, non-{@code null}.
+   * @param queueEvents The queue events; events related to other queues are allowed and are to be ignored.
    * 
    * @return A single {@link JobQueueVisitLog} for every job that visits the given queue.
    * 
    * @throws IllegalArgumentException              If {@code queue == null} or the workload parameters are somehow illegal.
    * @throws UnsupportedOperationException         If the queue type or the workload is (partially) unsupported.
-   * 
    * @throws SimQueuePredictionException           If a prediction is (e.g.) too complex to generate
-   *                                               ({@link SimQueuePredictionComplexityException},
+   *                                               ({@link SimQueuePredictionComplexityException}),
    *                                               if invalid input has been supplied to the predictor
    *                                               ({@link SimQueuePredictionInvalidInputException}),
    *                                               or if a <i>unique</i> prediction cannot be generated
    *                                               ({@link SimQueuePredictionAmbiguityException}).
    * 
    */
-  public Map<J, JobQueueVisitLog<J, Q>> predictUniqueJobQueueVisitLogs_SingleVisit
-  (Q queue, TreeMap<Double, Set<QueueExternalEvent<J, Q>>> queueExternalEvents)
+  public Map<J, JobQueueVisitLog<J, Q>> predictVisitLogs_SQ_SV_ROEL_U
+  (Q queue, Set<SimEntityEvent<J, Q>> queueEvents)
     throws SimQueuePredictionException;
  
+  public default Map<J, JobQueueVisitLog<J, Q>> predictVisitLogs_SQ_SV_U
+  (final Q queue, final NavigableMap<Double, Set<SimEntityEvent<J, Q>>> queueEventsMap)
+    throws SimQueuePredictionException
+  {
+    if (queueEventsMap == null)
+      throw new IllegalArgumentException ();
+    final Set<SimEntityEvent<J, Q>> queueEvents = new LinkedHashSet<> ();
+    for (final Set<SimEntityEvent<J, Q>> queueEventsAtTime : queueEventsMap.values ())
+      queueEvents.addAll (queueEventsAtTime);
+    return predictVisitLogs_SQ_SV_ROEL_U (queue, queueEvents);
+  }
+  
   /** Compares two maps of predicted and actual {@link JobQueueVisitLog}s for equality, within given accuracy.
    * 
    * <p>
    * The {@code actual} argument holds all (allowing multiple) job visits, and may contain visits to other {@link SimQueue}s;
-   * these are (to be) ignored. The map has the jobs as keys, and each value holds another map from arrival times (of the
+   * the latter of which are (to be) ignored.
+   * The map has the jobs as keys, and each value holds another map from arrival times (of the
    * particular job) to numbered {@link JobQueueVisitLog} of that job at that particular arrival time
    * (this allows multiple arrivals of the same job at the same time).
    * 
@@ -63,7 +75,7 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
    *                                  accuracy argument is negative.
    * 
    */
-  public default boolean matchUniqueJobQueueVisitLogs_SingleVisit
+  public default boolean matchVisitLogs_SQ_SV
     (final Q queue,
       final Map<J, JobQueueVisitLog<J, Q>> predicted,
       final Map<J, TreeMap<Double, TreeMap<Integer, JobQueueVisitLog<J, Q>>>> actual,
