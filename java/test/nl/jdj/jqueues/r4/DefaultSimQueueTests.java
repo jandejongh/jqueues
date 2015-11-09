@@ -36,7 +36,7 @@ public class DefaultSimQueueTests
   {
     if (queue == null || predictor == null || numberOfJobs < 0 || queue.getEventList () == null)
       throw new IllegalArgumentException ();
-    System.out.println ("================================================================================");
+    System.out.println ("========== SimQueue Tests [SQ/SV] ==============================================");
     System.out.println (queue);
     System.out.println ("================================================================================");
     final SimEventList<SimEvent> el = queue.getEventList ();
@@ -47,7 +47,7 @@ public class DefaultSimQueueTests
         for (int pass = 1; pass <= NUMBER_OF_PASSES; pass++)
         {
           if (! silent)
-            System.out.println ("===== PASS " + pass + " =====");
+            System.out.println ("===== Test: " + klf + ", pass " + pass + " =====");
           final SimJobFactory<DefaultVisitsLoggingSimJob, Q> jobFactory
             = new DefaultVisitsLoggingSimJobFactory<> ();
           final NavigableMap<Double, Set<SimEntityEvent<DefaultVisitsLoggingSimJob, Q>>> queueEvents
@@ -58,15 +58,13 @@ public class DefaultSimQueueTests
           final Map<DefaultVisitsLoggingSimJob, JobQueueVisitLog<DefaultVisitsLoggingSimJob, Q>> predictedJobQueueVisitLogs
             = predictor.predictVisitLogs_SQ_SV_U (queue, queueEvents);
           el.run ();
-          if (! el.isEmpty ())
-            return false;
+          assert el.isEmpty ();
           final Map<DefaultVisitsLoggingSimJob, TreeMap<Double,TreeMap<Integer,JobQueueVisitLog<DefaultVisitsLoggingSimJob, Q>>>>
             actualJobQueueVisitLogs = new HashMap<> ();
           for (final DefaultVisitsLoggingSimJob j : jobs) 
             actualJobQueueVisitLogs.put (j, j.getVisitLogs ());
-          if (! predictor.matchVisitLogs_SQ_SV
-            (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, DefaultSimQueueTests.ACCURACY))
-            return false;
+          assert predictor.matchVisitLogs_SQ_SV
+            (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, DefaultSimQueueTests.ACCURACY, System.err);
           el.reset ();
         }
     return true;
