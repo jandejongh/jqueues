@@ -55,7 +55,7 @@ extends LoadFactory_SQ_SV_001<J, Q>
       queue, jobFactory, numberOfJobs, reset, resetTime, queueExternalEvents);
     final NavigableMap<Double, Set<SimEntityEvent<J, Q>>> realQueueExternalEvents =
       ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
-    final int numberOfQavToSchedule = Math.min (1, jobs.size () / 3);
+    final int numberOfQavToSchedule = Math.max (1, jobs.size () / 3);
     final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
     for (int i = 1; i <= numberOfQavToSchedule; i++)
     {
