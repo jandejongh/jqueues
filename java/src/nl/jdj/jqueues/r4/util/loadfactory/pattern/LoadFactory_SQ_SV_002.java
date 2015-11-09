@@ -30,11 +30,11 @@ extends LoadFactory_SQ_SV_001<J, Q>
    * This method
    * <ul>
    * <li> generates the job load according to {@link LoadFactory_SQ_SV_001#generate};
-   * <li> adds queue-access vacations from 9.5 until 10.5, 19.5 until 20.5, etc.
+   * <li> adds queue-access vacations from 2.5 until 3.5, 5.5 until 6.5, etc.
    * </ul>
    * 
    * <p>
-   * This should effectively make the queue drop every 10th job generated.
+   * This should effectively make the queue drop every 3rd job generated.
    * 
    * @see SimEntityEventScheduler#schedule
    * 
@@ -52,13 +52,13 @@ extends LoadFactory_SQ_SV_001<J, Q>
   {
     final Set<J> jobs = super.generate (eventList, attachSimJobsToEventList,
       queue, jobFactory, numberOfJobs, reset, resetTime, queueExternalEvents);
-    final int numberOfQavToSchedule = Math.min (1, jobs.size () / 10);
+    final int numberOfQavToSchedule = Math.min (1, jobs.size () / 3);
     final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
     for (int i = 1; i <= numberOfQavToSchedule; i++)
     {
-      final SimEntityEvent<J, Q> qavOnSchedule = new SimQueueAccessVacationEvent<> (queue, 10.0 * i - 0.5, true);
+      final SimEntityEvent<J, Q> qavOnSchedule = new SimQueueAccessVacationEvent<> (queue, 3.0 * i - 0.5, true);
       eventsToSchedule.add (qavOnSchedule);
-      final SimEntityEvent<J, Q> qavOffSchedule = new SimQueueAccessVacationEvent<> (queue, 10.0 * i + 0.5, false);
+      final SimEntityEvent<J, Q> qavOffSchedule = new SimQueueAccessVacationEvent<> (queue, 3.0 * i + 0.5, false);
       eventsToSchedule.add (qavOffSchedule);
     }
     // Be careful not to reset the event list (again) here!
