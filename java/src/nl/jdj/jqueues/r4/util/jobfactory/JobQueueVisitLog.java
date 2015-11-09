@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r4.util.jobfactory;
 
 import java.io.PrintStream;
+import java.util.Set;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 
@@ -207,13 +208,189 @@ public class JobQueueVisitLog<J extends SimJob, Q extends SimQueue>
   {
     if (out == null)
       out = System.out;
-    out.println ("Visit Log: job= " + this.job + "@queue=" + this.queue + ":");
+    out.println ("Visit Log: job=" + this.job + "@queue=" + this.queue + ":");
     out.println ("  Arrived : " + this.arrived  + (this.arrived  ? ("@" + Double.toString (this.arrivalTime))    : "") + ".");
     out.println ("  SeqNo   : " + this.sequenceNumber + ".");
     out.println ("  Started : " + this.started  + (this.started  ? ("@" + Double.toString (this.startTime))      : "") + ".");
     out.println ("  Dropped : " + this.dropped  + (this.dropped  ? ("@" + Double.toString (this.dropTime))       : "") + ".");
     out.println ("  Revoked : " + this.revoked  + (this.revoked  ? ("@" + Double.toString (this.revocationTime)) : "") + ".");
     out.println ("  Departed: " + this.departed + (this.departed ? ("@" + Double.toString (this.departureTime))  : "") + ".");
+  }
+  
+  /** Adds a dropped job at a queue to a set of {@link JobQueueVisitLog}s.
+   * 
+   * @param visitLogs   The set.
+   * @param queue       The queue.
+   * @param job         The job.
+   * @param arrivalTime The arrival time.
+   * @param started     Whether the job has already started.
+   * @param startTime   The start time of the job, if started.
+   * @param dropTime    The drop time.
+   * 
+   * @throws IllegalArgumentException If the set, queue, or job is {@code null},
+   *                                  or if sanity checks on the time arguments fail.
+   * 
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
+   * 
+   */
+  public static
+  <J extends SimJob, Q extends SimQueue>
+  void addDroppedJob
+  (final Set<JobQueueVisitLog<J, Q>> visitLogs,
+   final Q queue,
+   final J job,
+   final double arrivalTime,
+   final boolean started,
+   final double startTime,
+   final double dropTime)
+  {
+    if (visitLogs == null
+      || queue == null
+      || job == null
+      || dropTime < arrivalTime
+      || (started && startTime < arrivalTime)
+      || (started && dropTime < startTime))
+      throw new IllegalArgumentException ();
+    visitLogs.add (new JobQueueVisitLog<>
+      (job, queue,
+        true, arrivalTime,
+        0,
+        started, startTime,
+        true,  dropTime,
+        false, Double.NaN,
+        false, Double.NaN));
+  }
+  
+  /** Adds a revoked job at a queue to a set of {@link JobQueueVisitLog}s.
+   * 
+   * @param visitLogs      The set.
+   * @param queue          The queue.
+   * @param job            The job.
+   * @param arrivalTime    The arrival time.
+   * @param started        Whether the job has already started.
+   * @param startTime      The start time of the job, if started.
+   * @param revocationTime The revocation time.
+   * 
+   * @throws IllegalArgumentException If the set, queue, or job is {@code null},
+   *                                  or if sanity checks on the time arguments fail.
+   * 
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
+   * 
+   */
+  public static
+  <J extends SimJob, Q extends SimQueue>
+  void addRevokedJob
+  (final Set<JobQueueVisitLog<J, Q>> visitLogs,
+   final Q queue,
+   final J job,
+   final double arrivalTime,
+   final boolean started,
+   final double startTime,
+   final double revocationTime)
+  {
+    if (visitLogs == null
+      || queue == null
+      || job == null
+      || revocationTime < arrivalTime
+      || (started && startTime < arrivalTime)
+      || (started && revocationTime < startTime))
+      throw new IllegalArgumentException ();
+    visitLogs.add (new JobQueueVisitLog<>
+      (job, queue,
+        true, arrivalTime,
+        0,
+        started, startTime,
+        false, Double.NaN,
+        true, revocationTime,
+        false, Double.NaN));
+  }
+  
+  /** Adds a departed job at a queue to a set of {@link JobQueueVisitLog}s.
+   * 
+   * @param visitLogs     The set.
+   * @param queue         The queue.
+   * @param job           The job.
+   * @param arrivalTime   The arrival time.
+   * @param started       Whether the job has already started.
+   * @param startTime     The start time of the job, if started.
+   * @param departureTime The departure time.
+   * 
+   * @throws IllegalArgumentException If the set, queue, or job is {@code null},
+   *                                  or if sanity checks on the time arguments fail.
+   * 
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
+   * 
+   */
+  public static
+  <J extends SimJob, Q extends SimQueue>
+  void addDepartedJob
+  (final Set<JobQueueVisitLog<J, Q>> visitLogs,
+   final Q queue,
+   final J job,
+   final double arrivalTime,
+   final boolean started,
+   final double startTime,
+   final double departureTime)
+  {
+    if (visitLogs == null
+      || queue == null
+      || job == null
+      || (departureTime < arrivalTime)
+      || (started && startTime < arrivalTime)
+      || (started && startTime > departureTime))
+      throw new IllegalArgumentException ();
+    visitLogs.add (new JobQueueVisitLog<>
+      (job, queue,
+        true, arrivalTime,
+        0,
+        started, startTime,
+        false, Double.NaN,
+        false, Double.NaN,
+        true, departureTime));
+  }
+  
+  /** Adds a sticky job (never leaves) at a queue to a set of {@link JobQueueVisitLog}s.
+   * 
+   * @param visitLogs   The set.
+   * @param queue       The queue.
+   * @param job         The job.
+   * @param arrivalTime The arrival time.
+   * @param started     Whether the job has already started.
+   * @param startTime   The start time of the job, if started.
+   * 
+   * @throws IllegalArgumentException If the set, queue, or job is {@code null},
+   *                                  or if sanity checks on the time arguments fail.
+   * 
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
+   * 
+   */
+  public static
+  <J extends SimJob, Q extends SimQueue>
+  void addStickyJob
+  (final Set<JobQueueVisitLog<J, Q>> visitLogs,
+   final Q queue,
+   final J job,
+   final double arrivalTime,
+   final boolean started,
+   final double startTime)
+  {
+    if (visitLogs == null
+      || queue == null
+      || job == null
+      || (started && startTime < arrivalTime))
+      throw new IllegalArgumentException ();
+    visitLogs.add (new JobQueueVisitLog<>
+      (job, queue,
+        true, arrivalTime,
+        0,
+        started, startTime,
+        false, Double.NaN,
+        false, Double.NaN,
+        false, Double.NaN));
   }
   
 }
