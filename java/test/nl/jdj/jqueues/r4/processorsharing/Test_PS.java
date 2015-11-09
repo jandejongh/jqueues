@@ -17,10 +17,10 @@ import org.junit.Test;
  *
  *
  */
-public class ProcessorSharingTest
+public class Test_PS
 {
   
-  public ProcessorSharingTest ()
+  public Test_PS ()
   {
   }
   
@@ -55,7 +55,7 @@ public class ProcessorSharingTest
     final PS queue = new PS (eventList);
     final SimQueuePredictor<DefaultVisitsLoggingSimJob, PS> predictor = new SimQueuePredictor_PS<> ();
     final int numberOfJobs = 100;
-    final boolean silent = true;
+    final boolean silent = false;
     DefaultSimQueueTests.doTest_01 (queue, predictor, numberOfJobs, silent);
   }
 
