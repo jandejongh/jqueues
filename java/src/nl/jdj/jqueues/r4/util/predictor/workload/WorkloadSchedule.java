@@ -8,6 +8,8 @@ import java.util.Set;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.event.SimEntityEvent;
+import nl.jdj.jqueues.r4.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r4.event.simple.SimQueueSimpleEventType;
 
 /** A representation of a schedule of workload and state-setting events for a set of {@link SimQueue}s.
  *
@@ -37,6 +39,116 @@ public interface WorkloadSchedule<J extends SimJob, Q extends SimQueue>
    * 
    */
   public Set<SimEntityEvent> getQueueEvents ();
+
+  /** Returns the time of the next event(s), and optionally their types,
+   *  scheduled strictly beyond a given time at a specific queue.
+   * 
+   * @param queue The queue, may be {@code null} or not in {@link #getQueues}, in which case {@link Double#NaN} is returned.
+   * @param time        The time from which to search, use {@link Double#NaN} to retrieve the first-event time (which
+   *                      may be {@link Double#NEGATIVE_INFINITY}).
+   * @param eventTypes An optional set to store the (possible multiple) event types; a non-{@code null} set is cleared upon entry.
+   * 
+   * @return The time of the next event, or {@link Double#NaN} if no such event exists.
+   * 
+   * @see #hasEventsBeyond
+   * @see SimQueueSimpleEventType#QUEUE_ACCESS_VACATION
+   * @see SimEntitySimpleEventType#ARRIVAL
+   * @see SimEntitySimpleEventType#REVOCATION
+   * @see SimQueueSimpleEventType#SERVER_ACCESS_CREDITS
+   * 
+   */
+  public default double getNextEventTimeBeyond
+  (final Q queue,
+   final double time,
+   final Set<SimEntitySimpleEventType.Member> eventTypes)
+  {
+    if (eventTypes != null)
+      eventTypes.clear ();
+    if (queue == null || ! getQueues ().contains (queue))
+      return Double.NaN;
+    double nextEventTime = Double.NaN;
+    if (! getQueueAccessVacationMap (queue).isEmpty ())
+    {
+      final Double nextQavTime = (Double.isNaN (time)
+        ? getQueueAccessVacationMap (queue).firstKey ()
+        : getQueueAccessVacationMap (queue).higherKey (time));
+      if (nextQavTime != null && (Double.isNaN (nextEventTime) || nextQavTime <= nextEventTime))
+      {
+        if (eventTypes != null)
+        {
+          if ((! Double.isNaN (nextEventTime)) && nextQavTime < nextEventTime)
+            eventTypes.clear ();
+          eventTypes.add (SimQueueSimpleEventType.QUEUE_ACCESS_VACATION);
+        }
+        nextEventTime = nextQavTime;
+      }
+    }
+    if (! getJobArrivalsMap (queue).isEmpty ())
+    {
+      final Double nextArrTime = (Double.isNaN (time)
+        ? getJobArrivalsMap (queue).firstKey ()
+        : getJobArrivalsMap (queue).higherKey (time));
+      if (nextArrTime != null && (Double.isNaN (nextEventTime) || nextArrTime <= nextEventTime))
+      {
+        if (eventTypes != null)
+        {
+          if ((! Double.isNaN (nextEventTime)) && nextArrTime < nextEventTime)
+            eventTypes.clear ();
+          eventTypes.add (SimEntitySimpleEventType.ARRIVAL);
+        }
+        nextEventTime = nextArrTime;
+      }
+    }
+    if (! getJobRevocationsMap (queue).isEmpty ())
+    {
+      final Double nextRevTime = (Double.isNaN (time)
+        ? getJobRevocationsMap (queue).firstKey ()
+        : getJobRevocationsMap (queue).higherKey (time));
+      if (nextRevTime != null && (Double.isNaN (nextEventTime) || nextRevTime <= nextEventTime))
+      {
+        if (eventTypes != null)
+        {
+          if ((! Double.isNaN (nextEventTime)) && nextRevTime < nextEventTime)
+            eventTypes.clear ();
+          eventTypes.add (SimEntitySimpleEventType.REVOCATION);
+        }
+        nextEventTime = nextRevTime;
+      }
+    }
+    if (! getServerAccessCreditsMap (queue).isEmpty ())
+    {
+      final Double nextSacTime = (Double.isNaN (time)
+        ? getServerAccessCreditsMap (queue).firstKey ()
+        : getServerAccessCreditsMap (queue).higherKey (time));
+      if (nextSacTime != null && (Double.isNaN (nextEventTime) || nextSacTime <= nextEventTime))
+      {
+        if (eventTypes != null)
+        {
+          if ((! Double.isNaN (nextEventTime)) && nextSacTime < nextEventTime)
+            eventTypes.clear ();
+          eventTypes.add (SimQueueSimpleEventType.SERVER_ACCESS_CREDITS);
+        }
+        nextEventTime = nextSacTime;
+      }
+    }
+    return nextEventTime;
+  }
+  
+  /** Returns whether there exist event(s) scheduled strictly beyond a given time at a specific queue.
+   * 
+   * @param queue The queue, may be {@code null} or not in {@link #getQueues}, in which case {@code false} is returned.
+   * @param time  The time from which to search, use {@link Double#NaN} to retrieve the first-event time (which
+   *              may be {@link Double#NEGATIVE_INFINITY}).
+   * 
+   * @return True if there exist event(s) strictly beyond a given time.
+   * 
+   * @see #getNextEventTimeBeyond
+   * 
+   */
+  public default boolean hasEventsBeyond (final Q queue, final double time)
+  {
+    return ! Double.isNaN (getNextEventTimeBeyond (queue, time, null));
+  }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
