@@ -60,7 +60,7 @@ extends AbstractSimQueuePredictor<J, PS>
     if (smallestRs < 0)
       throw new RuntimeException ();
     queueEventTypes.add (SimEntitySimpleEventType.DEPARTURE);
-    return time + (smallestRs / numberOfJobsExecuting);
+    return time + (smallestRs * numberOfJobsExecuting);
   }
 
   @Override
