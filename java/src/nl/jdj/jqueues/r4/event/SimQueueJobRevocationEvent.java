@@ -5,7 +5,7 @@ import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 
-/** A revocation {@link SimEvent} of a job at a queue.
+/** A revocation {@link SimEvent} (request) of a job at a queue.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
