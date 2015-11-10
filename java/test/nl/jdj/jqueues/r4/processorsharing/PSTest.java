@@ -54,9 +54,10 @@ public class PSTest
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final PS queue = new PS (eventList);
     final SimQueuePredictor<DefaultVisitsLoggingSimJob, PS> predictor = new SimQueuePredictor_PS<> ();
-    final int numberOfJobs = 100;
+    final int numberOfJobs = 50;
     final boolean silent = false;
-    DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, silent, null);
+    final boolean deadSilent = true;
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, silent, deadSilent, 1.0e-6, null);
   }
 
 }
