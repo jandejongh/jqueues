@@ -346,6 +346,9 @@ implements SimQueueState<J, Q>
     setTime (time);
     for (final J job : allExits)
     {
+      // Take care that revocation requests may target jobs not present (anymore).
+      if (revocations != null && revocations.contains (job) && ! this.arrivalTimesMap.containsKey (job))
+        continue;
       final double arrivalTime = this.arrivalTimesMap.get (job);
       final boolean started = this.startTimesMap.containsKey (job);
       final double startTime = (started ? this.startTimesMap.get (job) : Double.NaN);
