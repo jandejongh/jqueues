@@ -27,6 +27,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  */
 public class GATE<J extends SimJob, Q extends GATE>
 extends AbstractServerlessSimQueue<J, Q>
+implements SimQueueWithCountingGate<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -125,6 +126,7 @@ extends AbstractServerlessSimQueue<J, Q>
    * @see #closeGate
    * 
    */
+  @Override
   public final void openGate (final double time)
   {
     update (time);
@@ -139,7 +141,7 @@ extends AbstractServerlessSimQueue<J, Q>
     fireNewNoWaitArmed (time, isNoWaitArmed ());
   }
   
-  /** Opens the gate with a limits on the number of jobs allowed to pass.
+  /** Opens the gate with a limit on the number of jobs allowed to pass.
    * 
    * <p>
    * If allowed by the <code>numberOfPassages</code> parameter, some waiting jobs will depart.
@@ -151,6 +153,7 @@ extends AbstractServerlessSimQueue<J, Q>
    * @see #closeGate
    * 
    */
+  @Override
   public final void openGate (final double time, final int numberOfPassages)
   {
     update (time);
@@ -186,6 +189,7 @@ extends AbstractServerlessSimQueue<J, Q>
    * @param time The current time.
    * 
    */
+  @Override
   public final void closeGate (final double time)
   {
     update (time);
