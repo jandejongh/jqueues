@@ -12,7 +12,6 @@ import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jqueues.r4.event.SimEntityEvent;
 import nl.jdj.jqueues.r4.event.SimEntityEventScheduler;
-import nl.jdj.jqueues.r4.event.SimQueueAccessVacationEvent;
 import nl.jdj.jqueues.r4.event.SimQueueJobRevocationEvent;
 import nl.jdj.jsimulation.r4.SimEventList;
 
