@@ -32,13 +32,13 @@ extends AbstractSimQueuePredictor<J, PS>
 
   /**
    * 
-   * @return True.
+   * @return False.
    * 
    */
   @Override
   protected boolean is_ROEL_U_UnderWorkloadQueueEventClashes (final PS queue)
   {
-    return true;
+    return false;
   }
 
   @Override
