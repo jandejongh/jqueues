@@ -395,6 +395,8 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
   {
     if (aJob != null && eJob != null)
       throw new IllegalArgumentException ();
+    boolean departureEventMustBePresent = ! this.jobsExecuting.isEmpty ();
+    boolean departureEventMustBeAbsent = ! departureEventMustBePresent;
     if (aJob != null)
     {
       if (! this.jobQueue.contains (aJob))
@@ -419,6 +421,8 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
         throw new IllegalStateException ();
       if (departureEvents.size () == 1 && departureEvents.iterator ().next ().getObject () == eJob)
         cancelDepartureEvent (eJob);
+      departureEventMustBePresent = (departureEvents.size () > 0);
+      departureEventMustBeAbsent = ! departureEventMustBePresent;
     }
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
@@ -439,8 +443,8 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
     }
     if (getNumberOfJobsExecuting () > 0)
       rescheduleDepartureEvent (time,
-        eJob == null && ((aJob != null && getNumberOfJobsExecuting () > 1) || ((aJob == null) && getNumberOfJobsExecuting () > 0)),
-        eJob != null);
+        departureEventMustBePresent,
+        departureEventMustBeAbsent);
     // Notification section.
     for (J j : startedJobs)
       // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
