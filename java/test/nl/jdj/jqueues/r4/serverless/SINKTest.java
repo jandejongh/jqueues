@@ -54,9 +54,9 @@ public class SINKTest
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final SINK queue = new SINK (eventList);
     final SimQueuePredictor<DefaultVisitsLoggingSimJob, SINK> predictor = new SimQueuePredictor_SINK<> ();
-    final int numberOfJobs = 100;
-    final boolean silent = false;
-    final boolean deadSilent = false;
+    final int numberOfJobs = 50;
+    final boolean silent = true;
+    final boolean deadSilent = true;
     DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, silent, deadSilent, 1.0e-12, null);
   }
 
