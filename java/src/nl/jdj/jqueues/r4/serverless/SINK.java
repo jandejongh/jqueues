@@ -5,7 +5,7 @@ import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** The {@link SINK} queue has unlimited waiting capacity, but does not provide
- *  any service.
+ *  any service and jobs can only leave through revocations.
  *
  * <p>
  * This {@link SimQueue} is server-less.
