@@ -354,6 +354,12 @@ implements SimQueueState<J, Q>
     setTime (time);
     for (final J job : allExits)
     {
+      // Drops may occur for jobs not present, e.g., in the DROP queue.
+      if (drops != null && drops.contains (job) && ! this.arrivalTimesMap.containsKey (job))
+      {
+        JobQueueVisitLog.addDroppedJob (visitLogs, this.queue, job, time, false, Double.NaN, time);
+        continue;
+      }
       // Take care that revocation requests may target jobs not present (anymore).
       if (revocations != null && revocations.contains (job) && ! this.arrivalTimesMap.containsKey (job))
         continue;
