@@ -101,9 +101,9 @@ implements SimQueuePredictor<J, Q>
         final boolean hasQueueEvent = ! Double.isNaN (nextQueueEventTime);
         final boolean doWorkloadEvent = hasWorkloadEvent && ((! hasQueueEvent) || nextWorkloadEventTime <= nextQueueEventTime);
         final boolean doQueueEvent = hasQueueEvent && ((! hasWorkloadEvent) || nextQueueEventTime <= nextWorkloadEventTime);
-        if (! is_ROEL_U_UnderWorkloadQueueEventClashes (queue))
+        if (doWorkloadEvent && doQueueEvent)
         {
-          if (doWorkloadEvent && doQueueEvent)
+          if (! is_ROEL_U_UnderWorkloadQueueEventClashes (queue))
             throw new SimQueuePredictionAmbiguityException ();
         }
         if (doQueueEvent)
