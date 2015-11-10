@@ -13,6 +13,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  * It can be closed ({@link #closeGate}),
  * opened limitless ({@link #openGate(double)}),
  * or opened with a limit on the number of jobs to pass before closing ({@link #openGate(double,int)}).
+ * 
  * <p>
  * This {@link SimQueue} is server-less.
  * 
@@ -27,7 +28,7 @@ import nl.jdj.jsimulation.r4.SimEventList;
  */
 public class GATE<J extends SimJob, Q extends GATE>
 extends AbstractServerlessSimQueue<J, Q>
-implements SimQueueWithCountingGate<J, Q>
+implements SimQueueWithGate<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,26 +95,10 @@ implements SimQueueWithCountingGate<J, Q>
   @Override
   public final boolean isNoWaitArmed ()
   {
-    return this.gateState != GateState.CLOSED;
+    return this.numberOfPassages > 0;
   }
 
-  /** The gate states.
-   * 
-   * When CLOSED, the number of passages is irrelevant (should be zero).
-   * When OPEN_LIMITED, the number of passages must be strictly positive.
-   * When OPEN, the number of passages is irrelevant.
-   * 
-   */
-  private enum GateState
-  {
-    CLOSED,
-    OPEN_LIMITED,
-    OPEN
-  }
-  
-  private GateState gateState = GateState.OPEN;
-  
-  private int numberOfPassages = 0;
+  private int numberOfPassages = Integer.MAX_VALUE;
   
   /** Opens the gate without limits on the number of jobs allowed to pass.
    * 
@@ -130,7 +115,7 @@ implements SimQueueWithCountingGate<J, Q>
   public final void openGate (final double time)
   {
     update (time);
-    this.gateState = GateState.OPEN;
+    this.numberOfPassages = Integer.MAX_VALUE;
     final Set<J> jobsReleased = new LinkedHashSet<>  ();
     jobsReleased.addAll (this.jobQueue);
     for (final J job : jobsReleased)
@@ -147,7 +132,8 @@ implements SimQueueWithCountingGate<J, Q>
    * If allowed by the <code>numberOfPassages</code> parameter, some waiting jobs will depart.
    * 
    * @param time The current time.
-   * @param numberOfPassages The (remaining) number of passages to allow (will override, not add to, any previous value).
+   * @param numberOfPassages The (remaining) number of passages to allow (will override, not add to, any previous value);
+   *                         {@link Integer#MAX_VALUE} is treated as infinity.
    * 
    * @see #openGate(double)
    * @see #closeGate
@@ -160,28 +146,18 @@ implements SimQueueWithCountingGate<J, Q>
     if (numberOfPassages < 0)
       throw new IllegalArgumentException ();
     final Set<J> jobsReleased = new LinkedHashSet<>  ();
-    if (numberOfPassages == 0)
+    this.numberOfPassages = numberOfPassages;
+    while (this.numberOfPassages > 0 && ! this.jobQueue.isEmpty ())
     {
-      this.gateState = GateState.CLOSED;
-      this.numberOfPassages = 0;
-    }
-    else
-    {
-      this.gateState = GateState.OPEN_LIMITED;
-      this.numberOfPassages = numberOfPassages;
-      while (this.numberOfPassages > 0 && ! this.jobQueue.isEmpty ())
-      {
-        jobsReleased.add (jobQueue.remove (0));
+      jobsReleased.add (jobQueue.remove (0));
+      if (this.numberOfPassages < Integer.MAX_VALUE)
         this.numberOfPassages--;
-      }
-      if (this.numberOfPassages == 0)
-        this.gateState = GateState.CLOSED;
-      for (final J job : jobsReleased)
-        job.setQueue (null);
-      for (final J job : jobsReleased)
-        fireDeparture (time, job, (Q) this);
-      fireNewNoWaitArmed (time, isNoWaitArmed ());
     }
+    for (final J job : jobsReleased)
+      job.setQueue (null);
+    for (final J job : jobsReleased)
+      fireDeparture (time, job, (Q) this);
+    fireNewNoWaitArmed (time, isNoWaitArmed ());
   }
   
   /** Closes the gate.
@@ -193,7 +169,6 @@ implements SimQueueWithCountingGate<J, Q>
   public final void closeGate (final double time)
   {
     update (time);
-    this.gateState = GateState.CLOSED;
     fireNewNoWaitArmed (time, isNoWaitArmed ());
   }
   
@@ -225,7 +200,7 @@ implements SimQueueWithCountingGate<J, Q>
   public final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
-    this.gateState = GateState.OPEN;
+    this.numberOfPassages = Integer.MAX_VALUE;
   }  
   
   /** Adds the job to the tail of the {@link #jobQueue}.
@@ -254,16 +229,10 @@ implements SimQueueWithCountingGate<J, Q>
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (this.gateState == GateState.CLOSED)
+    if (this.numberOfPassages == 0)
       return;
-    if (this.gateState == GateState.OPEN_LIMITED)
-    {
-      if (this.numberOfPassages <= 0)
-        throw new IllegalStateException ();
+    if (this.numberOfPassages < Integer.MAX_VALUE)
       this.numberOfPassages--;
-      if (this.numberOfPassages == 0)
-        this.gateState = GateState.CLOSED;
-    }
     this.jobQueue.remove (job);
     job.setQueue (null);
     fireDeparture (time, job, (Q) this);
