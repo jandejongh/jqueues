@@ -92,6 +92,7 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
       if (entry.getValue ().queue == queue)
         predictedAtQueue.put (entry.getKey (), entry.getValue ());
     final Map<J, JobQueueVisitLog<J, Q>> actualAtQueue = new HashMap<> ();
+    boolean success = true;
     for (final Entry<J, TreeMap<Double, TreeMap<Integer, JobQueueVisitLog<J, Q>>>> entry : actual.entrySet ())
     {
       if (entry == null)
@@ -106,11 +107,11 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
           {
             if (actualAtQueue.containsKey (job))
             {
+              success = false;
               if (stream != null)
-              {
                 stream.println ("[matchVisitLogs_SQ_SV] Found multiple visits of job " + job + " to queue " + queue +".");
-              }
-              return false;
+              else
+                return false;
             }
             else
               actualAtQueue.put (job, sequenceEntry.getValue ());
@@ -122,17 +123,20 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
       final JobQueueVisitLog<J, Q> predictedVisitLog = predictedAtQueue.get (job);
       if (! actualAtQueue.containsKey (job))
       {
+        success = false;
         if (stream != null)
         {
           stream.println ("[matchVisitLogs_SQ_SV] Absent predicted visit of job " + job + " to queue " + queue +":");
           stream.println ("Predicted visit log: ");
           predictedVisitLog.print (stream);
         }
-        return false;        
+        else
+          return false;        
       }
       final JobQueueVisitLog<J, Q> actualVisitLog = actualAtQueue.get (job);
       if (! actualVisitLog.equals (predictedVisitLog, accuracy))
       {
+        success = false;
         if (stream != null)
         {
           stream.println ("[matchVisitLogs_SQ_SV] Found mismatch for visit of job " + job + " to queue " + queue +":");
@@ -141,10 +145,11 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
           predictedVisitLog.print (stream);
           actualVisitLog.print (stream);
         }
-        return false;
+        else
+          return false;
       }
     }
-    return true;
+    return success;
   }
     
 }
