@@ -16,6 +16,7 @@ public enum KnownLoadFactory_SQ_SV
 
   KLF_001 (new LoadFactory_SQ_SV_001 ()),
   KLF_002 (new LoadFactory_SQ_SV_002 ()),
+  KLF_003 (new LoadFactory_SQ_SV_003 ()),
     ;
   
   /** Creates the entry in this enumeration.
