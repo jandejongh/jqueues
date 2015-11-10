@@ -7,7 +7,7 @@ package nl.jdj.jqueues.r4;
  *
  */
 public class StdOutSimQueueListener<J extends SimJob, Q extends SimQueue>
-extends StdOutSimEntityListener<J, Q>
+extends StdOutSimEntityListener<J, Q> 
 implements SimQueueListener<J, Q>
 {
 
