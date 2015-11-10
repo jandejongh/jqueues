@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r4.util.predictor.queues;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -133,14 +134,14 @@ extends AbstractSimQueuePredictor<J, PS>
       queueState.setServerAccessCredits (time, newSac);
       if (oldSac == 0)
       {
-        final Set<J> starters = new HashSet<> ();
-        // XXX DOES THIS PRESERVE INSERTION ORDER???
-        final Iterator<J> i_waiters = new HashSet<> (queueState.getJobsWaiting ()).iterator ();
+        final Set<J> starters = new LinkedHashSet<> ();
+        final Iterator<J> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
         int remainingSac = newSac;
-        while (remainingSac > 0 && ! i_waiters.hasNext ())
+        while ((remainingSac == Integer.MAX_VALUE || remainingSac > 0) && i_waiters.hasNext ())
         {
           starters.add (i_waiters.next ());
-          remainingSac--;
+          if (remainingSac != Integer.MAX_VALUE)
+            remainingSac--;
         }
         queueState.doStarts (time, starters);
       }
