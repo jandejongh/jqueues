@@ -397,6 +397,7 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
       throw new IllegalArgumentException ();
     boolean departureEventMustBePresent = ! this.jobsExecuting.isEmpty ();
     boolean departureEventMustBeAbsent = ! departureEventMustBePresent;
+    final int creditsOld = getServerAccessCredits ();
     if (aJob != null)
     {
       if (! this.jobQueue.contains (aJob))
@@ -450,7 +451,8 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
       // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
       if (this.jobsExecuting.contains (j))
         fireStart (time, j, (Q) this);
-    fireIfOutOfServerAccessCredits (time);
+    if (creditsOld > 0 && getServerAccessCredits () == 0)
+      fireIfOutOfServerAccessCredits (time);
   }
   
 }
