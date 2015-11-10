@@ -178,6 +178,12 @@ implements SimQueueState<J, Q>
     return SimQueueState.super.getJobsWaiting ();
   }
   
+  @Override
+  public final Set<J> getJobsWaitingOrdered ()
+  {
+    return SimQueueState.super.getJobsWaitingOrdered ();
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // SERVER-ACCESS CREDITS

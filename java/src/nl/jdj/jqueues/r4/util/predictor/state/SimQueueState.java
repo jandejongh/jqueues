@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r4.util.predictor.state;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -184,7 +185,7 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Gets a set holding all the jobs waiting at the queue.
+  /** Gets a set holding all the jobs waiting at the queue (in no particular order).
    * 
    * <p>
    * Mimics {@link SimQueue#getJobsWaiting}.
@@ -193,7 +194,7 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
    * The default implementation returns the set difference of
    * {@link #getJobs} and {@link #getJobsExecuting}.
    * 
-   * @return A set holding all the jobs waiting at the queue.
+   * @return A set holding all the jobs waiting at the queue (in no particular order).
    * 
    */
   public default Set<J> getJobsWaiting ()
@@ -204,6 +205,25 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
     return jobsWaiting;
   }
 
+  /** Gets a set holding all the jobs waiting at the queue, in order of arrival.
+   * 
+   * <p>
+   * The default implementation returns a {@link LinkedHashSet}.
+   * 
+   * @return A set holding all the jobs waiting at the queue, in order of arrival.
+   * 
+   */
+  public default Set<J> getJobsWaitingOrdered ()
+  {
+    final Set<J> jobsWaitingOrdered = new LinkedHashSet<> ();
+    final Set<J> jobsExecuting = getJobsExecuting ();
+    for (final List<J> l : this.getJobArrivalsMap ().values ())
+      for (final J job : l)
+        if (! jobsExecuting.contains (job))
+          jobsWaitingOrdered.add (job);
+    return jobsWaitingOrdered;
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // SERVER-ACCESS CREDITS
