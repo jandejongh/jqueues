@@ -1,5 +1,6 @@
 package nl.jdj.jqueues.r4.serverless;
 
+import nl.jdj.jqueues.r4.SimQueueWithGate;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r4.SimJob;
@@ -163,6 +164,9 @@ implements SimQueueWithGate<J, Q>
   /** Closes the gate.
    * 
    * @param time The current time.
+   * 
+   * @see #openGate(double)
+   * @see #openGate(double, int)
    * 
    */
   @Override

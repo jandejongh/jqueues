@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r4.serverless;
+package nl.jdj.jqueues.r4;
 
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
