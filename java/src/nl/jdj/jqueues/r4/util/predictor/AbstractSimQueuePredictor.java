@@ -99,6 +99,20 @@ implements SimQueuePredictor<J, Q>
         final double nextQueueEventTime = getNextQueueEventTimeBeyond (queue, queueState, queueEventTypes);
         final boolean hasWorkloadEvent = ! Double.isNaN (nextWorkloadEventTime);
         final boolean hasQueueEvent = ! Double.isNaN (nextQueueEventTime);
+        if (hasWorkloadEvent)
+        {
+          if (workloadEventTypes.isEmpty ())
+            throw new RuntimeException ();
+          if (workloadEventTypes.size () > 1)
+            throw new SimQueuePredictionAmbiguityException ();
+        }
+        if (hasQueueEvent)
+        {
+          if (queueEventTypes.isEmpty ())
+            throw new RuntimeException ();
+          if (queueEventTypes.size () > 1)
+            throw new SimQueuePredictionAmbiguityException ();
+        }
         final boolean doWorkloadEvent = hasWorkloadEvent && ((! hasQueueEvent) || nextWorkloadEventTime <= nextQueueEventTime);
         final boolean doQueueEvent = hasQueueEvent && ((! hasWorkloadEvent) || nextQueueEventTime <= nextWorkloadEventTime);
         if (doWorkloadEvent && doQueueEvent)
