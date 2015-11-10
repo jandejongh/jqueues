@@ -49,7 +49,9 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
    * Note that the corresponding {@link SimQueue} method is {@link SimEntity#resetEntity}.
    * 
    * <p>
-   * Implementations must set the time to {@link Double#NEGATIVE_INFINITY}.
+   * Implementations must set the time to {@link Double#NaN}, effectively meaning
+   * "left of" {@link Double#NEGATIVE_INFINITY}.
+   * 
    * @see SimQueue#resetEntity
    * 
    */
@@ -75,7 +77,7 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
    * 
    * @param time The new time.
    * 
-   * @throws IllegalArgumentException If the time is in the past.
+   * @throws IllegalArgumentException If the time is in the past, or equal to {@link Double#NaN}.
    * 
    * @see #reset
    * 

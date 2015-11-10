@@ -41,7 +41,7 @@ implements SimQueueState<J, Q>
     if (queue == null)
       throw new IllegalArgumentException ();
     this.queue = queue;
-    this.time = Double.NEGATIVE_INFINITY;
+    this.time = Double.NaN;
     this.queueAccessVacation = false;
     this.jobArrivalsMap = new TreeMap<> ();
     this.arrivalTimesMap = new HashMap<> ();
@@ -75,7 +75,7 @@ implements SimQueueState<J, Q>
   @Override
   public void reset ()
   {
-    this.time = Double.NEGATIVE_INFINITY;
+    this.time = Double.NaN;
     this.queueAccessVacation = false;
     this.jobArrivalsMap.clear ();
     this.arrivalTimesMap.clear ();
@@ -103,7 +103,9 @@ implements SimQueueState<J, Q>
   @Override
   public final void setTime (final double time)
   {
-    if (time < this.time)
+    if (Double.isNaN (time))
+      throw new IllegalArgumentException ();
+    if ((! Double.isNaN (this.time)) && time < this.time)
       throw new IllegalArgumentException ();
     this.time = time;
   }

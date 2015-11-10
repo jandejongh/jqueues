@@ -44,6 +44,7 @@ implements SimQueuePredictor<J, Q>
    * <li>{@link #createQueueState} for the creation of a, possibly queue-type specific, {@link SimQueueState},
    * <li>{@link #is_ROEL_U_UnderWorkloadQueueEventClashes},
    * <li>{@link #getNextQueueEventTimeBeyond} for determining the scheduled time and type(s) of the next queue-state event(s),
+   * <li>{@link #updateToTime} for progressing time on the queue state without processing events,
    * <li>{@link #doWorkloadEvents_SQ_SV_ROEL_U} for the processing of the next workload events (like scheduled arrivals),
    * <li>{@link #doQueueEvents_SQ_SV_ROEL_U} for the processing of the next queue events (like scheduled departures).
    * </ul>
@@ -75,10 +76,8 @@ implements SimQueuePredictor<J, Q>
       // Create a state object for the queue.
       //
       final SimQueueState<J, Q> queueState = createQueueState (queue, true);
-      //
-      // Reset the time to Double.NaN, meaning "left of Double.MINUS_INFINITY".
-      //
-      double time = Double.NaN;
+      if (! Double.isNaN (queueState.getTime ()))
+        throw new RuntimeException ();
       //
       // Create sets to hold the (simple) event types from the workload and from the queue.
       //
@@ -93,10 +92,11 @@ implements SimQueuePredictor<J, Q>
       //
       while (! finished)
       {
+        final double time = queueState.getTime ();
         workloadEventTypes.clear ();
         queueEventTypes.clear ();
         final double nextWorkloadEventTime = workloadSchedule.getNextEventTimeBeyond (queue, time, workloadEventTypes);
-        final double nextQueueEventTime = getNextQueueEventTimeBeyond (queue, queueState, time, queueEventTypes);
+        final double nextQueueEventTime = getNextQueueEventTimeBeyond (queue, queueState, queueEventTypes);
         final boolean hasWorkloadEvent = ! Double.isNaN (nextWorkloadEventTime);
         final boolean hasQueueEvent = ! Double.isNaN (nextQueueEventTime);
         final boolean doWorkloadEvent = hasWorkloadEvent && ((! hasQueueEvent) || nextWorkloadEventTime <= nextQueueEventTime);
@@ -108,15 +108,21 @@ implements SimQueuePredictor<J, Q>
         }
         if (doQueueEvent)
         {
-          doQueueEvents_SQ_SV_ROEL_U
-            (queue, queueState, nextQueueEventTime, queueEventTypes, visitLogsSet);
-          time = nextQueueEventTime;
+          updateToTime (queue, queueState, nextQueueEventTime);
+          if (queueState.getTime () != nextQueueEventTime)
+            throw new RuntimeException ();
+          doQueueEvents_SQ_SV_ROEL_U (queue, queueState, queueEventTypes, visitLogsSet);
+          if (queueState.getTime () != nextQueueEventTime)
+            throw new RuntimeException ();
         }
         if (doWorkloadEvent)
         {
-          doWorkloadEvents_SQ_SV_ROEL_U
-            (queue, workloadSchedule, queueState, nextWorkloadEventTime, workloadEventTypes, visitLogsSet);
-          time = nextWorkloadEventTime;
+          updateToTime (queue, queueState, nextWorkloadEventTime);
+          if (queueState.getTime () != nextWorkloadEventTime)
+            throw new RuntimeException ();
+          doWorkloadEvents_SQ_SV_ROEL_U (queue, workloadSchedule, queueState, workloadEventTypes, visitLogsSet);
+          if (queueState.getTime () != nextWorkloadEventTime)
+            throw new RuntimeException ();
         }
         finished = ! (hasWorkloadEvent || hasQueueEvent);
       }
@@ -144,6 +150,9 @@ implements SimQueuePredictor<J, Q>
   }
 
   /** Creates a suitable {@link SimQueueState} object for this predictor and given queue.
+   * 
+   * <p>
+   * The initial time must be set to {@link Double#NaN}.
    * 
    * @param queue  The queue, non-{@code null}.
    * @param isROEL Whether or not the event list used is a Random-Order Event List.
@@ -184,12 +193,14 @@ implements SimQueuePredictor<J, Q>
   }
   
   /** Returns the time and types of the next event(s)
-   *  scheduled strictly beyond a given time at a specific queue.
+   *  scheduled strictly beyond the time at (the state object of) a specific queue.
+   * 
+   * <p>
+   * The time from which to search must be taken from {@link SimQueueState#getTime},
+   * and equals {@link Double#NaN} after initialization.
    * 
    * @param queue           The queue, non-{@code null}.
-   * @param queueState      The queue-state, non-{@code null}
-   * @param time            The time from which to search, use {@link Double#NaN} to retrieve the first-event time (which
-   *                          may be {@link Double#NEGATIVE_INFINITY}).
+   * @param queueState      The queue-state, non-{@code null}.
    * @param queueEventTypes A non-{@code null} set to store the (possible multiple) event types; it must be cleared upon entry.
    * 
    * @return The time of the next event, or {@link Double#NaN} if no such event exists.
@@ -204,15 +215,36 @@ implements SimQueuePredictor<J, Q>
   protected abstract double getNextQueueEventTimeBeyond
   (Q queue,
    SimQueueState<J, Q> queueState,
-   double time,
    Set<SimEntitySimpleEventType.Member> queueEventTypes)
    throws SimQueuePredictionException;
+  
+  /** Updates the queue state to a new time, without processing any events.
+   * 
+   * <p>
+   * Implementations must at least set the time on the queue state.
+   * Beware that the old time on the queue state may equal its initial value {@link Double#NaN}.
+   * 
+   * @param queue      The queue, non-{@code null}.
+   * @param queueState The queue-state, non-{@code null}.
+   * @param newTime    The new time.
+   * 
+   * @throws IllegalArgumentException If the queue or queue state is {@code null},
+   *                                  the new time is in the past,
+   *                                  or the new time equals {@link Double#NaN}.
+   * 
+   * @see SimQueueState#setTime
+   * 
+   */
+  protected abstract void updateToTime (Q queue, SimQueueState queueState, double newTime);
   
   /** Process the next event(s) from given {@link WorkloadSchedule} at a queue with given state.
    * 
    * <p>
    * The scheduled time and the types of the next events must be known beforehand,
    * e.g., through {@link WorkloadSchedule#getNextEventTimeBeyond}.
+   * The scheduled time has already been set on the {@link SimQueueState} object,
+   * and the object has been updated upto that time.
+   * The time on the queue state must not be changed.
    * 
    * <p>
    * Implementations must update the queue state and (if applicable) add suitable entries to the visit logs.
@@ -222,8 +254,7 @@ implements SimQueuePredictor<J, Q>
    * 
    * @param queue                 The queue, non-{@code null}.
    * @param workloadSchedule      The workload schedule, non-{@code null}.
-   * @param queueState            The queue-state, non-{@code null}
-   * @param nextWorkloadEventTime The (pre-calculated) time of the next workload event(s).
+   * @param queueState            The queue-state, non-{@code null}.
    * @param workloadEventTypes    The (pre-calculated) types of the next workload event(s).
    * @param visitLogsSet          The visit logs, non-{@code null}.
    * 
@@ -232,13 +263,14 @@ implements SimQueuePredictor<J, Q>
    * @throws WorkloadScheduleException   If the workload is invalid (e.g., containing ambiguities).
    * 
    * @see WorkloadSchedule#getNextEventTimeBeyond
+   * @see #updateToTime
+   * @see SimQueueState#setTime
    * 
    */
   protected abstract void doWorkloadEvents_SQ_SV_ROEL_U
   (Q queue,
    WorkloadSchedule_SQ_SV_ROEL_U<J, Q> workloadSchedule,
    SimQueueState<J, Q> queueState,
-   double nextWorkloadEventTime,
    Set<SimEntitySimpleEventType.Member> workloadEventTypes,
    Set<JobQueueVisitLog<J, Q>> visitLogsSet)
    throws SimQueuePredictionException, WorkloadScheduleException;
@@ -248,24 +280,29 @@ implements SimQueuePredictor<J, Q>
    * <p>
    * The scheduled time and the types of the next events must be known beforehand,
    * e.g., through {@link #getNextQueueEventTimeBeyond}.
+   * The scheduled time has already been set on the {@link SimQueueState} object,
+   * and the object has been updated upto that time.
+   * The time on the queue state must not be changed.
    * 
    * <p>
    * Implementations must update the queue state and (if applicable) add suitable entries to the visit logs.
    * 
    * @param queue              The queue, non-{@code null}.
    * @param queueState         The queue-state, non-{@code null}
-   * @param nextQueueEventTime The (pre-calculated) time of the next queue event(s).
    * @param queueEventTypes    The (pre-calculated) types of the next workload event(s).
    * @param visitLogsSet       The visit logs, non-{@code null}.
    * 
    * @throws IllegalArgumentException    If any of the mandatory input arguments is {@code null}.
    * @throws SimQueuePredictionException If the result cannot be computed, e.g., due to invalid input or schedule ambiguities.
    * 
+   * @see #getNextQueueEventTimeBeyond
+   * @see #updateToTime
+   * @see SimQueueState#setTime
+   * 
    */
   protected abstract void doQueueEvents_SQ_SV_ROEL_U
   (Q queue,
    SimQueueState<J, Q> queueState,
-   double nextQueueEventTime,
    Set<SimEntitySimpleEventType.Member> queueEventTypes,
    Set<JobQueueVisitLog<J, Q>> visitLogsSet)
    throws SimQueuePredictionException;

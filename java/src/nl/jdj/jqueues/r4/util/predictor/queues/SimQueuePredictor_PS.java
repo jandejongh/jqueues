@@ -44,18 +44,19 @@ extends AbstractSimQueuePredictor<J, PS>
   protected double getNextQueueEventTimeBeyond
   (final PS queue,
    final SimQueueState<J, PS> queueState,
-   final double time,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
     if ( queue == null
       || queueState == null
-      || ((! Double.isNaN (time)) && time != queueState.getTime ())
       || queueEventTypes == null)
       throw new IllegalArgumentException ();
     queueEventTypes.clear ();
+    final double time = queueState.getTime ();
     final int numberOfJobsExecuting = queueState.getJobRemainingServiceTimeMap ().size ();
     if (numberOfJobsExecuting == 0)
       return Double.NaN;
+    if (Double.isNaN (time))
+      throw new IllegalStateException ();
     final double smallestRs = queueState.getRemainingServiceMap ().firstKey ();
     if (smallestRs < 0)
       throw new RuntimeException ();
@@ -68,7 +69,6 @@ extends AbstractSimQueuePredictor<J, PS>
   (final PS queue,
    final WorkloadSchedule_SQ_SV_ROEL_U<J, PS> workloadSchedule,
    final SimQueueState<J, PS> queueState,
-   final double nextWorkloadEventTime,
    final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
    final Set<JobQueueVisitLog<J, PS>> visitLogsSet)
    throws SimQueuePredictionException, WorkloadScheduleException
@@ -76,47 +76,61 @@ extends AbstractSimQueuePredictor<J, PS>
     if ( queue == null
       || workloadSchedule == null
       || queueState == null
-      || Double.isNaN (nextWorkloadEventTime)
-      || nextWorkloadEventTime < queueState.getTime ()
       || workloadEventTypes == null
       || visitLogsSet == null)
       throw new IllegalArgumentException ();
-    if (workloadEventTypes.isEmpty ())
-      return;
     if (workloadEventTypes.size () > 1)
       throw new SimQueuePredictionAmbiguityException ();
-    updatedRemainingServiceTimes (queue, queueState, nextWorkloadEventTime);
-    final SimEntitySimpleEventType.Member eventType = workloadEventTypes.iterator ().next ();
-    if (eventType == SimQueueSimpleEventType.QUEUE_ACCESS_VACATION)
+    final double time = queueState.getTime ();
+    if (Double.isNaN (time))
+      throw new IllegalStateException ();
+    final SimEntitySimpleEventType.Member eventType = (workloadEventTypes.isEmpty ()
+      ? null
+      : workloadEventTypes.iterator ().next ());
+    if (eventType == null)
     {
-      final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (nextWorkloadEventTime);
+      /* NOTHING (LEFT) TO DO */
+    }
+    else if (eventType == SimQueueSimpleEventType.QUEUE_ACCESS_VACATION)
+    {
+      final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (time);
       if (queueAccessVacation)
-        queueState.startQueueAccessVacation (nextWorkloadEventTime);
+        queueState.startQueueAccessVacation (time);
       else
-        queueState.stopQueueAccessVacation (nextWorkloadEventTime);
+        queueState.stopQueueAccessVacation (time);
     }
     else if (eventType == SimEntitySimpleEventType.ARRIVAL)
     {
-      final J job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (nextWorkloadEventTime);
+      final J job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
       final Set<J> arrivals = new HashSet<> ();
       arrivals.add (job);
-      queueState.doArrivals (nextWorkloadEventTime, arrivals, visitLogsSet);
+      queueState.doArrivals (time, arrivals, visitLogsSet);
       if ((! queueState.isQueueAccessVacation ()) && queueState.getServerAccessCredits () >= 1)
-        queueState.doStarts (nextWorkloadEventTime, arrivals);
+        queueState.doStarts (time, arrivals);
     }
     else if (eventType == SimEntitySimpleEventType.REVOCATION)
     {
       final J job =
-        workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (nextWorkloadEventTime).entrySet ().iterator ().next ().getKey ();
-      final Set<J> revocations = new HashSet<> ();
-      revocations.add (job);
-      queueState.doExits (nextWorkloadEventTime, null, revocations, null, null, visitLogsSet);
+        workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).entrySet ().iterator ().next ().getKey ();
+      // Check whether job is actually present.
+      if (queueState.getJobs ().contains (job))
+      {
+        final boolean interruptService =
+          workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).get (job);
+        // Mkae sure we do not revoke an executing job without the interruptService flag.
+        if (interruptService || ! queueState.getJobsExecuting ().contains (job))
+        {
+          final Set<J> revocations = new HashSet<> ();
+          revocations.add (job);
+          queueState.doExits (time, null, revocations, null, null, visitLogsSet);
+        }
+      }
     }
     else if (eventType == SimQueueSimpleEventType.SERVER_ACCESS_CREDITS)
     {
       final int oldSac = queueState.getServerAccessCredits ();
-      final int newSac = workloadSchedule.getServerAccessCreditsMap_SQ_SV_ROEL_U ().get (nextWorkloadEventTime);
-      queueState.setServerAccessCredits (nextWorkloadEventTime, newSac);
+      final int newSac = workloadSchedule.getServerAccessCreditsMap_SQ_SV_ROEL_U ().get (time);
+      queueState.setServerAccessCredits (time, newSac);
       if (oldSac == 0)
       {
         final Set<J> starters = new HashSet<> ();
@@ -128,77 +142,81 @@ extends AbstractSimQueuePredictor<J, PS>
           starters.add (i_waiters.next ());
           remainingSac--;
         }
-        queueState.doStarts (nextWorkloadEventTime, starters);
+        queueState.doStarts (time, starters);
       }
     }
     else
       throw new RuntimeException ();
+    if (eventType != null)
+      workloadEventTypes.remove (eventType);
   }
 
   @Override
   protected void doQueueEvents_SQ_SV_ROEL_U
   (final PS queue,
    final SimQueueState<J, PS> queueState,
-   final double nextQueueEventTime,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
    final Set<JobQueueVisitLog<J, PS>> visitLogsSet)
    throws SimQueuePredictionException    
   {
     if ( queue == null
       || queueState == null
-      || Double.isNaN (nextQueueEventTime)
-      || nextQueueEventTime < queueState.getTime ()
       || queueEventTypes == null
       || visitLogsSet == null)
       throw new IllegalArgumentException ();
-    if (queueEventTypes.isEmpty ())
-      return;
     if (queueEventTypes.size () > 1)
       throw new SimQueuePredictionAmbiguityException ();
-    updatedRemainingServiceTimes (queue, queueState, nextQueueEventTime);
-    final SimEntitySimpleEventType.Member eventType = queueEventTypes.iterator ().next ();
-    if (eventType == SimEntitySimpleEventType.DEPARTURE)
+    final double time = queueState.getTime ();
+    if (Double.isNaN (time))
+      throw new IllegalStateException ();
+    final SimEntitySimpleEventType.Member eventType = (queueEventTypes.isEmpty ()
+      ? null
+      : queueEventTypes.iterator ().next ());
+    if (eventType == null)
+    {
+      /* NOTHING (LEFT) TO DO */      
+    }
+    else if (eventType == SimEntitySimpleEventType.DEPARTURE)
     {
       final Set<J> departures = new HashSet<> (queueState.getRemainingServiceMap ().firstEntry ().getValue ());
-      queueState.doExits (nextQueueEventTime, null, null, departures, null, visitLogsSet);
+      queueState.doExits (time, null, null, departures, null, visitLogsSet);
     }
     else
       throw new RuntimeException ();
+    if (eventType != null)
+      queueEventTypes.remove (eventType);
   }  
   
-  /** Updates the remaining service times of running jobs.
-   * 
-   * @param queue      The queue, non-{@code null}.
-   * @param queueState The queue state, non-{@code null}.
-   * @param newTime    The new time.
-   * 
-   * @throws IllegalArgumentException If {@code queue} or {@code queueState} is {@code null},
-   *                                  or the time argument is in the past.
-   * 
-   */
-  protected void updatedRemainingServiceTimes (final PS queue, final SimQueueState queueState, final double newTime)
+  @Override
+  protected void updateToTime (final PS queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
+    if (Double.isNaN (newTime))
+      throw new IllegalArgumentException ();
     final double oldTime = queueState.getTime ();
-    final double dT = newTime - oldTime;
-    if (dT < 0)
-      throw new RuntimeException ();
-    final Map<J, Double> rsTimeMap = queueState.getJobRemainingServiceTimeMap ();
-    final NavigableMap<Double,List<J>> rsMap = queueState.getRemainingServiceMap ();
-    if (dT > 0 && ! rsTimeMap.isEmpty ())
-    { 
-      rsMap.clear ();
-      final double dS = dT / rsTimeMap.keySet ().size ();
-      for (final J job : new HashSet<> (rsTimeMap.keySet ()))
-      {
-        final double newRs = rsTimeMap.get (job) - dS;
-        rsTimeMap.put (job, newRs);
-        if (! rsMap.containsKey (newRs))
-          rsMap.put (newRs, new ArrayList<> ());
-        rsMap.get (newRs).add (job);
+    if (! Double.isNaN (oldTime))
+    {
+      final double dT = newTime - oldTime;
+      if (dT < 0)
+        throw new RuntimeException ();
+      final Map<J, Double> rsTimeMap = queueState.getJobRemainingServiceTimeMap ();
+      final NavigableMap<Double,List<J>> rsMap = queueState.getRemainingServiceMap ();
+      if (dT > 0 && ! rsTimeMap.isEmpty ())
+      { 
+        rsMap.clear ();
+        final double dS = dT / rsTimeMap.keySet ().size ();
+        for (final J job : new HashSet<> (rsTimeMap.keySet ()))
+        {
+          final double newRs = rsTimeMap.get (job) - dS;
+          rsTimeMap.put (job, newRs);
+          if (! rsMap.containsKey (newRs))
+            rsMap.put (newRs, new ArrayList<> ());
+          rsMap.get (newRs).add (job);
+        }
       }
     }
+    queueState.setTime (newTime);
   }
 
 }
