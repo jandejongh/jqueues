@@ -30,17 +30,6 @@ public class SimQueuePredictor_PS<J extends SimJob>
 extends AbstractSimQueuePredictor<J, PS>
 {
 
-  /**
-   * 
-   * @return False.
-   * 
-   */
-  @Override
-  protected boolean is_ROEL_U_UnderWorkloadQueueEventClashes (final PS queue)
-  {
-    return false;
-  }
-
   @Override
   protected double getNextQueueEventTimeBeyond
   (final PS queue,

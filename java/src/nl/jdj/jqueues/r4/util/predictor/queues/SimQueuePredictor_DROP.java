@@ -24,17 +24,6 @@ public class SimQueuePredictor_DROP<J extends SimJob>
 extends AbstractSimQueuePredictor<J, DROP>
 {
 
-  /**
-   * 
-   * @throws IllegalStateException We do not expect queue events.
-   * 
-   */
-  @Override
-  protected boolean is_ROEL_U_UnderWorkloadQueueEventClashes (final DROP queue)
-  {
-    throw new IllegalStateException ();
-  }
-
   @Override
   protected double getNextQueueEventTimeBeyond
   (final DROP queue,

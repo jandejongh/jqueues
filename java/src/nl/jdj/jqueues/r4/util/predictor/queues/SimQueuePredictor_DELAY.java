@@ -24,17 +24,6 @@ public class SimQueuePredictor_DELAY<J extends SimJob>
 extends AbstractSimQueuePredictor<J, DELAY>
 {
 
-  /**
-   * 
-   * @return False.
-   * 
-   */
-  @Override
-  protected boolean is_ROEL_U_UnderWorkloadQueueEventClashes (final DELAY queue)
-  {
-    return false;
-  }
-
   @Override
   protected double getNextQueueEventTimeBeyond
   (final DELAY queue,

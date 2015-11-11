@@ -24,17 +24,6 @@ public class SimQueuePredictor_ZERO<J extends SimJob>
 extends AbstractSimQueuePredictor<J, ZERO>
 {
 
-  /**
-   * 
-   * @throws IllegalStateException We do not expect queue events.
-   * 
-   */
-  @Override
-  protected boolean is_ROEL_U_UnderWorkloadQueueEventClashes (final ZERO queue)
-  {
-    throw new IllegalStateException ();
-  }
-
   @Override
   protected double getNextQueueEventTimeBeyond
   (final ZERO queue,

@@ -24,17 +24,6 @@ public class SimQueuePredictor_SINK<J extends SimJob>
 extends AbstractSimQueuePredictor<J, SINK>
 {
 
-  /**
-   * 
-   * @throws IllegalStateException We do not expect queue events.
-   * 
-   */
-  @Override
-  protected boolean is_ROEL_U_UnderWorkloadQueueEventClashes (final SINK queue)
-  {
-    throw new IllegalStateException ();
-  }
-
   @Override
   protected double getNextQueueEventTimeBeyond
   (final SINK queue,
