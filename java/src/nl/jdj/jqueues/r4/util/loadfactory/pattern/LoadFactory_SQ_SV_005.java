@@ -73,6 +73,7 @@ extends LoadFactory_SQ_SV_001<J, Q>
       final Random rngPassageCredits = new Random ();
       for (int i = 1; i <= numberOfGateEventsToSchedule; i++)
       {
+        // XXX We probably need jitter on the schedule time.
         final double scheduleTime = 11.0 * i + 0.19;
         final int draw = rngPassageCredits.nextInt (4);
         final int gatePassageCredits;
