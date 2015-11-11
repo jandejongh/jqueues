@@ -12,10 +12,18 @@ import nl.jdj.jsimulation.r4.SimEventList;
 /** The {@link GATE} queue lets jobs depart without service conditionally ("gate is open") or lets them wait ("gate is closed").
  * 
  * <p>
+ * The gate status is a {@link SimQueue} <i>state variable</i>, i.e., it can be changed from an event list being run.
+ * 
+ * <p>
  * By default, the gate is open without limit on the number of jobs passing.
  * It can be closed ({@link #closeGate}),
  * opened limitless ({@link #openGate(double)}),
  * or opened with a limit on the number of jobs to pass before closing ({@link #openGate(double,int)}).
+ * 
+ * <p>
+ * The state of the gate can in fact be represented by a single non-negative number, the <i>gate passage credits</i>.
+ * If the credits are zero, the gate is closed, and if infinite ({@link Integer#MAX_VALUE}), the gate is open without limits.
+ * If the number of credits is in between, the gate is also open, but only for that number of job passages.
  * 
  * <p>
  * This {@link SimQueue} is server-less.
@@ -98,10 +106,21 @@ implements SimQueueWithGate<J, Q>
   @Override
   public final boolean isNoWaitArmed ()
   {
-    return this.numberOfPassages > 0;
+    return this.gatePassageCredits > 0;
   }
 
-  private int numberOfPassages = Integer.MAX_VALUE;
+  private int gatePassageCredits = Integer.MAX_VALUE;
+
+  /** Returns the remaining gate-passage credits, i.e., the number of jobs still allowed to pass before the gate closes.
+   * 
+   * @return The remaining gate-passage credits, i.e., the number of jobs still allowed to pass before the gate closes.
+   * 
+   */
+  @Override
+  public int getGatePassageCredits ()
+  {
+    return this.gatePassageCredits;
+  }
   
   /** Opens the gate without limits on the number of jobs allowed to pass.
    * 
@@ -124,37 +143,37 @@ implements SimQueueWithGate<J, Q>
   /** Opens the gate with a limit on the number of jobs allowed to pass.
    * 
    * <p>
-   * If allowed by the <code>numberOfPassages</code> parameter, some waiting jobs will depart.
+   * If allowed by the <code>gatePassageCredits</code> parameter, some waiting jobs will depart.
    * 
-   * @param time The current time.
-   * @param numberOfPassages The (remaining) number of passages to allow (will override, not add to, any previous value);
-   *                         {@link Integer#MAX_VALUE} is treated as infinity.
+   * @param time               The current time.
+   * @param gatePassageCredits The (remaining) number of passages to allow (will override, not add to, any previous value);
+   *                           {@link Integer#MAX_VALUE} is treated as infinity.
    * 
    * @see #openGate(double)
    * @see #closeGate
    * 
    */
   @Override
-  public final void openGate (final double time, final int numberOfPassages)
+  public final void openGate (final double time, final int gatePassageCredits)
   {
     update (time);
-    if (numberOfPassages < 0)
+    if (gatePassageCredits < 0)
       throw new IllegalArgumentException ();
-    final int oldNumberOfPassages = this.numberOfPassages;
+    final int oldGatePassageCredits = this.gatePassageCredits;
     final Set<J> jobsReleased = new LinkedHashSet<>  ();
-    this.numberOfPassages = numberOfPassages;
-    while (this.numberOfPassages > 0 && ! this.jobQueue.isEmpty ())
+    this.gatePassageCredits = gatePassageCredits;
+    while (this.gatePassageCredits > 0 && ! this.jobQueue.isEmpty ())
     {
       jobsReleased.add (jobQueue.remove (0));
-      if (this.numberOfPassages < Integer.MAX_VALUE)
-        this.numberOfPassages--;
+      if (this.gatePassageCredits < Integer.MAX_VALUE)
+        this.gatePassageCredits--;
     }
     for (final J job : jobsReleased)
       job.setQueue (null);
     for (final J job : jobsReleased)
       fireDeparture (time, job, (Q) this);
     fireNewNoWaitArmed (time, isNoWaitArmed ());
-    fireNewGateStatus (time, oldNumberOfPassages, this.numberOfPassages);
+    fireNewGateStatus (time, oldGatePassageCredits);
   }
   
   /** Closes the gate.
@@ -199,7 +218,7 @@ implements SimQueueWithGate<J, Q>
   public final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
-    this.numberOfPassages = Integer.MAX_VALUE;
+    this.gatePassageCredits = Integer.MAX_VALUE;
   }  
   
   /** Adds the job to the tail of the {@link #jobQueue}.
@@ -218,8 +237,7 @@ implements SimQueueWithGate<J, Q>
    * and fires a notification of the departure.
    * 
    * <p>
-   * If needed, this method updates the number of remaining passages allowed.
-   * If zero, changes the internal gate state to closed.
+   * If needed, this method updates the gate-passage credits.
    * 
    * @see #arrive
    * @see #jobQueue
@@ -228,10 +246,10 @@ implements SimQueueWithGate<J, Q>
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (this.numberOfPassages == 0)
+    if (this.gatePassageCredits == 0)
       return;
-    if (this.numberOfPassages < Integer.MAX_VALUE)
-      this.numberOfPassages--;
+    if (this.gatePassageCredits < Integer.MAX_VALUE)
+      this.gatePassageCredits--;
     this.jobQueue.remove (job);
     job.setQueue (null);
     fireDeparture (time, job, (Q) this);
@@ -260,7 +278,7 @@ implements SimQueueWithGate<J, Q>
     throw new IllegalStateException ();
   }
 
-  /** Removes the jobs from the {@link #jobQueue}.
+  /** Removes the job from the {@link #jobQueue}.
    * 
    */
   @Override
@@ -320,20 +338,19 @@ implements SimQueueWithGate<J, Q>
   
   /** Notifies all gate listeners of a gate status change, if needed.
    *
-   * @param time                The current time.
-   * @param oldNumberOfPassages The old number of passages (last reported or implicit).
-   * @param newNumberOfPassages The new number of passages.
+   * @param time                  The current time.
+   * @param oldGatePassageCredits The old number of gate-passage credits (last reported or implicit).
    *
-   * @see SimQueueGateListener#notifyNewGateStatus 
+   * @see SimQueueGateListener#notifyNewGateStatus
    * 
    */
-  protected final void fireNewGateStatus (final double time, final int oldNumberOfPassages, final int newNumberOfPassages)
+  protected final void fireNewGateStatus (final double time, final int oldGatePassageCredits)
   {
-    if (oldNumberOfPassages > 0 && newNumberOfPassages == 0)
+    if (oldGatePassageCredits > 0 && this.gatePassageCredits == 0)
       for (SimEntityListener<J, Q> l : getSimEntityListeners ())
         if (l instanceof SimQueueWithGateListener)
           ((SimQueueWithGateListener) l).notifyNewGateStatus (time, (Q) this, false);
-    if (oldNumberOfPassages == 0 && newNumberOfPassages > 0)
+    if (oldGatePassageCredits == 0 && this.gatePassageCredits > 0)
       for (SimEntityListener<J, Q> l : getSimEntityListeners ())
         if (l instanceof SimQueueWithGateListener)
           ((SimQueueWithGateListener) l).notifyNewGateStatus (time, (Q) this, true);
