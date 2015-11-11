@@ -107,7 +107,7 @@ extends AbstractSimQueuePredictor<J, PS>
       {
         final boolean interruptService =
           workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).get (job);
-        // Mkae sure we do not revoke an executing job without the interruptService flag.
+        // Make sure we do not revoke an executing job without the interruptService flag.
         if (interruptService || ! queueState.getJobsExecuting ().contains (job))
         {
           final Set<J> revocations = new HashSet<> ();
@@ -121,7 +121,7 @@ extends AbstractSimQueuePredictor<J, PS>
       final int oldSac = queueState.getServerAccessCredits ();
       final int newSac = workloadSchedule.getServerAccessCreditsMap_SQ_SV_ROEL_U ().get (time);
       queueState.setServerAccessCredits (time, newSac);
-      if (oldSac == 0)
+      if (oldSac == 0 && newSac > 0)
       {
         final Set<J> starters = new LinkedHashSet<> ();
         final Iterator<J> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
