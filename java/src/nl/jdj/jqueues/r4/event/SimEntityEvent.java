@@ -16,7 +16,7 @@ import nl.jdj.jsimulation.r4.SimEventAction;
  * 
  */
 public abstract class SimEntityEvent<J extends SimJob, Q extends SimQueue>
-extends SimEvent<J>
+extends SimEvent
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,21 +27,18 @@ extends SimEvent<J>
   
   /** Creates a new event for a queue.
    * 
-   * @param name   The (optional) name of the event, may be  <code>null</code>.
+   * @param name   The (optional) name of the event, may be  {@code null}.
    * @param time   The time at which the event occurs.
-   * @param queue  The queue at which the event occurs, non-{@code null}.
-   * @param job    The job related to the event (if applicable, may be <code>null</code>).
+   * @param queue  The queue related to the event (if applicable), may be {@code null}.
+   * @param job    The job related to the event (if applicable), may be {@code null}.
    * @param action The {@link SimEventAction} to take; may be {@code null}.
-   * 
-   * @throws IllegalArgumentException If the queue is {@code null}.
    * 
    */
   protected SimEntityEvent (final String name, final double time, final Q queue, final J job, final SimEventAction<J> action)
   {
-    super (name, time, job, action);
-    if (queue == null)
-      throw new IllegalArgumentException ();
+    super (name, time, null, action);
     this.queue = queue;
+    this.job = job;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,14 +47,11 @@ extends SimEvent<J>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** The queue at which the event occurs, non-{@code null}.
-   * 
-   */
   private final Q queue;
   
-  /** Gets the queue at which the event occurs.
+  /** Gets the queue (if applicable) at which the event occurs.
    * 
-   * @return The queue at which the event occurs, non-{@code null}.
+   * @return The queue (if applicable) to which the event applies, may be {@code null}.
    * 
    */
   public final Q getQueue ()
@@ -71,19 +65,16 @@ extends SimEvent<J>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  private final J job;
+  
   /** Gets the job (if applicable) to which the event applies.
    * 
-   * <p>
-   * The job is stored as user object on the {@link SimEvent}.
-   * 
    * @return The job (if applicable) to which the event applies, may be {@code null}.
-   * 
-   * @see SimEvent#getObject
    * 
    */
   public final J getJob ()
   {
-    return getObject ();
+    return this.job;
   }
   
 }
