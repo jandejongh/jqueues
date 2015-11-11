@@ -32,8 +32,18 @@ extends LoadFactory_SQ_SV_001<J, Q>
    * This method
    * <ul>
    * <li> generates the job load according to {@link LoadFactory_SQ_SV_001#generate};
-   * <li> adds setting server-access credits 6.75, 13.75, 20.74, etc.
+   * <li> adds setting server-access credits 6.75, 13.75, 20.75, etc.,
+   *      with a jitter on the schedule time in U[-0.001, +0.001].
    * </ul>
+   * 
+   * <p>
+   * The jitter on the schedule time is often required (e.g., in FCFS) to avoid ambiguities.
+   * If the server-access credits (sac) set are (relatively) small,
+   * the start times tend to synchronize to the
+   * scheduled sac-settings.
+   * Given the integral length of the interval between setting the server-access credits,
+   * and the integral service time in {@link LoadFactory_SQ_SV_001#generate},
+   * this will lead to ambiguities between departures/starts and scheduled sac-settings.
    * 
    * <p>
    * The amount of credits is 0, 1, or 2 with equal probabilities.
@@ -60,10 +70,13 @@ extends LoadFactory_SQ_SV_001<J, Q>
       ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
     final int numberOfSacToSchedule = Math.max (1, jobs.size () * (jobs.size () + 1) / 7);
     final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
+    final Random rngScheduleTimeJitter = new Random ();
     final Random rngCredits = new Random ();
     for (int i = 1; i <= numberOfSacToSchedule; i++)
     {
-      final double scheduleTime = 7.0 * i - 0.25;
+      // Create a jitter on the schedule time in U[-0.001, +0.001].
+      final double scheduleTimeJitter = 0.001 * (2.0 * rngScheduleTimeJitter.nextDouble () - 1.0);
+      final double scheduleTime = 7.0 * i - 0.25 + scheduleTimeJitter;
       final int credits = rngCredits.nextInt (3); // 0, 1, or 2.
       final SimEntityEvent<J, Q> sacSchedule = new SimQueueServerAccessCreditsEvent<> (queue, scheduleTime, credits);
       if (! realQueueExternalEvents.containsKey (scheduleTime))
