@@ -1,10 +1,12 @@
 package nl.jdj.jqueues.r4.serverless;
 
-import nl.jdj.jqueues.r4.SimQueueWithGate;
+import nl.jdj.jqueues.r4.extensions.gate.SimQueueWithGate;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import nl.jdj.jqueues.r4.SimEntityListener;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.extensions.gate.SimQueueWithGateListener;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** The {@link GATE} queue lets jobs depart without service conditionally ("gate is open") or lets them wait ("gate is closed").
@@ -116,15 +118,7 @@ implements SimQueueWithGate<J, Q>
   public final void openGate (final double time)
   {
     update (time);
-    this.numberOfPassages = Integer.MAX_VALUE;
-    final Set<J> jobsReleased = new LinkedHashSet<>  ();
-    jobsReleased.addAll (this.jobQueue);
-    for (final J job : jobsReleased)
-      job.setQueue (null);
-    this.jobQueue.clear ();
-    for (final J job : jobsReleased)
-      fireDeparture (time, job, (Q) this);
-    fireNewNoWaitArmed (time, isNoWaitArmed ());
+    openGate (time, Integer.MAX_VALUE);
   }
   
   /** Opens the gate with a limit on the number of jobs allowed to pass.
@@ -146,6 +140,7 @@ implements SimQueueWithGate<J, Q>
     update (time);
     if (numberOfPassages < 0)
       throw new IllegalArgumentException ();
+    final int oldNumberOfPassages = this.numberOfPassages;
     final Set<J> jobsReleased = new LinkedHashSet<>  ();
     this.numberOfPassages = numberOfPassages;
     while (this.numberOfPassages > 0 && ! this.jobQueue.isEmpty ())
@@ -159,6 +154,7 @@ implements SimQueueWithGate<J, Q>
     for (final J job : jobsReleased)
       fireDeparture (time, job, (Q) this);
     fireNewNoWaitArmed (time, isNoWaitArmed ());
+    fireNewGateStatus (time, oldNumberOfPassages, this.numberOfPassages);
   }
   
   /** Closes the gate.
@@ -172,8 +168,7 @@ implements SimQueueWithGate<J, Q>
   @Override
   public final void closeGate (final double time)
   {
-    update (time);
-    fireNewNoWaitArmed (time, isNoWaitArmed ());
+    openGate (time, 0);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -317,6 +312,33 @@ implements SimQueueWithGate<J, Q>
     /* EMPTY */
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // EVENT NOTIFICATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Notifies all gate listeners of a gate status change, if needed.
+   *
+   * @param time                The current time.
+   * @param oldNumberOfPassages The old number of passages (last reported or implicit).
+   * @param newNumberOfPassages The new number of passages.
+   *
+   * @see SimQueueGateListener#notifyNewGateStatus 
+   * 
+   */
+  protected final void fireNewGateStatus (final double time, final int oldNumberOfPassages, final int newNumberOfPassages)
+  {
+    if (oldNumberOfPassages > 0 && newNumberOfPassages == 0)
+      for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+        if (l instanceof SimQueueWithGateListener)
+          ((SimQueueWithGateListener) l).notifyNewGateStatus (time, (Q) this, false);
+    if (oldNumberOfPassages == 0 && newNumberOfPassages > 0)
+      for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+        if (l instanceof SimQueueWithGateListener)
+          ((SimQueueWithGateListener) l).notifyNewGateStatus (time, (Q) this, true);
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // END OF FILE
