@@ -23,19 +23,19 @@ public enum KnownSimQueue
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // serverless
-  DROP    ("DROP",  false, nl.jdj.jqueues.r4.serverless.DROP.class,  GeneratorProfile.SE,
+  DROP    ("DROP",  false, nl.jdj.jqueues.r4.queue.serverless.DROP.class,  GeneratorProfile.SE,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_IRRELEVANT,
            DoubleParameterProfile.DPP_IRRELEVANT),
-  SINK    ("SINK",  false, nl.jdj.jqueues.r4.serverless.SINK.class,  GeneratorProfile.SE,
+  SINK    ("SINK",  false, nl.jdj.jqueues.r4.queue.serverless.SINK.class,  GeneratorProfile.SE,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
            DoubleParameterProfile.DPP_IRRELEVANT),
-  DELAY   ("DELAY", false, nl.jdj.jqueues.r4.serverless.DELAY.class, GeneratorProfile.SE_WST,
+  DELAY   ("DELAY", false, nl.jdj.jqueues.r4.queue.serverless.DELAY.class, GeneratorProfile.SE_WST,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
            DoubleParameterProfile.DPP_POSITIVE),
-  ZERO    ("ZERO",  false, nl.jdj.jqueues.r4.serverless.ZERO.class,  GeneratorProfile.SE,
+  ZERO    ("ZERO",  false, nl.jdj.jqueues.r4.queue.serverless.ZERO.class,  GeneratorProfile.SE,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
            DoubleParameterProfile.DPP_IRRELEVANT),
-  GATE    ("GATE",  false, nl.jdj.jqueues.r4.serverless.GATE.class,  GeneratorProfile.SE,
+  GATE    ("GATE",  false, nl.jdj.jqueues.r4.extensions.gate.GATE.class,  GeneratorProfile.SE,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
            DoubleParameterProfile.DPP_IRRELEVANT),
   

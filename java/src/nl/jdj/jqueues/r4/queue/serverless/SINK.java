@@ -1,19 +1,20 @@
-package nl.jdj.jqueues.r4.serverless;
+package nl.jdj.jqueues.r4.queue.serverless;
 
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-/** The {@link DROP} queue drops all jobs upon arrival.
- * 
+/** The {@link SINK} queue has unlimited waiting capacity, but does not provide
+ *  any service and jobs can only leave through revocations.
+ *
  * <p>
  * This {@link SimQueue} is server-less.
- * 
+ *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public class DROP<J extends SimJob, Q extends DROP>
+public class SINK<J extends SimJob, Q extends SINK>
 extends AbstractServerlessSimQueue<J, Q>
 {
 
@@ -23,27 +24,27 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a DROP queue given an event list.
+  /** Creates a SINK queue given an event list.
    *
    * @param eventList The event list to use.
    *
    */
-  public DROP (final SimEventList eventList)
+  public SINK (final SimEventList eventList)
   {
     super (eventList);
   }
   
-  /** Returns a new {@link DROP} object on the same {@link SimEventList}.
+  /** Returns a new {@link SINK} object on the same {@link SimEventList}.
    * 
-   * @return A new {@link DROP} object on the same {@link SimEventList}.
+   * @return A new {@link SINK} object on the same {@link SimEventList}.
    * 
    * @see #getEventList
    * 
    */
   @Override
-  public DROP<J, Q> getCopySimQueue ()
+  public SINK<J, Q> getCopySimQueue ()
   {
-    return new DROP<> (getEventList ());
+    return new SINK<> (getEventList ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,15 +53,15 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "DROP".
+  /** Returns "SINK".
    * 
-   * @return "DROP".
+   * @return "SINK".
    * 
    */
   @Override
   public final String toStringDefault ()
   {
-    return "DROP";
+    return "SINK";
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,68 +111,65 @@ extends AbstractServerlessSimQueue<J, Q>
     super.resetEntitySubClass ();
   }  
   
-  /** Does nothing (effectively forcing the job to be dropped).
+  /** Adds the job to the tail of the {@link #jobQueue}.
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    /* EMPTY */    
+    this.jobQueue.add (job);
   }
 
-  /** Throws {@link IllegalStateException}.
-   * 
-   * @throws IllegalStateException Always, as this method is not expected to be invoked.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    throw new IllegalStateException ();
+    /* EMPTY */
   }
 
-  /** Throws {@link IllegalStateException}.
-   * 
-   * @throws IllegalStateException Always, as this method is not expected to be invoked.
+  /** Invokes {@link #removeJobFromQueueUponRevokation}, requesting <code>interruptService</code>.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
-    throw new IllegalStateException ();
+    removeJobFromQueueUponRevokation (job, time, true);
   }
 
-  /** Throws {@link IllegalStateException}.
-   * 
-   * @throws IllegalStateException Always, as this method is not expected to be invoked.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void rescheduleAfterDrop (final J job, final double time)
   {
-    throw new IllegalStateException ();
+    /* EMPTY */
   }
 
-  /** Throws {@link IllegalStateException}.
+  /** Removes the job, after passing sanity checks, from the job queue {@link #jobQueue}.
    * 
-   * @throws IllegalStateException Always, as this {@link SimQueue} does not allow revocations.
+   * @return True.
    * 
    */
   @Override
   protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
   {
-    throw new IllegalStateException ();
+    if (job == null || ! this.jobQueue.contains (job))
+      throw new IllegalArgumentException ();
+    if (! this.jobsExecuting.isEmpty ())
+      throw new IllegalStateException ();
+    this.jobQueue.remove (job);
+    return true;
   }
 
-  /** Throws {@link IllegalStateException}.
-   * 
-   * @throws IllegalStateException Always, as this {@link SimQueue} does not allow revocations.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void rescheduleAfterRevokation (final J job, final double time)
   {
-    throw new IllegalStateException ();
+    /* EMPTY */
   }
 
   /** Throws {@link IllegalStateException}.

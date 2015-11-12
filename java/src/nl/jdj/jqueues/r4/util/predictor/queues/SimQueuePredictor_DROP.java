@@ -5,7 +5,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r4.event.simple.SimQueueSimpleEventType;
-import nl.jdj.jqueues.r4.serverless.DROP;
+import nl.jdj.jqueues.r4.queue.serverless.DROP;
 import nl.jdj.jqueues.r4.util.jobfactory.JobQueueVisitLog;
 import nl.jdj.jqueues.r4.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r4.util.predictor.SimQueuePredictionAmbiguityException;
