@@ -138,9 +138,9 @@ extends AbstractSimQueuePredictor<J, SimQueue>
       {
         if (this.hasB && queueState.getJobsWaiting ().size () > this.B)
           throw new IllegalStateException ();
-        if (this.hasB
-          && (! (queueState.getJobsExecuting ().isEmpty () && queueState.getServerAccessCredits () > 0))
-          && queueState.getJobsWaiting ().size () == this.B)
+        if (this.hasB && queueState.getJobsWaiting ().size () == this.B
+          && ! ((queueState.getServerAccessCredits () > 0)
+                && ((! this.hasc) || queueState.getJobsExecuting ().size () < this.c)))
           // Drops.
           queueState.doExits (time, arrivals, null, null, null, visitLogsSet);
         else
