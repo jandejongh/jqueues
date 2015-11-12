@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 import java.util.Set;
 import nl.jdj.jqueues.r4.SimJob;
+import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r4.event.simple.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS;
@@ -24,13 +25,38 @@ import nl.jdj.jqueues.r4.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
  * 
  */
 public class SimQueuePredictor_FCFS<J extends SimJob>
-extends AbstractSimQueuePredictor<J, FCFS>
+extends AbstractSimQueuePredictor<J, SimQueue>
 {
+  
+  final boolean hasB;
+  
+  final int B;
+  
+  final boolean hasc;
+  
+  final int c;
+  
+  protected SimQueuePredictor_FCFS (final boolean hasB, final int B, final boolean hasc, final int c)
+  {
+    if (hasB && B < 0)
+      throw new IllegalArgumentException ();
+    if (hasc && c < 0)
+      throw new IllegalArgumentException ();
+    this.hasB = hasB;
+    this.B = B;
+    this.hasc = hasc;
+    this.c = c;
+  }
+  
+  public SimQueuePredictor_FCFS ()
+  {
+    this (false, 0, true, 1);
+  }
 
   @Override
   protected double getNextQueueEventTimeBeyond
-  (final FCFS queue,
-   final SimQueueState<J, FCFS> queueState,
+  (final SimQueue queue,
+   final SimQueueState<J, SimQueue> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
     if ( queue == null
@@ -44,28 +70,35 @@ extends AbstractSimQueuePredictor<J, FCFS>
       return Double.NaN;
     if (Double.isNaN (time))
       throw new IllegalStateException ();
-    if (numberOfJobsExecuting > 1)
+    if (this.hasc && numberOfJobsExecuting > this.c)
       throw new IllegalStateException ();
-    if (queueState.getStartTimesMap ().size () != 1)
+    if (queueState.getStartTimesMap ().isEmpty ())
       throw new IllegalStateException ();
-    final Entry<J, Double> jobExecutingEntry = queueState.getStartTimesMap ().entrySet ().iterator ().next ();
-    final J jobExecuting = jobExecutingEntry.getKey ();
-    final double startTime = jobExecutingEntry.getValue ();
-    final double serviceTime = queueState.getJobRemainingServiceTimeMap ().get (jobExecuting);
-    final double departureTime = startTime + serviceTime;
-    if (departureTime < time)
-      throw new RuntimeException ();
+    if (this.hasc && queueState.getStartTimesMap ().size () > this.c)
+      throw new IllegalStateException ();
+    double minDepartureTime = Double.NaN;
+    for (final Entry<J, Double> jobExecutingEntry : queueState.getStartTimesMap ().entrySet ())
+    {
+      final J jobExecuting = jobExecutingEntry.getKey ();
+      final double startTime = jobExecutingEntry.getValue ();
+      final double serviceTime = queueState.getJobRemainingServiceTimeMap ().get (jobExecuting);
+      final double departureTime = startTime + serviceTime;
+      if (departureTime < time)
+        throw new RuntimeException ();
+      if (Double.isNaN (minDepartureTime) || departureTime < minDepartureTime)
+        minDepartureTime = departureTime;
+    }
     queueEventTypes.add (SimEntitySimpleEventType.DEPARTURE);
-    return departureTime;
+    return minDepartureTime;
   }
 
   @Override
   protected void doWorkloadEvents_SQ_SV_ROEL_U
-  (final FCFS queue,
-   final WorkloadSchedule_SQ_SV_ROEL_U<J, FCFS> workloadSchedule,
-   final SimQueueState<J, FCFS> queueState,
+  (final SimQueue queue,
+   final WorkloadSchedule_SQ_SV_ROEL_U<J, SimQueue> workloadSchedule,
+   final SimQueueState<J, SimQueue> queueState,
    final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
-   final Set<JobQueueVisitLog<J, FCFS>> visitLogsSet)
+   final Set<JobQueueVisitLog<J, SimQueue>> visitLogsSet)
    throws SimQueuePredictionException, WorkloadScheduleException
   {
     if ( queue == null
@@ -99,11 +132,24 @@ extends AbstractSimQueuePredictor<J, FCFS>
       final J job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
       final Set<J> arrivals = new HashSet<> ();
       arrivals.add (job);
-      queueState.doArrivals (time, arrivals, visitLogsSet);
-      if ((! queueState.isQueueAccessVacation ())
-        && queueState.getJobsExecuting ().isEmpty ()
-        && queueState.getServerAccessCredits () >= 1)
-        queueState.doStarts (time, arrivals);
+      if (queueState.isQueueAccessVacation ())
+        queueState.doArrivals (time, arrivals, visitLogsSet);
+      else
+      {
+        if (this.hasB && queueState.getJobsWaiting ().size () > this.B)
+          throw new IllegalStateException ();
+        if (this.hasB
+          && (! (queueState.getJobsExecuting ().isEmpty () && queueState.getServerAccessCredits () > 0))
+          && queueState.getJobsWaiting ().size () == this.B)
+          // Drops.
+          queueState.doExits (time, arrivals, null, null, null, visitLogsSet);
+        else
+        {
+          queueState.doArrivals (time, arrivals, visitLogsSet);
+          if (queueState.getJobsExecuting ().isEmpty () && queueState.getServerAccessCredits () >= 1)
+            queueState.doStarts (time, arrivals);
+        }
+      }
     }
     else if (eventType == SimEntitySimpleEventType.REVOCATION)
     {
@@ -164,10 +210,10 @@ extends AbstractSimQueuePredictor<J, FCFS>
 
   @Override
   protected void doQueueEvents_SQ_SV_ROEL_U
-  (final FCFS queue,
-   final SimQueueState<J, FCFS> queueState,
+  (final SimQueue queue,
+   final SimQueueState<J, SimQueue> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
-   final Set<JobQueueVisitLog<J, FCFS>> visitLogsSet)
+   final Set<JobQueueVisitLog<J, SimQueue>> visitLogsSet)
    throws SimQueuePredictionException    
   {
     if ( queue == null
@@ -212,7 +258,7 @@ extends AbstractSimQueuePredictor<J, FCFS>
   }
   
   @Override
-  protected void updateToTime (final FCFS queue, final SimQueueState queueState, final double newTime)
+  protected void updateToTime (final SimQueue queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
