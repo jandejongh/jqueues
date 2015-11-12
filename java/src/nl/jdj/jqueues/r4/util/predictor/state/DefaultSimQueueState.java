@@ -268,7 +268,7 @@ implements SimQueueState<J, Q>
    *              from the service-time provider (if installed).
    * 
    */
-  protected final double getServiceTime (final Q queue, final J job)
+  public final double getServiceTime (final Q queue, final J job)
   {
     if (this.serviceTimeProvider == null)
       return job.getServiceTime (this.queue);
