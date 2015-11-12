@@ -327,7 +327,7 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
   {
     if (mustBePresent && mustBeAbsent)
       throw new IllegalArgumentException ();
-    final Set<DefaultDepartureEvent> departureEvents = getDepartureEvents ();
+    final Set<DefaultDepartureEvent<J, Q>> departureEvents = getDepartureEvents ();
     if (departureEvents == null)
       throw new RuntimeException ();
     if (departureEvents.size () > 1)
@@ -415,7 +415,7 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
         throw new IllegalStateException ();
       if (this.virtualDepartureTime.containsKey (eJob))
         throw new IllegalStateException ();
-      final Set<DefaultDepartureEvent> departureEvents = getDepartureEvents ();
+      final Set<DefaultDepartureEvent<J, Q>> departureEvents = getDepartureEvents ();
       if (departureEvents == null)
         throw new RuntimeException ();
       if (departureEvents.size () > 1)
