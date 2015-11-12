@@ -16,6 +16,7 @@ import nl.jdj.jqueues.r4.event.SimQueueJobArrivalEvent;
 import nl.jdj.jqueues.r4.event.SimEntityEvent;
 import nl.jdj.jqueues.r4.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS_B;
+import nl.jdj.jqueues.r4.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r4.nonpreemptive.NoBuffer_c;
 import nl.jdj.jsimulation.r4.SimEventList;
 
@@ -37,7 +38,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
    * 
    * <p>
    * For specific queue types, i.c.,
-   * {@link FCFS_B}, {@link NoBuffer_c},
+   * {@link FCFS_B}, {@link NoBuffer_c}, {@linkl LCFS},
    * a jitter from U[-0.01, +0.01] is added to the service time.
    * 
    * @param queue The queue.
@@ -52,7 +53,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
   {
     final Map<Q, Double> requestedServiceTimeMap = new HashMap ();
     final double requestedServiceTimeJitter =
-      (((queue instanceof FCFS_B) || (queue instanceof NoBuffer_c))
+      (((queue instanceof FCFS_B) || (queue instanceof NoBuffer_c) || (queue instanceof LCFS))
       ? 0.01 * (2.0 * this.rngRequestedServiceTimeJitter.nextDouble () - 1.0)
       : 0.0);
     requestedServiceTimeMap.put (queue, ((double) n) + requestedServiceTimeJitter);
