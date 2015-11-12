@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import nl.jdj.jqueues.r4.SimJob;
@@ -14,6 +15,7 @@ import nl.jdj.jqueues.r4.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jqueues.r4.event.SimQueueJobArrivalEvent;
 import nl.jdj.jqueues.r4.event.SimEntityEvent;
 import nl.jdj.jqueues.r4.event.SimEntityEventScheduler;
+import nl.jdj.jqueues.r4.nonpreemptive.FCFS_B;
 import nl.jdj.jsimulation.r4.SimEventList;
 
 /** A concrete {@link LoadFactory_SQ_SV}, pattern 001.
@@ -28,7 +30,14 @@ public class LoadFactory_SQ_SV_001<J extends SimJob, Q extends SimQueue>
 extends AbstractLoadFactory_SQ_SV<J, Q>
 {
 
+  private final Random rngRequestedServiceTimeJitter = new Random ();
+  
   /** Creates a suitable map for the requested service time for a job visit to a queue.
+   * 
+   * <p>
+   * For specific queue types, i.c.,
+   * {@link FCFS_B},
+   * a jitter from U[-0.01, +0.01] is added to the service time.
    * 
    * @param queue The queue.
    * @param n     The job number.
@@ -41,7 +50,11 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
   protected Map<Q, Double> generateRequestedServiceTimeMap (final Q queue, final int n)
   {
     final Map<Q, Double> requestedServiceTimeMap = new HashMap ();
-    requestedServiceTimeMap.put (queue, (double) n);
+    final double requestedServiceTimeJitter =
+      (((queue instanceof FCFS_B))
+      ? 0.01 * (2.0 * this.rngRequestedServiceTimeJitter.nextDouble () - 1.0)
+      : 0.0);
+    requestedServiceTimeMap.put (queue, ((double) n) + requestedServiceTimeJitter);
     return requestedServiceTimeMap;
   }
   
