@@ -95,6 +95,17 @@ extends AbstractSimQueuePredictor<J, SimQueue>
     return minDepartureTime;
   }
 
+  protected J getJobToStart
+  (final SimQueue queue,
+   final SimQueueState<J, SimQueue> queueState)
+  {
+    final Iterator<J> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
+    if (i_waiters.hasNext ())
+      return i_waiters.next ();
+    else
+      throw new RuntimeException ();
+  }
+  
   @Override
   protected void doWorkloadEvents_SQ_SV_ROEL_U
   (final SimQueue queue,
@@ -174,15 +185,11 @@ extends AbstractSimQueuePredictor<J, SimQueue>
           if (isExecutingJob)
           {
             final int sac = queueState.getServerAccessCredits ();
-            if (sac > 0)
+            if (sac > 0 && queueState.getJobsWaiting ().size () > 0)
             {
               final Set<J> starters = new LinkedHashSet<> ();
-              final Iterator<J> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
-              if (i_waiters.hasNext ())
-              {
-                starters.add (i_waiters.next ());
-                queueState.doStarts (time, starters);
-              }
+              starters.add (getJobToStart (queue, queueState));
+              queueState.doStarts (time, starters);
             }            
           }
         }
@@ -196,19 +203,19 @@ extends AbstractSimQueuePredictor<J, SimQueue>
       if (((! this.hasc) || queueState.getJobsExecuting ().size () < this.c)
         && oldSac == 0
         && newSac > 0)
-      {        
-        final Set<J> starters = new LinkedHashSet<> ();
-        final Iterator<J> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
+      {
         int remainingMaxStarters = newSac;
         if (this.hasc)
           remainingMaxStarters = Math.min (remainingMaxStarters, this.c - queueState.getJobsExecuting ().size ());
-        while (remainingMaxStarters > 0 && i_waiters.hasNext ())
+        remainingMaxStarters = Math.min (remainingMaxStarters, queueState.getJobsWaiting ().size ());
+        while (remainingMaxStarters > 0)
         {
-          starters.add (i_waiters.next ());
+          final Set<J> starters = new LinkedHashSet<> ();
+          starters.add (getJobToStart (queue, queueState));
           if (remainingMaxStarters != Integer.MAX_VALUE)
             remainingMaxStarters--;
+          queueState.doStarts (time, starters);
         }
-        queueState.doStarts (time, starters);
       }
     }
     else
@@ -251,15 +258,11 @@ extends AbstractSimQueuePredictor<J, SimQueue>
       final Set<J> departures = new HashSet<> (queueState.getRemainingServiceMap ().firstEntry ().getValue ());
       queueState.doExits (time, null, null, departures, null, visitLogsSet);
       final int sac = queueState.getServerAccessCredits ();
-      if (sac > 0)
+      if (sac > 0 && queueState.getJobsWaiting ().size () > 0)
       {
         final Set<J> starters = new LinkedHashSet<> ();
-        final Iterator<J> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
-        if (i_waiters.hasNext ())
-        {
-          starters.add (i_waiters.next ());
-          queueState.doStarts (time, starters);
-        }
+        starters.add (getJobToStart (queue, queueState));
+        queueState.doStarts (time, starters);
       }
     }
     else
