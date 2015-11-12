@@ -1,0 +1,350 @@
+\documentclass[12pt]{book}
+
+\usepackage{color}
+\usepackage{listings}
+
+\title{Discrete-Event Simulation\\
+       of Queueing Systems in Java:\\
+       The JSimulation and JQueues Libraries}
+\author{Jan de Jongh}
+\date{Release 5}
+
+\lstset
+{
+  language=Java,
+  basicstyle=\ttfamily,
+  commentstyle=\textit,
+  keywordstyle=\color{blue}\bfseries,
+  tabsize=2,
+  frame=single
+}
+
+\begin{document}
+
+\maketitle
+
+\chapter{Preface}
+
+Queueing systems deal with the general notion of {\em waiting\ }
+  for (the completion of) something.
+They are ubiquitously and often annoyingly present in our everyday lives.
+If there is anything we do most,
+  it is probably {\em waiting\ } for something to
+  happen (finally winning a non-trivial prize in the State Lottery
+          after paying monthly tickets over the past thirty years),
+  arrive (the breath-taking dress we ordered from that webshop
+          against warnings in the seller's reputation blog),
+  change (the reception of many severely bad hands in the poker game
+          we just happened to ran into),
+  stop (the constant flipping into red of traffic lights
+        while we are just within breaking distance
+        in our urban environment),
+  or resume (the heater that regularly happens to have
+             a mind of its own during
+             winter months).
+
+{\bf XXX}
+
+\chapter{Introduction}
+
+\chapter{Guided Tour}
+
+\chapter{Events, Event Lists and Actions}
+
+This chapter describes the event and event-list features
+  that are available from the \lstinline{jsimulation} package.
+Note that \lstinline{jsimulation} is a dependency of \lstinline{jqueues}.
+
+\section{Creating the Event List and Events}
+
+At the very heart of every simulation experiment
+  in \lstinline{jqueues}
+  is the so-called {\em event list}.
+The event list obviously holds the events,
+  keeps them ordered,
+  and maintains a notion of "where we are" in a simulation run.
+Together, an event list and the events it contains define
+  the precise sequence of actions taken in a simulation.
+The following code snipplet shows how to create an event list and
+  schedule two (empty) events, one at $t_{1}=5.0$ and one at $t_{2}=10$,
+  and print the resulting event list on \lstinline{System.out}:
+\begin{lstlisting}
+final SimEventList el = new SimEventList ();
+final SimEvent e1 = new SimEvent (5.0);
+final SimEvent e2 = new SimEvent (10.0);
+el.add (e1);
+el.add (e2);
+el.print ();
+\end{lstlisting}
+In \lstinline{jsimulation},
+  the event list is of type \lstinline{SimEventList};
+  events are of type \lstinline{SimEvent},
+  respectively.
+Typically,
+  you instantiate a single event list for a simulation experiment,
+  and numerous events.
+
+The \lstinline{double} argument in the \lstinline{SimEvent} constructor
+  (of which there are several)
+  is the {\em schedule time\/} of the event on the event list.
+Perhaps surprisingly,
+  in \lstinline{jsimulation},
+  the schedule time is actually held on the event,
+ {\em not\/} on the event list.
+Moreover, a \lstinline{SimEventList} is implemented as a \lstinline{TreeSet}
+  from the Java Collections Framework.
+These implementation choices have the following consequences:
+\begin{itemize}
+  \item Each \lstinline{SimEvent} can be present {\em at most once\/} in a \lstinline{SimEventList}.
+        You cannot reuse a single event instance (like a job creation and arrival event)
+          by scheduling it multiple times on the event list.
+        Instead, you must either use separate event instances, or reschedule the event
+          the moment it leaves the event list.
+  \item You cannot (more precisely, {\em should not\/}) modify the time on the event while it is
+          scheduled on an event list.
+  \item You always have access to the (intended) schedule time of the event, without having to
+          refer to an event list (if the event is scheduled at all) or use a separate
+          variable to keep and maintain that time.
+\end{itemize}
+
+The output of the code snipplet is something like\footnote{
+We may have improved the layout in the meantime.}:
+\begin{lstlisting}[basicstyle=\tiny]
+SimEventList nl.jdj.jsimulation.r4.SimEventList@159bfbe, time=-Infinity:
+  time=5.0, name=No Name, object=null, action=null.
+  time=10.0, name=No Name, object=null, action=null.
+\end{lstlisting}
+The output shows the name of the event list (as obtained from its \lstinline{toString} method)
+  and the current time ($-\infty$) in the first row, and then the events in the list
+  in the proper order.
+The output also shows the four properties of an event: its time, name, user object, and action.
+These will be described in more detail in the next section.
+
+\section{Event Properties and Event Constructors}
+
+A \lstinline{SimEvent} has the following properties:
+\begin{itemize}
+\item Time:   The (intended) schedule time of the event.
+\item Name:   The name of the event, which is only used for logging and output.
+\item Object: A general-purpose object available for storing information associated with the event
+              (\lstinline{jsimulation} nor \lstinline{jqueues} use this field).
+\item Action: The action to take, a \lstinline{SimEventAction}, described in the next section.
+\end{itemize}
+
+\section{Actions}
+
+A \lstinline{SimEventAction} defined what needs to be done by the time an event
+  is {\em executec} or {\em processed}.
+In Java terms, a \lstinline{SimEventAction} is an interface with
+  a single abstract method which is invoked when the event is processed.
+Below we show the declaration of the interface:
+\begin{lstlisting}[basicstyle=\tiny]
+@FunctionalInterface
+public interface SimEventAction<T>
+{
+
+  /** Invokes the action for supplied {@link SimEvent}.
+   *
+   * @param event The event.
+   *
+   * @throws IllegalArgumentException If <code>event</code> is <code>null</code>.
+   * 
+   */
+  public void action (SimEvent<T> event);
+
+}
+\end{lstlisting}
+
+There are several ways to create actions for events.
+The first and most often used way in our own code is to use anonymous inner classes:
+\begin{lstlisting}[basicstyle=\tiny]
+final SimEventList el = new SimEventList ();
+final SimEvent e =
+  new SimEvent ("My First Real Event", 5.0, null, new SimEventAction ()
+  {
+    @Override
+    public final void action (final SimEvent event)
+    {
+      System.out.println ("Event=" + event + ", time=" + event.getTime () + ".");
+    }
+    @Override
+    public String toString ()
+    {
+      return "My First Action";
+    }
+  });
+el.add (e);
+el.print ();
+el.run ();
+el.print ();
+\end{lstlisting}
+Note that we are now using the full \lstinline{SimEvent} constructor,
+  giving out own name, and supplying a \lstinline{SimEventAction}
+  as an anonymous inner class.
+In the inner class, we define the \lstinline{action} method,
+  and in the meantime override the \lstinline{toString} method
+  (to be honest, this was merely to keep the generated text within bounds).
+The generated output is:
+\begin{lstlisting}[basicstyle=\tiny]
+SimEventList nl.jdj.jsimulation.r4.SimEventList@106d69c, time=-Infinity:
+  t=5.0, name=My First Real Event, object=null, action=My First Action.
+Event=My First Real Event, time=5.0.
+SimEventList nl.jdj.jsimulation.r4.SimEventList@0, time=5.0:
+  EMPTY!
+\end{lstlisting}
+Clearly, as expected!
+However, rote that after "running" the event list, it turns out to be empty,
+  and its time is now $t=5.0$, the schedule time of our event.
+This is as intended, and will be explained in the next section.
+But first we look at an alternative way of attaching
+  actions to events:
+\begin{lstlisting}[basicstyle=\tiny]
+final SimEventList el = new SimEventList ()
+{
+  @Override
+  public final String toString ()
+  {
+    return "My Renamed Event List";
+  } 
+};
+final SimEventAction action = new SimEventAction ()
+{
+  @Override
+  public final void action (final SimEvent event)
+  {
+      System.out.println ("Event=" + event + ", time=" + event.getTime () + ".");
+  }
+  @Override
+  public final String toString ()
+  {
+    return "A Shared Action";
+  }
+};
+for (int i = 1; i <= 10; i++)
+{
+  final SimEvent e = new SimEvent ("Our Event", (double) i, null, action);
+  el.add (e);
+}
+el.print ();
+el.run ();
+el.print ();
+\end{lstlisting}
+In this example, we created a single action object
+  (again using an anonymous inner class),
+  and reuse it among ten distinct events we schedule
+  (we cannot reuse those).
+We also took the opportunity give our
+  event list a friendlier name by overriding its \lstinline{toString} method.
+The output is as follows:
+\begin{lstlisting}[basicstyle=\tiny]
+SimEventList My Renamed Event List, time=-Infinity:
+  t=1.0, name=Our Event, object=null, action=A Shared Action.
+  t=2.0, name=Our Event, object=null, action=A Shared Action.
+  t=3.0, name=Our Event, object=null, action=A Shared Action.
+  t=4.0, name=Our Event, object=null, action=A Shared Action.
+  t=5.0, name=Our Event, object=null, action=A Shared Action.
+  t=6.0, name=Our Event, object=null, action=A Shared Action.
+  t=7.0, name=Our Event, object=null, action=A Shared Action.
+  t=8.0, name=Our Event, object=null, action=A Shared Action.
+  t=9.0, name=Our Event, object=null, action=A Shared Action.
+  t=10.0, name=Our Event, object=null, action=A Shared Action.
+Event=Our Event, time=1.0.
+Event=Our Event, time=2.0.
+Event=Our Event, time=3.0.
+Event=Our Event, time=4.0.
+Event=Our Event, time=5.0.
+Event=Our Event, time=6.0.
+Event=Our Event, time=7.0.
+Event=Our Event, time=8.0.
+Event=Our Event, time=9.0.
+Event=Our Event, time=10.0.
+SimEventList My Renamed Event List, time=10.0:
+  EMPTY!
+\end{lstlisting}
+Again note that the time on the event list after running it
+  is the time of the last event we scheduled on it.
+
+So, there are different ways of attaching a \lstinline{SimEventAction}
+  to a \lstinline{SimEvent}.
+The abundant use of anonymous inner classes as shown here
+  is certainly not to everyone's taste,
+  but it results in relatively compact code
+  (even more through the use of lambda expressions, see XXX).
+
+\section{Processing the Event List}
+
+\section{Listening to an Event List}
+
+\section{Advanced Topics}
+
+\subsection{Event-List Updates}
+
+\subsection{Using Generic-Type Arguments}
+
+\subsection{Processing Simultaneous Events: Random-Order and Insertion-Order Event Lists}
+
+\subsection{Utility Methods for Scheduling Events}
+
+\subsection{Action is a Functional Interface}
+
+\chapter{Queues and Jobs}
+
+\chapter{Fundamental Queues}
+
+\section{Introduction}
+
+\section{Serverless Queues}
+
+\section{Single-Server Queues}
+
+\section{Finite-Server Queues}
+
+\section{Infinite-Server Queues}
+
+\section{Processor-Sharing Queues}
+
+\section{Preemptive Queues}
+
+\chapter{Visualization of Queues and Jobs with Swing Components}
+
+\chapter{Queue and Job Statistics}
+
+\chapter{Multiclass Queues and Jobs}
+
+\chapter{Advanced Topics}
+
+\section{Job Factories}
+
+\section{Queue Events and Schedules}
+
+\section{Load Factories}
+
+\chapter{Composite Queues}
+
+\section{Introduction}
+
+\section{Types of Composite Queues}
+
+\section{Tandem Queues}
+
+\section{Compressed Tandem Queues}
+
+\section{Parallel Queues}
+
+\section{Feedback Queues}
+
+\section{Jackson Networks}
+
+\section{Special Composite Queues}
+
+\subsection{Encapsulator Queues}
+
+\subsection{Drop-Collector Queues}
+
+\section{Building Custom Queues and Jobs}
+
+\section{Test Infrastructure}
+
+\chapter{Conclusions}
+
+\end{document}
