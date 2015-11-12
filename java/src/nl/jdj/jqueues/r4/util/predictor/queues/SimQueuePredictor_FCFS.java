@@ -1,9 +1,13 @@
 package nl.jdj.jqueues.r4.util.predictor.queues;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
 import java.util.Set;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
@@ -80,9 +84,8 @@ extends AbstractSimQueuePredictor<J, SimQueue>
     for (final Entry<J, Double> jobExecutingEntry : queueState.getStartTimesMap ().entrySet ())
     {
       final J jobExecuting = jobExecutingEntry.getKey ();
-      final double startTime = jobExecutingEntry.getValue ();
-      final double serviceTime = queueState.getJobRemainingServiceTimeMap ().get (jobExecuting);
-      final double departureTime = startTime + serviceTime;
+      final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobExecuting);
+      final double departureTime = time + remainingServiceTime;
       if (departureTime < time)
         throw new RuntimeException ();
       if (Double.isNaN (minDepartureTime) || departureTime < minDepartureTime)
@@ -272,6 +275,28 @@ extends AbstractSimQueuePredictor<J, SimQueue>
       throw new IllegalArgumentException ();
     if (Double.isNaN (newTime))
       throw new IllegalArgumentException ();
+    final double oldTime = queueState.getTime ();
+    if (! Double.isNaN (oldTime))
+    {
+      final double dT = newTime - oldTime;
+      if (dT < 0)
+        throw new RuntimeException ();
+      final Map<J, Double> rsTimeMap = queueState.getJobRemainingServiceTimeMap ();
+      final NavigableMap<Double,List<J>> rsMap = queueState.getRemainingServiceMap ();
+      if (dT > 0 && ! rsTimeMap.isEmpty ())
+      { 
+        rsMap.clear ();
+        final double dS = dT;
+        for (final J job : new HashSet<> (rsTimeMap.keySet ()))
+        {
+          final double newRs = rsTimeMap.get (job) - dS;
+          rsTimeMap.put (job, newRs);
+          if (! rsMap.containsKey (newRs))
+            rsMap.put (newRs, new ArrayList<> ());
+          rsMap.get (newRs).add (job);
+        }
+      }
+    }
     queueState.setTime (newTime);
   }
 
