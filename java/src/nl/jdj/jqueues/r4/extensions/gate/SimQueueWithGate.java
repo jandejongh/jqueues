@@ -1,7 +1,8 @@
-package nl.jdj.jqueues.r4;
+package nl.jdj.jqueues.r4.extensions.gate;
 
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
+import nl.jdj.jqueues.r4.serverless.GATE;
 
 /** A {@link SimQueue} with the notion of a single gate
  *  that can be opened (optionally for a limited number of passages) and closed.
@@ -20,6 +21,13 @@ public interface SimQueueWithGate<J extends SimJob, Q extends SimQueueWithGate>
 extends SimQueue<J, Q>
 {
   
+  /** Returns the number of (remaining) gate-passage credits.
+   * 
+   * @return The number of (remaining) gate-passage credits.
+   * 
+   */
+  public int getGatePassageCredits ();
+  
   /** Opens the gate (without limits on the number of passages).
    * 
    * @param time The current time.
@@ -37,20 +45,20 @@ extends SimQueue<J, Q>
   /** Opens the gate for a limited number of remaining passages.
    * 
    * <p>
-   * Note that setting the remaining number of passages to zero effectively closes the gate,
+   * Note that setting the remaining number of passage credits to zero effectively closes the gate,
    * and setting it to {@link Integer#MAX_VALUE} open it without limits on the number of passages.
    * 
    * <p>
-   * If a {@link SimQueue} does not support this operation, it is to consider every strictly positive value
+   * If a {@link SimQueueWithGate} does not support this operation, it is to consider every strictly positive value
    * as {@link Integer#MAX_VALUE}, effectively opening the gate without limits on the number of passages.
    * 
-   * @param time             The current time.
-   * @param numberOfPassages The remaining number of passages to allow (will override, not add to, any previous value),
-   *                         with {@link Integer#MAX_VALUE} treated as infinity.
+   * @param time               The current time.
+   * @param gatePassageCredits The remaining number of passages to allow (will override, not add to, any previous value),
+   *                             with {@link Integer#MAX_VALUE} treated as infinity.
    * 
    * @throws IllegalArgumentException If the number of passages passed is strictly negative.
    * 
    */
-  public void openGate (double time, int numberOfPassages);
+  public void openGate (double time, int gatePassageCredits);
   
 }
