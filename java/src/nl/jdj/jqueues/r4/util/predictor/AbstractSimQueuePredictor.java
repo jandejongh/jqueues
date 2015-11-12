@@ -9,6 +9,7 @@ import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.event.SimEntityEvent;
 import nl.jdj.jqueues.r4.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r4.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r4.nonpreemptive.FCFS_B;
 import nl.jdj.jqueues.r4.util.jobfactory.JobQueueVisitLog;
 import nl.jdj.jqueues.r4.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r4.util.predictor.state.SimQueueState;
@@ -115,29 +116,25 @@ implements SimQueuePredictor<J, Q>
         }
         final boolean doWorkloadEvent = hasWorkloadEvent && ((! hasQueueEvent) || nextWorkloadEventTime <= nextQueueEventTime);
         final boolean doQueueEvent = hasQueueEvent && ((! hasWorkloadEvent) || nextQueueEventTime <= nextWorkloadEventTime);
+        final double nextEventTime = (doWorkloadEvent ? nextWorkloadEventTime : (doQueueEvent ? nextQueueEventTime : Double.NaN));
+        if (doWorkloadEvent || doQueueEvent)
+        {
+          updateToTime (queue, queueState, nextEventTime);
+          if (queueState.getTime () != nextEventTime)
+            throw new RuntimeException ();
+        }
         if (doWorkloadEvent && doQueueEvent)
         {
-          if (! is_ROEL_U_UnderWorkloadQueueEventClashes (queue))
+          if (! is_ROEL_U_UnderWorkloadQueueEventClashes
+                  (queue, queueState, workloadSchedule, workloadEventTypes, queueEventTypes))
             throw new SimQueuePredictionAmbiguityException ();
         }
         if (doQueueEvent)
-        {
-          updateToTime (queue, queueState, nextQueueEventTime);
-          if (queueState.getTime () != nextQueueEventTime)
-            throw new RuntimeException ();
           doQueueEvents_SQ_SV_ROEL_U (queue, queueState, queueEventTypes, visitLogsSet);
-          if (queueState.getTime () != nextQueueEventTime)
-            throw new RuntimeException ();
-        }
         if (doWorkloadEvent)
-        {
-          updateToTime (queue, queueState, nextWorkloadEventTime);
-          if (queueState.getTime () != nextWorkloadEventTime)
-            throw new RuntimeException ();
           doWorkloadEvents_SQ_SV_ROEL_U (queue, workloadSchedule, queueState, workloadEventTypes, visitLogsSet);
-          if (queueState.getTime () != nextWorkloadEventTime)
-            throw new RuntimeException ();
-        }
+        if ((doWorkloadEvent || doQueueEvent) && queueState.getTime () != nextEventTime)
+          throw new RuntimeException ();
         finished = ! (hasWorkloadEvent || hasQueueEvent);
       }
     }
@@ -187,23 +184,48 @@ implements SimQueuePredictor<J, Q>
     return new DefaultSimQueueState<> (queue);
   }
   
-  /** Returns whether the given queue, which must be a valid input to this predictor,
-   *  gives unambiguous predictions under a ROEL even if workload and queue-state events
-   *  occur simultaneously.
+  /** Check unambiguity under a ROEL for workload and queue-state events occurring simultaneously.
    * 
    * @param queue The queue, non-{@code null}.
    * 
-   * @return True if the queue gives unambiguous predictions under a ROEL even if workload and queue-state events
-   *         occur simultaneously. This default implementation returns {@code false}.
+   * @return True if this object gives unambiguous predictions under a ROEL for given simultaneous events.
    * 
-   * @throws IllegalArgumentException If {@code queue == null}.
+   * @throws IllegalArgumentException If any of the input arguments is {@code null} or,
+   *                                  for the sets, empty or containing {@code null},
+   *                                  or if the time on the queue state is invalid.
    * 
    */
-  protected boolean is_ROEL_U_UnderWorkloadQueueEventClashes (final Q queue)
+  protected boolean is_ROEL_U_UnderWorkloadQueueEventClashes
+  (final Q queue,
+   final SimQueueState<J, Q> queueState,
+   final WorkloadSchedule_SQ_SV_ROEL_U<J, Q> workloadSchedule,
+   final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
+   final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
-    if (queue == null)
+    if (queue == null
+      || queueState == null
+      || Double.isNaN (queueState.getTime ())
+      || workloadSchedule == null
+      || workloadEventTypes == null
+      || workloadEventTypes.isEmpty ()
+      || workloadEventTypes.contains (null)
+      || queueEventTypes == null
+      || queueEventTypes.isEmpty ()
+      || queueEventTypes.contains (null))
       throw new IllegalArgumentException ();
-    return false;
+    for (final SimEntitySimpleEventType.Member wEvent : workloadEventTypes)
+      for (final SimEntitySimpleEventType.Member qEvent : queueEventTypes)
+        if (wEvent == SimEntitySimpleEventType.REVOCATION
+        &&  qEvent == SimEntitySimpleEventType.DEPARTURE)
+          return false;
+        else if (wEvent == SimQueueSimpleEventType.SERVER_ACCESS_CREDITS
+             &&  (qEvent == SimEntitySimpleEventType.DEPARTURE || qEvent == SimEntitySimpleEventType.START))
+          return false;
+        else if (wEvent == SimQueueSimpleEventType.ARRIVAL
+             &&  (qEvent == SimEntitySimpleEventType.DEPARTURE || qEvent == SimEntitySimpleEventType.START)
+             && ((queue instanceof FCFS_B)))
+          return false;
+    return true;
   }
   
   /** Returns the time and types of the next event(s)
