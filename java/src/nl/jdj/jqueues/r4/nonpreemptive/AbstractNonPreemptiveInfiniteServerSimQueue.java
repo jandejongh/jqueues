@@ -1,6 +1,8 @@
 package nl.jdj.jqueues.r4.nonpreemptive;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jsimulation.r4.SimEventList;
@@ -124,16 +126,45 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
   {
-    while (this.jobsExecuting.size () < this.jobQueue.size () && hasServerAcccessCredits ())
-      for (J j : this.jobQueue)
-      {
-        if (! this.jobsExecuting.contains (j))
-        {
-          rescheduleAfterArrival (j, time);
-          break;
-        }
+// 20151112: The following piece of code is something I do no understand... Why the exception...
+//    while (this.jobsExecuting.size () < this.jobQueue.size () && hasServerAcccessCredits ())
+//      for (J j : this.jobQueue)
+//      {
+//        if (! this.jobsExecuting.contains (j))
+//        {
+//          rescheduleAfterArrival (j, time);
+//          break;
+//        }
+//        throw new IllegalStateException ();
+//      }
+//
+// 20151112: Code below copied and modified from AbstractNonPreemptiveMultipleServerSimQueue.
+//
+    // Scheduling section; make sure we do not issue notifications.
+    final Set<J> startedJobs = new LinkedHashSet<> ();
+    while (hasServerAcccessCredits ()
+      && hasJobsWaiting ())
+    {
+      takeServerAccessCredit (false);
+      final J job = getFirstJobWaiting ();
+      if (job == null)
         throw new IllegalStateException ();
-      }
+      this.jobsExecuting.add (job);
+      final double jobServiceTime = job.getServiceTime (this);
+      if (jobServiceTime < 0)
+        throw new RuntimeException ();
+      scheduleDepartureEvent (time + jobServiceTime, job);
+      // Defer notifications until we are in a valid state again.
+      startedJobs.add (job);
+    }
+    // Notification section.
+    for (J j : startedJobs)
+      // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
+      if (this.jobsExecuting.contains (j))
+        fireStart (time, j, (Q) this);
+    fireIfOutOfServerAccessCredits (time);
+    // XXX May want to check this...
+    fireNewNoWaitArmed (time, isNoWaitArmed ());
   }
 
   /** Does nothing.
