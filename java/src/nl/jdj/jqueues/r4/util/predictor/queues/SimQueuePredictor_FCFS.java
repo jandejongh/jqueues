@@ -2,7 +2,6 @@ package nl.jdj.jqueues.r4.util.predictor.queues;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +97,7 @@ extends AbstractSimQueuePredictor<J, SimQueue>
   protected J getJobToStart
   (final SimQueue queue,
    final SimQueueState<J, SimQueue> queueState)
+   throws SimQueuePredictionException
   {
     return queueState.getJobsWaitingOrdered ().iterator ().next ();
   }
