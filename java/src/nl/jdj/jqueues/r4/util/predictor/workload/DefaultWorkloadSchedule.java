@@ -132,6 +132,8 @@ implements WorkloadSchedule<J, Q>
               sacTimesMap_q.put (time, new ArrayList<> ());
             sacTimesMap_q.get (time).add (credits);
           }
+          else
+            throw new UnsupportedOperationException ();
         }
       }
     }
