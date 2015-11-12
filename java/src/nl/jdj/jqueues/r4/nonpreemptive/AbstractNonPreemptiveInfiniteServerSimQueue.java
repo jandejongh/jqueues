@@ -126,20 +126,6 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
   {
-// 20151112: The following piece of code is something I do no understand... Why the exception...
-//    while (this.jobsExecuting.size () < this.jobQueue.size () && hasServerAcccessCredits ())
-//      for (J j : this.jobQueue)
-//      {
-//        if (! this.jobsExecuting.contains (j))
-//        {
-//          rescheduleAfterArrival (j, time);
-//          break;
-//        }
-//        throw new IllegalStateException ();
-//      }
-//
-// 20151112: Code below copied and modified from AbstractNonPreemptiveMultipleServerSimQueue.
-//
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
     while (hasServerAcccessCredits ()
@@ -150,7 +136,7 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
       if (job == null)
         throw new IllegalStateException ();
       this.jobsExecuting.add (job);
-      final double jobServiceTime = job.getServiceTime (this);
+      final double jobServiceTime = getServiceTime (job);
       if (jobServiceTime < 0)
         throw new RuntimeException ();
       scheduleDepartureEvent (time + jobServiceTime, job);
