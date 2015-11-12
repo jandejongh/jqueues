@@ -146,7 +146,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * Any events in this set must also be in the {@link #eventList}.
    *
    */
-  protected final Set<SimEvent<J>> eventsScheduled
+  protected final Set<SimEvent> eventsScheduled
     = new HashSet<> ();
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -848,31 +848,44 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>The {@link DefaultDepartureEvent} (actually, its {@link SimEventAction}), once activated,
    * calls {@link #departureFromEventList}.
-   * The event puts the jobs passed in the constructor in its user object
-   * {{@link SimEvent#getObject}).
    * 
    * <p>
    * Implementations are encouraged to avoid creation of {@link DefaultDepartureEvent}s
    * for each departure, but instead reuse instances whenever possible.
    * 
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
+   * 
    */
   protected final static class DefaultDepartureEvent<J extends SimJob, Q extends AbstractSimQueue>
   extends SimQueueJobDepartureEvent<J, Q>
   {
+    
+    /** Creates the actions that invokes {@link AbstractSimQueue#departureFromEventList} on the queue,
+     *  and invokes the super method.
+     * 
+     * @param departureTime The scheduled departure time.
+     * @param queue         The queue for which the departure is scheduled.
+     * @param job           The job that is to depart.
+     * 
+     * @throws IllegalArgumentException If the job or the queue is {@code null}.
+     * 
+     */
     public DefaultDepartureEvent
       (final double departureTime,
       final Q queue,
       final J job)
     {
-      super (job, queue, departureTime, new SimEventAction<J> ()
+      super (job, queue, departureTime, new SimEventAction ()
       {
         @Override
-        public final void action (final SimEvent<J> event)
+        public final void action (final SimEvent event)
         {
-          queue.departureFromEventList (event);
+          queue.departureFromEventList ((DefaultDepartureEvent) event);
         }
       });
     }
+      
   }
 
   /** Schedules a suitable {@link SimEvent} for a job's future departure on the event list.
@@ -903,10 +916,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     // The following check is an error; jobs may depart without receiving any service at all!
     // if (! this.jobsExecuting.contains (job))
     //   throw new IllegalArgumentException ();
-    final DefaultDepartureEvent event = new DefaultDepartureEvent (time, this, job);
+    final DefaultDepartureEvent<J, Q> event = new DefaultDepartureEvent (time, this, job);
     SimEntityEventScheduler.schedule (getEventList (), event);
     this.eventsScheduled.add (event);
-//    getEventList ().add (event);
     return event;
   }
   
@@ -924,7 +936,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see #getEventList
    * 
    */
-  protected final void cancelDepartureEvent (final DefaultDepartureEvent event)
+  protected final void cancelDepartureEvent (final DefaultDepartureEvent<J, Q> event)
   {
     if (event == null)
       throw new IllegalArgumentException ();
@@ -932,11 +944,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalArgumentException ();
     if (! this.eventsScheduled.contains (event))
       throw new IllegalArgumentException ();
-    if (! this.jobQueue.contains (event.getObject ()))
+    if (! this.jobQueue.contains (event.getJob ()))
       throw new IllegalArgumentException ();
-    // The following check is an error; jobs may depart without receiving any service at all!
-    // if (! this.jobsExecuting.contains (event.getObject ()))
-    //   throw new IllegalArgumentException ();
     this.eventsScheduled.remove (event);
     getEventList ().remove (event);
   }
@@ -965,7 +974,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    final Set<DefaultDepartureEvent> set = getDepartureEvents (job);
+    final Set<DefaultDepartureEvent<J, Q>> set = getDepartureEvents (job);
     if (set == null || set.size () != 1)
       throw new IllegalArgumentException ();
     cancelDepartureEvent (set.iterator ().next ());
@@ -978,10 +987,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @return A non-<code>null</code> {@link Set} holding all future departure events.
    * 
    */
-  protected final Set<DefaultDepartureEvent> getDepartureEvents ()
+  protected final Set<DefaultDepartureEvent<J, Q>> getDepartureEvents ()
   {
-    final Set<DefaultDepartureEvent> set = new LinkedHashSet<> ();
-    for (SimEvent<J> e : this.eventsScheduled)
+    final Set<DefaultDepartureEvent<J, Q>> set = new LinkedHashSet<> ();
+    for (final SimEvent e : this.eventsScheduled)
       if (e == null)
         throw new IllegalStateException ();
       // JdJ20150913: I have no clue why the next statement does not work...
@@ -1004,14 +1013,14 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @return A non-<code>null</code> {@link Set} holding all future departure events for the job.
    * 
    */
-  protected final Set<DefaultDepartureEvent> getDepartureEvents (final J job)
+  protected final Set<DefaultDepartureEvent<J, Q>> getDepartureEvents (final J job)
   {
     if (job == null)
       throw new IllegalArgumentException ();
     if (! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
-    final Set<DefaultDepartureEvent> set = new LinkedHashSet<> ();
-    for (SimEvent<J> e : this.eventsScheduled)
+    final Set<DefaultDepartureEvent<J, Q>> set = new LinkedHashSet<> ();
+    for (SimEvent e : this.eventsScheduled)
       if (e == null)
         throw new IllegalStateException ();
       // JdJ20150913: I have no clue why the next statement does not work...
@@ -1020,7 +1029,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       //  continue;
       else if (! DefaultDepartureEvent.class.isAssignableFrom (e.getClass ()))
         /* continue */ ;
-      else if (((DefaultDepartureEvent) e).getObject () != job)
+      else if (((DefaultDepartureEvent) e).getJob () != job)
         /* continue */ ;
       else
         set.add ((DefaultDepartureEvent) e);
@@ -1048,7 +1057,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see #scheduleDepartureEvent
    * 
    */
-  protected final void departureFromEventList (final SimEvent<J> event)
+  protected final void departureFromEventList (final DefaultDepartureEvent<J, Q> event)
   {
     if (event == null)
       throw new RuntimeException ();
@@ -1056,7 +1065,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalStateException ();
     this.eventsScheduled.remove (event);
     final double time = event.getTime ();
-    final J job = event.getObject ();
+    final J job = event.getJob ();
     if (job.getQueue () != this)
       throw new IllegalStateException ();
     update (time);
