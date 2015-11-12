@@ -1,7 +1,6 @@
 package nl.jdj.jqueues.r4.util.predictor.queues;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.nonpreemptive.LCFS;
