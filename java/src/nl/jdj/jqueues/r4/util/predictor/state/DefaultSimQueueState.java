@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.ToDoubleBiFunction;
 import nl.jdj.jqueues.r4.SimJob;
 import nl.jdj.jqueues.r4.SimQueue;
 import nl.jdj.jqueues.r4.util.jobfactory.JobQueueVisitLog;
@@ -257,6 +258,34 @@ implements SimQueueState<J, Q>
     return this.jobRemainingServiceTimeMap;
   }
   
+  private ToDoubleBiFunction<Q, J> serviceTimeProvider = null;
+  
+  /** Gets the service time of a job at a queue (central entry point).
+   * 
+   * @param queue The queue.
+   * @param job   The job.
+   * @return      The jobs service time, either taken from {@link SimJob#getServiceTime} or
+   *              from the service-time provider (if installed).
+   * 
+   */
+  protected final double getServiceTime (final Q queue, final J job)
+  {
+    if (this.serviceTimeProvider == null)
+      return job.getServiceTime (this.queue);
+    else
+      return this.serviceTimeProvider.applyAsDouble (queue, job);
+  }
+  
+  /** Sets a service-time provider, overruling job-settings for obtaining the required service time for a job visit.
+   * 
+   * @param serviceTimeProvider The service-time provider; its two arguments are the queue and job, respectively.
+   * 
+   */
+  public void setServiceTimeProvider (final ToDoubleBiFunction<Q, J> serviceTimeProvider)
+  {
+    this.serviceTimeProvider = serviceTimeProvider;
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // OPERATIONS
@@ -309,7 +338,7 @@ implements SimQueueState<J, Q>
       if (! this.jobsExecutingMap.containsKey (time))
         this.jobsExecutingMap.put (time, new LinkedHashSet<> ());
       this.jobsExecutingMap.get (time).add (job);
-      final double rsJob = job.getServiceTime (this.queue);
+      final double rsJob = getServiceTime (this.queue, job);
       if (! this.remainingServiceMap.containsKey (rsJob))
         this.remainingServiceMap.put (rsJob, new ArrayList<> ());
       this.remainingServiceMap.get (rsJob).add (job);
