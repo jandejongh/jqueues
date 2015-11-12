@@ -146,7 +146,8 @@ extends AbstractSimQueuePredictor<J, SimQueue>
         else
         {
           queueState.doArrivals (time, arrivals, visitLogsSet);
-          if (queueState.getJobsExecuting ().isEmpty () && queueState.getServerAccessCredits () >= 1)
+          if (((! this.hasc) || queueState.getJobsExecuting ().size () < this.c)
+            && queueState.getServerAccessCredits () >= 1)
             queueState.doStarts (time, arrivals);
         }
       }
@@ -189,17 +190,22 @@ extends AbstractSimQueuePredictor<J, SimQueue>
       final int oldSac = queueState.getServerAccessCredits ();
       final int newSac = workloadSchedule.getServerAccessCreditsMap_SQ_SV_ROEL_U ().get (time);
       queueState.setServerAccessCredits (time, newSac);
-      if (queueState.getJobsExecuting ().isEmpty ()
+      if (((! this.hasc) || queueState.getJobsExecuting ().size () < this.c)
         && oldSac == 0
         && newSac > 0)
-      {
+      {        
         final Set<J> starters = new LinkedHashSet<> ();
         final Iterator<J> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
-        if (i_waiters.hasNext ())
+        int remainingMaxStarters = newSac;
+        if (this.hasc)
+          remainingMaxStarters = Math.min (remainingMaxStarters, this.c - queueState.getJobsExecuting ().size ());
+        while (remainingMaxStarters > 0 && i_waiters.hasNext ())
         {
           starters.add (i_waiters.next ());
-          queueState.doStarts (time, starters);
+          if (remainingMaxStarters != Integer.MAX_VALUE)
+            remainingMaxStarters--;
         }
+        queueState.doStarts (time, starters);
       }
     }
     else
@@ -235,7 +241,9 @@ extends AbstractSimQueuePredictor<J, SimQueue>
     }
     else if (eventType == SimEntitySimpleEventType.DEPARTURE)
     {
-      if (queueState.getJobsExecuting ().size () != 1)
+      if (queueState.getJobsExecuting ().size () < 1)
+        throw new IllegalStateException ();
+      if (this.hasc && queueState.getJobsExecuting ().size () > this.c)
         throw new IllegalStateException ();
       final Set<J> departures = new HashSet<> (queueState.getRemainingServiceMap ().firstEntry ().getValue ());
       queueState.doExits (time, null, null, departures, null, visitLogsSet);
