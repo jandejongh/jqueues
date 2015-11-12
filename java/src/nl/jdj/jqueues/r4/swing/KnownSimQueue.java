@@ -35,7 +35,7 @@ public enum KnownSimQueue
   ZERO    ("ZERO",  false, nl.jdj.jqueues.r4.queue.serverless.ZERO.class,  GeneratorProfile.SE,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
            DoubleParameterProfile.DPP_IRRELEVANT),
-  GATE    ("GATE",  false, nl.jdj.jqueues.r4.extensions.gate.GATE.class,  GeneratorProfile.SE,
+  GATE    ("GATE",  false, nl.jdj.jqueues.r4.extensions.gate.GATE.class,   GeneratorProfile.SE,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
            DoubleParameterProfile.DPP_IRRELEVANT),
   
