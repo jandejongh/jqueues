@@ -11,7 +11,9 @@ import nl.jdj.jqueues.r4.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r4.event.simple.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r4.nonpreemptive.FCFS_B;
 import nl.jdj.jqueues.r4.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r4.nonpreemptive.LJF;
 import nl.jdj.jqueues.r4.nonpreemptive.NoBuffer_c;
+import nl.jdj.jqueues.r4.nonpreemptive.SJF;
 import nl.jdj.jqueues.r4.util.jobfactory.JobQueueVisitLog;
 import nl.jdj.jqueues.r4.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r4.util.predictor.state.SimQueueState;
@@ -225,7 +227,11 @@ implements SimQueuePredictor<J, Q>
           return false;
         else if (wEvent == SimQueueSimpleEventType.ARRIVAL
              &&  (qEvent == SimEntitySimpleEventType.DEPARTURE || qEvent == SimEntitySimpleEventType.START)
-             && ((queue instanceof FCFS_B)  || (queue instanceof LCFS) || (queue instanceof NoBuffer_c)))
+             && ((queue instanceof FCFS_B) 
+              || (queue instanceof LCFS)
+              || (queue instanceof NoBuffer_c)
+              || (queue instanceof SJF)
+              || (queue instanceof LJF)))
           return false;
     return true;
   }
