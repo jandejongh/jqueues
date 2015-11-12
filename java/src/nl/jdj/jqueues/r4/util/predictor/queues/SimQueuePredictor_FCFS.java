@@ -99,11 +99,7 @@ extends AbstractSimQueuePredictor<J, SimQueue>
   (final SimQueue queue,
    final SimQueueState<J, SimQueue> queueState)
   {
-    final Iterator<J> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
-    if (i_waiters.hasNext ())
-      return i_waiters.next ();
-    else
-      throw new RuntimeException ();
+    return queueState.getJobsWaitingOrdered ().iterator ().next ();
   }
   
   @Override
