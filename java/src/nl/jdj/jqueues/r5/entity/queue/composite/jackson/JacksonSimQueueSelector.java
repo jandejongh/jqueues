@@ -73,11 +73,6 @@ implements SimQueueSelector<J, DQ>
     this.rng = ((userRNG != null) ? userRNG : new Random ());
   }
 
-   public JacksonSimQueueSelector createCopySimQueueSelector ()
-   {
-     return new JacksonSimQueueSelector (this.queues, this.pdfArrival, this.pdfTransition, null);
-   }
-   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // QUEUES
