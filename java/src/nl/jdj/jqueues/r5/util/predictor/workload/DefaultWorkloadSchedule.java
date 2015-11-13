@@ -17,6 +17,7 @@ import nl.jdj.jqueues.r5.event.SimQueueAccessVacationEvent;
 import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
 import nl.jdj.jqueues.r5.event.SimQueueJobRevocationEvent;
 import nl.jdj.jqueues.r5.event.SimQueueServerAccessCreditsEvent;
+import nl.jdj.jqueues.r5.event.map.DefaultSimEntityEventMap;
 
 /** A default implementation of {@link WorkloadSchedule}.
  *
@@ -25,6 +26,7 @@ import nl.jdj.jqueues.r5.event.SimQueueServerAccessCreditsEvent;
  * 
  */
 public class DefaultWorkloadSchedule<J extends SimJob, Q extends SimQueue>
+extends DefaultSimEntityEventMap
 implements WorkloadSchedule<J, Q>
 {
   
@@ -58,6 +60,7 @@ implements WorkloadSchedule<J, Q>
    */
   public DefaultWorkloadSchedule (final Set<Q> queues, final Set<SimEntityEvent<J, Q>> queueEvents)
   {
+    super (queueEvents);
     if (queueEvents != null)
       this.queueEvents.addAll (queueEvents);
     this.queueEvents.remove (null);

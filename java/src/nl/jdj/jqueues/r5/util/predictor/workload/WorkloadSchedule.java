@@ -8,6 +8,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.event.map.SimEntityEventMap;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
 
@@ -21,6 +22,7 @@ import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
  * 
  */
 public interface WorkloadSchedule<J extends SimJob, Q extends SimQueue>
+extends SimEntityEventMap
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
