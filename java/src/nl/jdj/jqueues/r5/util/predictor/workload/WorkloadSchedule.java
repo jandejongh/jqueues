@@ -10,18 +10,15 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.map.SimEntityEventMap;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
 
 /** A representation of a schedule of workload and state-setting events for a set of {@link SimQueue}s.
  *
  * <p>
  * The set of {@link SimQueue}s to which the workload applies must be fixed upon construction.
  * 
- * @param <J> The type of {@link SimJob}s supported.
- * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
-public interface WorkloadSchedule<J extends SimJob, Q extends SimQueue>
+public interface WorkloadSchedule
 extends SimEntityEventMap
 {
   
@@ -53,88 +50,12 @@ extends SimEntityEventMap
    * @return The time of the next event, or {@link Double#NaN} if no such event exists.
    * 
    * @see #hasEventsBeyond
-   * @see SimQueueSimpleEventType#QUEUE_ACCESS_VACATION
-   * @see SimEntitySimpleEventType#ARRIVAL
-   * @see SimEntitySimpleEventType#REVOCATION
-   * @see SimQueueSimpleEventType#SERVER_ACCESS_CREDITS
    * 
    */
-  public default double getNextEventTimeBeyond
-  (final Q queue,
-   final double time,
-   final Set<SimEntitySimpleEventType.Member> eventTypes)
-  {
-    if (eventTypes != null)
-      eventTypes.clear ();
-    if (queue == null || ! getQueues ().contains (queue))
-      return Double.NaN;
-    double nextEventTime = Double.NaN;
-    if (! getQueueAccessVacationMap (queue).isEmpty ())
-    {
-      final Double nextQavTime = (Double.isNaN (time)
-        ? getQueueAccessVacationMap (queue).firstKey ()
-        : getQueueAccessVacationMap (queue).higherKey (time));
-      if (nextQavTime != null && (Double.isNaN (nextEventTime) || nextQavTime <= nextEventTime))
-      {
-        if (eventTypes != null)
-        {
-          if ((! Double.isNaN (nextEventTime)) && nextQavTime < nextEventTime)
-            eventTypes.clear ();
-          eventTypes.add (SimQueueSimpleEventType.QUEUE_ACCESS_VACATION);
-        }
-        nextEventTime = nextQavTime;
-      }
-    }
-    if (! getJobArrivalsMap (queue).isEmpty ())
-    {
-      final Double nextArrTime = (Double.isNaN (time)
-        ? getJobArrivalsMap (queue).firstKey ()
-        : getJobArrivalsMap (queue).higherKey (time));
-      if (nextArrTime != null && (Double.isNaN (nextEventTime) || nextArrTime <= nextEventTime))
-      {
-        if (eventTypes != null)
-        {
-          if ((! Double.isNaN (nextEventTime)) && nextArrTime < nextEventTime)
-            eventTypes.clear ();
-          eventTypes.add (SimEntitySimpleEventType.ARRIVAL);
-        }
-        nextEventTime = nextArrTime;
-      }
-    }
-    if (! getJobRevocationsMap (queue).isEmpty ())
-    {
-      final Double nextRevTime = (Double.isNaN (time)
-        ? getJobRevocationsMap (queue).firstKey ()
-        : getJobRevocationsMap (queue).higherKey (time));
-      if (nextRevTime != null && (Double.isNaN (nextEventTime) || nextRevTime <= nextEventTime))
-      {
-        if (eventTypes != null)
-        {
-          if ((! Double.isNaN (nextEventTime)) && nextRevTime < nextEventTime)
-            eventTypes.clear ();
-          eventTypes.add (SimEntitySimpleEventType.REVOCATION);
-        }
-        nextEventTime = nextRevTime;
-      }
-    }
-    if (! getServerAccessCreditsMap (queue).isEmpty ())
-    {
-      final Double nextSacTime = (Double.isNaN (time)
-        ? getServerAccessCreditsMap (queue).firstKey ()
-        : getServerAccessCreditsMap (queue).higherKey (time));
-      if (nextSacTime != null && (Double.isNaN (nextEventTime) || nextSacTime <= nextEventTime))
-      {
-        if (eventTypes != null)
-        {
-          if ((! Double.isNaN (nextEventTime)) && nextSacTime < nextEventTime)
-            eventTypes.clear ();
-          eventTypes.add (SimQueueSimpleEventType.SERVER_ACCESS_CREDITS);
-        }
-        nextEventTime = nextSacTime;
-      }
-    }
-    return nextEventTime;
-  }
+  public abstract double getNextEventTimeBeyond
+  (SimQueue queue,
+   double time,
+   Set<SimEntitySimpleEventType.Member> eventTypes);
   
   /** Returns whether there exist event(s) scheduled strictly beyond a given time at a specific queue.
    * 
@@ -147,7 +68,7 @@ extends SimEntityEventMap
    * @see #getNextEventTimeBeyond
    * 
    */
-  public default boolean hasEventsBeyond (final Q queue, final double time)
+  public default boolean hasEventsBeyond (final SimQueue queue, final double time)
   {
     return ! Double.isNaN (getNextEventTimeBeyond (queue, time, null));
   }
@@ -189,7 +110,7 @@ extends SimEntityEventMap
    * @return The queue (in no particular order) to which this workload representation applies.
    * 
    */
-  public Set<Q> getQueues ();
+  public Set<SimQueue> getQueues ();
   
   /** Returns whether of not this workload describes a single queue only.
    * 
@@ -218,7 +139,7 @@ extends SimEntityEventMap
    *         according to appearance in the source event list upon construction.
    * 
    */
-  public NavigableMap<Double, List<Boolean>> getQueueAccessVacationMap (Q queue);
+  public NavigableMap<Double, List<Boolean>> getQueueAccessVacationMap (SimQueue queue);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -238,7 +159,7 @@ extends SimEntityEventMap
    *         operating (arriving, revoking, ...) at least once at <i>any</i> of the queues.
    * 
    */
-  public Set<J> getJobs ();
+  public Set<SimJob> getJobs ();
 
   /** Gets the jobs (in no particular order) operating (arriving, revoking, ...) at least once at given queue.
    * 
@@ -257,7 +178,7 @@ extends SimEntityEventMap
    *         operating (arriving, revoking, ...) at least once at given queue.
    * 
    */
-  public Set<J> getJobs (Q queue);
+  public Set<SimJob> getJobs (SimQueue queue);
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -276,7 +197,7 @@ extends SimEntityEventMap
    *         according to appearance in the source event list upon construction.
    * 
    */
-  public Map<J, List<Double>> getArrivalTimesMap (Q queue);
+  public Map<SimJob, List<Double>> getArrivalTimesMap (SimQueue queue);
   
   /** Gets the job arrivals indexed by time at given queue.
    * 
@@ -289,7 +210,7 @@ extends SimEntityEventMap
    *         according to appearance in the source event list upon construction.
    * 
    */
-  public NavigableMap<Double, List<J>> getJobArrivalsMap (Q queue);
+  public NavigableMap<Double, List<SimJob>> getJobArrivalsMap (SimQueue queue);
   
   /** Return whether jobs arrive at most once at given queue.
    * 
@@ -298,7 +219,7 @@ extends SimEntityEventMap
    * @return Whether jobs arrive at most once at given queue.
    * 
    */
-  public default boolean isSingleVisit (final Q queue)
+  public default boolean isSingleVisit (final SimQueue queue)
   {
     if (queue == null || ! getQueues ().contains (queue))
       return false;
@@ -319,7 +240,7 @@ extends SimEntityEventMap
    */
   public default boolean isSingleVisit ()
   {
-    for (final Q q : getQueues ())
+    for (final SimQueue q : getQueues ())
       if (! isSingleVisit (q))
         return false;
     return true;
@@ -346,7 +267,7 @@ extends SimEntityEventMap
    *         according to appearance in the source event list upon construction.
    * 
    */
-  public Map<J, List<Map<Double, Boolean>>> getRevocationTimesMap (Q queue);
+  public Map<SimJob, List<Map<Double, Boolean>>> getRevocationTimesMap (SimQueue queue);
   
   /** Gets the job revocations indexed by time at given queue.
    * 
@@ -363,7 +284,7 @@ extends SimEntityEventMap
    *         according to appearance in the source event list upon construction.
    * 
    */
-  public NavigableMap<Double, List<Map<J, Boolean>>> getJobRevocationsMap (Q queue);
+  public NavigableMap<Double, List<Map<SimJob, Boolean>>> getJobRevocationsMap (SimQueue queue);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -382,7 +303,7 @@ extends SimEntityEventMap
    *         according to appearance in the source event list upon construction.
    * 
    */
-  public NavigableMap<Double, List<Integer>> getServerAccessCreditsMap (Q queue);
+  public NavigableMap<Double, List<Integer>> getServerAccessCreditsMap (SimQueue queue);
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -411,7 +332,7 @@ extends SimEntityEventMap
   {
     final Set<Double> eventTimes = new HashSet<> ();
     int eventDuplicates = 0;
-    for (final Q q : getQueues ())
+    for (final SimQueue q : getQueues ())
     {
       for (final List<Boolean> l : getQueueAccessVacationMap (q).values ())
         if (new HashSet<> (l).size () < l.size ())
@@ -419,17 +340,17 @@ extends SimEntityEventMap
         else
           eventDuplicates += (l.size () - 1);
       eventTimes.addAll (getQueueAccessVacationMap (q).keySet ());
-      for (final List<J> l : getJobArrivalsMap (q).values ())
+      for (final List<SimJob> l : getJobArrivalsMap (q).values ())
         if (l.size () > 1)
           return false;
       eventTimes.addAll (getJobArrivalsMap (q).keySet ());
-      for (final List<Map<J, Boolean>> l : getJobRevocationsMap (q).values ())
+      for (final List<Map<SimJob, Boolean>> l : getJobRevocationsMap (q).values ())
       {
         if (l.size () != 1)
           throw new WorkloadScheduleInvalidException ();
-        final Set<J> jobs = new HashSet<> ();
+        final Set<SimJob> jobs = new HashSet<> ();
         final Set<Boolean> iSs = new HashSet<> ();
-        for (final Map<J, Boolean> member : l)
+        for (final Map<SimJob, Boolean> member : l)
         {
           jobs.addAll (member.keySet ());
           iSs.addAll (member.values ());
