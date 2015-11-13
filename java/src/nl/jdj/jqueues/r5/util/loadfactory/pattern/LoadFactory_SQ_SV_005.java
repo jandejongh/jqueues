@@ -60,13 +60,13 @@ extends LoadFactory_SQ_SV_001<J, Q>
     final int numberOfJobs,
     final boolean reset,
     final double resetTime,
-    final NavigableMap<Double, Set<SimEntityEvent<J, Q>>> queueExternalEvents)
+    final NavigableMap<Double, Set<SimEntityEvent>> queueExternalEvents)
   {
     final Set<J> jobs = super.generate (eventList, attachSimJobsToEventList,
       queue, jobFactory, numberOfJobs, reset, resetTime, queueExternalEvents);
     if (queue instanceof SimQueueWithGate)
     {
-      final NavigableMap<Double, Set<SimEntityEvent<J, Q>>> realQueueExternalEvents =
+      final NavigableMap<Double, Set<SimEntityEvent>> realQueueExternalEvents =
         ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
       final int numberOfGateEventsToSchedule = Math.max (1, jobs.size () * (jobs.size () + 1) / 11);
       final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();

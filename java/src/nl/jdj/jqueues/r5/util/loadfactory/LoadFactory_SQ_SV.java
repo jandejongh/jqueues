@@ -49,6 +49,6 @@ extends LoadFactory<J, Q>
     int numberOfJobs,
     boolean reset,
     double resetTime,
-    NavigableMap<Double, Set<SimEntityEvent<J, Q>>> queueEvents);
+    NavigableMap<Double, Set<SimEntityEvent>> queueEvents);
 
 }

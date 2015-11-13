@@ -91,14 +91,14 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
     final int numberOfJobs,
     final boolean reset,
     final double resetTime,
-    final NavigableMap<Double, Set<SimEntityEvent<J, Q>>> queueExternalEvents)
+    final NavigableMap<Double, Set<SimEntityEvent>> queueExternalEvents)
   {
     if (eventList == null || queue == null || jobFactory == null)
       throw new IllegalArgumentException ();
     if (numberOfJobs < 0)
       throw new IllegalArgumentException ();
     final Set<J> jobs = new LinkedHashSet<> ();
-    final NavigableMap<Double, Set<SimEntityEvent<J, Q>>> realQueueExternalEvents =
+    final NavigableMap<Double, Set<SimEntityEvent>> realQueueExternalEvents =
       ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
     final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
     final SimEventList jobEventList = (attachSimJobsToEventList ? eventList : null);
