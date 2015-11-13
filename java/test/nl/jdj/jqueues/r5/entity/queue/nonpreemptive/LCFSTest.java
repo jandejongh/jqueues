@@ -55,7 +55,7 @@ public class LCFSTest
   {
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final LCFS queue = new LCFS (eventList);
-    final SimQueuePredictor<DefaultVisitsLoggingSimJob, SimQueue> predictor = new SimQueuePredictor_LCFS<> ();
+    final SimQueuePredictor predictor = new SimQueuePredictor_LCFS ();
     final int numberOfJobs = 50;
     final boolean silent = true;
     final boolean deadSilent = true;

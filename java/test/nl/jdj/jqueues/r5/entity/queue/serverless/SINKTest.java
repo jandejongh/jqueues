@@ -1,8 +1,6 @@
 package nl.jdj.jqueues.r5.entity.queue.serverless;
 
-import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_SINK;
@@ -54,7 +52,7 @@ public class SINKTest
   {
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final SINK queue = new SINK (eventList);
-    final SimQueuePredictor<DefaultVisitsLoggingSimJob, SINK> predictor = new SimQueuePredictor_SINK<> ();
+    final SimQueuePredictor predictor = new SimQueuePredictor_SINK ();
     final int numberOfJobs = 50;
     final boolean silent = true;
     final boolean deadSilent = true;

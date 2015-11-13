@@ -54,7 +54,7 @@ public class DROPTest
   {
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final DROP queue = new DROP (eventList);
-    final SimQueuePredictor<DefaultVisitsLoggingSimJob, DROP> predictor = new SimQueuePredictor_DROP<> ();
+    final SimQueuePredictor predictor = new SimQueuePredictor_DROP ();
     final int numberOfJobs = 50;
     final boolean silent = true;
     final boolean deadSilent = true;

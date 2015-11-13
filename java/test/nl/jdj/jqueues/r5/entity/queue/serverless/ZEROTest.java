@@ -1,8 +1,6 @@
 package nl.jdj.jqueues.r5.entity.queue.serverless;
 
-import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_ZERO;
@@ -54,7 +52,7 @@ public class ZEROTest
   {
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final ZERO queue = new ZERO (eventList);
-    final SimQueuePredictor<DefaultVisitsLoggingSimJob, ZERO> predictor = new SimQueuePredictor_ZERO<> ();
+    final SimQueuePredictor predictor = new SimQueuePredictor_ZERO ();
     final int numberOfJobs = 50;
     final boolean silent = true;
     final boolean deadSilent = true;

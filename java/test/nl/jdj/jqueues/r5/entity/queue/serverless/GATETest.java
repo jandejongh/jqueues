@@ -1,7 +1,6 @@
 package nl.jdj.jqueues.r5.entity.queue.serverless;
 
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueuePredictor_GATE;
@@ -53,7 +52,7 @@ public class GATETest
   {
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final GATE queue = new GATE (eventList);
-    final SimQueuePredictor<DefaultVisitsLoggingSimJob, GATE> predictor = new SimQueuePredictor_GATE<> ();
+    final SimQueuePredictor predictor = new SimQueuePredictor_GATE ();
     final int numberOfJobs = 1;
     final boolean silent = false;
     final boolean deadSilent = false;

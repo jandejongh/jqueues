@@ -55,7 +55,7 @@ public class LJFTest
   {
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final LJF queue = new LJF (eventList);
-    final SimQueuePredictor<DefaultVisitsLoggingSimJob, SimQueue> predictor = new SimQueuePredictor_LJF<> ();
+    final SimQueuePredictor predictor = new SimQueuePredictor_LJF ();
     final int numberOfJobs = 50;
     final boolean silent = true;
     final boolean deadSilent = true;

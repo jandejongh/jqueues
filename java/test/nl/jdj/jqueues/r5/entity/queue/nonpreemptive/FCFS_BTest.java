@@ -61,7 +61,7 @@ public class FCFS_BTest
     for (final int B : bValues)
     {
       final FCFS_B queue = new FCFS_B (eventList, B);
-      final SimQueuePredictor<DefaultVisitsLoggingSimJob, SimQueue> predictor = new SimQueuePredictor_FCFS_B<> (B);
+      final SimQueuePredictor predictor = new SimQueuePredictor_FCFS_B (B);
       DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, silent, deadSilent, 1.0e-12, null);
     }
   }

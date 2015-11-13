@@ -54,7 +54,7 @@ public class PSTest
   {
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final PS queue = new PS (eventList);
-    final SimQueuePredictor<DefaultVisitsLoggingSimJob, PS> predictor = new SimQueuePredictor_PS<> ();
+    final SimQueuePredictor<PS> predictor = new SimQueuePredictor_PS ();
     final int numberOfJobs = 50;
     final boolean silent = false;
     final boolean deadSilent = true;

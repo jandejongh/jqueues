@@ -61,7 +61,7 @@ public class IS_CSTTest
     for (final double serviceTime : serviceTimeValues)
     {
       final IS_CST queue = new IS_CST (eventList, serviceTime);
-      final SimQueuePredictor<DefaultVisitsLoggingSimJob, SimQueue> predictor = new SimQueuePredictor_IS_CST<> (serviceTime);
+      final SimQueuePredictor predictor = new SimQueuePredictor_IS_CST (serviceTime);
       DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, silent, deadSilent, 1.0e-6, null);      
     }
   }

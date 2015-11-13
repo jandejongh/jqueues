@@ -1,9 +1,6 @@
 package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_SJF;
@@ -55,7 +52,7 @@ public class SJFTest
   {
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final SJF queue = new SJF (eventList);
-    final SimQueuePredictor<DefaultVisitsLoggingSimJob, SimQueue> predictor = new SimQueuePredictor_SJF<> ();
+    final SimQueuePredictor predictor = new SimQueuePredictor_SJF ();
     final int numberOfJobs = 50;
     final boolean silent = true;
     final boolean deadSilent = true;

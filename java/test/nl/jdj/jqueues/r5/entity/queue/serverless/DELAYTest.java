@@ -1,8 +1,6 @@
 package nl.jdj.jqueues.r5.entity.queue.serverless;
 
-import nl.jdj.jqueues.r5.entity.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DELAY;
@@ -57,7 +55,7 @@ public class DELAYTest
     for (final double waitingTime : waitingTimeValues)
     {
       final DELAY queue = new DELAY (eventList, waitingTime);
-      final SimQueuePredictor<DefaultVisitsLoggingSimJob, DELAY> predictor = new SimQueuePredictor_DELAY<> ();
+      final SimQueuePredictor predictor = new SimQueuePredictor_DELAY ();
       final int numberOfJobs = 50;
       final boolean silent = true;
       final boolean deadSilent = true;

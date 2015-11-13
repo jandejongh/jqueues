@@ -1,9 +1,6 @@
 package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS;
@@ -55,7 +52,7 @@ public class FCFSTest
   {
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final FCFS queue = new FCFS (eventList);
-    final SimQueuePredictor<DefaultVisitsLoggingSimJob, SimQueue> predictor = new SimQueuePredictor_FCFS<> ();
+    final SimQueuePredictor predictor = new SimQueuePredictor_FCFS ();
     final int numberOfJobs = 50;
     final boolean silent = true;
     final boolean deadSilent = true;

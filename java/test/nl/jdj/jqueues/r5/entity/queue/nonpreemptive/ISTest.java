@@ -55,7 +55,7 @@ public class ISTest
   {
     final SimEventList eventList = new SimEventList (SimEvent.class);
     final IS queue = new IS (eventList);
-    final SimQueuePredictor<DefaultVisitsLoggingSimJob, SimQueue> predictor = new SimQueuePredictor_IS<> ();
+    final SimQueuePredictor predictor = new SimQueuePredictor_IS ();
     final int numberOfJobs = 50;
     final boolean silent = true;
     final boolean deadSilent = true;
