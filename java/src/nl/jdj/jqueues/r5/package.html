@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+-->
+<html>
+  <head>
+    <title>jqueues</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <div>A package for simulation of queueing systems.
+      <p>
+        A (far more) detailed description of this package is available in the javadoc of <code>SimQueue</code> in this package.
+        In the package, we uses three important concepts:
+      <ul>
+        <li>Jobs (<code>interface SimJob</code>): a job represents an amount of work to be carried out by one or more servers
+        <li>Queues (<code>interface SimQueue</code>): a queue is an abstract waiting line holding jobs
+          to be served by one or more servers associated with the queue;
+        <li>Entities (<code>interface SimEntity</code>): the common part of jobs and queues.
+      </ul>
+      The so-called queue discipline determines in what order jobs are served by the server(s).
+      <p>
+        Notes:
+      <ul>
+        <li>This package depends on the <code>jsimulation</code> package.
+        <li>This package focuses exclusively on modeling and simulation of the queueing systems themselves;
+            it currently does not feature adequate random-number and stochastic-process generation
+            and only basic statistics
+            (mostly because we believe there are extremely good Java libraries for that already).
+      </ul>
+    </div>
+  </body>
+</html>
