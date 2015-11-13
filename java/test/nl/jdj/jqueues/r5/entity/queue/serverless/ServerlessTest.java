@@ -1,6 +1,5 @@
 package nl.jdj.jqueues.r5.entity.queue.serverless;
 
-import nl.jdj.jqueues.r5.entity.queue.serverless.GATE;
 import java.util.ArrayList;
 import java.util.List;
 import nl.jdj.jqueues.r5.SimQueue;

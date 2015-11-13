@@ -1,6 +1,5 @@
 package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RANDOM;
 import java.util.ArrayList;
 import java.util.List;
 import nl.jdj.jqueues.r5.SimQueue;

@@ -1,9 +1,6 @@
 package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_NoBuffer_c;
