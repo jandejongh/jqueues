@@ -49,13 +49,16 @@ extends SimEntityEventMap
    * 
    * @return The time of the next event, or {@link Double#NaN} if no such event exists.
    * 
+   * @throws WorkloadScheduleException If the workload is invalid, or this schedule is incapable of parsing it (completely).
+   * 
    * @see #hasEventsBeyond
    * 
    */
   public abstract double getNextEventTimeBeyond
   (SimQueue queue,
    double time,
-   Set<SimEntitySimpleEventType.Member> eventTypes);
+   Set<SimEntitySimpleEventType.Member> eventTypes)
+   throws WorkloadScheduleException;
   
   /** Returns whether there exist event(s) scheduled strictly beyond a given time at a specific queue.
    * 
@@ -65,10 +68,13 @@ extends SimEntityEventMap
    * 
    * @return True if there exist event(s) strictly beyond a given time.
    * 
+   * @throws WorkloadScheduleException If the workload is invalid, or this schedule is incapable of parsing it (completely).
+   * 
    * @see #getNextEventTimeBeyond
    * 
    */
   public default boolean hasEventsBeyond (final SimQueue queue, final double time)
+  throws WorkloadScheduleException
   {
     return ! Double.isNaN (getNextEventTimeBeyond (queue, time, null));
   }
