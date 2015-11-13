@@ -2,19 +2,15 @@ package nl.jdj.jqueues.r5.util.predictor.workload;
 
 import java.util.HashSet;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 
 /** A default implementation of {@link WorkloadSchedule_SQ_SV_ROEL_U}.
  *
- * @param <J> The type of {@link SimJob}s supported.
- * @param <Q> The type of {@link SimQueue}s supported.
- * 
  */
-public class DefaultWorkloadSchedule_SQ_SV_ROEL_U<J extends SimJob, Q extends SimQueue>
-extends DefaultWorkloadSchedule<J, Q>
-implements WorkloadSchedule_SQ_SV_ROEL_U<J, Q>
+public class DefaultWorkloadSchedule_SQ_SV_ROEL_U
+extends DefaultWorkloadSchedule
+implements WorkloadSchedule_SQ_SV_ROEL_U
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,14 +20,13 @@ implements WorkloadSchedule_SQ_SV_ROEL_U<J, Q>
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   private static
-  <J extends SimJob, Q extends SimQueue>
-  Set<Q>
+  Set<SimQueue>
   getQueueSet
-  (final Q queue)
+  (final SimQueue queue)
   {
     if (queue == null)
       throw new IllegalArgumentException ();
-    final Set<Q> allQueues = new HashSet<> ();
+    final Set<SimQueue> allQueues = new HashSet<> ();
     allQueues.add (queue);
     return allQueues;
   }
@@ -50,7 +45,7 @@ implements WorkloadSchedule_SQ_SV_ROEL_U<J, Q>
    *                                            (e.g., containing a job with multiple visits to the {@code queue}.
    * 
    */
-  public DefaultWorkloadSchedule_SQ_SV_ROEL_U (final Q queue, final Set<SimEntityEvent<J, Q>> queueEvents)
+  public DefaultWorkloadSchedule_SQ_SV_ROEL_U (final SimQueue queue, final Set<? extends SimEntityEvent> queueEvents)
   throws WorkloadScheduleException
   {
     super (getQueueSet (queue), queueEvents);

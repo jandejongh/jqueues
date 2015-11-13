@@ -12,12 +12,9 @@ import nl.jdj.jqueues.r5.SimQueue;
  * <p>
  * The {@link SimQueue} to which the workload applies must be fixed upon construction.
  * 
- * @param <J> The type of {@link SimJob}s supported.
- * @param <Q> The type of {@link SimQueue}s supported.
- * 
  */
-public interface WorkloadSchedule_SQ<J extends SimJob, Q extends SimQueue>
-extends WorkloadSchedule<J, Q>
+public interface WorkloadSchedule_SQ
+extends WorkloadSchedule
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,11 +33,10 @@ extends WorkloadSchedule<J, Q>
    * @throws WorkloadScheduleInvalidException If the object is invalid (e.g., due to internal inconsistencies).
    * 
    */
-  public default Q getQueue ()
+  public default SimQueue getQueue ()
   throws WorkloadScheduleInvalidException
   {
-    // final Set<Q> queues = WorkloadSchedule.super.getQueues ();
-    final Set<Q> queues = getQueues ();
+    final Set<? extends SimQueue> queues = getQueues ();
     if (queues.size () != 1 || queues.contains (null))
       throw new WorkloadScheduleInvalidException ();
     return queues.iterator ().next ();
@@ -76,7 +72,7 @@ extends WorkloadSchedule<J, Q>
    * @see #getQueue
    * 
    */
-  public default Map<J, List<Double>> getArrivalTimesMap_SQ ()
+  public default Map<SimJob, List<Double>> getArrivalTimesMap_SQ ()
   throws WorkloadScheduleInvalidException
   {
     return getArrivalTimesMap (getQueue ());
@@ -88,7 +84,7 @@ extends WorkloadSchedule<J, Q>
    * @see #getQueue
    * 
    */
-  public default NavigableMap<Double, List<J>> getJobArrivalsMap_SQ ()
+  public default NavigableMap<Double, List<SimJob>> getJobArrivalsMap_SQ ()
   throws WorkloadScheduleInvalidException
   {
     return getJobArrivalsMap (getQueue ());
@@ -106,7 +102,7 @@ extends WorkloadSchedule<J, Q>
    * @see #getQueue
    * 
    */
-  public default Map<J, List<Map<Double, Boolean>>> getRevocationTimesMap_SQ ()
+  public default Map<SimJob, List<Map<Double, Boolean>>> getRevocationTimesMap_SQ ()
   throws WorkloadScheduleInvalidException
   {
     return getRevocationTimesMap (getQueue ());
@@ -118,7 +114,7 @@ extends WorkloadSchedule<J, Q>
    * @see #getQueue
    * 
    */
-  public default NavigableMap<Double, List<Map<J, Boolean>>> getJobRevocationsMap_SQ ()
+  public default NavigableMap<Double, List<Map<SimJob, Boolean>>> getJobRevocationsMap_SQ ()
   throws WorkloadScheduleInvalidException
   {
     return getJobRevocationsMap (getQueue ());
