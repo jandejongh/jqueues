@@ -45,7 +45,7 @@ extends SimEntityEventMap
   /** Returns the time of the next event(s), and optionally their types,
    *  scheduled strictly beyond a given time at a specific queue.
    * 
-   * @param queue The queue, may be {@code null} or not in {@link #getQueues}, in which case {@link Double#NaN} is returned.
+   * @param queue       The queue, may be {@code null} or not in {@link #getQueues}, in which case {@link Double#NaN} is returned.
    * @param time        The time from which to search, use {@link Double#NaN} to retrieve the first-event time (which
    *                      may be {@link Double#NEGATIVE_INFINITY}).
    * @param eventTypes An optional set to store the (possible multiple) event types; a non-{@code null} set is cleared upon entry.
