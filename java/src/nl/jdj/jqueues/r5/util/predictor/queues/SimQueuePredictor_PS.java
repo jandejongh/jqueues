@@ -22,18 +22,16 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link PS}.
- *
- * @param <J> The type of {@link SimJob}s supported.
  * 
  */
-public class SimQueuePredictor_PS<J extends SimJob>
-extends AbstractSimQueuePredictor<J, PS>
+public class SimQueuePredictor_PS
+extends AbstractSimQueuePredictor<PS>
 {
 
   @Override
   protected double getNextQueueEventTimeBeyond
   (final PS queue,
-   final SimQueueState<J, PS> queueState,
+   final SimQueueState<SimJob, PS> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
     if ( queue == null
@@ -57,10 +55,10 @@ extends AbstractSimQueuePredictor<J, PS>
   @Override
   protected void doWorkloadEvents_SQ_SV_ROEL_U
   (final PS queue,
-   final WorkloadSchedule_SQ_SV_ROEL_U<J, PS> workloadSchedule,
-   final SimQueueState<J, PS> queueState,
+   final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
+   final SimQueueState<SimJob, PS> queueState,
    final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
-   final Set<JobQueueVisitLog<J, PS>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, PS>> visitLogsSet)
    throws SimQueuePredictionException, WorkloadScheduleException
   {
     if ( queue == null
@@ -91,8 +89,8 @@ extends AbstractSimQueuePredictor<J, PS>
     }
     else if (eventType == SimEntitySimpleEventType.ARRIVAL)
     {
-      final J job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
-      final Set<J> arrivals = new HashSet<> ();
+      final SimJob job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
+      final Set<SimJob> arrivals = new HashSet<> ();
       arrivals.add (job);
       queueState.doArrivals (time, arrivals, visitLogsSet);
       if ((! queueState.isQueueAccessVacation ()) && queueState.getServerAccessCredits () >= 1)
@@ -100,7 +98,7 @@ extends AbstractSimQueuePredictor<J, PS>
     }
     else if (eventType == SimEntitySimpleEventType.REVOCATION)
     {
-      final J job =
+      final SimJob job =
         workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).entrySet ().iterator ().next ().getKey ();
       // Check whether job is actually present.
       if (queueState.getJobs ().contains (job))
@@ -110,7 +108,7 @@ extends AbstractSimQueuePredictor<J, PS>
         // Make sure we do not revoke an executing job without the interruptService flag.
         if (interruptService || ! queueState.getJobsExecuting ().contains (job))
         {
-          final Set<J> revocations = new HashSet<> ();
+          final Set<SimJob> revocations = new HashSet<> ();
           revocations.add (job);
           queueState.doExits (time, null, revocations, null, null, visitLogsSet);
         }
@@ -123,8 +121,8 @@ extends AbstractSimQueuePredictor<J, PS>
       queueState.setServerAccessCredits (time, newSac);
       if (oldSac == 0 && newSac > 0)
       {
-        final Set<J> starters = new LinkedHashSet<> ();
-        final Iterator<J> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
+        final Set<SimJob> starters = new LinkedHashSet<> ();
+        final Iterator<SimJob> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
         int remainingSac = newSac;
         while ((remainingSac == Integer.MAX_VALUE || remainingSac > 0) && i_waiters.hasNext ())
         {
@@ -144,9 +142,9 @@ extends AbstractSimQueuePredictor<J, PS>
   @Override
   protected void doQueueEvents_SQ_SV_ROEL_U
   (final PS queue,
-   final SimQueueState<J, PS> queueState,
+   final SimQueueState<SimJob, PS> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
-   final Set<JobQueueVisitLog<J, PS>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, PS>> visitLogsSet)
    throws SimQueuePredictionException    
   {
     if ( queue == null
@@ -168,7 +166,7 @@ extends AbstractSimQueuePredictor<J, PS>
     }
     else if (eventType == SimEntitySimpleEventType.DEPARTURE)
     {
-      final Set<J> departures = new HashSet<> (queueState.getRemainingServiceMap ().firstEntry ().getValue ());
+      final Set<SimJob> departures = new HashSet<> (queueState.getRemainingServiceMap ().firstEntry ().getValue ());
       queueState.doExits (time, null, null, departures, null, visitLogsSet);
     }
     else
@@ -190,13 +188,13 @@ extends AbstractSimQueuePredictor<J, PS>
       final double dT = newTime - oldTime;
       if (dT < 0)
         throw new RuntimeException ();
-      final Map<J, Double> rsTimeMap = queueState.getJobRemainingServiceTimeMap ();
-      final NavigableMap<Double,List<J>> rsMap = queueState.getRemainingServiceMap ();
+      final Map<SimJob, Double> rsTimeMap = queueState.getJobRemainingServiceTimeMap ();
+      final NavigableMap<Double,List<SimJob>> rsMap = queueState.getRemainingServiceMap ();
       if (dT > 0 && ! rsTimeMap.isEmpty ())
       { 
         rsMap.clear ();
         final double dS = dT / rsTimeMap.keySet ().size ();
-        for (final J job : new HashSet<> (rsTimeMap.keySet ()))
+        for (final SimJob job : new HashSet<> (rsTimeMap.keySet ()))
         {
           final double newRs = rsTimeMap.get (job) - dS;
           rsTimeMap.put (job, newRs);

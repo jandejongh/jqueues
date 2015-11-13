@@ -25,12 +25,11 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** Partial implementation of and utility methods for {@link SimQueuePredictor}.
  * 
- * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
-public abstract class AbstractSimQueuePredictor<J extends SimJob, Q extends SimQueue>
-implements SimQueuePredictor<J, Q>
+public abstract class AbstractSimQueuePredictor<Q extends SimQueue>
+implements SimQueuePredictor<Q>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,26 +60,26 @@ implements SimQueuePredictor<J, Q>
    * 
    */
   @Override
-  public Map<J, JobQueueVisitLog<J, Q>>
+  public Map<SimJob, JobQueueVisitLog<SimJob, Q>>
   predictVisitLogs_SQ_SV_ROEL_U
   (final Q queue,
-   final Set<SimEntityEvent<J, Q>> queueEvents)
+   final Set<SimEntityEvent> queueEvents)
    throws SimQueuePredictionException
   {
     if (queue == null)
       throw new IllegalArgumentException ();
-    final Set<JobQueueVisitLog<J, Q>> visitLogsSet = new HashSet<> ();
+    final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet = new HashSet<> ();
     try
     {
       //
       // Check the set of events for SV and ROEL_U, and create a suitable workload schedule.
       //
-      final WorkloadSchedule_SQ_SV_ROEL_U<J, Q> workloadSchedule
-        = new DefaultWorkloadSchedule_SQ_SV_ROEL_U<> (queue, queueEvents);
+      final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule
+        = new DefaultWorkloadSchedule_SQ_SV_ROEL_U (queue, queueEvents);
       //
       // Create a state object for the queue.
       //
-      final SimQueueState<J, Q> queueState = createQueueState (queue, true);
+      final SimQueueState<SimJob, Q> queueState = createQueueState (queue, true);
       if (! Double.isNaN (queueState.getTime ()))
         throw new RuntimeException ();
       //
@@ -150,8 +149,8 @@ implements SimQueuePredictor<J, Q>
     {
       throw new SimQueuePredictionInvalidInputException (wse);
     }
-    final Map<J, JobQueueVisitLog<J, Q>> visitLogs = new HashMap<> ();
-    for (final JobQueueVisitLog<J, Q> jqvl : visitLogsSet)
+    final Map<SimJob, JobQueueVisitLog<SimJob, Q>> visitLogs = new HashMap<> ();
+    for (final JobQueueVisitLog<SimJob, Q> jqvl : visitLogsSet)
     {
       if (jqvl == null)
         throw new RuntimeException ();
@@ -179,7 +178,7 @@ implements SimQueuePredictor<J, Q>
    *                                       support non-ROEL event lists.
    * 
    */
-  protected SimQueueState<J, Q> createQueueState (final Q queue, final boolean isROEL)
+  protected SimQueueState<SimJob, Q> createQueueState (final Q queue, final boolean isROEL)
   {
     if (queue == null)
       throw new IllegalArgumentException ();
@@ -201,8 +200,8 @@ implements SimQueuePredictor<J, Q>
    */
   protected boolean is_ROEL_U_UnderWorkloadQueueEventClashes
   (final Q queue,
-   final SimQueueState<J, Q> queueState,
-   final WorkloadSchedule_SQ_SV_ROEL_U<J, Q> workloadSchedule,
+   final SimQueueState<SimJob, Q> queueState,
+   final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
@@ -258,7 +257,7 @@ implements SimQueuePredictor<J, Q>
    */
   protected abstract double getNextQueueEventTimeBeyond
   (Q queue,
-   SimQueueState<J, Q> queueState,
+   SimQueueState<SimJob, Q> queueState,
    Set<SimEntitySimpleEventType.Member> queueEventTypes)
    throws SimQueuePredictionException;
   
@@ -313,10 +312,10 @@ implements SimQueuePredictor<J, Q>
    */
   protected abstract void doWorkloadEvents_SQ_SV_ROEL_U
   (Q queue,
-   WorkloadSchedule_SQ_SV_ROEL_U<J, Q> workloadSchedule,
-   SimQueueState<J, Q> queueState,
+   WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
+   SimQueueState<SimJob, Q> queueState,
    Set<SimEntitySimpleEventType.Member> workloadEventTypes,
-   Set<JobQueueVisitLog<J, Q>> visitLogsSet)
+   Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
    throws SimQueuePredictionException, WorkloadScheduleException;
   
   /** Process the next event(s) at a queue with given state.
@@ -346,9 +345,9 @@ implements SimQueuePredictor<J, Q>
    */
   protected abstract void doQueueEvents_SQ_SV_ROEL_U
   (Q queue,
-   SimQueueState<J, Q> queueState,
+   SimQueueState<SimJob, Q> queueState,
    Set<SimEntitySimpleEventType.Member> queueEventTypes,
-   Set<JobQueueVisitLog<J, Q>> visitLogsSet)
+   Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
    throws SimQueuePredictionException;
   
 }

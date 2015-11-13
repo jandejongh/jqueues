@@ -17,17 +17,15 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link SINK}.
  *
- * @param <J> The type of {@link SimJob}s supported.
- * 
  */
-public class SimQueuePredictor_SINK<J extends SimJob>
-extends AbstractSimQueuePredictor<J, SINK>
+public class SimQueuePredictor_SINK
+extends AbstractSimQueuePredictor<SINK>
 {
 
   @Override
   protected double getNextQueueEventTimeBeyond
   (final SINK queue,
-   final SimQueueState<J, SINK> queueState,
+   final SimQueueState<SimJob, SINK> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
     if ( queue == null
@@ -41,10 +39,10 @@ extends AbstractSimQueuePredictor<J, SINK>
   @Override
   protected void doWorkloadEvents_SQ_SV_ROEL_U
   (final SINK queue,
-   final WorkloadSchedule_SQ_SV_ROEL_U<J, SINK> workloadSchedule,
-   final SimQueueState<J, SINK> queueState,
+   final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
+   final SimQueueState<SimJob, SINK> queueState,
    final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
-   final Set<JobQueueVisitLog<J, SINK>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, SINK>> visitLogsSet)
    throws SimQueuePredictionException, WorkloadScheduleException
   {
     if ( queue == null
@@ -75,19 +73,19 @@ extends AbstractSimQueuePredictor<J, SINK>
     }
     else if (eventType == SimEntitySimpleEventType.ARRIVAL)
     {
-      final J job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
-      final Set<J> arrivals = new HashSet<> ();
+      final SimJob job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
+      final Set<SimJob> arrivals = new HashSet<> ();
       arrivals.add (job);
       queueState.doArrivals (time, arrivals, visitLogsSet);
     }
     else if (eventType == SimEntitySimpleEventType.REVOCATION)
     {
-      final J job =
+      final SimJob job =
         workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).entrySet ().iterator ().next ().getKey ();
       // Check whether job is actually present.
       if (queueState.getJobs ().contains (job))
       {
-        final Set<J> revocations = new HashSet<> ();
+        final Set<SimJob> revocations = new HashSet<> ();
         revocations.add (job);
         queueState.doExits (time, null, revocations, null, null, visitLogsSet);
       }
@@ -106,9 +104,9 @@ extends AbstractSimQueuePredictor<J, SINK>
   @Override
   protected void doQueueEvents_SQ_SV_ROEL_U
   (final SINK queue,
-   final SimQueueState<J, SINK> queueState,
+   final SimQueueState<SimJob, SINK> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
-   final Set<JobQueueVisitLog<J, SINK>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, SINK>> visitLogsSet)
    throws SimQueuePredictionException    
   {
     if ( queue == null

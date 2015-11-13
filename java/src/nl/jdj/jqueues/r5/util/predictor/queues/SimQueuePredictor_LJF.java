@@ -13,19 +13,17 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 
 /** A {@link SimQueuePredictor} for {@link LJF}.
  *
- * @param <J> The type of {@link SimJob}s supported.
- * 
  */
-public class SimQueuePredictor_LJF<J extends SimJob>
-extends SimQueuePredictor_FCFS<J>
+public class SimQueuePredictor_LJF
+extends SimQueuePredictor_FCFS
 {
 
   @Override
-  protected J getJobToStart (final SimQueue queue, final SimQueueState<J, SimQueue> queueState)
+  protected SimJob getJobToStart (final SimQueue queue, final SimQueueState<SimJob, SimQueue> queueState)
   throws SimQueuePredictionException
   {
-    final NavigableMap<Double, J> serviceTimeMap = new TreeMap<> ();
-    for (final J job : queueState.getJobsWaiting ())
+    final NavigableMap<Double, SimJob> serviceTimeMap = new TreeMap<> ();
+    for (final SimJob job : queueState.getJobsWaiting ())
     {
       final double serviceTime = ((DefaultSimQueueState) queueState).getServiceTime (queue, job);
       if (serviceTimeMap.containsKey (serviceTime))

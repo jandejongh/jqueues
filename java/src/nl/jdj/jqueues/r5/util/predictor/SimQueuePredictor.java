@@ -15,11 +15,10 @@ import nl.jdj.jqueues.r5.event.SimEntityEvent;
 
 /** An object capable of predicting the behavior of one or more {@link SimQueue}s under user-supplied workload and conditions.
  *
- * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
-public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
+public interface SimQueuePredictor<Q extends SimQueue>
 {
 
   /** Creates the unique prediction, if possible, of job-visits (at most one) to a given queue under a Random-Order Event List.
@@ -39,18 +38,18 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
    *                                               ({@link SimQueuePredictionAmbiguityException}).
    * 
    */
-  public Map<J, JobQueueVisitLog<J, Q>> predictVisitLogs_SQ_SV_ROEL_U
-  (Q queue, Set<SimEntityEvent<J, Q>> queueEvents)
+  public Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictVisitLogs_SQ_SV_ROEL_U
+  (Q queue, Set<SimEntityEvent> queueEvents)
     throws SimQueuePredictionException;
  
-  public default Map<J, JobQueueVisitLog<J, Q>> predictVisitLogs_SQ_SV_U
-  (final Q queue, final NavigableMap<Double, Set<SimEntityEvent<J, Q>>> queueEventsMap)
+  public default Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictVisitLogs_SQ_SV_U
+  (final Q queue, final NavigableMap<Double, Set<SimEntityEvent>> queueEventsMap)
     throws SimQueuePredictionException
   {
     if (queueEventsMap == null)
       throw new IllegalArgumentException ();
-    final Set<SimEntityEvent<J, Q>> queueEvents = new LinkedHashSet<> ();
-    for (final Set<SimEntityEvent<J, Q>> queueEventsAtTime : queueEventsMap.values ())
+    final Set<SimEntityEvent> queueEvents = new LinkedHashSet<> ();
+    for (final Set<SimEntityEvent> queueEventsAtTime : queueEventsMap.values ())
       queueEvents.addAll (queueEventsAtTime);
     return predictVisitLogs_SQ_SV_ROEL_U (queue, queueEvents);
   }
@@ -80,29 +79,29 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
    */
   public default boolean matchVisitLogs_SQ_SV
     (final Q queue,
-      final Map<J, JobQueueVisitLog<J, Q>> predicted,
-      final Map<J, TreeMap<Double, TreeMap<Integer, JobQueueVisitLog<J, Q>>>> actual,
+      final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predicted,
+      final Map<SimJob, TreeMap<Double, TreeMap<Integer, JobQueueVisitLog<SimJob, Q>>>> actual,
       final double accuracy,
       final PrintStream stream)
   {
     if (queue == null || predicted == null || actual == null || accuracy < 0)
       throw new IllegalArgumentException ();
-    final Map<J, JobQueueVisitLog<J, Q>> predictedAtQueue = new HashMap<> ();
-    for (final Entry<J, JobQueueVisitLog<J, Q>> entry : predicted.entrySet ())
+    final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictedAtQueue = new HashMap<> ();
+    for (final Entry<SimJob, JobQueueVisitLog<SimJob, Q>> entry : predicted.entrySet ())
       if (entry.getValue ().queue == queue)
         predictedAtQueue.put (entry.getKey (), entry.getValue ());
-    final Map<J, JobQueueVisitLog<J, Q>> actualAtQueue = new HashMap<> ();
+    final Map<SimJob, JobQueueVisitLog<SimJob, Q>> actualAtQueue = new HashMap<> ();
     boolean success = true;
-    for (final Entry<J, TreeMap<Double, TreeMap<Integer, JobQueueVisitLog<J, Q>>>> entry : actual.entrySet ())
+    for (final Entry<SimJob, TreeMap<Double, TreeMap<Integer, JobQueueVisitLog<SimJob, Q>>>> entry : actual.entrySet ())
     {
       if (entry == null)
         throw new IllegalArgumentException ();
-      final J job = entry.getKey ();
-      for (final Entry<Double, TreeMap<Integer, JobQueueVisitLog<J, Q>>> timeEntry : entry.getValue ().entrySet ())
+      final SimJob job = entry.getKey ();
+      for (final Entry<Double, TreeMap<Integer, JobQueueVisitLog<SimJob, Q>>> timeEntry : entry.getValue ().entrySet ())
       {
         if (timeEntry == null)
           throw new IllegalArgumentException ();
-        for (final Entry<Integer, JobQueueVisitLog<J, Q>> sequenceEntry : timeEntry.getValue ().entrySet ())
+        for (final Entry<Integer, JobQueueVisitLog<SimJob, Q>> sequenceEntry : timeEntry.getValue ().entrySet ())
           if (sequenceEntry.getValue ().queue == queue)
           {
             if (actualAtQueue.containsKey (job))
@@ -118,9 +117,9 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
           }
       }
     }
-    for (final J job : predictedAtQueue.keySet ())
+    for (final SimJob job : predictedAtQueue.keySet ())
     {
-      final JobQueueVisitLog<J, Q> predictedVisitLog = predictedAtQueue.get (job);
+      final JobQueueVisitLog<SimJob, Q> predictedVisitLog = predictedAtQueue.get (job);
       if (! actualAtQueue.containsKey (job))
       {
         success = false;
@@ -133,7 +132,7 @@ public interface SimQueuePredictor<J extends SimJob, Q extends SimQueue>
         else
           return false;        
       }
-      final JobQueueVisitLog<J, Q> actualVisitLog = actualAtQueue.get (job);
+      final JobQueueVisitLog<SimJob, Q> actualVisitLog = actualAtQueue.get (job);
       if (! actualVisitLog.equals (predictedVisitLog, accuracy))
       {
         success = false;

@@ -16,18 +16,16 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link DELAY}.
- *
- * @param <J> The type of {@link SimJob}s supported.
  * 
  */
-public class SimQueuePredictor_DELAY<J extends SimJob>
-extends AbstractSimQueuePredictor<J, DELAY>
+public class SimQueuePredictor_DELAY
+extends AbstractSimQueuePredictor<DELAY>
 {
 
   @Override
   protected double getNextQueueEventTimeBeyond
   (final DELAY queue,
-   final SimQueueState<J, DELAY> queueState,
+   final SimQueueState<SimJob, DELAY> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
     if ( queue == null
@@ -47,10 +45,10 @@ extends AbstractSimQueuePredictor<J, DELAY>
   @Override
   protected void doWorkloadEvents_SQ_SV_ROEL_U
   (final DELAY queue,
-   final WorkloadSchedule_SQ_SV_ROEL_U<J, DELAY> workloadSchedule,
-   final SimQueueState<J, DELAY> queueState,
+   final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
+   final SimQueueState<SimJob, DELAY> queueState,
    final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
-   final Set<JobQueueVisitLog<J, DELAY>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, DELAY>> visitLogsSet)
    throws SimQueuePredictionException, WorkloadScheduleException
   {
     if ( queue == null
@@ -81,9 +79,9 @@ extends AbstractSimQueuePredictor<J, DELAY>
     }
     else if (eventType == SimEntitySimpleEventType.ARRIVAL)
     {
-      final J job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
+      final SimJob job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
       final double waitTime = queue.getWaitTime ();
-      final Set<J> arrivals = new HashSet<> ();
+      final Set<SimJob> arrivals = new HashSet<> ();
       arrivals.add (job);
       // Abuse queueState.doArrivals for dropping arrivals upon queue-access vacation.
       if (waitTime > 0 || queueState.isQueueAccessVacation ())
@@ -94,12 +92,12 @@ extends AbstractSimQueuePredictor<J, DELAY>
     }
     else if (eventType == SimEntitySimpleEventType.REVOCATION)
     {
-      final J job =
+      final SimJob job =
         workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).entrySet ().iterator ().next ().getKey ();
       // Check whether job is actually present.
       if (queueState.getJobs ().contains (job))
       {
-        final Set<J> revocations = new HashSet<> ();
+        final Set<SimJob> revocations = new HashSet<> ();
         revocations.add (job);
         queueState.doExits (time, null, revocations, null, null, visitLogsSet);
       }
@@ -118,9 +116,9 @@ extends AbstractSimQueuePredictor<J, DELAY>
   @Override
   protected void doQueueEvents_SQ_SV_ROEL_U
   (final DELAY queue,
-   final SimQueueState<J, DELAY> queueState,
+   final SimQueueState<SimJob, DELAY> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
-   final Set<JobQueueVisitLog<J, DELAY>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, DELAY>> visitLogsSet)
    throws SimQueuePredictionException    
   {
     if ( queue == null
@@ -142,7 +140,7 @@ extends AbstractSimQueuePredictor<J, DELAY>
     }
     else if (eventType == SimEntitySimpleEventType.DEPARTURE)
     {
-      final Set<J> departures = new HashSet<> (queueState.getJobArrivalsMap ().firstEntry ().getValue ());
+      final Set<SimJob> departures = new HashSet<> (queueState.getJobArrivalsMap ().firstEntry ().getValue ());
       queueState.doExits (time, null, null, departures, null, visitLogsSet);
     }
     else

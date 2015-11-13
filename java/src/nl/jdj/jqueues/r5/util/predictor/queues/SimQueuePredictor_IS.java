@@ -10,11 +10,9 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 
 /** A {@link SimQueuePredictor} for {@link IS}.
  *
- * @param <J> The type of {@link SimJob}s supported.
- * 
  */
-public class SimQueuePredictor_IS<J extends SimJob>
-extends SimQueuePredictor_FCFS<J>
+public class SimQueuePredictor_IS
+extends SimQueuePredictor_FCFS
 {
   
   final boolean overrideServiceTime;
@@ -22,7 +20,7 @@ extends SimQueuePredictor_FCFS<J>
   final double serviceTime;
 
   @Override
-  protected SimQueueState<J, SimQueue> createQueueState (SimQueue queue, boolean isROEL)
+  protected SimQueueState<SimJob, SimQueue> createQueueState (SimQueue queue, boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
     if (this.overrideServiceTime)
@@ -42,7 +40,7 @@ extends SimQueuePredictor_FCFS<J>
     this (false, Double.NaN);
   }
   
-  final ToDoubleBiFunction<SimQueue, J> serviceTimeProvider =
-    (final SimQueue queue, final J job) -> SimQueuePredictor_IS.this.serviceTime;
+  final ToDoubleBiFunction<SimQueue, SimJob> serviceTimeProvider =
+    (final SimQueue queue, final SimJob job) -> SimQueuePredictor_IS.this.serviceTime;
   
 }

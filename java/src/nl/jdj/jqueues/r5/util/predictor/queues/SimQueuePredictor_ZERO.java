@@ -17,17 +17,15 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link ZERO}.
  *
- * @param <J> The type of {@link SimJob}s supported.
- * 
  */
-public class SimQueuePredictor_ZERO<J extends SimJob>
-extends AbstractSimQueuePredictor<J, ZERO>
+public class SimQueuePredictor_ZERO
+extends AbstractSimQueuePredictor<ZERO>
 {
 
   @Override
   protected double getNextQueueEventTimeBeyond
   (final ZERO queue,
-   final SimQueueState<J, ZERO> queueState,
+   final SimQueueState<SimJob, ZERO> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
     if ( queue == null
@@ -41,10 +39,10 @@ extends AbstractSimQueuePredictor<J, ZERO>
   @Override
   protected void doWorkloadEvents_SQ_SV_ROEL_U
   (final ZERO queue,
-   final WorkloadSchedule_SQ_SV_ROEL_U<J, ZERO> workloadSchedule,
-   final SimQueueState<J, ZERO> queueState,
+   final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
+   final SimQueueState<SimJob, ZERO> queueState,
    final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
-   final Set<JobQueueVisitLog<J, ZERO>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, ZERO>> visitLogsSet)
    throws SimQueuePredictionException, WorkloadScheduleException
   {
     if ( queue == null
@@ -75,8 +73,8 @@ extends AbstractSimQueuePredictor<J, ZERO>
     }
     else if (eventType == SimEntitySimpleEventType.ARRIVAL)
     {
-      final J job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
-      final Set<J> arrivals = new HashSet<> ();
+      final SimJob job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
+      final Set<SimJob> arrivals = new HashSet<> ();
       arrivals.add (job);
       if (queueState.isQueueAccessVacation ())
         // Drops.
@@ -102,9 +100,9 @@ extends AbstractSimQueuePredictor<J, ZERO>
   @Override
   protected void doQueueEvents_SQ_SV_ROEL_U
   (final ZERO queue,
-   final SimQueueState<J, ZERO> queueState,
+   final SimQueueState<SimJob, ZERO> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
-   final Set<JobQueueVisitLog<J, ZERO>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, ZERO>> visitLogsSet)
    throws SimQueuePredictionException    
   {
     if ( queue == null

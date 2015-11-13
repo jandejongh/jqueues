@@ -9,17 +9,15 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 
 /** A {@link SimQueuePredictor} for {@link LCFS}.
  *
- * @param <J> The type of {@link SimJob}s supported.
- * 
  */
-public class SimQueuePredictor_LCFS<J extends SimJob>
-extends SimQueuePredictor_FCFS<J>
+public class SimQueuePredictor_LCFS
+extends SimQueuePredictor_FCFS
 {
 
   @Override
-  protected J getJobToStart (final SimQueue queue, final SimQueueState<J, SimQueue> queueState)
+  protected SimJob getJobToStart (final SimQueue queue, final SimQueueState<SimJob, SimQueue> queueState)
   {
-    final ArrayList<J> waitingJobs = new ArrayList<> (queueState.getJobsWaitingOrdered ());
+    final ArrayList<SimJob> waitingJobs = new ArrayList<> (queueState.getJobsWaitingOrdered ());
     return waitingJobs.get (waitingJobs.size () - 1);
   }
 
