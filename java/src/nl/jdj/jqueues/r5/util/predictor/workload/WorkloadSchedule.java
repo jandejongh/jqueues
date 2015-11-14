@@ -94,7 +94,7 @@ extends SimEntityEventMap
    * A unmodifiable view must be returned.
    * 
    * @return The underlying queue events that were processed for this workload representation,
-   *         ordered as found in the source upon construction.
+   *         in no particular specified order.
    * 
    */
   public Set<SimEntityEvent> getProcessedQueueEvents ();

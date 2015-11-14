@@ -236,7 +236,14 @@ implements WorkloadSchedule, WorkloadScheduleHandler
     }
     this.handlerNameMap.put (handler.getHandlerName (), handler);
     if (handler.needsScan ())
-      handler.scan (this);
+    {
+      final Set<SimEntityEvent> handlerProcessedQueueEvents = handler.scan (this);
+      if (handlerProcessedQueueEvents != null)
+        for (final SimEntityEvent event : handlerProcessedQueueEvents)
+          if (event == null || this.processedQueueEvents.contains (event))
+            throw new WorkloadScheduleInvalidException ();
+      this.processedQueueEvents.addAll (handlerProcessedQueueEvents);
+    }
   }
   
   /** Gets a handler by name.
@@ -271,7 +278,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private final Set<SimEntityEvent> processedQueueEvents = new LinkedHashSet<> ();
+  private final Set<SimEntityEvent> processedQueueEvents = new HashSet<> ();
   
   @Override
   public final Set<SimEntityEvent> getProcessedQueueEvents ()
@@ -281,7 +288,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // SimQueueUEUES
+  // QUEUES
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -467,10 +474,11 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   }
 
   @Override
-  public final void scan (final DefaultWorkloadSchedule workloadSchedule)
+  public final Set<SimEntityEvent> scan (final DefaultWorkloadSchedule workloadSchedule)
   {
     if (workloadSchedule != this)
       throw new IllegalArgumentException ();
+    final Set<SimEntityEvent> handlerProcessedQueueEvents = new HashSet<> ();
     for (SimQueue q : this.queues)
     {
       this.qavTimesMap.put (q, new TreeMap<> ());
@@ -482,7 +490,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
     }
     if (this.queueEvents != null)
     {
-      for (final SimEntityEvent<SimJob, SimQueue> event : this.queueEvents)
+      for (final SimEntityEvent event : this.queueEvents)
       {
         final double time = event.getTime ();
         final SimQueue queue = event.getQueue ();
@@ -491,7 +499,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
         {
           if (event instanceof SimQueueAccessVacationEvent)
           {
-            this.processedQueueEvents.add (event);
+            handlerProcessedQueueEvents.add (event);
             final boolean vacation = ((SimQueueAccessVacationEvent) event).getVacation ();
             final NavigableMap<Double, List<Boolean>> qavTimesMap_q = this.qavTimesMap.get (queue);
             if (! qavTimesMap_q.containsKey (time))
@@ -500,7 +508,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
           }
           else if (event instanceof SimQueueJobArrivalEvent)
           {
-            this.processedQueueEvents.add (event);
+            handlerProcessedQueueEvents.add (event);
             this.jobs.add (job);
             final Map<SimJob, List<Double>> arrTimesMap_q = this.arrTimesMap.get (queue);
             if (! arrTimesMap_q.containsKey (job))
@@ -513,7 +521,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
           }
           else if (event instanceof SimQueueJobRevocationEvent)
           {
-            this.processedQueueEvents.add (event);
+            handlerProcessedQueueEvents.add (event);
             this.jobs.add (job);
             final boolean interruptService = ((SimQueueJobRevocationEvent) event).isInterruptService ();
             final  Map<SimJob, List<Map<Double, Boolean>>> revTimesMap_q = this.revTimesMap.get (queue);
@@ -531,7 +539,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
           }
           else if (event instanceof SimQueueServerAccessCreditsEvent)
           {
-            this.processedQueueEvents.add (event);
+            handlerProcessedQueueEvents.add (event);
             final int credits = ((SimQueueServerAccessCreditsEvent) event).getCredits ();
             final NavigableMap<Double, List<Integer>> sacTimesMap_q = this.sacTimesMap.get (queue);
             if (! sacTimesMap_q.containsKey (time))
@@ -541,6 +549,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
         }
       }
     }
+    return handlerProcessedQueueEvents;
   }
   
 }

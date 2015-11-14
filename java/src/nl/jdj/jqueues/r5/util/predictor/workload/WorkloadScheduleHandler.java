@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r5.util.predictor.workload;
 
 import java.util.Map;
+import java.util.Set;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
@@ -77,13 +78,16 @@ public interface WorkloadScheduleHandler
    * 
    * @param workloadSchedule The host at which we registered.
    * 
+   * @return The {@link SimEntityEvent}s processed by this handler,
+   *         in a set with no particular member ordering; may be {@code null} or empty.
+   * 
    * @throws WorkloadScheduleException If the workload is invalid or ambiguous.
    * 
    * @see DefaultWorkloadSchedule#registerHandler
    * @see #scan
    * 
    */
-  public void scan (final DefaultWorkloadSchedule workloadSchedule)
+  public Set<SimEntityEvent> scan (final DefaultWorkloadSchedule workloadSchedule)
   throws WorkloadScheduleException;
 
 }
