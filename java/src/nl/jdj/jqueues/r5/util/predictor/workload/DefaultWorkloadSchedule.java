@@ -27,7 +27,7 @@ import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
  */
 public class DefaultWorkloadSchedule
 extends DefaultSimEntityEventMap
-implements WorkloadSchedule, DefaultWorkloadScheduleHandler
+implements WorkloadSchedule, WorkloadScheduleHandler
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,9 +196,9 @@ implements WorkloadSchedule, DefaultWorkloadScheduleHandler
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private final Map<Class<? extends SimEntityEvent>, DefaultWorkloadScheduleHandler> handlerEventMap = new HashMap<> ();
+  private final Map<Class<? extends SimEntityEvent>, WorkloadScheduleHandler> handlerEventMap = new HashMap<> ();
   
-  private final Map<String, DefaultWorkloadScheduleHandler> handlerNameMap = new HashMap<> ();
+  private final Map<String, WorkloadScheduleHandler> handlerNameMap = new HashMap<> ();
   
   /** Registers a handler for {@link SimEntityEvent}s, and, upon request of the handler, passes control to it for scanning.
    * 
@@ -210,12 +210,12 @@ implements WorkloadSchedule, DefaultWorkloadScheduleHandler
    *                                  or if it tries to register {@link SimEntityEvent}s that are already registered
    *                                  by other handlers.
    * 
-   * @see DefaultWorkloadScheduleHandler
+   * @see WorkloadScheduleHandler
    * 
    * @throws WorkloadScheduleException If the workload is invalid or ambiguous (for instance).
    * 
    */
-  public final void registerHandler (final DefaultWorkloadScheduleHandler handler)
+  public final void registerHandler (final WorkloadScheduleHandler handler)
   throws WorkloadScheduleException
   {
     if (handler == null
@@ -246,7 +246,7 @@ implements WorkloadSchedule, DefaultWorkloadScheduleHandler
    * @return The handler, or {@code null} if not found.
    * 
    */
-  public final DefaultWorkloadScheduleHandler getHandler (final String name)
+  public final WorkloadScheduleHandler getHandler (final String name)
   {
     return this.handlerNameMap.get (name);
   }
@@ -409,7 +409,7 @@ implements WorkloadSchedule, DefaultWorkloadScheduleHandler
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // DefaultWorkloadScheduleHandler
+  // WorkloadScheduleHandler
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

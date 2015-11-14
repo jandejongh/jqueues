@@ -17,7 +17,7 @@ import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGate;
  * 
  * <p>
  * The handler-extension mechanism through {@link DefaultWorkloadSchedule#registerHandler} allows
- * the registration of a handler, i.c., a {@link DefaultWorkloadScheduleHandler}, that manages
+ * the registration of a handler, i.c., a {@link WorkloadScheduleHandler}, that manages
  * a specific subset of {@link SimEntityEvent} types (classes).
  * An example of such an event is the {@link SimQueueGateEvent} for {@link SimQueueWithGate}s.
  * The extension mechanism is particularly useful for such state extensions to a {@link SimQueue} with
@@ -30,7 +30,7 @@ import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGate;
  * @see SimQueuePredictor_GATE
  *
  */
-public interface DefaultWorkloadScheduleHandler
+public interface WorkloadScheduleHandler
 {
 
   /** Returns the name of the handler.
