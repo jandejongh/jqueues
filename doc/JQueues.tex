@@ -273,6 +273,56 @@ The abundant use of anonymous inner classes as shown here
 
 \section{Processing the Event List}
 
+Once the events of your liking are scheduled on the event list,
+  you can start the simulation by {\em processing\/} or {\em running\/}
+  the event lists.
+Processing the event list will cause the event list to
+  equentially invoke the actions attached to the events
+  in increasing-time order.
+There are several ways to process a \lstinline{SimEventList}:
+\begin{itemize}
+  \item You can process the event list until it is empty with the \lstinline{run} method.
+  \item You can process the event list until some specified (simulation) time with the
+          \lstinline{runUtil} method.
+  \item You can {\em single-step\/} through the event list with the
+          \lstinline{runSingleStep} method.
+\end{itemize}
+You can check whether an event list is being processed through its \lstinline{isRunning}
+  method.
+
+While processing, the event list maintains a {\em clock}
+  holding the (simulation) time of the current event.
+You can get the time from the event list through \lstinline{getTime} nethod,
+  although you can obtain it more easily from the event itself.
+You can insert new events while it is being processed,
+  {\em but these events must not be in the past}.
+Once the event list detects insertion of events in the past,
+  it will throw and exception.
+
+Note that processing the event list
+  is thread-safe in the sense that all methods involved
+  need to obtain a {\em lock} before being able to process the list.
+Trying to process an event list that is already being processed
+  from another thread,
+  or from the thread that currently processes the list,
+  will lead to an exception.
+Note that currently there is no safe, atomic, way
+  to process an event list on the condition that is
+  is not being processed already.
+Though you can check with \lstinline{isRunning}
+  whether the list is being processed or not,
+  the answer from this method has zero validity lifetime.
+
+The example below shows how to schedule new events
+  from event actions; it also shows what happens if you schedule
+  events in the past.
+\begin{lstlisting}[basicstyle=\tiny]
+\end{lstlisting}
+
+The output of the example is shown below.
+\begin{lstlisting}[basicstyle=\tiny]
+\end{lstlisting}
+
 \section{Listening to an Event List}
 
 \section{Advanced Topics}
@@ -287,7 +337,7 @@ The abundant use of anonymous inner classes as shown here
 
 \subsection{Action is a Functional Interface}
 
-\chapter{Queues and Jobs}
+\chapter{Queueing Systems; Entities, Queues, and Jobs}
 
 \chapter{Fundamental Queues}
 
@@ -323,7 +373,15 @@ The abundant use of anonymous inner classes as shown here
 
 \section{Introduction}
 
-\section{Types of Composite Queues}
+Composite queues consist of zero or more other queues
+  named {\em subqueues\/} or {\em embedded queues\/}
+  through which visiting jobs must pass.
+The sequence of visits to the embedded queues is
+  determined by the composite queue.
+
+{\bf XXX}
+
+\section{Types (Colors) of Composite Queues}
 
 \section{Tandem Queues}
 
