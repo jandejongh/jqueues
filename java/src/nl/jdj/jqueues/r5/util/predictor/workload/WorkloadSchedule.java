@@ -1,8 +1,8 @@
 package nl.jdj.jqueues.r5.util.predictor.workload;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
@@ -320,10 +320,9 @@ extends SimEntityEventMap
   /** Determines whether the workload is unambiguous under a ROEL (Random-Order Event List).
    * 
    * <p>
-   * Our basic strategy is to count the number of distinct event times from the collections.
-   * Then count the number of "duplicate" events.
-   * Finally, compare the size of the event-times set to the number of distinct (i.e., not being duplicates) events processed.
-   * If we find a smaller number, we know there are ambiguities.
+   * This implementation checks that for each queue in {@link #getQueues}, there are no simultaneous queue events.
+   * It ignores job-only events, events related to queues <i>not</i> in {@link #getQueues},
+   * and allows simultaneous events to distinct queues.
    * 
    * <p>
    * The criterion for unambiguity is rather strong, but is believed to be applicable to <i>any</i> queue type.
@@ -336,45 +335,80 @@ extends SimEntityEventMap
   public default boolean isUnambiguous_ROEL ()
   throws WorkloadScheduleInvalidException
   {
-    final Set<Double> eventTimes = new HashSet<> ();
-    int eventDuplicates = 0;
-    for (final SimQueue q : getQueues ())
-    {
-      for (final List<Boolean> l : getQueueAccessVacationMap (q).values ())
-        if (new HashSet<> (l).size () < l.size ())
+    for (final Map<SimQueue, Set<SimEntityEvent>> timeEvents : getTimeSimQueueSimEntityEventMap ().values ())
+      for (final Entry<SimQueue, Set<SimEntityEvent>> timeEventsQueueEntry : timeEvents.entrySet ())
+        if (getQueues ().contains (timeEventsQueueEntry.getKey ()) && timeEventsQueueEntry.getValue ().size () > 1)
           return false;
-        else
-          eventDuplicates += (l.size () - 1);
-      eventTimes.addAll (getQueueAccessVacationMap (q).keySet ());
-      for (final List<SimJob> l : getJobArrivalsMap (q).values ())
-        if (l.size () > 1)
-          return false;
-      eventTimes.addAll (getJobArrivalsMap (q).keySet ());
-      for (final List<Map<SimJob, Boolean>> l : getJobRevocationsMap (q).values ())
-      {
-        if (l.size () != 1)
-          throw new WorkloadScheduleInvalidException ();
-        final Set<SimJob> jobs = new HashSet<> ();
-        final Set<Boolean> iSs = new HashSet<> ();
-        for (final Map<SimJob, Boolean> member : l)
-        {
-          jobs.addAll (member.keySet ());
-          iSs.addAll (member.values ());
-        }
-        if (jobs.size () > 1 || iSs.size () > 1)
-          return false;
-        else
-          eventDuplicates += (l.size () - 1);
-      }
-      eventTimes.addAll (getJobRevocationsMap (q).keySet ());
-      for (final List<Integer> l : getServerAccessCreditsMap (q).values ())
-        if (new HashSet<> (l).size () < l.size ())
-          return false;
-        else
-          eventDuplicates += (l.size () - 1);
-      eventTimes.addAll (getServerAccessCreditsMap (q).keySet ());
-    }
-    return eventTimes.size () == (getProcessedQueueEvents ().size () - eventDuplicates);
+    return true;
   }
   
+  //
+  // OLDER IMPLEMENTATION OF isUnambiguous_ROEL.
+  //
+  // This implementation is a lot more subtle, removing "duplicate" events.
+  //
+  // Unfortunately, the implementation fails in presence of WorkloadScheduleHandlers
+  // on DefaultWorkloadSchedule.
+  //
+  
+//  /** Determines whether the workload is unambiguous under a ROEL (Random-Order Event List).
+//   * 
+//   * <p>
+//   * Our basic strategy is to count the number of distinct event times from the collections.
+//   * Then count the number of "duplicate" events.
+//   * Finally, compare the size of the event-times set to the number of distinct (i.e., not being duplicates) events processed.
+//   * If we find a smaller number, we know there are ambiguities.
+//   * 
+//   * <p>
+//   * The criterion for unambiguity is rather strong, but is believed to be applicable to <i>any</i> queue type.
+//   * 
+//   * @return Whether the workload is unambiguous under a ROEL.
+//   * 
+//   * @throws WorkloadScheduleInvalidException If the workload is invalid.
+//   * 
+//   */
+//  public default boolean isUnambiguous_ROEL ()
+//  throws WorkloadScheduleInvalidException
+//  {
+//    final Set<Double> eventTimes = new HashSet<> ();
+//    int eventDuplicates = 0;
+//    for (final SimQueue q : getQueues ())
+//    {
+//      for (final List<Boolean> l : getQueueAccessVacationMap (q).values ())
+//        if (new HashSet<> (l).size () < l.size ())
+//          return false;
+//        else
+//          eventDuplicates += (l.size () - 1);
+//      eventTimes.addAll (getQueueAccessVacationMap (q).keySet ());
+//      for (final List<SimJob> l : getJobArrivalsMap (q).values ())
+//        if (l.size () > 1)
+//          return false;
+//      eventTimes.addAll (getJobArrivalsMap (q).keySet ());
+//      for (final List<Map<SimJob, Boolean>> l : getJobRevocationsMap (q).values ())
+//      {
+//        if (l.size () != 1)
+//          throw new WorkloadScheduleInvalidException ();
+//        final Set<SimJob> jobs = new HashSet<> ();
+//        final Set<Boolean> iSs = new HashSet<> ();
+//        for (final Map<SimJob, Boolean> member : l)
+//        {
+//          jobs.addAll (member.keySet ());
+//          iSs.addAll (member.values ());
+//        }
+//        if (jobs.size () > 1 || iSs.size () > 1)
+//          return false;
+//        else
+//          eventDuplicates += (l.size () - 1);
+//      }
+//      eventTimes.addAll (getJobRevocationsMap (q).keySet ());
+//      for (final List<Integer> l : getServerAccessCreditsMap (q).values ())
+//        if (new HashSet<> (l).size () < l.size ())
+//          return false;
+//        else
+//          eventDuplicates += (l.size () - 1);
+//      eventTimes.addAll (getServerAccessCreditsMap (q).keySet ());
+//    }
+//    return eventTimes.size () == (getProcessedQueueEvents ().size () - eventDuplicates);
+//  }
+
 }
