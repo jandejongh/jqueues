@@ -55,6 +55,51 @@ implements SimQueueState<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // HANDLERS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final Map<String, SimQueueStateHandler> handlerNameMap = new HashMap<> ();
+  
+  /** Registers a handler.
+   * 
+   * <p>
+   * A (extension) handler allow for extending the queue-state representation with
+   * additional state variables without creating a subclass of {@link DefaultSimQueueState} for that
+   * (which would lead to problems in case we have multiple such extensions).
+   * 
+   * @param handler The handler.
+   * 
+   * @throws IllegalArgumentException If the handler or its name are {@code null},
+   *                                  or if a handler with the same name has been registered already.
+   * 
+   * @see SimQueueStateHandler
+   * 
+   */
+  public final void registerHandler (final SimQueueStateHandler handler)
+  {
+    if (handler == null
+      || handler.getHandlerName () == null
+      || this.handlerNameMap.containsKey (handler.getHandlerName ()))
+      throw new IllegalArgumentException ();
+    this.handlerNameMap.put (handler.getHandlerName (), handler);
+    handler.initHandler (this);
+  }
+  
+  /** Gets a handler by name.
+   * 
+   * @param name The name to look for.
+   * 
+   * @return The handler, or {@code null} if not found.
+   * 
+   */
+  public final SimQueueStateHandler getHandler (final String name)
+  {
+    return this.handlerNameMap.get (name);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // QUEUE
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +130,8 @@ implements SimQueueState<J, Q>
     this.jobsExecutingMap.clear ();
     this.remainingServiceMap.clear ();
     this.jobRemainingServiceTimeMap.clear ();
+    for (SimQueueStateHandler handler : this.handlerNameMap.values ())
+      handler.resetHandler (this);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
