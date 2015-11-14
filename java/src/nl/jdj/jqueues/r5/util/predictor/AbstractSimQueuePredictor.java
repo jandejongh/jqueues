@@ -45,6 +45,8 @@ implements SimQueuePredictor<Q>
    * the queue state and the workload state, respectively, and relies on abstract (or default) methods for
    * the behavior of the specific queue type:
    * <ul>
+   * <li>{@link #createWorkloadSchedule_SQ_SV_ROEL_U} for the creation of a, possibly queue-type specific,
+   *            {@link WorkloadSchedule_SQ_SV_ROEL_U} from the workload events,
    * <li>{@link #createQueueState} for the creation of a, possibly queue-type specific, {@link SimQueueState},
    * <li>{@link #is_ROEL_U_UnderWorkloadQueueEventClashes},
    * <li>{@link #getNextQueueEventTimeBeyond} for determining the scheduled time and type(s) of the next queue-state event(s),
@@ -74,8 +76,7 @@ implements SimQueuePredictor<Q>
       //
       // Check the set of events for SV and ROEL_U, and create a suitable workload schedule.
       //
-      final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule
-        = new DefaultWorkloadSchedule_SQ_SV_ROEL_U (queue, queueEvents);
+      final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule = createWorkloadSchedule_SQ_SV_ROEL_U (queue, queueEvents);
       //
       // Create a state object for the queue.
       //
@@ -163,6 +164,35 @@ implements SimQueuePredictor<Q>
     return visitLogs;
   }
 
+  /** Creates and prepares a suitable {@link WorkloadSchedule_SQ_SV_ROEL_U} object for this predictor and given queue,
+   *  for a given set of workload events.
+   * 
+   * <p>
+   * The initial time must be set to {@link Double#NaN}.
+   * 
+   * <p>
+   * Implementations must prepare the required maps from the {@link WorkloadSchedule_SQ_SV_ROEL_U} at construction.
+   * 
+   * <p>
+   * The default implementation returns a new {@link DefaultWorkloadSchedule_SQ_SV_ROEL_U}.
+   * 
+   * @param queue          The queue, non-{@code null}.
+   * @param workloadEvents The workload events, may be {@code null} or empty.
+   * 
+   * @return A new suitable {@link WorkloadSchedule_SQ_SV_ROEL_U} object for this predictor and given queue.
+   * 
+   * @throws WorkloadScheduleException If the workload is invalid or ambiguous (for instance).
+   * 
+   */
+  protected
+  WorkloadSchedule_SQ_SV_ROEL_U
+  createWorkloadSchedule_SQ_SV_ROEL_U
+  (final Q queue, final Set<SimEntityEvent> workloadEvents)
+  throws WorkloadScheduleException
+  {
+    return new DefaultWorkloadSchedule_SQ_SV_ROEL_U (queue, workloadEvents);
+  }
+  
   /** Creates a suitable {@link SimQueueState} object for this predictor and given queue.
    * 
    * <p>

@@ -123,71 +123,6 @@ implements WorkloadSchedule, WorkloadScheduleHandler
       }
     }
     return nextEventTime;
-//    if (! getQueueAccessVacationMap (queue).isEmpty ())
-//    {
-//      final Double nextQavTime = (Double.isNaN (time)
-//        ? getQueueAccessVacationMap (queue).firstKey ()
-//        : getQueueAccessVacationMap (queue).higherKey (time));
-//      if (nextQavTime != null && (Double.isNaN (nextEventTime) || nextQavTime <= nextEventTime))
-//      {
-//        if (eventTypes != null)
-//        {
-//          if ((! Double.isNaN (nextEventTime)) && nextQavTime < nextEventTime)
-//            eventTypes.clear ();
-//          eventTypes.add (SimQueueSimpleEventType.QUEUE_ACCESS_VACATION);
-//        }
-//        nextEventTime = nextQavTime;
-//      }
-//    }
-//    if (! getJobArrivalsMap (queue).isEmpty ())
-//    {
-//      final Double nextArrTime = (Double.isNaN (time)
-//        ? getJobArrivalsMap (queue).firstKey ()
-//        : getJobArrivalsMap (queue).higherKey (time));
-//      if (nextArrTime != null && (Double.isNaN (nextEventTime) || nextArrTime <= nextEventTime))
-//      {
-//        if (eventTypes != null)
-//        {
-//          if ((! Double.isNaN (nextEventTime)) && nextArrTime < nextEventTime)
-//            eventTypes.clear ();
-//          eventTypes.add (SimEntitySimpleEventType.ARRIVAL);
-//        }
-//        nextEventTime = nextArrTime;
-//      }
-//    }
-//    if (! getJobRevocationsMap (queue).isEmpty ())
-//    {
-//      final Double nextRevTime = (Double.isNaN (time)
-//        ? getJobRevocationsMap (queue).firstKey ()
-//        : getJobRevocationsMap (queue).higherKey (time));
-//      if (nextRevTime != null && (Double.isNaN (nextEventTime) || nextRevTime <= nextEventTime))
-//      {
-//        if (eventTypes != null)
-//        {
-//          if ((! Double.isNaN (nextEventTime)) && nextRevTime < nextEventTime)
-//            eventTypes.clear ();
-//          eventTypes.add (SimEntitySimpleEventType.REVOCATION);
-//        }
-//        nextEventTime = nextRevTime;
-//      }
-//    }
-//    if (! getServerAccessCreditsMap (queue).isEmpty ())
-//    {
-//      final Double nextSacTime = (Double.isNaN (time)
-//        ? getServerAccessCreditsMap (queue).firstKey ()
-//        : getServerAccessCreditsMap (queue).higherKey (time));
-//      if (nextSacTime != null && (Double.isNaN (nextEventTime) || nextSacTime <= nextEventTime))
-//      {
-//        if (eventTypes != null)
-//        {
-//          if ((! Double.isNaN (nextEventTime)) && nextSacTime < nextEventTime)
-//            eventTypes.clear ();
-//          eventTypes.add (SimQueueSimpleEventType.SERVER_ACCESS_CREDITS);
-//        }
-//        nextEventTime = nextSacTime;
-//      }
-//    }
-//    return nextEventTime;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -242,7 +177,8 @@ implements WorkloadSchedule, WorkloadScheduleHandler
         for (final SimEntityEvent event : handlerProcessedQueueEvents)
           if (event == null || this.processedQueueEvents.contains (event))
             throw new WorkloadScheduleInvalidException ();
-      this.processedQueueEvents.addAll (handlerProcessedQueueEvents);
+      if (handlerProcessedQueueEvents != null)
+        this.processedQueueEvents.addAll (handlerProcessedQueueEvents);
     }
   }
   
