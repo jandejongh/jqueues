@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.misc.book;
 import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-final class CreatingSimEventListAndSimEvents
+final class Ex00110_CreatingSimEventListAndSimEvents
 {
   
   public static void main (final String[] args)

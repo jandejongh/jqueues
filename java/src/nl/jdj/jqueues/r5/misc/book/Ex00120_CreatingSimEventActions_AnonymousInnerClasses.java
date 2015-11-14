@@ -4,7 +4,7 @@ import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-final class CreatingSimEventActions_AnonymousInnerClasses
+final class Ex00120_CreatingSimEventActions_AnonymousInnerClasses
 {
   
   public static void main (final String[] args)

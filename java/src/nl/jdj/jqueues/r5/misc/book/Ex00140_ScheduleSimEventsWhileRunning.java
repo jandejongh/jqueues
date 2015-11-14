@@ -4,7 +4,7 @@ import nl.jdj.jsimulation.r4.SimEvent;
 import nl.jdj.jsimulation.r4.SimEventAction;
 import nl.jdj.jsimulation.r4.SimEventList;
 
-final class ScheduleSimEventsWhileRunning
+final class Ex00140_ScheduleSimEventsWhileRunning
 {
   
   public static void main (final String[] args)
