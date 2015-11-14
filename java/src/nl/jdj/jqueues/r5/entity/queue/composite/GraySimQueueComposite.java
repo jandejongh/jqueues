@@ -7,7 +7,7 @@ import nl.jdj.jqueues.r5.SimQueue;
  *
  * <p>
  * Unlike black composite queues,
- * {@link Black}, a gray queue does not hide its
+ * {@link BlackSimQueueComposite}, a gray queue does not hide its
  * internal structure, nor does it use <i>delegate</i> jobs.
  * 
  * <p>

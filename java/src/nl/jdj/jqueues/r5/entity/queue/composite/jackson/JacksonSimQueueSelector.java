@@ -242,7 +242,7 @@ implements SimQueueSelector<J, DQ>
    * from a probabilistic experiment governed by the <code>pdfTransition</code>
    * matrix passed in the constructor.
    * 
-   * @throws IllegalStateException If the previous queue argument is <code>null</code> or not a member of {@link #getQueues}.
+   * @throws IllegalStateException If the previous queue argument is <code>null</code> or not a member of the set of queues.
    * 
    * @see #draw
    * 

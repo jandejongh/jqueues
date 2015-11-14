@@ -3,6 +3,8 @@ package nl.jdj.jqueues.r5.entity.queue.composite;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.parallel.BlackParallelSimQueues;
+import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackTandemSimQueue;
 
 /** A {@link SimQueue} that embeds a fixed set of other queues;
  *  turning its job visits into visits to the embedded queues.

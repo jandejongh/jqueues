@@ -23,7 +23,7 @@ implements SimQueueSelector<J, DQ>
 
   /** Creates a {@link SimQueueSelector} for parallel queues.
    * 
-   * @param userSimQueueSelector The user-supplied {@link SimQueueSelector, may be {@code null},
+   * @param userSimQueueSelector The user-supplied {@link SimQueueSelector}, may be {@code null},
    *                             in which case a visiting jobs leaves upon arrival.
    * 
    */
