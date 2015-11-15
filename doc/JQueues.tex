@@ -2,6 +2,7 @@
 
 \usepackage{color}
 \usepackage{listings}
+\usepackage{array}
 
 \title{Discrete-Event Simulation\\
        of Queueing Systems in Java:\\
@@ -22,6 +23,10 @@
 \begin{document}
 
 \maketitle
+
+\chapter*{}
+
+{\em This book is dedicated to Dick Epema and Graham Birtwistle.}
 
 \chapter{Preface}
 
@@ -317,23 +322,321 @@ The example below shows how to schedule new events
   from event actions; it also shows what happens if you schedule
   events in the past.
 \begin{lstlisting}[basicstyle=\tiny]
+final SimEventList el = new SimEventList ()
+{
+  @Override
+  public final String toString ()
+  {
+    return "The Event List";
+  } 
+};
+final SimEventAction schedulingAction = new SimEventAction ()
+{
+  private int counter = 0;
+  @Override
+  public final void action (final SimEvent event)
+  {
+      System.out.println ("Event=" + event + ", time=" + event.getTime () + ".");
+      counter++;
+      if (counter < 10)
+        // Schedule 1 second from now.
+        // Use utility method on SimEventList.
+        el.schedule (event.getTime () + 1, this);
+      else if (counter == 10)
+      {
+        // Schedule now.
+        el.schedule (event.getTime (), this);
+        System.out.println ("Scheduled event now.");
+      }
+      else
+      {
+        // Schedule 1 second in the past -> throws exception.
+        el.schedule (event.getTime () - 1, this);
+        // Never reached.
+        System.out.println ("Scheduled event in the past.");
+      }
+  }
+  @Override
+  public final String toString ()
+  {
+    return "Scheduling Action";
+  }
+};
+el.schedule (0, schedulingAction);
+el.print ();
+el.run ();
+el.print ();
 \end{lstlisting}
+The code begins to look familiar.
+First, we create the event list, then a single action.
+The action is a bit more complicated than before;
+  it has an internal \lstinline{counter} in the anynoumous class.
+Using the counter, it reschedules itself ten times,
+  the first nine times one second in the future,
+  the tenth time at exactly the same time.
+As mentioned before, this is perfectly legal
+  (and, in fact, often used in our own code).
+The final attempt to reschedule the action results in an
+  exception, because the event is scheduled in the past.
+Note that the example also showcases a utility method
+  in \lstinline{SimEventList}, viz., \lstinline{schedule (double, SimEventAction)},
+  which directly schedules the action on the event list at given time,
+  creating a new \lstinline{SimEvent} on the fly.
+In a later section we will look in more detail at more utility methods
+  on event lists.
 
-The output of the example is shown below.
+The output of the example is shown below\footnote{
+  For improved reading, we have left out the full stack-trace of the exception,
+  and rearranged the mixed outputs from \lstinline{System.out} and \lstinline{System.err}.
+  We will do that without notice in the sequel.
+}.
 \begin{lstlisting}[basicstyle=\tiny]
+SimEventList The Event List, time=-Infinity:
+  t=0.0, name=No Name, object=null, action=Scheduling Action.
+Event=No Name, time=0.0.
+Event=No Name, time=1.0.
+Event=No Name, time=2.0.
+Event=No Name, time=3.0.
+Event=No Name, time=4.0.
+Event=No Name, time=5.0.
+Event=No Name, time=6.0.
+Event=No Name, time=7.0.
+Event=No Name, time=8.0.
+Event=No Name, time=9.0.
+Scheduled event now.
+Event=No Name, time=9.0.
+Exception in thread "main" java.lang.IllegalArgumentException:
+Schedule time is in the past: 8.0 < 9.0!
 \end{lstlisting}
+Note that in this particular case,
+  the exception thrown actually comes with an
+  instructive message as to what caused it
+  (you tried to schedule something on the event list at $t=8.0$,
+   whereas the current time is beyond that, $t=9.0$).
+However, in all honesty,
+  such messages are not present
+  for the majority of exceptions thrown
+  as a result of incorrect arguments from user code.
+We are currently working on improving this.
+
+The output also shows the expected result from the first \lstinline{el.print} statement:
+Only a single event is scheduled!
+The others are created and scheduled while the event list is being processed.
+It is important to realize that the contents of a \lstinline{SimEventList}
+  can always change, as long as these are changes {\em now or in the future}.
+By the way, the second invocation of \lstinline{el.print} does not stand a chance;
+  it is unreachable because of the exception thrown in \lstinline{el.run}.
+
+\section{Utility Methods for Scheduling Events}
+
+A \lstinline{SimEventList} supports various methods for
+  directly scheduling events and actions
+  without the need to generate both
+  the \lstinline{SimEvent} {\em and\/} the \lstinline{SimEventAction}.
+In most cases, the availability of one of the object suffices.
+Below we show the most common utility methods for scheduling on a \lstinline{SimEventList}.
+
+\begin{tabular}{|l|}
+  \hline
+  {\bf Utility methods for scheduling} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void schedule (E)! \\
+    Schedules the event at its own time.\\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void schedule (double, E)! \\
+    Schedules the event at given time.\\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!reschedule (double, E)! \\
+    Reschedules (if present, else schedules) the event at given new time.\\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!E schedule (double, SimEventAction, String)! \\
+    Schedules the action at given time with given event name.\\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void scheduleNow (E)! \\
+    Schedules the event now.\\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!E schedule (double, SimEventAction)! \\
+    Schedules the action at given time with default event name.\\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!E scheduleNow (SimEventAction, String)! \\
+    Schedules the action now with given event name.\\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!E scheduleNow (SimEventAction)! \\
+    Schedules the action now with default event name.\\
+  \hline
+\end{tabular}
+
+Note that \lstinline{E} refers to the so-called {\em generic-type argument\/}
+  of \lstinline{SimEventList}.
+The prototype is \lstinline!SimEventList<E extends SimEvent>!.
+The use of generic types is explained in some more details in the "Advanced Topics" section,
+  but for now \lstinline!E! can be simply read as a \lstinline{SimEvent}.
+
+For any of the utilty methods that take a \lstinline{SimEventAction}
+  as argument, a new \lstinline{SimEvent} is created on the fly,
+  and returned from the method.
+Upon return from these methods,
+  the newly created event has already been scheduled,
+  and you {\em really\/} should not schedule it again.
+
+You may wonder how to {\em remove\/} events and actions from the event list.
+Well, since \lstinline{SimEventList} implements the \lstinline{Set} interface for
+  \lstinline{SimEvent} members, removing an event \lstinline{e}
+  from an event list \lstinline{el} is as simple as
+  \lstinline{el.remove (e)}.
+Currently, there is no support to remove an action from an event list.
+Because actions can be reused, it would require iterating over
+  all scheduled events,
+  and remove all events with the given action.
+It is not hard to implement at all, we just did not do it\footnote{
+This code fragment has not been tested.}:
+\begin{lstlisting}[basicstyle=\tiny]
+public static void removeAction
+(final SimEventList eventList, final SimAction action)
+{
+  if (eventList != null)
+  {
+    final Iterator it = eventList.iterator;
+    while (it.hasNext ())
+      if (it.next ().getEventAction () == action)
+        it.remove ();
+  }
+}
+\end{lstlisting}
+The code fragment silently assumes
+  the absence of \lstinline{null} events
+  in the event list,
+  which is indeed guaranteed,
+  and works perfectly for \lstinline{null} actions.
+Note the somewhat unexpected method name on \lstinline{SimEvent}
+  to get its action, viz., \lstinline{getEventAction}.
+This name was chosen in order to avoid potential name clashes.
+At the risk of sounding pedantic,
+  the explicit use of the iterator
+  looks old-fashioned,
+  yet allows for
+  the safe removal of elements
+  from a collection in a loop
+  (contrary to a much fancier \lstinline{for} construction).
+
+We conclude with an overview of
+  non-scheduling related utility methods
+  of \lstinline{SimEventList}:
+
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void print ()! & Prints the event list to \lstinline!System.out!. \\
+  \lstinline[basicstyle=\footnotesize]!void print (PrintStream)! & Prints the event list to the stream. \\
+  \hline
+\end{tabular}
+
+\section{Simultaneous Events}
+
+While reading through the previous sections,
+  you may have wondered
+  what would happen
+  if two events are scheduled
+  on exactly the same time.
+Well, why not just give it a try?
+First, we create an action class with an index number as argument;
+  when invoked, the action merely prints its index number
+  to \lstinline{System.out}:
+\begin{lstlisting}[basicstyle=\tiny]
+private static class IndexedSimEventAction
+implements SimEventAction
+{
+  
+  final int index;
+  
+  public IndexedSimEventAction (final int index)
+  {
+    this.index = index;
+  }
+  
+  @Override
+  public void action (SimEvent event)
+  {
+    System.out.println ("Hello, I am action number " + this.index + "!");
+  }
+
+  @Override
+  public String toString ()
+  {
+    return "Action " + index;
+  }
+  
+}
+\end{lstlisting}
+So, let us schedule some of these at $t=0$
+  in order of increasing index:
+\begin{lstlisting}[basicstyle=\tiny]
+final SimEventList el = new SimEventList ();
+for (int i = 1; i <= 10; i++)
+  el.schedule (0, new IndexedSimEventAction (i), "Event " + i);
+el.print ();
+el.run ();
+\end{lstlisting}
+The potential result of this code may be a bit surprising\footnote{
+The probablity of you seeing the same result is $1/(10!)$,
+  which equals the probability
+  of you being {\em not\/} surprised at all about your own output.}:
+\begin{lstlisting}[basicstyle=\tiny]
+SimEventList nl.jdj.jsimulation.r4.SimEventList@a27aa42, time=-Infinity:
+  t=0.0, name=Event 9, object=null, action=Action 9.
+  t=0.0, name=Event 5, object=null, action=Action 5.
+  t=0.0, name=Event 8, object=null, action=Action 8.
+  t=0.0, name=Event 7, object=null, action=Action 7.
+  t=0.0, name=Event 6, object=null, action=Action 6.
+  t=0.0, name=Event 4, object=null, action=Action 4.
+  t=0.0, name=Event 3, object=null, action=Action 3.
+  t=0.0, name=Event 1, object=null, action=Action 1.
+  t=0.0, name=Event 10, object=null, action=Action 10.
+  t=0.0, name=Event 2, object=null, action=Action 2.
+Hello, I am action number 9!
+Hello, I am action number 5!
+Hello, I am action number 8!
+Hello, I am action number 7!
+Hello, I am action number 6!
+Hello, I am action number 4!
+Hello, I am action number 3!
+Hello, I am action number 1!
+Hello, I am action number 10!
+Hello, I am action number 2!
+\end{lstlisting}
+Well, it looks like all our scheduled events were indeed processed,
+  {\em but not in the order we inserted them into the list!}
+It was even clear {\em before\/} processing the event list that there
+  was something "wrong" with the sequence of events.
+Why?
+Well, because we explictly instructed the \lstinline{SimEventList}
+  {\em not\/} to do process simultaneous events in so-called
+  {\em insertion order},
+  but instead to break ties {\em at random\/} for
+  simultaneously scheduled events.
+The exact reasoning for doing this is a bit involved,
+  and deferred until the "Advanced Topics" section,
+  but for now it is important to realize that
+  a \lstinline{SimEventList}
+\begin{itemize}
+  \item processes its scheduled events in random order
+        should they have equal schedule times;
+  \item will {\em never\/} preempt or interrupt the current event it is processing
+        in favor of another event that is scheduled at the same time from within the
+        action of the current event;
+  \item allows insertion-order processing of simultaneous events if you really want to.
+\end{itemize}
+
+\section{Resetting an Event List}
 
 \section{Listening to an Event List}
 
 \section{Advanced Topics}
 
-\subsection{Event-List Updates}
-
 \subsection{Using Generic-Type Arguments}
 
-\subsection{Processing Simultaneous Events: Random-Order and Insertion-Order Event Lists}
-
-\subsection{Utility Methods for Scheduling Events}
+\subsection{Simultaneous Events: Random-Order and Insertion-Order Event Lists}
 
 \subsection{Action is a Functional Interface}
 
