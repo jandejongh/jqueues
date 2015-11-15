@@ -80,7 +80,7 @@ implements SimEntityEventMap
     }    
   }
   
-  /** Creates a new {@link DefaultSimEntityEventMap}, filling out all the internal sets and maps from scanning a set of
+  /**  Creates a new {@link DefaultSimEntityEventMap}, filling out all the internal sets and maps from scanning a set of
    *  {@link SimEvent}s.
    * 
    * @param events The set of events to parse (parsing is actually done in this constructor).

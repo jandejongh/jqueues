@@ -17,6 +17,7 @@ import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackCompressedTandem2Sim
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.util.swing.JBlackSimQueueNetwork;
 import nl.jdj.jqueues.r5.util.swing.JSimQueueCreationDialog;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
@@ -85,7 +86,7 @@ public final class SwingExample
           final JPanel topPanel = new JPanel ();
           topPanel.setLayout (new BoxLayout (topPanel, BoxLayout.PAGE_AXIS));
           frame.getContentPane ().add (topPanel);
-          this.eventList = new DefaultSimEventList (SimEvent.class);
+          this.eventList = new DefaultSimEventList (DefaultSimEvent.class);
           final JLabel timeLabel = new JLabel ("Time: " + this.eventList.getTime ());
           this.eventList.addListener (new SimEventListListener ()
           {

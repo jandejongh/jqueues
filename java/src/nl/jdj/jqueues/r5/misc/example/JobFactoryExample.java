@@ -15,6 +15,7 @@ import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.listener.StdOutSimJobListener;
 import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
@@ -42,7 +43,7 @@ public final class JobFactoryExample
   {
     System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.util.jobfactory PACKAGE ===");
     // Create an event list and attach a new FCFS queue to it.
-    final SimEventList eventList = new DefaultSimEventList<> (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList<> (DefaultSimEvent.class);
     final SimQueue<SimJob, FCFS> queue = new FCFS (eventList);
     // Create a factory for self-listening jobs.
     final SimJobFactory<DefaultSelfListeningSimJob, SimQueue> factory_1 = new DefaultSelfListeningSimJobFactory<> ();

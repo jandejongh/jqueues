@@ -16,6 +16,7 @@ import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LJF;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RANDOM;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
@@ -69,7 +70,7 @@ public final class NonPreemptiveExample
       // Below is just one way of doing this.
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
       {
         @Override
         public void action (final SimEvent event)

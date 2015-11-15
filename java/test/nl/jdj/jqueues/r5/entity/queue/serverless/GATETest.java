@@ -9,7 +9,7 @@ import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
-import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -61,7 +61,7 @@ public class GATETest
   @Test
   public void testGATE () throws SimQueuePredictionException
   {
-    final SimEventList eventList = new DefaultSimEventList (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     final GATE queue = new GATE (eventList);
     final SimQueuePredictor predictor = new SimQueuePredictor_GATE ();
     final int numberOfJobs = 100;

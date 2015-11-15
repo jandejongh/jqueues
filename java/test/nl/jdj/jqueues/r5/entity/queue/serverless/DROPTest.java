@@ -5,7 +5,7 @@ import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DROP;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
-import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -51,7 +51,7 @@ public class DROPTest
   @Test
   public void testDROP () throws SimQueuePredictionException
   {
-    final SimEventList eventList = new DefaultSimEventList (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     final DROP queue = new DROP (eventList);
     final SimQueuePredictor predictor = new SimQueuePredictor_DROP ();
     final int numberOfJobs = 50;

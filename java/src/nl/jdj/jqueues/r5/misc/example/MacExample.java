@@ -9,6 +9,7 @@ import nl.jdj.jqueues.r5.entity.queue.mac.MediumPhyStateObserver;
 import nl.jdj.jqueues.r5.entity.queue.mac.StdOutDCFStateListener;
 import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
 import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
@@ -59,7 +60,7 @@ public final class MacExample
     final DCFSimJob job = new TestJob (true, 1);
     final DCFSimJob job2 = new TestJob (true, 2);
     System.out.println ("-> Creating event list...");
-    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
+    final SimEventList<DefaultSimEvent> el = new DefaultSimEventList<> (DefaultSimEvent.class);
     System.out.println ("-> Creating simple medium...");
     final MediumPhyStateMonitor mediumPhyStateMonitor = new MediumPhyStateMonitor ()
     {
@@ -88,7 +89,7 @@ public final class MacExample
       {
         this.transmitting = true;
         this.observer.mediumPhyStateUpdate (time, MediumPhyState.TX_BUSY);
-        el.add (new SimEvent (time + 5.0, null, new SimEventAction ()
+        el.add (new DefaultSimEvent (time + 5.0, null, new SimEventAction ()
         {
           @Override
           public void action (final SimEvent event)

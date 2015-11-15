@@ -3,10 +3,11 @@ package nl.jdj.jqueues.r5.event;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 
-/** A {@link SimEvent} for a {@link SimEntity} (queue, job, or other) operation.
+/**  A {@link SimEvent} for a {@link SimEntity} (queue, job, or other) operation.
  * 
  * <p>
  * This class only administers the key parameters for the event; it does not actually schedule it.
@@ -16,7 +17,7 @@ import nl.jdj.jsimulation.r5.SimEventAction;
  * 
  */
 public abstract class SimEntityEvent<J extends SimJob, Q extends SimQueue>
-extends SimEvent
+extends DefaultSimEvent
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

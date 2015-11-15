@@ -13,7 +13,7 @@ import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NonPreemptiveTest;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RANDOM;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
-import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -64,7 +64,7 @@ public class SimpleSimQueueStatTest
     SimQueue expResult = null;
     SimQueue result = instance.getQueue ();
     assertEquals (expResult, result);
-    final SimEventList eventList = new DefaultSimEventList (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     expResult = new LCFS<> (eventList);
     instance.setQueue (expResult);
     result = instance.getQueue ();
@@ -72,7 +72,7 @@ public class SimpleSimQueueStatTest
     instance.setQueue (null);
     result = instance.getQueue ();
     assertEquals (null, result);
-    expResult = new IS<> (new DefaultSimEventList (SimEvent.class));
+    expResult = new IS<> (new DefaultSimEventList (DefaultSimEvent.class));
     instance = new SimpleSimQueueStat (expResult, 500.0);
     result = instance.getQueue ();
     assertEquals (expResult, result);
@@ -85,7 +85,7 @@ public class SimpleSimQueueStatTest
   public void testStartTime ()
   {
     System.out.println ("StartTime");
-    final SimEventList eventList = new DefaultSimEventList (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     final SimQueue lifo  = new LCFS<> (eventList);
     SimpleSimQueueStat instance = new SimpleSimQueueStat (lifo, 400.5);
     Double expResult = 400.5;
@@ -118,7 +118,7 @@ public class SimpleSimQueueStatTest
   public void testStatisticsValid ()
   {
     System.out.println ("StatisticsValid");
-    final SimEventList eventList = new DefaultSimEventList (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     final SimQueue random  = new RANDOM<>(eventList);
     SimpleSimQueueStat instance = new SimpleSimQueueStat (random, 400.5);
     Boolean expResult = false;
@@ -137,7 +137,7 @@ public class SimpleSimQueueStatTest
   public void testGetLastUpdateTime ()
   {
     System.out.println ("LastUpdateTime");
-    final SimEventList eventList = new DefaultSimEventList (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     final SimQueue lifo  = new LCFS<> (eventList);
     SimpleSimQueueStat instance = new SimpleSimQueueStat (lifo, -10.0);
     Double expResult = -10.0;
@@ -159,7 +159,7 @@ public class SimpleSimQueueStatTest
   public void testGetAvgNrOfJobs ()
   {
     System.out.println ("Stats: AvgNumberOfJobs/AvgNumberOfJobsExecuting");
-    final SimEventList eventList = new DefaultSimEventList (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     SimQueue queue  = new LCFS<> (eventList);
     SimpleSimQueueStat instance = new SimpleSimQueueStat (queue, 0.0);
     // 1 Job arriving at t = 1, S = 1.

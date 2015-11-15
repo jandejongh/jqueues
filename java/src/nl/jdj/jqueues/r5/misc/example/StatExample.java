@@ -11,6 +11,7 @@ import nl.jdj.jqueues.r5.util.stat.AutoSimQueueStat;
 import nl.jdj.jqueues.r5.util.stat.AutoSimQueueStatEntry;
 import nl.jdj.jqueues.r5.util.stat.SimQueueProbe;
 import nl.jdj.jqueues.r5.util.stat.SimpleSimQueueStat;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
@@ -64,7 +65,7 @@ public final class StatExample
     
   }
   
-  private static final SimEventList<SimEvent> EVENT_LIST = new DefaultSimEventList<> (SimEvent.class);
+  private static final SimEventList<DefaultSimEvent> EVENT_LIST = new DefaultSimEventList<> (DefaultSimEvent.class);
   
   private static final SimQueue FCFS_QUEUE = new FCFS (EVENT_LIST);
   private static final SimQueue LCFS_QUEUE = new LCFS (EVENT_LIST);
@@ -95,7 +96,7 @@ public final class StatExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      EVENT_LIST.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      EVENT_LIST.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
       {
         @Override
         public void action (final SimEvent event)
@@ -118,7 +119,7 @@ public final class StatExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      EVENT_LIST.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      EVENT_LIST.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
       {
         @Override
         public void action (final SimEvent event)
@@ -141,7 +142,7 @@ public final class StatExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      EVENT_LIST.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      EVENT_LIST.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
       {
         @Override
         public void action (final SimEvent event)

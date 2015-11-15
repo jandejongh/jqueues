@@ -6,7 +6,7 @@ import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 
-/** An {@link SimEvent} for controlling the gate of a {@link SimQueueWithGate}.
+/**  An {@link SimEvent} for controlling the gate of a {@link SimQueueWithGate}.
  * 
  * <p>
  * The event can be created for any {@link SimQueue}, but it has no effect unless that queue

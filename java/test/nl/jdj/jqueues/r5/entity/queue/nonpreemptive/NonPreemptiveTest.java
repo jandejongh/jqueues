@@ -5,6 +5,7 @@ import java.util.List;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.TestJob1;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -55,7 +56,7 @@ public class NonPreemptiveTest
       final TestJob1 j = new TestJob1 (reported, i);
       jobList.add (j);
       final double arrTime = i;
-      eventList.add (new SimEvent ("ARRIVAL_" + i, arrTime, null, new SimEventAction ()
+      eventList.add (new DefaultSimEvent ("ARRIVAL_" + i, arrTime, null, new SimEventAction ()
       {
         @Override
         public void action (final SimEvent event)
@@ -77,7 +78,7 @@ public class NonPreemptiveTest
     System.out.println ("======");
     System.out.println ("RANDOM");
     System.out.println ("======");
-    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
+    final SimEventList<DefaultSimEvent> el = new DefaultSimEventList<> (DefaultSimEvent.class);
     final RANDOM queue = new RANDOM (el);
     final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();

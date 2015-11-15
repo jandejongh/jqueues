@@ -9,6 +9,7 @@ import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
 import nl.jdj.jqueues.r5.entity.queue.serverless.GATE;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
@@ -49,7 +50,7 @@ public final class ServerlessExample
     for (int n = 1; n <= 10; n++)
       jobList.add (new DefaultExampleSimJob (true, n));
     System.out.println ("-> Creating event list...");
-    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
+    final SimEventList<DefaultSimEvent> el = new DefaultSimEventList<> (DefaultSimEvent.class);
     System.out.println ("-> Creating SINK queue...");
     final SimQueue noneQueue = new SINK (el);
     System.out.println ("-> Submitting jobs to SINK ('Hotel California') queue...");
@@ -57,7 +58,7 @@ public final class ServerlessExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
       {
         @Override
         public void action (final SimEvent event)
@@ -77,7 +78,7 @@ public final class ServerlessExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
       {
         @Override
         public void action (final SimEvent event)
@@ -97,7 +98,7 @@ public final class ServerlessExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
       {
         @Override
         public void action (final SimEvent event)
@@ -117,7 +118,7 @@ public final class ServerlessExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
       {
         @Override
         public void action (final SimEvent event)
@@ -137,7 +138,7 @@ public final class ServerlessExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
       {
         @Override
         public void action (final SimEvent event)
@@ -157,7 +158,7 @@ public final class ServerlessExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new SimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
       {
         @Override
         public void action (final SimEvent event)

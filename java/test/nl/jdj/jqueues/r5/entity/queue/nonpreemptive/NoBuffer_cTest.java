@@ -5,7 +5,7 @@ import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_NoBuffer_c;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
-import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -51,7 +51,7 @@ public class NoBuffer_cTest
   @Test
   public void testNoBuffer_c () throws SimQueuePredictionException
   {
-    final SimEventList eventList = new DefaultSimEventList (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     final boolean silent = true;
     final boolean deadSilent = true;
     final int numberOfJobs = 50;

@@ -3,9 +3,10 @@ package nl.jdj.jqueues.r5.event;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 
-/** An {@link SimEvent} for the start or end of a queue-access vacation at a queue.
+/**  An {@link SimEvent} for the start or end of a queue-access vacation at a queue.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.

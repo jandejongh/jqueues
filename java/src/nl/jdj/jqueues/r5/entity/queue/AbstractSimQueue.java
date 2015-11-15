@@ -11,6 +11,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.SimQueueListener;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r5.event.SimQueueJobDepartureEvent;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -396,12 +397,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     if (time < this.lastUpdateTime || time < getEventList ().getTime () || job == null)
       throw new IllegalArgumentException ();
     SimEntityEventScheduler.scheduleJobArrival (job, this, time);
-//    final SimEvent arrivalEvent = new SimEvent<> (time, null, (SimEventAction) (SimEvent event) ->
-//    {
-//      AbstractSimQueue.this.arrive (job, time);
-//    });
-//    getEventList ().add (arrivalEvent);
-//    return arrivalEvent;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -437,13 +432,14 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     AbstractSimQueue.this.stopQueueAccessVacationFromEventList (event.getTime ());
   };
 
-  /** The single {@link SimEvent} used to wakeup the queue from queue-access vacations.
+  /**  The single {@link SimEvent} used to wakeup the queue from queue-access vacations.
    * 
    * The event has {@link #END_QUEUE_ACCESS_VACATION_ACTION} as its immutable {@link SimEventAction}.
    * 
    */
   protected final SimEvent END_QUEUE_ACCESS_VACATION_EVENT
-    = new SimEvent (0.0, null, this.END_QUEUE_ACCESS_VACATION_ACTION);
+    // XXX Why schedule such a raw event here??
+    = new DefaultSimEvent (0.0, null, this.END_QUEUE_ACCESS_VACATION_ACTION);
 
   /** Starts a queue-access vacation.
    * 
@@ -847,7 +843,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** The default {@link SimEvent} used internally for scheduling {@link SimJob} departures.
+  /**  The default {@link SimEvent} used internally for scheduling {@link SimJob} departures.
    * 
    * <p>The {@link DefaultDepartureEvent} (actually, its {@link SimEventAction}), once activated,
    * calls {@link #departureFromEventList}.
@@ -891,7 +887,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       
   }
 
-  /** Schedules a suitable {@link SimEvent} for a job's future departure on the event list.
+  /**  Schedules a suitable {@link SimEvent} for a job's future departure on the event list.
    * 
    * The implementation requires passing several rigorous sanity checks,
    * after which it creates a new {@link DefaultDepartureEvent},

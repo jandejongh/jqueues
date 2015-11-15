@@ -1,5 +1,6 @@
 package nl.jdj.jqueues.r5.misc.book;
 
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
@@ -33,7 +34,7 @@ final class Ex00130_CreatingSimEventActions_ReuseActionObject
     };
     for (int i = 1; i <= 10; i++)
     {
-      final SimEvent e = new SimEvent ("Our Event", (double) i, null, action);
+      final SimEvent e = new DefaultSimEvent ("Our Event", (double) i, null, action);
       el.add (e);
     }
     el.print ();

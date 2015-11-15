@@ -9,6 +9,7 @@ import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.tandem.AbstractBlackTandemSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.listener.DefaultSimQueueListener;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -839,7 +840,7 @@ implements MediumPhyStateObserver
   {
     // NOTE: WE ARE CALLED FROM A NOTIFICATION!
     // SCHEDULE STATE_CHANGE ON EVENT LIST!
-    getEventList ().add (new SimEvent (time, null, new SimEventAction ()
+    getEventList ().add (new DefaultSimEvent (time, null, new SimEventAction ()
     {
 
       @Override
@@ -893,7 +894,7 @@ implements MediumPhyStateObserver
   {
     // NOTE: WE ARE CALLED FROM A NOTIFICATION!
     // SCHEDULE STATE_CHANGE ON EVENT LIST!
-    getEventList ().add (new SimEvent (time, null, new SimEventAction ()
+    getEventList ().add (new DefaultSimEvent (time, null, new SimEventAction ()
     {
 
       @Override
@@ -945,7 +946,7 @@ implements MediumPhyStateObserver
   };
 
   protected final SimEvent navExpiredEvent
-    = new SimEvent (0, this, this.navExpiredAction);
+    = new DefaultSimEvent (0, this, this.navExpiredAction);
 
   protected final void rescheduleNAVTimer (final double time)
   {
@@ -1008,7 +1009,7 @@ implements MediumPhyStateObserver
   };
 
   protected final SimEvent IFS_EXPIRED_EVENT
-    = new SimEvent (0, this, this.IFS_EXPIRED_ACTION);
+    = new DefaultSimEvent (0, this, this.IFS_EXPIRED_ACTION);
 
   void rescheduleIFSTimer (final double time)
   {
@@ -1077,8 +1078,8 @@ implements MediumPhyStateObserver
    * @see #SLOT_EXPIRED_ACTION
    *
    */
-  protected final SimEvent SLOT_EXPIRED_EVENT
-    = new SimEvent<> (0, this, this.SLOT_EXPIRED_ACTION);
+  protected final DefaultSimEvent SLOT_EXPIRED_EVENT
+    = new DefaultSimEvent<> (0, this, this.SLOT_EXPIRED_ACTION);
 
   protected void rescheduleSlotTimer (final double time, final double slotTime_s)
   {
