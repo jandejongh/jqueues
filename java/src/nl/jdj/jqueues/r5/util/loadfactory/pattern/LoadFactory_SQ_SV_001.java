@@ -10,17 +10,17 @@ import java.util.TreeMap;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimJobFactory;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.util.loadfactory.AbstractLoadFactory_SQ_SV;
-import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
-import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_B;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LJF;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
+import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
+import nl.jdj.jqueues.r5.util.loadfactory.AbstractLoadFactory_SQ_SV;
+import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A concrete {@link LoadFactory_SQ_SV}, pattern 001.
  *

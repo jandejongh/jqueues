@@ -1,9 +1,9 @@
 package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link FCFS} queue with finite buffer size.
  *
@@ -32,7 +32,7 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
     this.bufferSize = bufferSize;
   }
   
-  /** Returns a new {@link FCFS_B} object on the same {@link SimEventList} with the same buffer size.
+  /**  Returns a new {@link FCFS_B} object on the same {@link SimEventList} with the same buffer size.
    * 
    * @return A new {@link FCFS_B} object on the same {@link SimEventList} with the same buffer size.
    * 

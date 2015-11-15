@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.entity.job;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.AbstractSimEntity;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Convenience class with a basic (yet still abstract) implementation of {@link SimJob}.
  *

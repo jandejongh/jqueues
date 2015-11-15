@@ -1,11 +1,11 @@
 package nl.jdj.jqueues.r5.entity.queue.composite.single.feedback;
 
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** (General) Feedback queue.
  * 
@@ -57,7 +57,7 @@ public class BlackGeneralFeedbackSimQueue
     super (eventList, queue, feedbackController, delegateSimJobFactory);
   }
   
-  /** Returns a new {@link BlackGeneralFeedbackSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
+  /**  Returns a new {@link BlackGeneralFeedbackSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
    *  queue and the same delegate-job factory.
    * 
    * @return A new {@link BlackGeneralFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated

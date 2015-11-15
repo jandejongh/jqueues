@@ -3,8 +3,8 @@ package nl.jdj.jqueues.r5.extensions.gate;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
 
 /** An {@link SimEvent} for controlling the gate of a {@link SimQueueWithGate}.
  * 

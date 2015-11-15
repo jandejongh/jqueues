@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.entity.job.visitslogging;
 import java.util.Map;
 import nl.jdj.jqueues.r5.SimJobFactory;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A factory for {@link DefaultVisitsLoggingSimJob}s.
  *

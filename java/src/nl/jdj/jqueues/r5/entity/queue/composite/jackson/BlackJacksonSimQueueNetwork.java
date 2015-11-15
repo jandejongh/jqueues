@@ -2,14 +2,14 @@ package nl.jdj.jqueues.r5.entity.queue.composite.jackson;
 
 import java.util.Random;
 import java.util.Set;
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link BlackSimQueueComposite} implementation of a Jackson queueing network.
  *
@@ -72,7 +72,7 @@ public class BlackJacksonSimQueueNetwork
       delegateSimJobFactory);
   }
 
-  /** Returns a new {@link BlackJacksonSimQueueNetwork} object on the same {@link SimEventList} with copies of the sub-queues and
+  /**  Returns a new {@link BlackJacksonSimQueueNetwork} object on the same {@link SimEventList} with copies of the sub-queues and
    *  probability arguments, a new RNG, and the same delegate-job factory.
    * 
    * @return A new {@link BlackJacksonSimQueueNetwork} object on the same {@link SimEventList} with copies of the sub-queues and

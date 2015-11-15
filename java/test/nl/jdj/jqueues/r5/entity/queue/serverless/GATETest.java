@@ -2,14 +2,15 @@ package nl.jdj.jqueues.r5.entity.queue.serverless;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
-import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueuePredictor_GATE;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGate;
 import nl.jdj.jqueues.r5.extensions.gate.StdOutSimQueueWithGateListener;
 import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
+import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -60,7 +61,7 @@ public class GATETest
   @Test
   public void testGATE () throws SimQueuePredictionException
   {
-    final SimEventList eventList = new SimEventList (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList (SimEvent.class);
     final GATE queue = new GATE (eventList);
     final SimQueuePredictor predictor = new SimQueuePredictor_GATE ();
     final int numberOfJobs = 100;

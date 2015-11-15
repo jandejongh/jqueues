@@ -7,7 +7,7 @@ import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGate;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGateListener;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link GATE} queue lets jobs depart without service conditionally ("gate is open") or lets them wait ("gate is closed").
  * 
@@ -58,7 +58,7 @@ implements SimQueueWithGate<J, Q>
     super (eventList);
   }
   
-  /** Returns a new {@link GATE} object on the same {@link SimEventList}.
+  /**  Returns a new {@link GATE} object on the same {@link SimEventList}.
    * 
    * @return A new {@link GATE} object on the same {@link SimEventList}.
    * 

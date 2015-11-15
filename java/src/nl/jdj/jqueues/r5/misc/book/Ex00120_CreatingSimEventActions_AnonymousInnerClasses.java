@@ -1,15 +1,16 @@
 package nl.jdj.jqueues.r5.misc.book;
 
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 final class Ex00120_CreatingSimEventActions_AnonymousInnerClasses
 {
   
   public static void main (final String[] args)
   {
-    final SimEventList el = new SimEventList ();
+    final SimEventList el = new DefaultSimEventList ();
     final SimEvent e =
       new SimEvent ("My First Real Event", 5.0, null, new SimEventAction ()
       {

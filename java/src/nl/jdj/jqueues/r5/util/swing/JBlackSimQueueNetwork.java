@@ -6,7 +6,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /**
  *

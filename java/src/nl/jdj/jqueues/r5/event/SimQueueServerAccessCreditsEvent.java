@@ -2,8 +2,8 @@ package nl.jdj.jqueues.r5.event;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
 
 /** An {@link SimEvent} for  setting server-access credits at a queue.
  * 

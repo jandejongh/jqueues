@@ -8,7 +8,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /**
  *

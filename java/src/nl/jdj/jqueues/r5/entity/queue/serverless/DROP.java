@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.serverless;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link DROP} queue drops all jobs upon arrival.
  * 
@@ -33,7 +33,7 @@ extends AbstractServerlessSimQueue<J, Q>
     super (eventList);
   }
   
-  /** Returns a new {@link DROP} object on the same {@link SimEventList}.
+  /**  Returns a new {@link DROP} object on the same {@link SimEventList}.
    * 
    * @return A new {@link DROP} object on the same {@link SimEventList}.
    * 

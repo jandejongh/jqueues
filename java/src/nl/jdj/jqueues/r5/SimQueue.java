@@ -13,10 +13,10 @@ import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF;
 import nl.jdj.jqueues.r5.entity.queue.processorsharing.PS;
 import nl.jdj.jqueues.r5.entity.queue.serverless.AbstractServerlessSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventList;
-import nl.jdj.jsimulation.r4.SimEventAction;
-import nl.jdj.jsimulation.r4.SimEventListListener;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventListListener;
 
 /** A (generic) queueing system capable of hosting and optionally serving jobs ({@link SimJob}s).
  *

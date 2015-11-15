@@ -1,11 +1,11 @@
 package nl.jdj.jqueues.r5.entity.queue.composite.single.feedback;
 
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Feedback queue with fixed number of visits to the embedded {@link SimQueue}.
  * 
@@ -64,7 +64,7 @@ public class BlackNumVisitsFeedbackSimQueue
     this.numberOfVisits = numberOfVisits;
   }
   
-  /** Returns a new {@link BlackNumVisitsFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
+  /**  Returns a new {@link BlackNumVisitsFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
    *  the same number of visits required, and the same delegate-job factory.
    * 
    * @return A new {@link BlackNumVisitsFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,

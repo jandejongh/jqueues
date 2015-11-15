@@ -1,8 +1,8 @@
 package nl.jdj.jqueues.r5.entity.queue.composite;
 
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 
 /** A {@link DelegateSimJobFactory} for any (real) {@link SimJob}, as used in black composite queues.
  * 

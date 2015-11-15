@@ -1,9 +1,9 @@
 package nl.jdj.jqueues.r5.entity.job;
 
 import java.util.Map;
-import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.SimJobFactory;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A factory for {@link DefaultSimJob}s.
  *

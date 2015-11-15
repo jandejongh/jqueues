@@ -6,7 +6,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A partial implementation of a {@link BlackSimQueueComposite}.
  *
@@ -263,7 +263,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** *  Resets this {@link AbstractBlackSimQueueComposite}.
+  /**  Resets this {@link AbstractBlackSimQueueComposite}.
    * 
    * <p>
    * Calls super method,

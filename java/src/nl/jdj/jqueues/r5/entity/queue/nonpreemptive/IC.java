@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue; /* Forced for javadoc. */
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link IC} queue serves all jobs in zero time.
  *
@@ -28,7 +28,7 @@ public class IC<J extends SimJob, Q extends IC>
 extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
 {
 
-  /** Creates a new {@link IC} queue with given {@link SimEventList}.
+  /**  Creates a new {@link IC} queue with given {@link SimEventList}.
    * 
    * @param eventList The event list to use.
    * 
@@ -38,7 +38,7 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     super (eventList);
   }
 
-  /** Returns a new {@link IC} object on the same {@link SimEventList}.
+  /**  Returns a new {@link IC} object on the same {@link SimEventList}.
    * 
    * @return A new {@link IC} object on the same {@link SimEventList}.
    * 

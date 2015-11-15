@@ -1,15 +1,14 @@
 package nl.jdj.jqueues.r5.entity.queue.composite.tandem;
 
-import nl.jdj.jqueues.r5.entity.queue.composite.tandem.AbstractBlackTandemSimQueue;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link BlackSimQueueComposite} encapsulating a single {@link SimQueue}.
  *
@@ -66,7 +65,7 @@ public class BlackEncapsulatorSimQueue
     super (eventList, (Set<DQ>) createQueuesSet (queue), delegateSimJobFactory);
   }
   
-  /** Returns a new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
+  /**  Returns a new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
    *  queue and the same delegate-job factory.
    * 
    * @return A new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated

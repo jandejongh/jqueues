@@ -1,14 +1,14 @@
 package nl.jdj.jqueues.r5.entity.queue.composite.parallel;
 
-import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
 import java.util.Set;
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Parallel queues.
  * 
@@ -65,7 +65,7 @@ public class BlackParallelSimQueues
     super (eventList, queues, simQueueSelector, delegateSimJobFactory);
   }
 
-  /** Returns a new {@link BlackParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
+  /**  Returns a new {@link BlackParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
    *  the same {@link SimQueueSelector} (bearing in mind <code>this</code> could be its own selector),
    *  and the same delegate-job factory.
    * 

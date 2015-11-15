@@ -2,9 +2,9 @@ package nl.jdj.jqueues.r5.misc.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_B;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_c;
@@ -16,9 +16,10 @@ import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LJF;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RANDOM;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.nonpreemptive</code>.
  * 
@@ -55,7 +56,7 @@ public final class NonPreemptiveExample
     for (int n = 1; n <= 10; n++)
       jobList.add (new DefaultExampleSimJob<> (true, n));
     System.out.println ("-> Creating event list...");
-    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
     System.out.println ("-> Creating FCFS queue...");
     final SimQueue fcfsQueue = new FCFS (el);
     System.out.println ("-> Submitting jobs to FCFS queue...");

@@ -1,12 +1,12 @@
 package nl.jdj.jqueues.r5.entity.job.selflistening;
 
 import java.util.Map;
-import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimJobListener;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link DefaultSimJob} that listens to notifications from itself as a {@link SimJobListener} and providing overridable methods
  * for notifications.

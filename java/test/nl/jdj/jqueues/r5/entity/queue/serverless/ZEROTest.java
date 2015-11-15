@@ -4,8 +4,9 @@ import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_ZERO;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -50,7 +51,7 @@ public class ZEROTest
   @Test
   public void testZERO () throws SimQueuePredictionException
   {
-    final SimEventList eventList = new SimEventList (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList (SimEvent.class);
     final ZERO queue = new ZERO (eventList);
     final SimQueuePredictor predictor = new SimQueuePredictor_ZERO ();
     final int numberOfJobs = 50;

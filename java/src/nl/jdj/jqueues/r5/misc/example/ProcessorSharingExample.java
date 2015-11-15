@@ -2,12 +2,13 @@ package nl.jdj.jqueues.r5.misc.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.processorsharing.PS;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.processorsharing</code>.
  * 
@@ -44,7 +45,7 @@ public final class ProcessorSharingExample
     for (int n = 1; n <= 10; n++)
       jobList.add (new DefaultExampleSimJob (true, n));
     System.out.println ("-> Creating event list...");
-    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
     System.out.println ("-> Creating PS queue...");
     final AbstractSimQueue psQueue = new PS (el);
     System.out.println ("-> Submitting jobs to PS queue...");

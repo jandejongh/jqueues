@@ -5,7 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A partial implementation of a non-preemptive queueing system with an infinite number of servers.
  *
@@ -30,7 +30,7 @@ public abstract class AbstractNonPreemptiveInfiniteServerSimQueue
 extends AbstractNonPreemptiveSimQueue<J, Q>
 {
 
-  /** Creates a new {@link AbstractNonPreemptiveInfiniteServerSimQueue} with given {@link SimEventList}.
+  /**  Creates a new {@link AbstractNonPreemptiveInfiniteServerSimQueue} with given {@link SimEventList}.
    * 
    * @param eventList The event list to use.
    * 

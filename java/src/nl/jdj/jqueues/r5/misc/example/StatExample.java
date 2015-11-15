@@ -11,9 +11,10 @@ import nl.jdj.jqueues.r5.util.stat.AutoSimQueueStat;
 import nl.jdj.jqueues.r5.util.stat.AutoSimQueueStatEntry;
 import nl.jdj.jqueues.r5.util.stat.SimQueueProbe;
 import nl.jdj.jqueues.r5.util.stat.SimpleSimQueueStat;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.stat</code>.
  * 
@@ -63,7 +64,7 @@ public final class StatExample
     
   }
   
-  private static final SimEventList<SimEvent> EVENT_LIST = new SimEventList<> (SimEvent.class);
+  private static final SimEventList<SimEvent> EVENT_LIST = new DefaultSimEventList<> (SimEvent.class);
   
   private static final SimQueue FCFS_QUEUE = new FCFS (EVENT_LIST);
   private static final SimQueue LCFS_QUEUE = new LCFS (EVENT_LIST);

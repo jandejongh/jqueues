@@ -6,7 +6,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.SimQueueListener;
 import nl.jdj.jqueues.r5.entity.AbstractSimEntity;
 import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A partial implementation of a {@link SimQueue}, taking care of listener and event-list management.
  * 

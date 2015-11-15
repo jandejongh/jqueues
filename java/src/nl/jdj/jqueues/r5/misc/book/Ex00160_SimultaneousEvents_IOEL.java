@@ -1,11 +1,11 @@
 package nl.jdj.jqueues.r5.misc.book;
 
-import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.DefaultSimEventList_IOEL;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-final class Ex00150_SimultaneousEvents
+final class Ex00160_SimultaneousEvents_IOEL
 {
   
   private static class IndexedSimEventAction
@@ -35,7 +35,7 @@ final class Ex00150_SimultaneousEvents
   
   public static void main (final String[] args)
   {
-    final SimEventList el = new DefaultSimEventList ();
+    final SimEventList el = new DefaultSimEventList_IOEL ();
     for (int i = 1; i <= 10; i++)
       el.schedule (0, new IndexedSimEventAction (i), "Event " + i);
     el.print ();

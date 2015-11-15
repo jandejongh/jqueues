@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link LCFS} queue serves jobs one at a time in reverse order of arrival times.
  *
@@ -29,7 +29,7 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
     super (eventList);
   }
   
-  /** Returns a new {@link LCFS} object on the same {@link SimEventList}.
+  /**  Returns a new {@link LCFS} object on the same {@link SimEventList}.
    * 
    * @return A new {@link LCFS} object on the same {@link SimEventList}.
    * 

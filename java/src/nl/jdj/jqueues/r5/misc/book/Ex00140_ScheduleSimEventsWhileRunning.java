@@ -1,8 +1,9 @@
 package nl.jdj.jqueues.r5.misc.book;
 
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 final class Ex00140_ScheduleSimEventsWhileRunning
 {
@@ -10,7 +11,7 @@ final class Ex00140_ScheduleSimEventsWhileRunning
   public static void main (final String[] args)
   {
     
-    final SimEventList el = new SimEventList ()
+    final SimEventList el = new DefaultSimEventList ()
     {
       @Override
       public final String toString ()

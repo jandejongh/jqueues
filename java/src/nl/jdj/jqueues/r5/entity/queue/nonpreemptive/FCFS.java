@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link FCFS} queue serves jobs one at a time in order of arrival times.
  *
@@ -30,7 +30,7 @@ public class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPreemptiv
     super (eventList);
   }
   
-  /** Returns a new {@link FCFS} object on the same {@link SimEventList}.
+  /**  Returns a new {@link FCFS} object on the same {@link SimEventList}.
    * 
    * @return A new {@link FCFS} object on the same {@link SimEventList}.
    * 

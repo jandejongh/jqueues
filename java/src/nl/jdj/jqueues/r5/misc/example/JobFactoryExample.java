@@ -3,21 +3,22 @@ package nl.jdj.jqueues.r5.misc.example;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimJobFactory;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.listener.StdOutSimJobListener;
-import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.job.selflistening.DefaultSelfListeningSimJob;
 import nl.jdj.jqueues.r5.entity.job.selflistening.DefaultSelfListeningSimJobFactory;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJobFactory;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.listener.StdOutSimJobListener;
+import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.util.jobfactory</code>.
  * 
@@ -41,7 +42,7 @@ public final class JobFactoryExample
   {
     System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.util.jobfactory PACKAGE ===");
     // Create an event list and attach a new FCFS queue to it.
-    final SimEventList eventList = new SimEventList<> (SimEvent.class);
+    final SimEventList eventList = new DefaultSimEventList<> (SimEvent.class);
     final SimQueue<SimJob, FCFS> queue = new FCFS (eventList);
     // Create a factory for self-listening jobs.
     final SimJobFactory<DefaultSelfListeningSimJob, SimQueue> factory_1 = new DefaultSelfListeningSimJobFactory<> ();

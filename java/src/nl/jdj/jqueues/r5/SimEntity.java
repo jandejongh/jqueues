@@ -2,8 +2,8 @@ package nl.jdj.jqueues.r5;
 
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.AbstractSimEntity;
-import nl.jdj.jsimulation.r4.SimEventList;
-import nl.jdj.jsimulation.r4.SimEventListResetListener;
+import nl.jdj.jsimulation.r5.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventListResetListener;
 
 /** The interface common to both {@link SimJob}s and {@link SimQueue}s.
  *

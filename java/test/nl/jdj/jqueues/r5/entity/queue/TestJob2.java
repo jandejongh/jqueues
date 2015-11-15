@@ -1,8 +1,8 @@
 package nl.jdj.jqueues.r5.entity.queue;
 
-import nl.jdj.jqueues.r5.SimQueue;
 import java.util.HashMap;
 import java.util.Map;
+import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 
 /**

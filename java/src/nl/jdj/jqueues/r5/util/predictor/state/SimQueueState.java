@@ -10,7 +10,7 @@ import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A representation of the state of a {@link SimQueue} while or as if being processed by an event list.
  * 

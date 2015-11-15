@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.event;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A utility class capable of scheduling {@link SimEntityEvent}s on an event list.
  *
@@ -30,7 +30,7 @@ public abstract class SimEntityEventScheduler
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Schedules all {@link SimEntityEvent}s on the given {@link SimEventList}, optionally after resetting it to a specific time.
+  /**  Schedules all {@link SimEntityEvent}s on the given {@link SimEventList}, optionally after resetting it to a specific time.
    * 
    * @param eventList   The event list.
    * @param reset       Whether to reset the event list before scheduling.

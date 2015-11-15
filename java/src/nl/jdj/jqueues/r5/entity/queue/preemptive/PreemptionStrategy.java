@@ -1,5 +1,7 @@
 package nl.jdj.jqueues.r5.entity.queue.preemptive;
 
+import nl.jdj.jqueues.r5.SimJob;
+
 /** A list of possible strategies at {@link SimJob} preemption.
  *
  */

@@ -1,23 +1,23 @@
 package nl.jdj.jqueues.r5.entity.queue;
 
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.SimJobFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 import nl.jdj.jqueues.r5.SimJob;
+import nl.jdj.jqueues.r5.SimJobFactory;
+import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJobFactory;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
-import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.KnownLoadFactory_SQ_SV;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
+import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Default tests for {@link SimQueue}s.
  *

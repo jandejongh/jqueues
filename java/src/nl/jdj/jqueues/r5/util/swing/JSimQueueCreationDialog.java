@@ -1,7 +1,6 @@
 package nl.jdj.jqueues.r5.util.swing;
 
 import java.awt.Color;
-import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
@@ -34,7 +33,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /**
  *

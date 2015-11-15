@@ -6,7 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.queue.composite.parallel.AbstractBlackParallelSimQueues;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** XXX Need solution with multiclass!!!
  *

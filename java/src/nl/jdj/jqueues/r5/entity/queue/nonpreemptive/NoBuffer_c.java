@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link NoBuffer_c} queueing system serves jobs with multiple servers but has no buffer space (i.c., no wait queue).
  *
@@ -36,7 +36,7 @@ public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends Abstract
     super (eventList, c);
   }
   
-  /** Returns a new {@link NoBuffer_c} object on the same {@link SimEventList} with the same number of servers.
+  /**  Returns a new {@link NoBuffer_c} object on the same {@link SimEventList} with the same number of servers.
    * 
    * @return A new {@link NoBuffer_c} object on the same {@link SimEventList} with the same number of servers.
    * 

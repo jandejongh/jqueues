@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link LJF} queue serves jobs one at a time in order of descending requested service times.
  *
@@ -27,7 +27,7 @@ public class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreemptiveS
     super (eventList);
   }
   
-  /** Returns a new {@link LJF} object on the same {@link SimEventList}.
+  /**  Returns a new {@link LJF} object on the same {@link SimEventList}.
    * 
    * @return A new {@link LJF} object on the same {@link SimEventList}.
    * 

@@ -1,13 +1,13 @@
 package nl.jdj.jqueues.r5.entity.queue.composite.tandem;
 
 import java.util.Set;
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Tandem (serial) queue.
  * 
@@ -62,7 +62,7 @@ public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue,
     super (eventList, queues, delegateSimJobFactory);
   }
 
-  /** Returns a new {@link BlackTandemSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
+  /**  Returns a new {@link BlackTandemSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
    *  and the same delegate-job factory.
    * 
    * @return A new {@link BlackTandemSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,

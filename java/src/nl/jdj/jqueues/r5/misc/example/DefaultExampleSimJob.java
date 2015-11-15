@@ -1,10 +1,10 @@
 package nl.jdj.jqueues.r5.misc.example;
 
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Implementation of {@link SimJob} used (as starting point) in (most of) the examples.
  * 

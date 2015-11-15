@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link FCFS_c} queueing system serves jobs in order of arrival times with multiple servers.
  *
@@ -37,7 +37,7 @@ public class FCFS_c<J extends SimJob, Q extends FCFS_c> extends AbstractNonPreem
     super (eventList, c);
   }
   
-  /** Returns a new {@link FCFS_c} object on the same {@link SimEventList} with the same number of servers.
+  /**  Returns a new {@link FCFS_c} object on the same {@link SimEventList} with the same number of servers.
    * 
    * @return A new {@link FCFS_c} object on the same {@link SimEventList} with the same number of servers.
    * 

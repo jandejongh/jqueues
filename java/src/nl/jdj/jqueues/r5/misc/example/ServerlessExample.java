@@ -9,9 +9,10 @@ import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
 import nl.jdj.jqueues.r5.entity.queue.serverless.GATE;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.serverless</code>.
  * 
@@ -48,7 +49,7 @@ public final class ServerlessExample
     for (int n = 1; n <= 10; n++)
       jobList.add (new DefaultExampleSimJob (true, n));
     System.out.println ("-> Creating event list...");
-    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
     System.out.println ("-> Creating SINK queue...");
     final SimQueue noneQueue = new SINK (el);
     System.out.println ("-> Submitting jobs to SINK ('Hotel California') queue...");

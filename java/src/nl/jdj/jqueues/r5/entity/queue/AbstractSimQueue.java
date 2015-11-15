@@ -11,9 +11,9 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.SimQueueListener;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r5.event.SimQueueJobDepartureEvent;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A partial implementation of a {@link SimQueue}.
  * 
@@ -377,7 +377,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    */
   protected abstract void rescheduleAfterArrival (J job, double time);
 
-  /** Schedules a job arrival at this {@link AbstractSimQueue} on its {@link SimEventList}.
+  /**  Schedules a job arrival at this {@link AbstractSimQueue} on its {@link SimEventList}.
    * 
    * Convenience method.
    * 

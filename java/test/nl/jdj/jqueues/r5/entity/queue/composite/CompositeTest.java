@@ -1,15 +1,16 @@
 package nl.jdj.jqueues.r5.entity.queue.composite;
 
-import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackCompressedTandem2SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
 import java.util.ArrayList;
 import java.util.List;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.TestJob1;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackCompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
@@ -89,7 +90,7 @@ public class CompositeTest
     System.out.println ("==========================================");
     System.out.println ("BlackCompressedTandem2SimQueue (FCFS+FCFS)");
     System.out.println ("==========================================");
-    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
     final BlackCompressedTandem2SimQueue queue = new BlackCompressedTandem2SimQueue (el, new FCFS (el), new FCFS (el), null);
     for (int i = 0; i <= 1; i++)
     {
@@ -122,7 +123,7 @@ public class CompositeTest
     System.out.println ("==========================================");
     System.out.println ("BlackCompressedTandem2SimQueue (LCFS+FCFS)");
     System.out.println ("==========================================");
-    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
     final BlackCompressedTandem2SimQueue queue = new BlackCompressedTandem2SimQueue (el, new LCFS (el), new FCFS (el), null);
     final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
     el.run ();
@@ -291,7 +292,7 @@ public class CompositeTest
 //    System.out.println ("======");
 //    System.out.println ("RANDOM");
 //    System.out.println ("======");
-//    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+//    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
 //    final RANDOM queue = new RANDOM (el);
 //    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
 //    el.run ();
@@ -355,7 +356,7 @@ public class CompositeTest
 //    System.out.println ("===");
 //    System.out.println ("SJF");
 //    System.out.println ("===");
-//    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+//    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
 //    final SJF queue = new SJF (el);
 //    final List<TestJob> jobs = scheduleJobArrivalsSJF (true, 10, el, queue);
 //    el.run ();
@@ -390,7 +391,7 @@ public class CompositeTest
 //    System.out.println ("===");
 //    System.out.println ("LJF");
 //    System.out.println ("===");
-//    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+//    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
 //    final LJF queue = new LJF (el);
 //    final List<TestJob> jobs = scheduleJobArrivalsLJF (true, 10, el, queue);
 //    el.run ();
@@ -464,7 +465,7 @@ public class CompositeTest
 //    System.out.println ("==");
 //    System.out.println ("IS");
 //    System.out.println ("==");
-//    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+//    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
 //    final IS queue = new IS (el);
 //    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
 //    el.run ();
@@ -491,7 +492,7 @@ public class CompositeTest
 //    System.out.println ("======");
 //    System.out.println ("IS_CST");
 //    System.out.println ("======");
-//    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+//    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
 //    final IS_CST queue = new IS_CST (el, 4.0);
 //    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
 //    el.run ();
@@ -518,7 +519,7 @@ public class CompositeTest
 //    System.out.println ("==");
 //    System.out.println ("IC");
 //    System.out.println ("==");
-//    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+//    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
 //    final IC queue = new IC (el);
 //    final List<TestJob> jobs = scheduleJobArrivals (true, 10, el, queue);
 //    el.run ();
@@ -558,7 +559,7 @@ public class CompositeTest
 //    System.out.println ("======================");
 //    System.out.println ("Queue Access Vacation ");
 //    System.out.println ("======================");
-//    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+//    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
 //    final FCFS queue = new FCFS (el);
 //    queue.registerSimEntityListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
 //    {
@@ -646,7 +647,7 @@ public class CompositeTest
 //    System.out.println ("======================");
 //    System.out.println ("Server Access Credits ");
 //    System.out.println ("======================");
-//    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+//    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
 //    final FCFS queue = new FCFS (el);
 //    queue.registerSimEntityListener (new DefaultSimQueueVacationListener<SimJob, SimQueue> ()
 //    {

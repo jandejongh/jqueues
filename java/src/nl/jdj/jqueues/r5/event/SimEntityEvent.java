@@ -3,8 +3,8 @@ package nl.jdj.jqueues.r5.event;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
 
 /** A {@link SimEvent} for a {@link SimEntity} (queue, job, or other) operation.
  * 

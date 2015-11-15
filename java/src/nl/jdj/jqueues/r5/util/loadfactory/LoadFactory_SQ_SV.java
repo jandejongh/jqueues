@@ -7,7 +7,7 @@ import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimJobFactory;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link LoadFactory} that generates a load for a single {@link SimQueue} in which each job visits the queue at most once.
  * 

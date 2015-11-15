@@ -2,8 +2,8 @@ package nl.jdj.jqueues.r5.util.loadfactory;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A factory for generating a load (in terms of job arrivals, vacations, etc.) on one or more {@link SimQueue}s.
  * 

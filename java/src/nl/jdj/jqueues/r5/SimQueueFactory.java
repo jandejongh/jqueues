@@ -1,6 +1,6 @@
 package nl.jdj.jqueues.r5;
 
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A factory for {@link SimQueue}s.
  * 

@@ -1,7 +1,7 @@
 package nl.jdj.jqueues.r5.entity.queue;
 
-import nl.jdj.jqueues.r5.SimJobListener;
 import nl.jdj.jqueues.r5.SimEntity;
+import nl.jdj.jqueues.r5.SimJobListener;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.misc.example.DefaultExampleSimJob;
 import static org.junit.Assert.assertEquals;

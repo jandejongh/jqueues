@@ -3,12 +3,12 @@ package nl.jdj.jqueues.r5.entity.queue.composite.tandem;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Tandem (serial) queue with two queues, one for waiting and one for serving.
  *
@@ -77,7 +77,7 @@ public class BlackCompressedTandem2SimQueue
     super (eventList, (Set<DQ>) createQueuesSet (waitQueue, serveQueue), delegateSimJobFactory);
   }
 
-  /** Returns a new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
+  /**  Returns a new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
    * serve queues and the same delegate-job factory.
    * 
    * @return A new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and

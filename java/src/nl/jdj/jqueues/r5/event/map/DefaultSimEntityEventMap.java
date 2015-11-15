@@ -9,7 +9,7 @@ import java.util.TreeMap;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jsimulation.r4.SimEvent;
+import nl.jdj.jsimulation.r5.SimEvent;
 
 /** A default {@link SimEntityEventMap}.
  * 

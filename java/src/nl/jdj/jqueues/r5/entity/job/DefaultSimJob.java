@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A reasonable first-order implementation of {@link SimJob} with support for naming, per-queue requested service times
  *  and a default service time.

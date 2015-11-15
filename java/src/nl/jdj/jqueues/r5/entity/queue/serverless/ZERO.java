@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.serverless;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link ZERO} queue induces no waiting, after which jobs depart without service.
  * 
@@ -35,7 +35,7 @@ extends AbstractServerlessSimQueue<J, Q>
     super (eventList);
   }
   
-  /** Returns a new {@link ZERO} object on the same {@link SimEventList}.
+  /**  Returns a new {@link ZERO} object on the same {@link SimEventList}.
    * 
    * @return A new {@link ZERO} object on the same {@link SimEventList}.
    * 

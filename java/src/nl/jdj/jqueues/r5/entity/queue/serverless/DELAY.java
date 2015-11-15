@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.serverless;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link DELAY} queue induces a fixed waiting delay, after which jobs depart without service.
  * 
@@ -41,7 +41,7 @@ extends AbstractServerlessSimQueue<J, Q>
     this.waitTime = waitTime;
   }
   
-  /** Returns a new {@link DELAY} object on the same {@link SimEventList} with the same wait time.
+  /**  Returns a new {@link DELAY} object on the same {@link SimEventList} with the same wait time.
    * 
    * @return A new {@link DELAY} object on the same {@link SimEventList} with the same wait time.
    * 

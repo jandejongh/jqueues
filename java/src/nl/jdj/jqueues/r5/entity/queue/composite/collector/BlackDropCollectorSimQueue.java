@@ -3,13 +3,13 @@ package nl.jdj.jqueues.r5.entity.queue.composite.collector;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A composite queue with two queues, a main one and one collecting all dropped jobs from the main queue.
  *
@@ -77,7 +77,7 @@ public class BlackDropCollectorSimQueue
       delegateSimJobFactory);
   }
 
-  /** Returns a new {@link BlackDropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and
+  /**  Returns a new {@link BlackDropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and
    *  drop queues and the same delegate-job factory.
    * 
    * @return A new {@link BlackDropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and

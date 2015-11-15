@@ -1,17 +1,18 @@
 package nl.jdj.jqueues.r5.misc.example;
 
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
-import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
 import nl.jdj.jqueues.r5.entity.queue.mac.DCF;
 import nl.jdj.jqueues.r5.entity.queue.mac.DCFSimJob;
 import nl.jdj.jqueues.r5.entity.queue.mac.MediumPhyState;
 import nl.jdj.jqueues.r5.entity.queue.mac.MediumPhyStateMonitor;
 import nl.jdj.jqueues.r5.entity.queue.mac.MediumPhyStateObserver;
 import nl.jdj.jqueues.r5.entity.queue.mac.StdOutDCFStateListener;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
+import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.mac</code>.
  * 
@@ -58,7 +59,7 @@ public final class MacExample
     final DCFSimJob job = new TestJob (true, 1);
     final DCFSimJob job2 = new TestJob (true, 2);
     System.out.println ("-> Creating event list...");
-    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
     System.out.println ("-> Creating simple medium...");
     final MediumPhyStateMonitor mediumPhyStateMonitor = new MediumPhyStateMonitor ()
     {

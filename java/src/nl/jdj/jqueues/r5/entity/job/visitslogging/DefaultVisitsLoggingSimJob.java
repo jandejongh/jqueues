@@ -3,12 +3,12 @@ package nl.jdj.jqueues.r5.entity.job.visitslogging;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.job.selflistening.DefaultSelfListeningSimJob;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link DefaultSimJob} that logs its {@link SimQueue} visits with {@link JobQueueVisitLog}s.
  *

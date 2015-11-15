@@ -8,11 +8,11 @@ import java.util.TreeMap;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimJobFactory;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r5.event.SimQueueServerAccessCreditsEvent;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A concrete {@link LoadFactory_SQ_SV}, pattern 004.
  *

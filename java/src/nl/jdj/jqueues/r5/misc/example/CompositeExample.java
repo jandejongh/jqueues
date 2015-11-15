@@ -4,23 +4,24 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
-import nl.jdj.jqueues.r5.entity.queue.composite.jackson.BlackJacksonSimQueueNetwork;
-import nl.jdj.jqueues.r5.entity.queue.composite.single.feedback.BlackNumVisitsFeedbackSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.composite.parallel.BlackParallelSimQueues;
-import nl.jdj.jqueues.r5.entity.queue.composite.single.feedback.BlackProbabilisticFeedbackSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackTandemSimQueue;
+import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
+import nl.jdj.jqueues.r5.entity.queue.composite.jackson.BlackJacksonSimQueueNetwork;
+import nl.jdj.jqueues.r5.entity.queue.composite.parallel.BlackParallelSimQueues;
+import nl.jdj.jqueues.r5.entity.queue.composite.single.feedback.BlackNumVisitsFeedbackSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.single.feedback.BlackProbabilisticFeedbackSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackTandemSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RANDOM;
-import nl.jdj.jsimulation.r4.SimEvent;
-import nl.jdj.jsimulation.r4.SimEventAction;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.composite</code>.
  * 
@@ -83,7 +84,7 @@ public final class CompositeExample
     for (int n = 1; n <= 10; n++)
       jobList.add (new DefaultExampleSimJob (true, n));
     System.out.println ("-> Creating event list...");
-    final SimEventList<SimEvent> el = new SimEventList<> (SimEvent.class);
+    final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
     System.out.println ("-> Creating FCFS queue...");
     final SimQueue fcfsQueue = new FCFS (el);
     fcfsQueue.registerSimEntityListener (new StdOutSimQueueListener ());

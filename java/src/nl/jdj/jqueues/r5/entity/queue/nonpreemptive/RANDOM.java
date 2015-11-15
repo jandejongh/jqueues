@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 import java.util.Random;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link RANDOM} queue serves jobs one at a time in random order.
  *
@@ -52,7 +52,7 @@ public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreem
     this.RNG = ((RNG == null) ? new Random () : RNG);
   }
   
-  /** Returns a new {@link RANDOM} object on the same {@link SimEventList}.
+  /**  Returns a new {@link RANDOM} object on the same {@link SimEventList}.
    *
    * <p>
    * The new object has its own newly created {@link Random} RNG.

@@ -4,7 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link PS} queue serves all jobs simultaneously, equally distributing its service capacity.
  *
@@ -37,7 +37,7 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
     super (eventList);
   }
   
-  /** Returns a new {@link PS} object on the same {@link SimEventList}.
+  /**  Returns a new {@link PS} object on the same {@link SimEventList}.
    * 
    * @return A new {@link PS} object on the same {@link SimEventList}.
    * 

@@ -1,10 +1,10 @@
 package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
-import nl.jdj.jsimulation.r4.SimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** An abstract base class for non-preemptive queueing disciplines
  *  for {@link SimJob}s.
