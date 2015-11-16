@@ -4,9 +4,10 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.util.collection.HashMapWithPreImageAndOrderedValueSet;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** The {@link PS} queue serves all jobs simultaneously, equally distributing its service capacity.
+/** The single-server {@link PS} queue serves all jobs simultaneously, equally distributing its service capacity.
  *
  * <p>
  * Processor Sharing.

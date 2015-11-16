@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r5.entity.queue.processorsharing;
+package nl.jdj.jqueues.r5.util.collection;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +14,7 @@ import java.util.TreeMap;
  * Note that <code>null</code> values are not allowed in this implementation.
  * 
  */
-class HashMapWithPreImageAndOrderedValueSet<K, V>
+public class HashMapWithPreImageAndOrderedValueSet<K, V>
 extends HashMap<K, V>
 {
 
