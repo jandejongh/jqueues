@@ -13,7 +13,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * The class supports job revocations.
  * 
  * <p>This abstract class relies heavily on the partial {@link SimQueue} implementation of {@link AbstractNonPreemptiveSimQueue}.
- * This class {@link AbstractNonPreemptiveMultipleServerSimQueue} implements most remaining abstract methods of
+ * This class {@link AbstractNonPreemptiveFiniteServerSimQueue} implements most remaining abstract methods of
  * {@link AbstractNonPreemptiveSimQueue},
  * and takes care of maintenance of the internal data structures {@link AbstractSimQueue#jobQueue} and
  * {@link AbstractSimQueue#jobsExecuting}, by automatically taking into service the first job(s) in
@@ -26,7 +26,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * If this is required, implementers should be aware that in most cases, some of the jobs in
  * the list are currently being served. Moving such jobs in the list is allowed, but it will have no effect.
  * 
- * <p>All concrete subclasses of {@link AbstractNonPreemptiveMultipleServerSimQueue} take
+ * <p>All concrete subclasses of {@link AbstractNonPreemptiveFiniteServerSimQueue} take
  * the {@link SimEventList} used for event scheduling and processing as one of their arguments upon construction.
  * It is up to the caller to properly start processing the event list.
  *
@@ -42,8 +42,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see SimEventList#run
  * 
  */
-public abstract class AbstractNonPreemptiveMultipleServerSimQueue
-  <J extends SimJob, Q extends AbstractNonPreemptiveMultipleServerSimQueue>
+public abstract class AbstractNonPreemptiveFiniteServerSimQueue
+  <J extends SimJob, Q extends AbstractNonPreemptiveFiniteServerSimQueue>
   extends AbstractNonPreemptiveSimQueue<J, Q>
   implements SimQueue<J, Q>
 {
@@ -71,7 +71,7 @@ public abstract class AbstractNonPreemptiveMultipleServerSimQueue
    * @throws IllegalArgumentException If the event list is <code>null</code> or the number of servers is negative.
    *
    */
-  protected AbstractNonPreemptiveMultipleServerSimQueue (final SimEventList eventList, final int numberOfServers)
+  protected AbstractNonPreemptiveFiniteServerSimQueue (final SimEventList eventList, final int numberOfServers)
   {
     super (eventList);
     if (numberOfServers < 0)

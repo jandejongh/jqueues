@@ -10,17 +10,17 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * The class supports job revocations.
  * 
  * <p>
- * This class merely wraps the {@link AbstractNonPreemptiveMultipleServerSimQueue} with one server.
+ * This class merely wraps the {@link AbstractNonPreemptiveFiniteServerSimQueue} with one server.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
- * @see AbstractNonPreemptiveMultipleServerSimQueue
+ * @see AbstractNonPreemptiveFiniteServerSimQueue
  * 
  */
 public abstract class AbstractNonPreemptiveSingleServerSimQueue
   <J extends SimJob, Q extends AbstractNonPreemptiveSingleServerSimQueue>
-  extends AbstractNonPreemptiveMultipleServerSimQueue<J, Q>
+  extends AbstractNonPreemptiveFiniteServerSimQueue<J, Q>
   implements SimQueue<J, Q>
 {
 

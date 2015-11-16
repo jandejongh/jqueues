@@ -21,7 +21,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see SINK
  * 
  */
-public class FCFS_c<J extends SimJob, Q extends FCFS_c> extends AbstractNonPreemptiveMultipleServerSimQueue<J, Q>
+public class FCFS_c<J extends SimJob, Q extends FCFS_c> extends AbstractNonPreemptiveFiniteServerSimQueue<J, Q>
 {
 
   /** Creates a FCFS_c queue given an event list.

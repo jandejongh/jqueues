@@ -20,7 +20,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see DROP
  * 
  */
-public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends AbstractNonPreemptiveMultipleServerSimQueue<J, Q>
+public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends AbstractNonPreemptiveFiniteServerSimQueue<J, Q>
 {
 
   /** Creates a NoBuffer_c queue given an event list.
