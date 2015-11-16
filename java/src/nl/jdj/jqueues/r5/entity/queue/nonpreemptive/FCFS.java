@@ -4,7 +4,7 @@ import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** The {@link FCFS} queue serves jobs one at a time in order of arrival times.
+/** The single-server {@link FCFS} queue serves jobs one at a time in order of arrival times.
  *
  * First Come First Served.
  * 
@@ -20,7 +20,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
 public class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
 {
 
-  /** Creates a FCFS queue given an event list.
+  /** Creates a single-server FCFS queue given an event list.
    *
    * @param eventList The event list to use.
    *
@@ -30,7 +30,7 @@ public class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPreemptiv
     super (eventList);
   }
   
-  /**  Returns a new {@link FCFS} object on the same {@link SimEventList}.
+  /** Returns a new {@link FCFS} object on the same {@link SimEventList}.
    * 
    * @return A new {@link FCFS} object on the same {@link SimEventList}.
    * 
