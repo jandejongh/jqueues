@@ -4,13 +4,13 @@ import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** The single-server preemptive Last-Come First-Served (LCFS) queueing discipline.
+/** The single-server Preemptive Last-Come First-Served (P_LCFS) queueing discipline.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
-public abstract class LCFS<J extends SimJob, Q extends LCFS>
+public abstract class P_LCFS<J extends SimJob, Q extends P_LCFS>
 extends AbstractPreemptiveSingleServerSimQueue<J, Q>
 {
 
@@ -28,21 +28,21 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    * @throws IllegalArgumentException If the event list is <code>null</code>.
    *
    */
-  public LCFS (final SimEventList eventList, final PreemptionStrategy preemptionStrategy)
+  public P_LCFS (final SimEventList eventList, final PreemptionStrategy preemptionStrategy)
   {
     super (eventList, preemptionStrategy);
   }
   
-  /** Returns a new (preemptive) {@link LCFS} object on the same {@link SimEventList} and the same preemption strategy.
+  /** Returns a new (preemptive) {@link P_LCFS} object on the same {@link SimEventList} and the same preemption strategy.
    * 
-   * @return A new (preemptive) {@link LCFS} object on the same {@link SimEventList} and the same preemption strategy.
+   * @return A new (preemptive) {@link P_LCFS} object on the same {@link SimEventList} and the same preemption strategy.
    * 
    * @see #getEventList
    * @see #getPreemptionStrategy
    * 
    */
   @Override
-  public LCFS<J, Q> getCopySimQueue ()
+  public P_LCFS<J, Q> getCopySimQueue ()
   {
     // XXX
     return null;
