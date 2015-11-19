@@ -7,9 +7,8 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.preemptive.SRTF;
+import nl.jdj.jqueues.r5.entity.queue.preemptive.AbstractPreemptiveSimQueue;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
@@ -19,15 +18,15 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 /** An abstract {@link SimQueuePredictor} for preemptive queues.
  * 
  */
-public abstract class SimQueuePredictor_Preemptive<Q extends SimQueue>
+public abstract class SimQueuePredictor_Preemptive<Q extends AbstractPreemptiveSimQueue>
 extends AbstractSimQueuePredictor<Q>
 {
 
   protected void preemptJob
-  (final SRTF queue,
-   final SimQueueState<SimJob, SRTF> queueState,
+  (final Q queue,
+   final SimQueueState<SimJob, Q> queueState,
    final SimJob executingJob,
-   final Set<JobQueueVisitLog<SimJob, SRTF>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
    throws SimQueuePredictionException
   {
     final double time = queueState.getTime ();
