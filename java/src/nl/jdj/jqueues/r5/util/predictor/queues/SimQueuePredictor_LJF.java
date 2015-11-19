@@ -23,7 +23,7 @@ extends SimQueuePredictor_FCFS
   throws SimQueuePredictionException
   {
     final NavigableMap<Double, SimJob> serviceTimeMap = new TreeMap<> ();
-    for (final SimJob job : queueState.getJobsWaiting ())
+    for (final SimJob job : queueState.getJobsInWaitingArea ())
     {
       final double serviceTime = ((DefaultSimQueueState) queueState).getServiceTime (queue, job);
       if (serviceTimeMap.containsKey (serviceTime))

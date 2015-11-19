@@ -16,7 +16,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This class {@link AbstractNonPreemptiveFiniteServerSimQueue} implements most remaining abstract methods of
  * {@link AbstractNonPreemptiveSimQueue},
  * and takes care of maintenance of the internal data structures {@link AbstractSimQueue#jobQueue} and
- * {@link AbstractSimQueue#jobsExecuting}, by automatically taking into service the first job(s) in
+ * {@link AbstractSimQueue#jobsInServiceArea}, by automatically taking into service the first job(s) in
  * {@link AbstractSimQueue#jobQueue} and serve them until completion repeatedly.
  * Concrete implementations only have to insert an arriving job into {@link AbstractSimQueue#jobQueue} by
  * implementing {@link #insertJobInQueueUponArrival}.
@@ -103,7 +103,7 @@ public abstract class AbstractNonPreemptiveFiniteServerSimQueue
   {
     if (! this.jobQueue.contains (job))
       throw new IllegalStateException ();
-    if (this.jobsExecuting.contains (job))
+    if (this.jobsInServiceArea.contains (job))
       throw new IllegalStateException ();
     rescheduleAfterDeparture (null, time);
   }
@@ -127,7 +127,7 @@ public abstract class AbstractNonPreemptiveFiniteServerSimQueue
   @Override
   protected final void rescheduleAfterRevokation (final J job, final double time)
   {
-    if (this.jobQueue.contains (job) || this.jobsExecuting.contains (job))
+    if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
       throw new IllegalStateException ();
     rescheduleAfterDeparture (job, time);
   }
@@ -160,9 +160,9 @@ public abstract class AbstractNonPreemptiveFiniteServerSimQueue
    * 
    * @see #jobQueue
    * @see #getNumberOfJobs
-   * @see #jobsExecuting
-   * @see #getNumberOfJobsExecuting
-   * @see #getFirstJobWaiting
+   * @see #jobsInServiceArea
+   * @see #getNumberOfJobsInServiceArea
+   * @see #getFirstJobInWaitingArea
    * @see #hasServerAcccessCredits
    * @see #takeServerAccessCredit
    * @see SimJob#getServiceTime
@@ -178,14 +178,14 @@ public abstract class AbstractNonPreemptiveFiniteServerSimQueue
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
     while (hasServerAcccessCredits ()
-      && hasJobsWaiting ()
-      && getNumberOfJobsExecuting () < getNumberOfServers ())
+      && hasJobsWaitingInWaitingArea ()
+      && getNumberOfJobsInServiceArea () < getNumberOfServers ())
     {
       takeServerAccessCredit (false);
-      final J job = getFirstJobWaiting ();
+      final J job = getFirstJobInWaitingArea ();
       if (job == null)
         throw new IllegalStateException ();
-      this.jobsExecuting.add (job);
+      this.jobsInServiceArea.add (job);
       final double jobServiceTime = job.getServiceTime (this);
       if (jobServiceTime < 0)
         throw new RuntimeException ();
@@ -196,7 +196,7 @@ public abstract class AbstractNonPreemptiveFiniteServerSimQueue
     // Notification section.
     for (J j : startedJobs)
       // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
-      if (this.jobsExecuting.contains (j))
+      if (this.jobsInServiceArea.contains (j))
         fireStart (time, j, (Q) this);
     fireIfOutOfServerAccessCredits (time);
     if (departedJob != null || ! startedJobs.isEmpty ())

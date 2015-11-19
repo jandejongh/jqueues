@@ -101,35 +101,21 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
    */
   public boolean isQueueAccessVacation ();
   
-  /** Starts a queue-access vacation.
+  /** Starts or ends a queue-access vacation.
    * 
    * <p>
    * The time cannot be in the past.
    * 
-   * @param time The time the vacation starts.
+   * @param time  The time the vacation starts or ends.
+   * @param start Whether to start ({@code true}) or end ({@code false}) the vacation.
    * 
    * <p>
-   * Mimics {@link SimQueue#startQueueAccessVacation}.
+   * Mimics {@link SimQueue#setQueueAccessVacation}.
    * 
    * @throws IllegalArgumentException If time is in the past.
    * 
    */
-  public void startQueueAccessVacation (double time);
-  
-  /** Stops a queue-access vacation.
-   * 
-   * <p>
-   * The time cannot be in the past.
-   * 
-   * @param time The time the vacation stops.
-   * 
-   * <p>
-   * Mimics {@link SimQueue#stopQueueAccessVacation}.
-   * 
-   * @throws IllegalArgumentException If time is in the past.
-   * 
-   */
-  public void stopQueueAccessVacation (double time);
+  public void setQueueAccessVacation (double time, boolean start);
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -163,7 +149,7 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
    */
   public Map<J, Double> getArrivalTimesMap ();
   
-  /** Get the set of all jobs currently residing at the queue, either waiting or executing.
+  /** Get the set of all jobs currently residing at the queue, either in the waiting area pr in the service area.
    * 
    * <p>
    * Mimics {@link SimQueue#getJobs}.
@@ -188,38 +174,38 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
   /** Gets a set holding all the jobs waiting at the queue (in no particular order).
    * 
    * <p>
-   * Mimics {@link SimQueue#getJobsWaiting}.
+   * Mimics {@link SimQueue#getJobsInWaitingArea}.
    * 
    * <p>
    * The default implementation returns the set difference of
-   * {@link #getJobs} and {@link #getJobsExecuting}.
+   * {@link #getJobs} and {@link #getJobsInServiceArea}.
    * 
    * @return A set holding all the jobs waiting at the queue (in no particular order).
    * 
    */
-  public default Set<J> getJobsWaiting ()
+  public default Set<J> getJobsInWaitingArea ()
   {
     final Set<J> jobsWaiting = new HashSet<> ();
     jobsWaiting.addAll (getJobs ());
-    jobsWaiting.removeAll (getJobsExecuting ());
+    jobsWaiting.removeAll (getJobsInServiceArea ());
     return jobsWaiting;
   }
 
-  /** Gets a set holding all the jobs waiting at the queue, in order of arrival.
+  /** Gets a set holding all the jobs in the waiting area of the queue, in order of arrival.
    * 
    * <p>
    * The default implementation returns a {@link LinkedHashSet}.
    * 
-   * @return A set holding all the jobs waiting at the queue, in order of arrival.
+   * @return A set holding all the jobs in the waiting area of the queue, in order of arrival.
    * 
    */
-  public default Set<J> getJobsWaitingOrdered ()
+  public default Set<J> getJobsInWaitingAreaOrdered ()
   {
     final Set<J> jobsWaitingOrdered = new LinkedHashSet<> ();
-    final Set<J> jobsExecuting = getJobsExecuting ();
+    final Set<J> jobsInWaitingArea = getJobsInServiceArea ();
     for (final List<J> l : this.getJobArrivalsMap ().values ())
       for (final J job : l)
-        if (! jobsExecuting.contains (job))
+        if (! jobsInWaitingArea.contains (job))
           jobsWaitingOrdered.add (job);
     return jobsWaitingOrdered;
   }
@@ -258,86 +244,86 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // JOBS EXECUTING
+  // JOBS IN WAITING AREA
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Gets a map from all jobs executing at this queue onto their start times.
+  /** Gets a map from all jobs in the service area of this queue onto their start times.
    * 
-   * @return A map from all jobs executing at this queue onto their start times.
+   * @return A map from all jobs in the service area of this queue onto their start times.
    * 
    */
   public Map<J, Double> getStartTimesMap ();
   
-  /** Returns a map of time onto jobs that started at that time, and are still present (and thus executing) in the queue.
+  /** Returns a map of time onto jobs that started at that time, and are still present (and thus in the service area) in the queue.
    * 
    * <p>
    * Within the list, the jobs are in start order.
    * Any job can only be in one of the value lists.
-   * The value lists only holds jobs currently executing in the system,
-   * and, vice versa, any job executing in the system must be in exactly one of the value lists.
+   * The value lists only holds jobs currently in the service area of the system,
+   * and, vice versa, any job in the service area in the system must be in exactly one of the value lists.
    * Null keys or values are not allowed.
    * 
-   * @return A map of time onto jobs that started at that time, and are still present (and thus executing) in the queue.
+   * @return A map of time onto jobs that started at that time, and are still present (and thus in the service area) in the queue.
    * 
    */
-  public NavigableMap<Double, Set<J>> getJobsExecutingMap ();
+  public NavigableMap<Double, Set<J>> getJobsInServiceAreaMap ();
   
-  /** Get the set of jobs currently being executed at the queue (i.e., not waiting).
+  /** Get the set of jobs currently in the service area of the queue (i.e., not waiting).
    * 
    * <p>
-   * Mimics {@link SimQueue#getJobsExecuting}.
+   * Mimics {@link SimQueue#getJobsInServiceArea}.
    * 
-   * @return The set of jobs currently being executed at the queue (i.e., not waiting).
+   * @return The set of jobs currently in the service area of the queue (i.e., not waiting).
    * 
    */
-  public default Set<J> getJobsExecuting ()
+  public default Set<J> getJobsInServiceArea ()
   {
     return getStartTimesMap ().keySet ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // JOBS EXECUTING - REMAINING SERVICE TIME
+  // JOBS IN WAITING AREA - REMAINING SERVICE TIME
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Returns a map of <i>remaining service time</i> onto jobs that started, <i>have</i> exactly that remaining service time,
-   * and are still present (and thus executing) in the queue.
+   * and are still present (and thus in the service area) in the queue.
    * 
    * <p>
    * This map has no equivalence in the bare {@link SimQueue}, but the concept is used in,
    * for instance, processor-sharing queues.
-   * Implementations must maintain the aggregate value set of the map returned to the set of jobs currently executing,
+   * Implementations must maintain the aggregate value set of the map returned to the set of jobs currently in the service area,
    * and must set the initial key for each job to the result returned from
    * {@link SimJob#getServiceTime}.
    * 
    * <p>
    * Within the list, the jobs are in start order.
    * Any job can only be in one of the value lists.
-   * The value lists only holds jobs currently executing in the system,
-   * and, vice versa, any job executing in the system must be in exactly one of the value lists.
+   * The value lists only holds jobs currently in the service area of the system,
+   * and, vice versa, any job in the service area must be in exactly one of the value lists.
    * Null keys or values are not allowed.
    * 
    * @return A map of <i>remaining service time</i> onto jobs that started, <i>have</i> exactly that remaining service time,
-   *         and are still present (and thus executing) in the queue.
+   *         and are still present (and thus in the service area) in the queue.
    * 
    */
   public NavigableMap<Double, List<J>> getRemainingServiceMap ();
   
-  /** Gets a map from all jobs executing onto their remaining service times.
+  /** Gets a map from all jobs in the service area onto their remaining service times.
    * 
    * <p>
    * This map has no equivalence in the bare {@link SimQueue}, but the concept is used in,
    * for instance, processor-sharing queues.
-   * Implementations must maintain the key set of the map returned to the set of jobs currently executing,
+   * Implementations must maintain the key set of the map returned to the set of jobs currently in the service area,
    * and must set the initial value for each job to the result returned from
    * {@link SimJob#getServiceTime}.
    * 
    * <p>
    * Values must be non-negative (but do not have to be decreasing in time!).
    * 
-   * @return A map from all jobs executing onto their remaining service times (non-negative).
+   * @return A map from all jobs in the service area onto their remaining service times (non-negative).
    * 
    */
   public Map<J, Double> getJobRemainingServiceTimeMap ();

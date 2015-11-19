@@ -105,10 +105,7 @@ extends AbstractSimQueuePredictor<GATE>
     else if (eventType == SimQueueSimpleEventType.QUEUE_ACCESS_VACATION)
     {
       final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (time);
-      if (queueAccessVacation)
-        queueState.startQueueAccessVacation (time);
-      else
-        queueState.stopQueueAccessVacation (time);
+      queueState.setQueueAccessVacation (time, queueAccessVacation);
     }
     else if (eventType == SimEntitySimpleEventType.ARRIVAL)
     {
@@ -150,10 +147,10 @@ extends AbstractSimQueuePredictor<GATE>
     {
       // XXX Already checked for right queue and ambiguities??
       int remainingPassages = workloadScheduleHandler.getGatePassageCreditsMap (queue).get (time).get (0);
-      if (oldPassages == 0 && remainingPassages > 0 && ! queueState.getJobsWaiting ().isEmpty ())
+      if (oldPassages == 0 && remainingPassages > 0 && ! queueState.getJobsInWaitingArea ().isEmpty ())
       {
         final Set<SimJob> departures = new LinkedHashSet<> ();
-        final Iterator<SimJob> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
+        final Iterator<SimJob> i_waiters = queueState.getJobsInWaitingAreaOrdered ().iterator ();
         while ((remainingPassages == Integer.MAX_VALUE || remainingPassages > 0) && i_waiters.hasNext ())
         {
           departures.add (i_waiters.next ());

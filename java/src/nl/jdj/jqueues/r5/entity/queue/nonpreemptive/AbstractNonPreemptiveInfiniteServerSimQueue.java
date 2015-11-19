@@ -30,7 +30,7 @@ public abstract class AbstractNonPreemptiveInfiniteServerSimQueue
 extends AbstractNonPreemptiveSimQueue<J, Q>
 {
 
-  /**  Creates a new {@link AbstractNonPreemptiveInfiniteServerSimQueue} with given {@link SimEventList}.
+  /** Creates a new {@link AbstractNonPreemptiveInfiniteServerSimQueue} with given {@link SimEventList}.
    * 
    * @param eventList The event list to use.
    * 
@@ -88,7 +88,7 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
    * 
    * @see #hasServerAcccessCredits
    * @see #takeServerAccessCredit
-   * @see #jobsExecuting
+   * @see #jobsInServiceArea
    * @see #getServiceTime
    * @see #scheduleDepartureEvent
    * @see #fireStart
@@ -101,7 +101,7 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
     {
       // XXX
       takeServerAccessCredit (true);
-      this.jobsExecuting.add (job);
+      this.jobsInServiceArea.add (job);
       final double jobServiceTime = getServiceTime (job);
       if (jobServiceTime < 0)
         throw new RuntimeException ();
@@ -118,7 +118,7 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
    * Jobs are started in order of appearance in an {@link Iterator} over {@link #jobQueue}.
    * 
    * @see #jobQueue
-   * @see #jobsExecuting
+   * @see #jobsInServiceArea
    * @see #hasServerAcccessCredits
    * @see #rescheduleAfterArrival
    * 
@@ -129,13 +129,13 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
     while (hasServerAcccessCredits ()
-      && hasJobsWaiting ())
+      && hasJobsWaitingInWaitingArea ())
     {
       takeServerAccessCredit (false);
-      final J job = getFirstJobWaiting ();
+      final J job = getFirstJobInWaitingArea ();
       if (job == null)
         throw new IllegalStateException ();
-      this.jobsExecuting.add (job);
+      this.jobsInServiceArea.add (job);
       final double jobServiceTime = getServiceTime (job);
       if (jobServiceTime < 0)
         throw new RuntimeException ();
@@ -146,7 +146,7 @@ extends AbstractNonPreemptiveSimQueue<J, Q>
     // Notification section.
     for (J j : startedJobs)
       // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
-      if (this.jobsExecuting.contains (j))
+      if (this.jobsInServiceArea.contains (j))
         fireStart (time, j, (Q) this);
     fireIfOutOfServerAccessCredits (time);
     // XXX May want to check this...

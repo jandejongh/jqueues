@@ -65,7 +65,7 @@ public class BlackEncapsulatorSimQueue
     super (eventList, (Set<DQ>) createQueuesSet (queue), delegateSimJobFactory);
   }
   
-  /**  Returns a new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
+  /** Returns a new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
    *  queue and the same delegate-job factory.
    * 
    * @return A new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
@@ -130,21 +130,6 @@ public class BlackEncapsulatorSimQueue
     return false;
   }
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // UPDATE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // RESET

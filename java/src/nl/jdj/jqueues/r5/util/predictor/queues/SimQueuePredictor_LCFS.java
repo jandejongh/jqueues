@@ -17,7 +17,7 @@ extends SimQueuePredictor_FCFS
   @Override
   protected SimJob getJobToStart (final SimQueue queue, final SimQueueState<SimJob, SimQueue> queueState)
   {
-    final ArrayList<SimJob> waitingJobs = new ArrayList<> (queueState.getJobsWaitingOrdered ());
+    final ArrayList<SimJob> waitingJobs = new ArrayList<> (queueState.getJobsInWaitingAreaOrdered ());
     return waitingJobs.get (waitingJobs.size () - 1);
   }
 

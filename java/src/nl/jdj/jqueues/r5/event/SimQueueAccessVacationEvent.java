@@ -3,10 +3,9 @@ package nl.jdj.jqueues.r5.event;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jsimulation.r5.SimEvent;
-import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 
-/**  An {@link SimEvent} for the start or end of a queue-access vacation at a queue.
+/** An {@link SimEvent} for the start or end of a queue-access vacation at a queue.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -29,13 +28,7 @@ extends SimEntityEvent<J, Q>
   {
     if (queue == null)
       throw new IllegalArgumentException ();
-    return (final SimEvent<J> event) ->
-    {
-      if (vacation)
-        queue.startQueueAccessVacation ();
-      else
-        queue.stopQueueAccessVacation ();
-    };
+    return (final SimEvent<J> event) -> queue.setQueueAccessVacation (event.getTime (), vacation);
   }
   
   /** Creates a queue-access vacation event at a specific queue.
@@ -46,8 +39,7 @@ extends SimEntityEvent<J, Q>
    * 
    * @throws IllegalArgumentException If the queue is <code>null</code>.
    * 
-   * @see SimQueue#startQueueAccessVacation
-   * @see SimQueue#stopQueueAccessVacation
+   * @see SimQueue#setQueueAccessVacation
    * 
    */
   public SimQueueAccessVacationEvent

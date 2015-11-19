@@ -29,6 +29,22 @@ implements SimEntityListener<J, Q>
    * 
    */
   @Override
+  public void notifyUpdate (final double time, final SimEntity entity)
+  {
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public void notifyStateChanged (final double time, final SimEntity entity)
+  {
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
   public void notifyArrival (final double time, final J job, final Q queue)
   {
   }

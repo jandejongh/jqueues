@@ -7,7 +7,7 @@ import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 
-/**  A {@link SimEvent} for a {@link SimEntity} (queue, job, or other) operation.
+/** A {@link SimEvent} for a {@link SimEntity} (queue, job, or other) operation.
  * 
  * <p>
  * This class only administers the key parameters for the event; it does not actually schedule it.

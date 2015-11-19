@@ -58,15 +58,6 @@ public class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPreemptiv
    * 
    */
   @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
   public final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();

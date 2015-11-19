@@ -27,7 +27,7 @@ public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveS
     super (eventList);
   }
   
-  /**  Returns a new {@link SJF} object on the same {@link SimEventList}.
+  /** Returns a new {@link SJF} object on the same {@link SimEventList}.
    * 
    * @return A new {@link SJF} object on the same {@link SimEventList}.
    * 
@@ -58,15 +58,6 @@ public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveS
     this.jobQueue.add (newPosition, job);    
   }
   
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
   /** Calls super method (in order to make implementation final).
    * 
    */

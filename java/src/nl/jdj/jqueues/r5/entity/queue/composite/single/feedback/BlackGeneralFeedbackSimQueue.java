@@ -57,7 +57,7 @@ public class BlackGeneralFeedbackSimQueue
     super (eventList, queue, feedbackController, delegateSimJobFactory);
   }
   
-  /**  Returns a new {@link BlackGeneralFeedbackSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
+  /** Returns a new {@link BlackGeneralFeedbackSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
    *  queue and the same delegate-job factory.
    * 
    * @return A new {@link BlackGeneralFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated

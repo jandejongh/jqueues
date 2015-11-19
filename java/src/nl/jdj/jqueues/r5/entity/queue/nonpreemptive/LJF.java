@@ -27,7 +27,7 @@ public class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreemptiveS
     super (eventList);
   }
   
-  /**  Returns a new {@link LJF} object on the same {@link SimEventList}.
+  /** Returns a new {@link LJF} object on the same {@link SimEventList}.
    * 
    * @return A new {@link LJF} object on the same {@link SimEventList}.
    * 
@@ -56,15 +56,6 @@ public class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreemptiveS
       && this.jobQueue.get (newPosition).getServiceTime (this) >= job.getServiceTime (this))
       newPosition++;
     this.jobQueue.add (newPosition, job);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
   }
 
   /** Calls super method (in order to make implementation final).

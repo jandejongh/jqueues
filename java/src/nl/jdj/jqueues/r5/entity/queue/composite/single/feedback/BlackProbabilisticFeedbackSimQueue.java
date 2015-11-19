@@ -69,7 +69,7 @@ public class BlackProbabilisticFeedbackSimQueue
     this.p_feedback = p_feedback;
   }
   
-  /**  Returns a new {@link BlackProbabilisticFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
+  /** Returns a new {@link BlackProbabilisticFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
    *  the same feedback probability, a new RNG, and the same delegate-job factory.
    * 
    * @return A new {@link BlackProbabilisticFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,

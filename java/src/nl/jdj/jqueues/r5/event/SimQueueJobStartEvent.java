@@ -5,7 +5,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 
-/**  A start {@link SimEvent} of a job at a queue.
+/** A start {@link SimEvent} of a job at a queue.
  * 
  * <p>
  * Do not <i>ever</i> schedule this yourself unless for your own implementation;

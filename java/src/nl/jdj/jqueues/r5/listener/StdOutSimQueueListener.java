@@ -16,13 +16,6 @@ implements SimQueueListener<J, Q>
 {
 
   @Override
-  public void notifyUpdate (final double time, final Q queue)
-  {
-    System.out.print (getHeaderString () + " ");
-    System.out.println ("t=" + time + ", queue=" + queue + ": UPDATE.");
-  }
-
-  @Override
   public void notifyNewNoWaitArmed (final double time, final Q queue, final boolean noWaitArmed)
   {
     System.out.print (getHeaderString () + " ");

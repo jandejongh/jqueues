@@ -69,12 +69,12 @@ public abstract class AbstractNonPreemptiveSimQueue
    * If the job is already in service, and the <code>interruptService</code> argument is set to <code>false</code>,
    * this method returns <code>false</code>, by contract of {@link SimQueue}.
    * Otherwise, if the job is in service, its departure event is canceled through {@link #cancelDepartureEvent},
-   * and the job is removed from {@link #jobsExecuting} and {@link #jobQueue}.
+   * and the job is removed from {@link #jobsInServiceArea} and {@link #jobQueue}.
    * Subsequently, whether the job was in service or not, it is removed from {@link #jobQueue},
    * and <code>true</code> is returned.
    * 
    * @see #jobQueue
-   * @see #jobsExecuting
+   * @see #jobsInServiceArea
    * @see #cancelDepartureEvent
    * 
    */
@@ -83,11 +83,11 @@ public abstract class AbstractNonPreemptiveSimQueue
   {
     if (! this.jobQueue.contains (job))
       throw new IllegalStateException ();
-    if (this.jobsExecuting.contains (job))
+    if (this.jobsInServiceArea.contains (job))
     {
       if (interruptService)
       {
-        this.jobsExecuting.remove (job);
+        this.jobsInServiceArea.remove (job);
         cancelDepartureEvent (job);
       }
       else
@@ -97,13 +97,13 @@ public abstract class AbstractNonPreemptiveSimQueue
     return true;
   }
 
-  /** Checks the presence of the departing job in {@link #jobQueue} and {@link #jobsExecuting},
+  /** Checks the presence of the departing job in {@link #jobQueue} and {@link #jobsInServiceArea},
    * and removes the job from those lists.
    * 
    * @throws IllegalStateException If the <code>departingJob</code> is not in one of the lists.
    * 
    * @see #jobQueue
-   * @see #jobsExecuting
+   * @see #jobsInServiceArea
    * 
    */
   @Override
@@ -111,10 +111,10 @@ public abstract class AbstractNonPreemptiveSimQueue
   {
     if (! this.jobQueue.contains (departingJob))
       throw new IllegalStateException ();
-    if (! this.jobsExecuting.contains (departingJob))
+    if (! this.jobsInServiceArea.contains (departingJob))
       throw new IllegalStateException ();
     this.jobQueue.remove (departingJob);
-    this.jobsExecuting.remove (departingJob);
+    this.jobsInServiceArea.remove (departingJob);
   }
     
 }

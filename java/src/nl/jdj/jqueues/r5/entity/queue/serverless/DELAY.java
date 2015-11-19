@@ -41,7 +41,7 @@ extends AbstractServerlessSimQueue<J, Q>
     this.waitTime = waitTime;
   }
   
-  /**  Returns a new {@link DELAY} object on the same {@link SimEventList} with the same wait time.
+  /** Returns a new {@link DELAY} object on the same {@link SimEventList} with the same wait time.
    * 
    * @return A new {@link DELAY} object on the same {@link SimEventList} with the same wait time.
    * 
@@ -106,21 +106,6 @@ extends AbstractServerlessSimQueue<J, Q>
   public final boolean isNoWaitArmed ()
   {
     return getWaitTime () == 0;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // UPDATE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +187,7 @@ extends AbstractServerlessSimQueue<J, Q>
   {
     if (job == null || ! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
-    if (! this.jobsExecuting.isEmpty ())
+    if (! this.jobsInServiceArea.isEmpty ())
       throw new IllegalStateException ();
     cancelDepartureEvent (job);
     this.jobQueue.remove (job);
@@ -226,7 +211,7 @@ extends AbstractServerlessSimQueue<J, Q>
   {
     if (departingJob == null || ! this.jobQueue.contains (departingJob))
       throw new IllegalArgumentException ();
-    if (! this.jobsExecuting.isEmpty ())
+    if (! this.jobsInServiceArea.isEmpty ())
       throw new IllegalStateException ();
     this.jobQueue.remove (departingJob);
   }

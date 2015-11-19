@@ -20,10 +20,10 @@ import org.junit.Test;
  *
  *
  */
-public class NonPreemptiveTest
+public class RandomTest
 {
   
-  public NonPreemptiveTest ()
+  public RandomTest ()
   {
   }
   
@@ -61,7 +61,7 @@ public class NonPreemptiveTest
         @Override
         public void action (final SimEvent event)
         {
-          queue.arrive (j, arrTime);
+          queue.arrive (arrTime, j);
         }
       }));
     }

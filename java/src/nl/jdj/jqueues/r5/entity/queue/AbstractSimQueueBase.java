@@ -93,20 +93,6 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Notifies all queue listeners upon an immediate upcoming update at this queue.
-   *
-   * @param time The current time, which has not been set yet on this queue.
-   *
-   * @see SimQueueListener#notifyUpdate
-   * 
-   */
-  protected final void fireUpdate (final double time)
-  {
-    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
-      if (l instanceof SimQueueListener)
-        ((SimQueueListener) l).notifyUpdate (time, (Q) this);
-  }
-  
   /** Notifies all queue listeners of a change in the <code>noWaitArmed</code> property.
    * 
    * @param time        The current time.

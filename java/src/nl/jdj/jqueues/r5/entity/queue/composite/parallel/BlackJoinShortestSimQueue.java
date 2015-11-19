@@ -31,7 +31,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <Q>  The queue type for jobs.
  *
  * @see SimQueue#getNumberOfJobs
- * @see SimQueue#getNumberOfJobsExecuting
+ * @see SimQueue#getNumberOfJobsInServiceArea
  * 
  */
 public class BlackJoinShortestSimQueue
@@ -106,7 +106,7 @@ public class BlackJoinShortestSimQueue
    * @see DefaultDelegateSimJobFactory
    * @see SimQueueSelector
    * @see SimQueue#getNumberOfJobs
-   * @see SimQueue#getNumberOfJobsExecuting
+   * @see SimQueue#getNumberOfJobsInServiceArea
    * 
    */
   public BlackJoinShortestSimQueue
@@ -122,7 +122,7 @@ public class BlackJoinShortestSimQueue
     this.onlyWaitingJobs = onlyWaitingJobs;
   }
 
-  /**  Returns a new {@link BlackJoinShortestSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
+  /** Returns a new {@link BlackJoinShortestSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
    *  the same <code>onlyWaitingJobs</code> argument, a new RNG, and the same delegate-job factory.
    * 
    * @return A new {@link BlackJoinShortestSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
@@ -216,7 +216,7 @@ public class BlackJoinShortestSimQueue
     int currentNrOfJobs = 0;
     for (SimQueue q : queues)
     {
-      final int nrOfJobs = (onlyWaitingJobs ? (q.getNumberOfJobs () - q.getNumberOfJobsExecuting ()) : q.getNumberOfJobs ());
+      final int nrOfJobs = (onlyWaitingJobs ? (q.getNumberOfJobs () - q.getNumberOfJobsInServiceArea ()) : q.getNumberOfJobs ());
       if (set.isEmpty ())
       {
         set.add (q);

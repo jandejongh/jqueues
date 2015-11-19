@@ -82,10 +82,7 @@ extends AbstractSimQueuePredictor<PS>
     else if (eventType == SimQueueSimpleEventType.QUEUE_ACCESS_VACATION)
     {
       final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (time);
-      if (queueAccessVacation)
-        queueState.startQueueAccessVacation (time);
-      else
-        queueState.stopQueueAccessVacation (time);
+      queueState.setQueueAccessVacation (time, queueAccessVacation);
     }
     else if (eventType == SimEntitySimpleEventType.ARRIVAL)
     {
@@ -106,7 +103,7 @@ extends AbstractSimQueuePredictor<PS>
         final boolean interruptService =
           workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).get (job);
         // Make sure we do not revoke an executing job without the interruptService flag.
-        if (interruptService || ! queueState.getJobsExecuting ().contains (job))
+        if (interruptService || ! queueState.getJobsInServiceArea ().contains (job))
         {
           final Set<SimJob> revocations = new HashSet<> ();
           revocations.add (job);
@@ -122,7 +119,7 @@ extends AbstractSimQueuePredictor<PS>
       if (oldSac == 0 && newSac > 0)
       {
         final Set<SimJob> starters = new LinkedHashSet<> ();
-        final Iterator<SimJob> i_waiters = queueState.getJobsWaitingOrdered ().iterator ();
+        final Iterator<SimJob> i_waiters = queueState.getJobsInWaitingAreaOrdered ().iterator ();
         int remainingSac = newSac;
         while ((remainingSac == Integer.MAX_VALUE || remainingSac > 0) && i_waiters.hasNext ())
         {

@@ -10,7 +10,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NonPreemptiveTest;
+import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RandomTest;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RANDOM;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
@@ -95,7 +95,7 @@ public class SimpleSimQueueStatTest
     expResult = -123.87;
     result = instance.getStartTime ();
     assertEquals (expResult, result, 0.0);
-    NonPreemptiveTest.scheduleJobArrivals (false, 10, eventList, lifo);
+    RandomTest.scheduleJobArrivals (false, 10, eventList, lifo);
     eventList.run ();
     // Should not have changed...
     result = instance.getStartTime ();
@@ -143,7 +143,7 @@ public class SimpleSimQueueStatTest
     Double expResult = -10.0;
     Double result = instance.getLastUpdateTime ();
     assertEquals (expResult, result, 0.0);
-    NonPreemptiveTest.scheduleJobArrivals (false, 10, eventList, lifo);
+    RandomTest.scheduleJobArrivals (false, 10, eventList, lifo);
     eventList.run ();
     expResult = eventList.getTime ();
     result = instance.getLastUpdateTime ();
@@ -158,33 +158,33 @@ public class SimpleSimQueueStatTest
   @Test
   public void testGetAvgNrOfJobs ()
   {
-    System.out.println ("Stats: AvgNumberOfJobs/AvgNumberOfJobsExecuting");
+    System.out.println ("Stats: AvgNumberOfJobs/AvgNumberOfJobsInServiceArea");
     final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     SimQueue queue  = new LCFS<> (eventList);
     SimpleSimQueueStat instance = new SimpleSimQueueStat (queue, 0.0);
     // 1 Job arriving at t = 1, S = 1.
     // So: [0,1)->0 job, [1,2]->1 job.
     // Average expected: 0.5.
-    NonPreemptiveTest.scheduleJobArrivals (false, 1, eventList, queue);
+    RandomTest.scheduleJobArrivals (false, 1, eventList, queue);
     eventList.run ();
     Double expResult;
     Double result;
     expResult = 0.5;
     result = instance.getAvgNrOfJobs ();
     assertEquals (expResult, result, 0.0);
-    result = instance.getAvgNrOfJobsExecuting ();
+    result = instance.getAvgNrOfJobsInServiceArea ();
     assertEquals (expResult, result, 0.0);
     // Compared to the first case: start at -2.
     // Average expected: 0.25.
     eventList.reset ();
     queue = new FCFS<> (eventList);
     instance = new SimpleSimQueueStat (queue, -2.0);
-    NonPreemptiveTest.scheduleJobArrivals (false, 1, eventList, queue);
+    RandomTest.scheduleJobArrivals (false, 1, eventList, queue);
     eventList.run ();
     expResult = 0.25;
     result = instance.getAvgNrOfJobs ();
     assertEquals (expResult, result, 0.0);
-    result = instance.getAvgNrOfJobsExecuting ();
+    result = instance.getAvgNrOfJobsInServiceArea ();
     assertEquals (expResult, result, 0.0);
     // Try a few more (4) jobs with FCFS.
     // Start sim at 0.
@@ -198,13 +198,13 @@ public class SimpleSimQueueStatTest
     eventList.reset ();
     queue = new FCFS<> (eventList);
     instance = new SimpleSimQueueStat (queue, 0.0);
-    NonPreemptiveTest.scheduleJobArrivals (false, 4, eventList, queue);
+    RandomTest.scheduleJobArrivals (false, 4, eventList, queue);
     eventList.run ();
     expResult = 14.0/11.0;
     result = instance.getAvgNrOfJobs ();
     assertEquals (expResult, result, 0.000000001);
     expResult = 10.0/11.0;
-    result = instance.getAvgNrOfJobsExecuting ();
+    result = instance.getAvgNrOfJobsInServiceArea ();
     assertEquals (expResult, result, 0.000000001);
     // Try the same scenario with IS.
     // Start sim at 0.
@@ -218,12 +218,12 @@ public class SimpleSimQueueStatTest
     eventList.reset ();
     queue = new IS<> (eventList);
     instance = new SimpleSimQueueStat (queue, 0.0);
-    NonPreemptiveTest.scheduleJobArrivals (false, 4, eventList, queue);
+    RandomTest.scheduleJobArrivals (false, 4, eventList, queue);
     eventList.run ();
     expResult = 10.0/8.0;
     result = instance.getAvgNrOfJobs ();
     assertEquals (expResult, result, 0.000000001);
-    result = instance.getAvgNrOfJobsExecuting ();
+    result = instance.getAvgNrOfJobsInServiceArea ();
     assertEquals (expResult, result, 0.000000001);
   }
 

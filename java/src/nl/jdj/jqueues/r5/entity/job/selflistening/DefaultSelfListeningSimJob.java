@@ -56,6 +56,24 @@ implements SimJobListener<J, Q>
    * 
    */
   @Override
+  public void notifyUpdate (final double time, final SimEntity entity)
+  {
+    /* EMPTY */
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public void notifyStateChanged (final double time, final SimEntity entity)
+  {
+    /* EMPTY */
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
   public void notifyArrival (double time, J job, Q queue)
   {
     /* EMPTY */

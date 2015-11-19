@@ -62,7 +62,7 @@ public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue,
     super (eventList, queues, delegateSimJobFactory);
   }
 
-  /**  Returns a new {@link BlackTandemSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
+  /** Returns a new {@link BlackTandemSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
    *  and the same delegate-job factory.
    * 
    * @return A new {@link BlackTandemSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
@@ -127,21 +127,6 @@ public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue,
     return false;
   }
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // UPDATE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // RESET

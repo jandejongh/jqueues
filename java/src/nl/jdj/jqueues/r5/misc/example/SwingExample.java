@@ -151,14 +151,14 @@ public final class SwingExample
             @Override
             public final void actionPerformed (ActionEvent ae)
             {
-              getQueue ().arrive (new AbstractSimJob (null, null)
+              getQueue ().arrive (eventList.getTime (), new AbstractSimJob (null, null)
               {
                 @Override
                 public double getServiceTime (SimQueue queue) throws IllegalArgumentException
                 {
                   return 10.0;
                 }
-              }, eventList.getTime ());
+              });
               jSimEventList.eventListChangedNotification ();              
             }
           }));
@@ -170,14 +170,14 @@ public final class SwingExample
             {
               eventList.scheduleNow ((SimEventAction) (SimEvent event) ->
               {
-                getQueue ().arrive (new AbstractSimJob (null, null)
+                getQueue ().arrive (eventList.getTime (), new AbstractSimJob (null, null)
                 {
                   @Override
                   public double getServiceTime (SimQueue queue1) throws IllegalArgumentException
                   {
                     return 10.0;
                   }
-                }, eventList.getTime ()); 
+                }); 
               });
               jSimEventList.eventListChangedNotification ();
             }

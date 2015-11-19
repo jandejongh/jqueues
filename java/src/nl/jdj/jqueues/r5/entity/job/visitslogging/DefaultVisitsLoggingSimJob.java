@@ -94,6 +94,24 @@ extends DefaultSelfListeningSimJob<J, Q>
     /* EMPTY */
   }
 
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public final void notifyUpdate (final double time, final SimEntity entity)
+  {
+    /* EMPTY */
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public final void notifyStateChanged (final double time, final SimEntity entity)
+  {
+    /* EMPTY */
+  }
+
   @Override
   public final void notifyArrival (final double time, final J job, final Q queue)
   {

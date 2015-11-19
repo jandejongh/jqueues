@@ -50,7 +50,7 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     return getServiceTime ();
   }
   
-  /**  Creates a new {@link IS_CST} queue with given {@link SimEventList} and (fixed) service time.
+  /** Creates a new {@link IS_CST} queue with given {@link SimEventList} and (fixed) service time.
    * 
    * @param eventList The event list to use.
    * @param serviceTime The service time for all jobs.
@@ -66,7 +66,7 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     this.serviceTime = serviceTime;
   }
   
-  /**  Returns a new {@link IS_CST} object on the same {@link SimEventList} with the same service time.
+  /** Returns a new {@link IS_CST} object on the same {@link SimEventList} with the same service time.
    * 
    * @return A new {@link IS_CST} object on the same {@link SimEventList} with the same service time.
    * 
@@ -80,15 +80,6 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     return new IS_CST<> (getEventList (), getServiceTime ());
   }
   
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
   /** Calls super method (in order to make implementation final).
    * 
    */

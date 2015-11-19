@@ -117,7 +117,7 @@ public final class CompositeExample
         @Override
         public void action (final SimEvent event)
         {
-          tandemQueue.arrive (j, arrTime);
+          tandemQueue.arrive (arrTime, j);
         }
       }));
     }
@@ -168,7 +168,7 @@ public final class CompositeExample
         @Override
         public void action (final SimEvent event)
         {
-          parallelQueue.arrive (j, arrTime);
+          parallelQueue.arrive (arrTime, j);
         }
       }));
     }
@@ -192,7 +192,7 @@ public final class CompositeExample
         @Override
         public void action (final SimEvent event)
         {
-          numVisitsFBQueue.arrive (j, arrTime);
+          numVisitsFBQueue.arrive (arrTime, j);
         }
       }));
     }
@@ -216,7 +216,7 @@ public final class CompositeExample
         @Override
         public void action (final SimEvent event)
         {
-          pFBQueue.arrive (j, arrTime);
+          pFBQueue.arrive (arrTime, j);
         }
       }));
     }
@@ -262,7 +262,7 @@ public final class CompositeExample
         @Override
         public void action (final SimEvent event)
         {
-          jacksonQueue.arrive (j, arrTime);
+          jacksonQueue.arrive (arrTime, j);
         }
       }));
     }

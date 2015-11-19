@@ -37,7 +37,7 @@ public class FCFS_c<J extends SimJob, Q extends FCFS_c> extends AbstractNonPreem
     super (eventList, c);
   }
   
-  /**  Returns a new {@link FCFS_c} object on the same {@link SimEventList} with the same number of servers.
+  /** Returns a new {@link FCFS_c} object on the same {@link SimEventList} with the same number of servers.
    * 
    * @return A new {@link FCFS_c} object on the same {@link SimEventList} with the same number of servers.
    * 
@@ -60,15 +60,6 @@ public class FCFS_c<J extends SimJob, Q extends FCFS_c> extends AbstractNonPreem
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
     this.jobQueue.add (job);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
   }
 
   /** Calls super method (in order to make implementation final).

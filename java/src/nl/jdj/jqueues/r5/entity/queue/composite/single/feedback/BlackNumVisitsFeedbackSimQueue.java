@@ -64,7 +64,7 @@ public class BlackNumVisitsFeedbackSimQueue
     this.numberOfVisits = numberOfVisits;
   }
   
-  /**  Returns a new {@link BlackNumVisitsFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
+  /** Returns a new {@link BlackNumVisitsFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
    *  the same number of visits required, and the same delegate-job factory.
    * 
    * @return A new {@link BlackNumVisitsFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,

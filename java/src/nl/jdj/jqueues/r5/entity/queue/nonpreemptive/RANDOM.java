@@ -52,7 +52,7 @@ public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreem
     this.RNG = ((RNG == null) ? new Random () : RNG);
   }
   
-  /**  Returns a new {@link RANDOM} object on the same {@link SimEventList}.
+  /** Returns a new {@link RANDOM} object on the same {@link SimEventList}.
    *
    * <p>
    * The new object has its own newly created {@link Random} RNG.
@@ -81,15 +81,6 @@ public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreem
     this.jobQueue.add (newPosition, job);
   }  
   
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
   /** Calls super method (in order to make implementation final).
    * 
    */

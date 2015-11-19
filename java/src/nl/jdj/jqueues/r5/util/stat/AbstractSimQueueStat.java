@@ -326,11 +326,19 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void notifyUpdate (final double time, final Q queue)
+  public void notifyUpdate (final double time, final SimEntity entity)
   {
-    if (queue == null || queue != getQueue ())
+    if (entity == null || entity != getQueue ())
       throw new IllegalArgumentException ();
     update (time);
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public void notifyStateChanged (final double time, final SimEntity entity)
+  {
   }
 
   /** Does nothing.

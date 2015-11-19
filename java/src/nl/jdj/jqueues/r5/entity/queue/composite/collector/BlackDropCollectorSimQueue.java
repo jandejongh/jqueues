@@ -77,7 +77,7 @@ public class BlackDropCollectorSimQueue
       delegateSimJobFactory);
   }
 
-  /**  Returns a new {@link BlackDropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and
+  /** Returns a new {@link BlackDropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and
    *  drop queues and the same delegate-job factory.
    * 
    * @return A new {@link BlackDropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and
@@ -178,21 +178,6 @@ public class BlackDropCollectorSimQueue
   public final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // UPDATE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

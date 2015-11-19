@@ -5,7 +5,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 
-/**  An {@link SimEvent} for  setting server-access credits at a queue.
+/** An {@link SimEvent} for  setting server-access credits at a queue.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -28,10 +28,7 @@ extends SimEntityEvent<J, Q>
   {
     if (queue == null || credits < 0)
       throw new IllegalArgumentException ();
-    return (final SimEvent<J> event) ->
-    {
-      queue.setServerAccessCredits (credits);
-    };
+    return (final SimEvent<J> event) -> queue.setServerAccessCredits (event.getTime (), credits);
   }
   
   /** Creates a server-access-credits event at a specific queue.

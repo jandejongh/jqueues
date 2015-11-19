@@ -30,15 +30,22 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
   
   /** Creates a PS queue given an event list.
    *
+   * <p>
+   * The constructor registers an update hook that sets the virtual time upon updates.
+   * 
    * @param eventList The event list to use.
    *
+   * @see #registerUpdateHook
+   * @see #updateVirtualTime
+   * 
    */
   public PS (final SimEventList eventList)
   {
     super (eventList);
+    registerUpdateHook (this::updateVirtualTime);
   }
   
-  /**  Returns a new {@link PS} object on the same {@link SimEventList}.
+  /** Returns a new {@link PS} object on the same {@link SimEventList}.
    * 
    * @return A new {@link PS} object on the same {@link SimEventList}.
    * 
@@ -116,7 +123,7 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
     return this.virtualTime;
   }
   
-  /** The mapping from jobs executing (in {@link #jobsExecuting}) to their respective virtual departure times.
+  /** The mapping from jobs in {@link #jobsInServiceArea} to their respective virtual departure times.
    * 
    * <p>
    * The special extensions to <code>TreeMap</code> allow for efficient  determination of the pre-images of
@@ -132,26 +139,29 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Updates the virtual time and calls super method (in that order!).
+  /** Updates the virtual time.
    * 
-   * @see #getNumberOfJobsExecuting
+   * <p>
+   * This method is called as an update hook, and not meant to be called from user code (in sub-classes).
+   * It is left protected for {@code javadoc}.
+   * 
+   * @param newTime The new time.
+   * 
+   * @see #getNumberOfJobsInServiceArea
    * @see #getVirtualTime
    * @see #getLastUpdateTime
+   * @see #registerUpdateHook
    * 
    */
-  @Override
-  public final void update (final double time)
+  protected final void updateVirtualTime (final double newTime)
   {
-    if (time < getLastUpdateTime ())
+    if (newTime < getLastUpdateTime ())
       throw new IllegalStateException ();
-    final int numberOfJobsExecuting = getNumberOfJobsExecuting ();
+    final int numberOfJobsExecuting = getNumberOfJobsInServiceArea ();
     if (numberOfJobsExecuting == 0)
       this.virtualTime = 0;
-    else if (time > getLastUpdateTime ())
-      this.virtualTime += ((time - getLastUpdateTime ()) / numberOfJobsExecuting);
-    // Super method will set this.lastUpdateTime to time.
-    // That is why it should not be called first, or we will lose this.lastUpdateTime.
-    super.update (time);
+    else if (newTime > getLastUpdateTime ())
+      this.virtualTime += ((newTime - getLastUpdateTime ()) / numberOfJobsExecuting);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,10 +236,10 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
   /** Removes the jobs from the internal data structures.
    * 
    * <p>
-   * Returns <code>false</code> if the job is currently in service (in {@link #jobsExecuting})
+   * Returns <code>false</code> if the job is currently in service (in {@link #jobsInServiceArea})
    * and <code>interruptService==true</code>.
    * Otherwise, removes the job from {@link #jobQueue},
-   * and if needed from {@link #jobsExecuting} and {@link #virtualDepartureTime}.
+   * and if needed from {@link #jobsInServiceArea} and {@link #virtualDepartureTime}.
    * 
    * @see #revoke
    * 
@@ -241,14 +251,14 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
       throw new IllegalArgumentException ();
     if (! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
-    if (this.jobsExecuting.contains (job))
+    if (this.jobsInServiceArea.contains (job))
     {
       if (! interruptService)
         return false;
       if (! this.virtualDepartureTime.containsKey (job))
         throw new IllegalMonitorStateException ();
       this.virtualDepartureTime.remove (job);
-      this.jobsExecuting.remove (job);
+      this.jobsInServiceArea.remove (job);
     }
     this.jobQueue.remove (job);
     return true;
@@ -319,7 +329,7 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
    * 
    * @see #getDepartureEvents
    * @see #cancelDepartureEvent
-   * @see #jobsExecuting
+   * @see #jobsInServiceArea
    * @see #virtualDepartureTime
    * @see #scheduleDepartureEvent
    * 
@@ -342,13 +352,13 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
       cancelDepartureEvent (departureEvents.iterator ().next ());
     if (! this.virtualDepartureTime.isEmpty ())
     {
-      if (getNumberOfJobsExecuting () == 0)
+      if (getNumberOfJobsInServiceArea () == 0)
         throw new IllegalStateException ();
       final double scheduleVirtualTime = this.virtualDepartureTime.firstValue ();
       final double deltaVirtualTime = scheduleVirtualTime - getVirtualTime ();
       if (deltaVirtualTime < 0)
         throw new IllegalStateException ();
-      final double deltaTime = deltaVirtualTime * getNumberOfJobsExecuting ();
+      final double deltaTime = deltaVirtualTime * getNumberOfJobsInServiceArea ();
       final J job = this.virtualDepartureTime.getPreImageForValue (scheduleVirtualTime).iterator ().next ();
       scheduleDepartureEvent (time + deltaTime, job);
     }
@@ -368,7 +378,7 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
    * <li>Admits jobs for service based upon the number of jobs waiting and the remaining number of server access credits.
    *     Waiting jobs are admitted to the server in order of arrival (which is only relevant in the presence of finite
    *     server-access credits). The server-access credits taken and the jobs started are <i>not</i> reported at this stage.
-   *     The started jobs are inserted into {@link #jobsExecuting}, their virtual times are calculated and they
+   *     The started jobs are inserted into {@link #jobsInServiceArea}, their virtual times are calculated and they
    *     are inserted into the {@link #virtualDepartureTime} mapping.
    * <li>Reschedules if needed the single departure event for the job in service with the smallest
    *     virtual departure time through {@link #rescheduleDepartureEvent}.
@@ -381,7 +391,7 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
    * @param eJob The job that exited (departed or successfully revoked), <code>null</code> if the event was not the exit of a job.
    * 
    * @see #jobQueue
-   * @see #jobsExecuting
+   * @see #jobsInServiceArea
    * @see #virtualDepartureTime
    * @see #getDepartureEvents
    * @see #cancelDepartureEvent
@@ -396,14 +406,14 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
   {
     if (aJob != null && eJob != null)
       throw new IllegalArgumentException ();
-    boolean departureEventMustBePresent = ! this.jobsExecuting.isEmpty ();
+    boolean departureEventMustBePresent = ! this.jobsInServiceArea.isEmpty ();
     boolean departureEventMustBeAbsent = ! departureEventMustBePresent;
     final int creditsOld = getServerAccessCredits ();
     if (aJob != null)
     {
       if (! this.jobQueue.contains (aJob))
         throw new IllegalStateException ();
-      if (this.jobsExecuting.contains (aJob))
+      if (this.jobsInServiceArea.contains (aJob))
         throw new IllegalStateException ();
       if (this.virtualDepartureTime.containsKey (aJob))
         throw new IllegalStateException ();
@@ -412,7 +422,7 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
     {
       if (this.jobQueue.contains (eJob))
         throw new IllegalStateException ();
-      if (this.jobsExecuting.contains (eJob))
+      if (this.jobsInServiceArea.contains (eJob))
         throw new IllegalStateException ();
       if (this.virtualDepartureTime.containsKey (eJob))
         throw new IllegalStateException ();
@@ -428,13 +438,13 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
     }
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
-    while (hasServerAcccessCredits () && hasJobsWaiting ())
+    while (hasServerAcccessCredits () && hasJobsWaitingInWaitingArea ())
     {
       takeServerAccessCredit (false);
-      final J job = getFirstJobWaiting ();
+      final J job = getFirstJobInWaitingArea ();
       if (job == null)
         throw new IllegalStateException ();
-      this.jobsExecuting.add (job);
+      this.jobsInServiceArea.add (job);
       final double jobServiceTime = job.getServiceTime (this);
       if (jobServiceTime < 0)
         throw new RuntimeException ();
@@ -443,14 +453,14 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
       // Defer notifications until we are in a valid state again.
       startedJobs.add (job);
     }
-    if (getNumberOfJobsExecuting () > 0)
+    if (getNumberOfJobsInServiceArea () > 0)
       rescheduleDepartureEvent (time,
         departureEventMustBePresent,
         departureEventMustBeAbsent);
     // Notification section.
     for (J j : startedJobs)
       // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
-      if (this.jobsExecuting.contains (j))
+      if (this.jobsInServiceArea.contains (j))
         fireStart (time, j, (Q) this);
     if (creditsOld > 0 && getServerAccessCredits () == 0)
       fireIfOutOfServerAccessCredits (time);

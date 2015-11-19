@@ -17,23 +17,6 @@ public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
 extends SimEntityListener<J, Q>
 {
  
-  /** Notification of an immediate upcoming update at a queue.
-   * 
-   * An update at a queue is defined as a moment in time at which the queue is about to change its state.
-   * The main advantage of an update notification is that you can inspect the queue right before it is about to change.
-   * This leads the way to maintaining time-based statistics on the queue.
-   * 
-   * <p>The general contract is that in between update notifications, the queue does not change its state.
-   * However, what exactly comprises the state of the queue has to be documented by concrete implementations.
-   * 
-   * @param time  The time of the update.
-   * @param queue The queue that is about to be updated.
-   * 
-   * @see AbstractSimQueueStat
-   * 
-   */
-  public void notifyUpdate (double time, Q queue);
-  
   /** Notification of a change of a {@link SimQueue} <code>noWaitArmed</code> state.
    * 
    * @param time        The (current) time.

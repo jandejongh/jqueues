@@ -63,7 +63,7 @@ public final class ServerlessExample
         @Override
         public void action (final SimEvent event)
         {
-          noneQueue.arrive (j, arrTime);
+          noneQueue.arrive (arrTime, j);
         }
       }));
     }
@@ -83,7 +83,7 @@ public final class ServerlessExample
         @Override
         public void action (final SimEvent event)
         {
-          delayQueue.arrive (j, arrTime);
+          delayQueue.arrive (arrTime, j);
         }
       }));
     }
@@ -103,7 +103,7 @@ public final class ServerlessExample
         @Override
         public void action (final SimEvent event)
         {
-          delayQueue2.arrive (j, arrTime);
+          delayQueue2.arrive (arrTime, j);
         }
       }));
     }
@@ -123,7 +123,7 @@ public final class ServerlessExample
         @Override
         public void action (final SimEvent event)
         {
-          zeroQueue.arrive (j, arrTime);
+          zeroQueue.arrive (arrTime, j);
         }
       }));
     }
@@ -143,7 +143,7 @@ public final class ServerlessExample
         @Override
         public void action (final SimEvent event)
         {
-          dropQueue.arrive (j, arrTime);
+          dropQueue.arrive (arrTime, j);
         }
       }));
     }
@@ -163,7 +163,7 @@ public final class ServerlessExample
         @Override
         public void action (final SimEvent event)
         {
-          gateQueue.arrive (j, arrTime);
+          gateQueue.arrive (arrTime, j);
         }
       }));
     }

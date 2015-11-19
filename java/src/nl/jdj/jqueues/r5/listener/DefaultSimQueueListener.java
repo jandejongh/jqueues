@@ -21,14 +21,6 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void notifyUpdate (final double time, final Q queue)
-  {
-  }
-
-  /** Does nothing.
-   * 
-   */
-  @Override
   public void notifyNewNoWaitArmed (final double time, final Q queue, final boolean noWaitArmed)
   {
   }

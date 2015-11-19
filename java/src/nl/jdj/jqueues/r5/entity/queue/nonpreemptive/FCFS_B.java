@@ -32,7 +32,7 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
     this.bufferSize = bufferSize;
   }
   
-  /**  Returns a new {@link FCFS_B} object on the same {@link SimEventList} with the same buffer size.
+  /** Returns a new {@link FCFS_B} object on the same {@link SimEventList} with the same buffer size.
    * 
    * @return A new {@link FCFS_B} object on the same {@link SimEventList} with the same buffer size.
    * 
@@ -59,7 +59,7 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
    * 
    * @see #hasServerAcccessCredits
    * @see #isNoWaitArmed
-   * @see #getNumberOfJobsWaiting
+   * @see #getNumberOfJobsInWaitingArea
    * @see #getBufferSize
    * @see #jobQueue
    * 
@@ -68,17 +68,8 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
     if ((hasServerAcccessCredits () && isNoWaitArmed ())
-      || getNumberOfJobsWaiting () < getBufferSize ())
+      || getNumberOfJobsInWaitingArea () < getBufferSize ())
       this.jobQueue.add (job);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
   }
 
   /** Calls super method (in order to make implementation final).

@@ -65,7 +65,7 @@ public class CompositeTest
         @Override
         public void action (final SimEvent event)
         {
-          queue.arrive (j, arrTime);
+          queue.arrive (arrTime, j);
         }
       }));
     }

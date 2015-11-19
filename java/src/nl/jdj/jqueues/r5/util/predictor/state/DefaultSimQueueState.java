@@ -48,7 +48,7 @@ implements SimQueueState<J, Q>
     this.arrivalTimesMap = new HashMap<> ();
     this.serverAccessCredits = Integer.MAX_VALUE;
     this.startTimesMap = new HashMap<> ();
-    this.jobsExecutingMap = new TreeMap<> ();
+    this.jobsInServiceAreaMap = new TreeMap<> ();
     this.remainingServiceMap = new TreeMap<> ();
     this.jobRemainingServiceTimeMap = new HashMap<> ();
   }
@@ -127,7 +127,7 @@ implements SimQueueState<J, Q>
     this.arrivalTimesMap.clear ();
     this.serverAccessCredits = Integer.MAX_VALUE;
     this.startTimesMap.clear ();
-    this.jobsExecutingMap.clear ();
+    this.jobsInServiceAreaMap.clear ();
     this.remainingServiceMap.clear ();
     this.jobRemainingServiceTimeMap.clear ();
     for (SimQueueStateHandler handler : this.handlerNameMap.values ())
@@ -173,19 +173,12 @@ implements SimQueueState<J, Q>
   }
 
   @Override
-  public final void startQueueAccessVacation (final double time)
+  public final void setQueueAccessVacation (final double time, final boolean start)
   {
     setTime (time);
-    this.queueAccessVacation = true;
+    this.queueAccessVacation = start;
   }
 
-  @Override
-  public final void stopQueueAccessVacation (final double time)
-  {
-    setTime (time);
-    this.queueAccessVacation = false;
-  }
-  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // ARRIVALS
@@ -216,20 +209,20 @@ implements SimQueueState<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // JOBS WAITING
+  // JOBS IN WAITING AREA
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   @Override
-  public final Set<J> getJobsWaiting ()
+  public final Set<J> getJobsInWaitingArea ()
   {
-    return SimQueueState.super.getJobsWaiting ();
+    return SimQueueState.super.getJobsInWaitingArea ();
   }
   
   @Override
-  public final Set<J> getJobsWaitingOrdered ()
+  public final Set<J> getJobsInWaitingAreaOrdered ()
   {
-    return SimQueueState.super.getJobsWaitingOrdered ();
+    return SimQueueState.super.getJobsInWaitingAreaOrdered ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -257,7 +250,7 @@ implements SimQueueState<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // JOBS EXECUTING
+  // JOBS IN SERVICE AREA
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -269,23 +262,23 @@ implements SimQueueState<J, Q>
     return this.startTimesMap;
   }
   
-  private final NavigableMap<Double, Set<J>> jobsExecutingMap;  
+  private final NavigableMap<Double, Set<J>> jobsInServiceAreaMap;  
   
   @Override
-  public final NavigableMap<Double, Set<J>> getJobsExecutingMap ()
+  public final NavigableMap<Double, Set<J>> getJobsInServiceAreaMap ()
   {
-    return this.jobsExecutingMap;
+    return this.jobsInServiceAreaMap;
   }
   
   @Override
-  public final Set<J> getJobsExecuting ()
+  public final Set<J> getJobsInServiceArea ()
   {
-    return SimQueueState.super.getJobsExecuting ();
+    return SimQueueState.super.getJobsInServiceArea ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // JOBS EXECUTING - REMAINING SERVICE TIME
+  // JOBS IN SERVICE AREA - REMAINING SERVICE TIME
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -373,7 +366,7 @@ implements SimQueueState<J, Q>
       throw new IllegalArgumentException ();
     setTime (time);
     for (final J job : starters)
-      if (! getJobsWaiting ().contains (job))
+      if (! getJobsInWaitingArea ().contains (job))
         throw new IllegalArgumentException ();
     if (this.serverAccessCredits < starters.size ())
       throw new IllegalArgumentException ();
@@ -382,9 +375,9 @@ implements SimQueueState<J, Q>
     for (final J job : starters)
     {
       this.startTimesMap.put (job, time);
-      if (! this.jobsExecutingMap.containsKey (time))
-        this.jobsExecutingMap.put (time, new LinkedHashSet<> ());
-      this.jobsExecutingMap.get (time).add (job);
+      if (! this.jobsInServiceAreaMap.containsKey (time))
+        this.jobsInServiceAreaMap.put (time, new LinkedHashSet<> ());
+      this.jobsInServiceAreaMap.get (time).add (job);
       final double rsJob = getServiceTime (this.queue, job);
       if (! this.remainingServiceMap.containsKey (rsJob))
         this.remainingServiceMap.put (rsJob, new ArrayList<> ());
@@ -468,12 +461,13 @@ implements SimQueueState<J, Q>
       if (started)
       {
         this.startTimesMap.remove (job);
-        this.jobsExecutingMap.get (startTime).remove (job);
-        if (this.jobsExecutingMap.get (startTime).isEmpty ())
-          this.jobsExecutingMap.remove (startTime);
+        this.jobsInServiceAreaMap.get (startTime).remove (job);
+        if (this.jobsInServiceAreaMap.get (startTime).isEmpty ())
+          this.jobsInServiceAreaMap.remove (startTime);
         final double rsJob = this.jobRemainingServiceTimeMap.get (job);
         this.jobRemainingServiceTimeMap.remove (job);
-        this.remainingServiceMap.get (rsJob).remove (job);
+        if (! this.remainingServiceMap.get (rsJob).remove (job))
+          throw new IllegalStateException ();
         if (this.remainingServiceMap.get (rsJob).isEmpty ())
           this.remainingServiceMap.remove (rsJob);
       }

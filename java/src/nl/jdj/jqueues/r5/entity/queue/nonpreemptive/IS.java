@@ -34,7 +34,7 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     return job.getServiceTime (this);
   }
   
-  /**  Creates a new {@link IS} queue with given {@link SimEventList}.
+  /** Creates a new {@link IS} queue with given {@link SimEventList}.
    * 
    * @param eventList The event list to use.
    * 
@@ -44,7 +44,7 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     super (eventList);
   }
   
-  /**  Returns a new {@link IS} object on the same {@link SimEventList}.
+  /** Returns a new {@link IS} object on the same {@link SimEventList}.
    * 
    * @return A new {@link IS} object on the same {@link SimEventList}.
    * 
@@ -57,15 +57,6 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     return new IS<> (getEventList ());
   }
   
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
   /** Calls super method (in order to make implementation final).
    * 
    */

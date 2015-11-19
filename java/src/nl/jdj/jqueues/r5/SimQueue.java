@@ -1,205 +1,97 @@
 package nl.jdj.jqueues.r5;
 
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueueBase;
-import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueComposite;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.AbstractNonPreemptiveSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF;
-import nl.jdj.jqueues.r5.entity.queue.processorsharing.PS;
-import nl.jdj.jqueues.r5.entity.queue.serverless.AbstractServerlessSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
-import nl.jdj.jsimulation.r5.SimEvent;
-import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
-import nl.jdj.jsimulation.r5.SimEventListListener;
+
 
 /** A (generic) queueing system capable of hosting and optionally serving jobs ({@link SimJob}s).
  *
  * <p> A {@link SimQueue} is an abstraction of a <i>queueing system</i> from queueing theory.
- * Such a system has an input accepting <i>jobs</i> (in our case {@link SimJob}s), each of which resides for a certain
- * amount of time in the system and eventually <i>departs</i> at its output.
- * The general notion is that jobs arrive at a queueing system
- * in order to receive some kind of service,
- * without actually being concerned about the actual type of service provided;
- * all that matters is a relative indication of the required <i>service time</i> from the queueing system,
- * and the resulting <i>sojourn time</i> in the system, which may be different from the job's required service time due
- * to other jobs requesting service from the same (usually finite-capacity) server,
- * in other words, due to server <i>contention</i>. The way in which the queueing system divides its serving capacity among
- * competing jobs and the order of service and relative priority given to them
- * is often referred to a its <i>queueing discipline</i> or <i>policy</i>.
- * 
- * <p> For many types of queueing systems with simple policies,
- * the internal structure can be seen as an area in which jobs that arrived <i>wait</i> until preceding jobs have finished,
- * and another area (the <i>server(s)</i>) that serves jobs (in turn) until completion.
- * A notorious example of this is the classic First-Come First Served (FCFS) queueing system
- * which serves jobs (a single one a a time) until completion in their order of arrival.
- * This gives rise to the idea that a queueing system
- * can be seen as
- * an area holding jobs awaiting service (the waiting area, or 'queue'),
- * and an area holding one or more jobs exclusively being served (the service area, or 'server(s)').
  * 
  * <p>
- * Unfortunately, this viewpoint is incomplete
- * in the sense that such a hard distinction between 'waiting' and 'being served exclusively' often cannot be made.
- * Several useful (idealized) policies
- * serve multiple jobs at once (like the Processor-Sharing (PS) policy,
- * sharing the server's capacity equally among all jobs present),
- * or switch the entire service capacity from one job to another with a certain service period (as in the Round-Robin (RR) policy).
- * 
- * <p>Therefore, in a {@link SimQueue},
- * the notion of 'waiting' is exclusively reserved
- * for the situation in which a job has arrived at a queueing system,
- * but has not yet received <i>any service at all</i>.
- * For policies like FCFS, this notion coincides with the classical viewpoint on queueing systems,
- * whereas for policies like PS,
- * this notion agrees with the general idea that arriving jobs do not have to wait before receiving service.
- * In our interface, it is (just) important to note that 'started jobs' do not necessarily have exclusive access to the server.
+ * The following {@code javadoc} section aims at concisely specifying the {@link SimQueue} interface.
+ * The assumptions and constraints in the sequel should not be interpreted as "agreed upon in the field",
+ * but motivations for them are not given in order to keep the section at (hopefully) pleasant length.
  * 
  * <p>
- * The life-cycle of a queue visit of a job thus is as follows.
- * {@link SimJob}s are offered for service through {@link #arrive}.
- * Depending on the queueing discipline, the job may be taking into service, in other words, start.
- * Between arrival and start, a job is said to be <i>waiting</i>.
- * After its start, a job is said to be <i>executing</i>.
- * Once the execution finishes, the job <i>departs</i> from the queue.
- * Note, however, that a job may also depart from the {@link SimQueue} without having started!
+ * A {@link SimQueue} accepts so-called <i>jobs</i> (in our case {@link SimJob}s) for a <i>visit</i>.
+ * Each job can visit at most one queue at a time,
+ * and while it is visiting a queue,
+ * it cannot initiate <i>another</i> visit to that same queue.
  * 
  * <p>
- * Once a job has been offered, {@link #revoke} tries to revoke the job,
- * if (still) possible and if supported by the queue discipline at all.
+ * A visit is initiated by the <i>arrival</i> of a job at a queue, see {@link #arrive}.
  * 
- * A queue may also choose to drop a job, whether in service or not.
- * Note the difference between a revocation (at the caller's discretion) and a drop (at the queue's discretion).
- * If a job is neither dropped nor revoked, and receives sufficient service from the queue,
- * it will depart from it (a departure).
- *
  * <p>
- * Despite the large number of freedom degrees for {@link SimQueue}s, there is also a number of (obvious) restrictions
- * on the behavior of a queue.
- * For instance,
+ * During a visit, a job is either in the queue's so-called <i>waiting area</i>,
+ * in which it always waits,
+ * or in the queue's <i>service area</i>,
+ * in which the job <i>can</i> receive <i>service</i> from
+ * the servers in the service area.
+ * At the start of a visit, a job is either put
+ * in the waiting area or directly into the service area
+ * (or <i>dropped</i> immediately).
+ * A job can move at most once from the waiting into the service area,
+ * but not in reverse direction.
+ * Entering the service area of a queue is called <i>starting</i> the job.
+ * 
+ * <p>
+ * In itself, a {@link SimQueue} makes no assumption whatsoever about the server structure,
+ * except for the fact that <i>only jobs in the service area can receive service</i>.
+ * But other than that, there may be any number (including zero and infinity) of servers,
+ * and the number of servers may change in time in the {@link SimQueue} interface.
+ * This flexibility, however, comes at the expense of the absence of server-structure methods
+ * on the (bare) {@link SimQueue} interface.
+ * 
+ * Also note that jobs in the service area do <i>not</i> have to be served all the time
+ * (although many sub-interfaces/sub-classes impose this requirement).
+ * 
+ * <p>
+ * A visit can end in three different ways:
  * <ul>
- * <li>a job cannot start, be dropped or be revoked before having arrived;
- * <li>a job can start at most once during a queue visit;
- * <li>a job can only <i>leave</i> the queueing system through departure (with or without being served),
- *     successful revocation or drop.
+ * <li>a <i>departure</i> (the visit ends normally),
+ * <li>a <i>drop</i> (the queue cannot complete the visit, e.g., because of limited buffer space or vacation),
+ * <li>a <i>revocation</i> (the job is removed upon external request).
  * </ul>
+ * If a visit ends, the job is said to <i>exit</i> (<i>depart from</i>; <i>be dropped at</i>; <i>be revoked at</i>) the queue.
+ * Each way to exit the queue can be from the waiting area or from the service area
+ * (but sub-classes may restrict the possibilities).
  * 
  * <p>
- * Note that with the current interface,
- * a {@link SimJob} <i>cannot</i> visit multiple {@link SimQueue}s simultaneously.
- * The {@link SimQueue} currently being visited by
- * a {@link SimJob} can be obtained from {@link SimJob#getQueue};
- * this must be maintained by implementations of
- * {@link SimQueue#arrive}.
- *
- * <p>
- * In general, the required service ('execution') time of the job during a queue visit
- * must be provided by each job through {@link SimJob#getServiceTime}.
- * It must remain constant during a queue visit (but may be changed in between visits).
- * Not all {@link SimQueue} implementations use the notion of service time (e.g., {@link SINK}),
- * but if they do,
- * the service time is to be interpreted as follows:
- * If a queue spends unit capacity on serving this and only this job, it will
- * leave the queue exactly after the requested service time has elapsed since its start.
- * Unless explicitly specified by the implementation, the default capacity of a server (or each server in case of a 
- * multi-server queue) is assumed to be unity throughout.
- * Since the notion of variable-capacity servers is not that common,
- * it has not been incorporated into this interface.
- * Although queues are not allowed to increase the requested service time of a job (e.g., to compensate overhead), they are allowed
- * to serve jobs at a rate lower than their capacity, or to take vacation periods.
- *
- * <p>
- * Some queueing systems override the requested service time as (would be) obtained through {@link SimJob#getServiceTime},
- * and instead use a different source to obtain the service time.
- * Implementations are strongly encouraged to document the source of the job's service time,
- * if different from (default) requesting this at the job.
- * In any case, the requested service time of a job, irrespective of its source, has to remain constant during a job's visit to
- * a particular queue.
+ * If a visit never ends, the job (or the visit) is named <i>sticky</i>;
+ * again this can be at the waiting area or the service area.
  * 
  * <p>
- * A {@link SimQueue} supports two types of <i>vacations</i>:
- * <ul>
- * <li>During a <i>queue-access vacation</i>, access to the <i>SimQueue</i> is prohibited and
- *     all jobs are dropped immediately upon arrival,
- *     see {@link #startQueueAccessVacation()}, {@link #startQueueAccessVacation(double)},
- *         {@link #stopQueueAccessVacation} and {@link #isQueueAccessVacation}.
- *     A queue-access vacation affects the queue's behavior <i>only</i> upon arrivals.
- *     Note that the vacation may be for a given duration, or for undetermined time until explicitly stopped.
- * <li>During a <i>server-access vacation</i>, jobs are prohibited to <i>start</i>, i.e., there is no access
- *       for jobs waiting to the server. It does not affect jobs that have already started. Server-access vacations
- *       are actually somewhat more flexible through the notion of <i>server-access credits</i>, denoting the number of jobs
- *       still admissible to the server, see {@link #getServerAccessCredits}.
- *       A server-access vacation starts when there are no more server-access credits
- *       (due to jobs starting), and ends when credits are explicitly granted to the interface through
- *       {@link #setServerAccessCredits}.
- *       Note that by default, each <code>SimQueue</code> has infinite server-access credits.
- * </ul>
+ * Each {@link SimQueue} must support the notions of <i>queue-access vacations</i> during which all jobs are dropped upon arrival,
+ * and of <i>server-access credits</i> that limit the remaining number of jobs that can be started
+ * (i.e., moved from the waiting area into the service area).
  * 
  * <p>
- * Each {@link SimQueue} maintains and reports changes to the state in which it <i>guarantees</i> that
- * the next arriving job will
- * <ul>
- * <li>start service immediately without waiting, or,
- * <li>departs immediately, without service and without waiting.
- * </ul>
+ * The <i>state</i> of a {@link SimQueue} includes at least the set of jobs present (and in which area each resides),
+ * its queue-access vacation state and its remaining number of server-access credits.
+ * In addition, the so-called {@code noWaitArmed} state has to be maintained.
+ * If a queue is in {@code noWaitArmed} state, any job will start service immediately or exit immediately upon arrival,
+ * <i>assuming</i> the absence of a queue access vacation and at least one server-access credit
+ * (i.e., ignoring the actual state settings for these features).
+ * See {@link #isNoWaitArmed}.
  * 
  * <p>
- * If either condition is met, the queueing system is said to be in <i>noWaitArmed</i> state.
- * Note that this state setting ignores queue and server-access vacations.
- * 
- * <p>
- * A convenient queue-centric way to be notified of {@link SimQueue} events is by registering as a {@link SimQueueListener}
- * or as a {@link SimEntityListener} through {@link #registerSimEntityListener}.
- * Arrival-related notifications are always issued immediately at the time a job arrives at a queue,
- * in other words, at a point where the queue does not even know yet about the existence of the job
- * (and vice versa, for that matter).
- * All other notifications are issued at the point where the queue has reached a consistent state (e.g.,
- * <i>after</i> a departure).
- * 
- * <p>
- * A {@link SimQueueListener} also get notifications
- * right <i>before</i> a state change in the queue occurs, e.g., right before a job departure.
- * Such notifications are named <i>updates</i>, see {@link SimQueueListener#notifyUpdate}.
- * 
- * <p>
- * If a job is successfully revoked, or if it is dropped, none of the departure events are fired.
- * Also, be aware that there is no guarantee that a start-service
- * or a departure event is ever called for a {@link SimJob} at all.
- *
- * <p>A {@link SimQueue}s relies
- * on an underlying {@link SimEventList} for scheduling events ({@link SimEvent})
- * in time and invoking the actions ({@link SimEventAction}).
- * Implementations must also listen to the underlying event list for resets,
- * see {@link SimEventListListener#notifyEventListReset}.
- *
- * <p>
- * Basic implementations of the most important non-preemptive
- * queueing disciplines are provided in the {@link AbstractNonPreemptiveSimQueue} class
- * and its concrete implementations in the same package like {@link FCFS}, {@link LCFS} and {@link SJF}.
- * For the processor-sharing queue see {@link PS}, and for various server-less queues
- * see {@link AbstractServerlessSimQueue} and descendants.
- * For composite queues like Jackson networks and the like, see {@link SimQueueComposite}
- * and its implementations.
- * 
- * <p>
- * Partial utility implementations of {@link SimQueue} are available in this package through 
- * {@link AbstractSimQueueBase} and its descendant {@link AbstractSimQueue}.
+ * Each {@link SimQueue} (and {@link SimJob} for that matter) must notify all state changes,
+ * see {@link SimEntityListener} and its sub-interfaces.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
+ * @see SimEventList
+ * @see SimEntity
  * @see SimJob
- * @see SimEntityListener
  * @see SimQueueListener
  * @see AbstractSimQueueBase
  * @see AbstractSimQueue
- * @see AbstractNonPreemptiveSimQueue
- *
+ * 
  */
 public interface SimQueue<J extends SimJob, Q extends SimQueue>
 extends SimEntity<J, Q>
@@ -235,111 +127,97 @@ extends SimEntity<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Get the set of jobs currently residing at the queue, either waiting or executing.
+  /** Get the set of jobs currently visiting this queue.
    *
-   * <p>
-   * Callers should not attempt to modify the set.
-   * Implementors are encouraged to return read-only views on the collection.
-   * 
-   * @return The set of jobs residing at the queue, non-{@code null}.
+   * @return The set of jobs currently visiting the queue, non-{@code null}.
    * 
    * @see #getNumberOfJobs
-   * @see #getJobsWaiting
-   * @see #getJobsExecuting
+   * @see #getJobsInWaitingArea
+   * @see #getJobsInServiceArea
    * 
    */
   public Set<J> getJobs ();
 
-  /** Gets the number of jobs currently residing at the queue, either waiting or executing.
+  /** Gets the number of jobs currently visiting the queue.
    *
    * <p>
-   * Typically, this method is more efficient than {@code getJobs ().size ()}.
+   * Typically, this method is more efficient than {@code getJobs ().size ()},
+   * but both methods must always yield the same result.
    * 
-   * @return The number of jobs at the queue, zero or positive.
+   * @return The number of jobs currently visiting the queue, zero or positive.
    * 
    * @see #getJobs
-   * @see #getNumberOfJobsWaiting
-   * @see #getNumberOfJobsExecuting
+   * @see #getNumberOfJobsInWaitingArea
+   * @see #getNumberOfJobsInServiceArea
    * 
    */
   public int getNumberOfJobs ();
   
-  /** Get the set of jobs waiting (i.e., <i>not</i> executing).
+  /** Get the set of jobs in the waiting area.
    *
-   * <p>
-   * Callers should not attempt to modify the set.
-   * Implementors are encouraged to return read-only views on the collection.
+   * @return The set of jobs in the waiting area, non-{@code null}.
    * 
-   * <p>
-   * The default implementation in this interface returns an unmodifiable set.
-   * 
-   * @return The set of jobs waiting at the queue, non-{@code null}.
-   * 
-   * @see #getNumberOfJobsWaiting
+   * @see #getNumberOfJobsInWaitingArea
    * @see #getJobs
-   * @see #getJobsExecuting
+   * @see #getJobsInServiceArea
    * 
    */
-  public default Set<J> getJobsWaiting ()
+  public default Set<J> getJobsInWaitingArea ()
   {
     final Set<J> set = new LinkedHashSet<> (getJobs ());
-    set.removeAll (getJobsExecuting ());
-    return Collections.unmodifiableSet (set);
+    set.removeAll (getJobsInServiceArea ());
+    return set;
   }
 
-  /** Gets the number of jobs waiting (i.e., <i>not</i> executing).
+  /** Gets the number of jobs in the waiting area.
    * 
    * <p>
-   * Typically, this method is more efficient than {@code getJobsWaiting ().size ()}.
+   * Typically, this method is more efficient than {@code getJobsInWaitingArea ().size ()},
+   * but both methods must always yield the same result.
    * 
-   * @return The number of jobs waiting at the queue.
+   * @return The number of jobs in the waiting area.
    * 
-   * @see #getJobsWaiting
+   * @see #getJobsInWaitingArea
    * @see #getNumberOfJobs
-   * @see #getNumberOfJobsExecuting
+   * @see #getNumberOfJobsInServiceArea
    * 
    */
-  public default int getNumberOfJobsWaiting ()
+  public default int getNumberOfJobsInWaitingArea ()
   {
-    return getNumberOfJobs () - getNumberOfJobsExecuting ();
+    return getNumberOfJobs () - getNumberOfJobsInServiceArea ();
   }
 
-  /** Get the set of jobs currently being executed at the queue (i.e., not waiting).
+  /** Get the set of jobs in the service area.
    *
-   * <p>
-   * Callers should not attempt to modify the set.
-   * Implementors are encouraged to return read-only views on the collection.
+   * @return The set of jobs in the service area, non-{@code null}.
    * 
-   * @return The set of jobs currently being executed at the queue (i.e., not waiting).
-   * 
-   * @see #getNumberOfJobsExecuting
+   * @see #getNumberOfJobsInServiceArea
    * @see #getJobs
-   * @see #getJobsWaiting
+   * @see #getJobsInWaitingArea
    * 
    */
-  public Set<J> getJobsExecuting ();
+  public Set<J> getJobsInServiceArea ();
 
-  /** Gets the number of jobs currently being executed at the queue (i.e., not waiting).
+  /** Gets the number of jobs in the service area.
    *
    * <p>
-   * Typically, this method is more efficient than {@code getJobsExecuting ().size ()}.
+   * Typically, this method is more efficient than {@code getJobsInServiceArea ().size ()},
+   * but both methods must always yield the same result.
    * 
-   * @return The number of jobs currently being executed at the queue (i.e., not waiting).
+   * @return The number of jobs in the service area.
    * 
-   * @see #getJobsExecuting
+   * @see #getJobsInServiceArea
    * @see #getNumberOfJobs
-   * @see #getNumberOfJobsWaiting
+   * @see #getNumberOfJobsInWaitingArea
    * 
    */
-  public int getNumberOfJobsExecuting ();
+  public int getNumberOfJobsInServiceArea ();
   
   /** Returns whether or not the queue is on queue-access vacation.
    * 
    * @return Whether or not the queue is on queue-access vacation.
    * 
-   * @see #startQueueAccessVacation()
-   * @see #startQueueAccessVacation(double)
-   * @see #stopQueueAccessVacation
+   * @see #setQueueAccessVacation
    * 
    */
   public boolean isQueueAccessVacation ();
@@ -349,14 +227,16 @@ extends SimEntity<J, Q>
    * The value {@link Integer#MAX_VALUE} is treated as infinity.
    * 
    * @return The remaining server-access credits, non-negative, with {@link Integer#MAX_VALUE} treated as infinity.
+   * 
    */
   public int getServerAccessCredits ();
   
-  /** Returns whether the next arriving job is guaranteed to suffer zero-waiting time before starting service or departing.
+  /** Returns whether the next arriving job is guaranteed to suffer zero-waiting time before starting service or exiting.
    * 
+   * <p>
    * The return value is <i>independent</i> of queue-access and server-access vacations.
    * 
-   * @return True if the next arriving job is guaranteed to suffer zero-waiting time before starting service or departing,
+   * @return True if the next arriving job is guaranteed to suffer zero-waiting time before starting service or exiting,
    *         in the absence of queue-access and server-access vacations.
    * 
    * @see SimQueueListener#notifyNewNoWaitArmed
@@ -370,48 +250,19 @@ extends SimEntity<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Start a queue-access vacation of undetermined duration (i.e., until explicit ending the vacation).
+  /** Starts or ends a queue-access vacation.
    * 
+   * <p>
    * During a queue-access vacation, all {@link SimJob}s will be dropped immediately upon arrival.
    * 
-   * If the queue is already on queue-access vacation, this method makes the vacation period undetermined (if not so already).
+   * @param time  The time at which to start or end the queue-access vacation, i.c., the current time.
+   * @param start Whether to start ({@code true}) or end ({@code false}) the vacation.
    * 
    * @see #arrive
-   * @see #startQueueAccessVacation(double)
-   * @see #stopQueueAccessVacation
    * @see #isQueueAccessVacation
    * 
    */
-  public void startQueueAccessVacation ();
-  
-  /** Start a queue-access vacation of given duration.
-   * 
-   * If the queue is already on queue-access vacation, this method will overrule previous 
-   * settings as to the (remaining) duration of the vacation.
-   * 
-   * @param duration The duration of the vacation (non-negative).
-   * 
-   * @see #arrive
-   * @see #startQueueAccessVacation()
-   * @see #stopQueueAccessVacation
-   * @see #isQueueAccessVacation
-   * 
-   * @throws IllegalArgumentException If the duration is (strictly) negative.
-   * 
-   */
-  public void startQueueAccessVacation (double duration);
-  
-  /** Immediately stops a queue-access vacation.
-   * 
-   * This method does nothing if the queue is not on queue-access vacation,
-   * and it overrules all settings as to the (remaining) duration of the vacation.
-   * 
-   * @see #startQueueAccessVacation()
-   * @see #startQueueAccessVacation(double)
-   * @see #isQueueAccessVacation
-   * 
-   */
-  public void stopQueueAccessVacation ();
+  public void setQueueAccessVacation (double time, boolean start);
   
   /** Arrival of a job at the queue.
    *
@@ -424,39 +275,39 @@ extends SimEntity<J, Q>
    * <p>
    * Note that during a <i>queue-access vacation</i>, all jobs will be dropped upon arrival.
    * 
-   * @param job  The job.
    * @param time The time at which the job arrives, i.c., the current time.
+   * @param job  The job.
    * 
    * @see #isQueueAccessVacation
    *
    */
-  public void arrive (J job, double time);
+  public void arrive (double time, J job);
 
   /** Revocation (attempt) of a job at a queue.
    *
    * <p>
    * If the job is not currently present at this {@link SimQueue}, {@code false} is returned.
    * 
-   * @param job  The job to be revoked from the queue.
-   * @param time The time at which the request is issued
-   *               (i.e., the current time).
+   * @param time             The time at which the request is issued, i.c., the current time.
+   * @param job              The job to be revoked from the queue.
    * @param interruptService Whether to allow interruption of the job's
    *                           service if already started.
-   *                         If false, revocation will only succeed if the
+   *                         If {@code false}, revocation will only succeed if the
    *                           job has not received any service yet.
    *
    * @return True if revocation succeeded (returns {@code false} if the job is not present).
    *
    */
-  public boolean revoke (J job, double time, boolean interruptService);
+  public boolean revoke (double time, J job, boolean interruptService);
 
   /** Sets the server-access credits.
    * 
+   * @param time    The time at which to set the credits, i.c., the current time.
    * @param credits The new remaining server-access credits, non-negative, with {@link Integer#MAX_VALUE} treated as infinity.
    * 
    * @throws IllegalArgumentException If credits is (strictly) negative.
    * 
    */
-  public void setServerAccessCredits (int credits);
+  public void setServerAccessCredits (double time, int credits);
   
 }

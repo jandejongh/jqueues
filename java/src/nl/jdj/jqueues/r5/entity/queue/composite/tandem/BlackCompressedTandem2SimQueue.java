@@ -77,7 +77,7 @@ public class BlackCompressedTandem2SimQueue
     super (eventList, (Set<DQ>) createQueuesSet (waitQueue, serveQueue), delegateSimJobFactory);
   }
 
-  /**  Returns a new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
+  /** Returns a new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
    * serve queues and the same delegate-job factory.
    * 
    * @return A new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
@@ -164,21 +164,6 @@ public class BlackCompressedTandem2SimQueue
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // UPDATE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -234,9 +219,9 @@ public class BlackCompressedTandem2SimQueue
       throw new IllegalArgumentException ();
     if (queue == getWaitQueue ())
     {
-      if (! getWaitQueue ().revoke (job, time, true))
+      if (! getWaitQueue ().revoke (time, job, true))
         throw new RuntimeException ();
-      getServeQueue ().arrive (job, time);
+      getServeQueue ().arrive (time, job);
     }
   }
 
@@ -265,7 +250,7 @@ public class BlackCompressedTandem2SimQueue
     if (! getQueues ().contains (queue))
       throw new IllegalArgumentException ();
     if (queue == getServeQueue ())
-      getWaitQueue ().setServerAccessCredits (noWaitArmed ? 1 : 0);
+      getWaitQueue ().setServerAccessCredits (time, noWaitArmed ? 1 : 0);
   }
 
 }

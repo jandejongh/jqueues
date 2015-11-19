@@ -72,7 +72,7 @@ public class BlackJacksonSimQueueNetwork
       delegateSimJobFactory);
   }
 
-  /**  Returns a new {@link BlackJacksonSimQueueNetwork} object on the same {@link SimEventList} with copies of the sub-queues and
+  /** Returns a new {@link BlackJacksonSimQueueNetwork} object on the same {@link SimEventList} with copies of the sub-queues and
    *  probability arguments, a new RNG, and the same delegate-job factory.
    * 
    * @return A new {@link BlackJacksonSimQueueNetwork} object on the same {@link SimEventList} with copies of the sub-queues and
@@ -190,21 +190,6 @@ public class BlackJacksonSimQueueNetwork
   public final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // UPDATE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

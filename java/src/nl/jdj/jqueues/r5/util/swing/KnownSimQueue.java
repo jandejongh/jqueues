@@ -591,11 +591,11 @@ public enum KnownSimQueue
     final SimQueue queue = generatorProfile.newInstance (getQueueClass (), parameters);
     if (queue != null)
     {
+      // XXX This is unpleasant; we can no longer set the qav and sac "directly".
       if (parameters.queueAccessVacation)
-        queue.startQueueAccessVacation ();
-      else
-        queue.stopQueueAccessVacation ();
-      queue.setServerAccessCredits (parameters.serverAccessCredits);
+        queue.setQueueAccessVacation (Double.NEGATIVE_INFINITY, true);
+      if (Double.isFinite (parameters.serverAccessCredits))
+        queue.setServerAccessCredits (Double.NEGATIVE_INFINITY, parameters.serverAccessCredits);
     }
     else
       System.err.println ("Generator profile " + generatorProfile + " on " + this + " failed to generate a new SimQueue.");

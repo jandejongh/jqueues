@@ -186,7 +186,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   private /* final */ void exitJobFromQueues (final J realJob, final DJ delegateJob)
   {
     this.jobQueue.remove (realJob);
-    this.jobsExecuting.remove (realJob);
+    this.jobsInServiceArea.remove (realJob);
     this.delegateSimJobMap.remove (realJob);
     this.realSimJobMap.remove (delegateJob);    
   }
@@ -263,7 +263,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /**  Resets this {@link AbstractBlackSimQueueComposite}.
+  /** Resets this {@link AbstractBlackSimQueueComposite}.
    * 
    * <p>
    * Calls super method,
@@ -296,7 +296,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if (this.jobQueue.contains (job) || this.jobsExecuting.contains (job))
+    if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
       throw new IllegalArgumentException ();
     if (this.delegateSimJobMap.containsKey (job))
       throw new IllegalStateException ();
@@ -326,7 +326,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if ((! this.jobQueue.contains (job)) || this.jobsExecuting.contains (job))
+    if ((! this.jobQueue.contains (job)) || this.jobsInServiceArea.contains (job))
       throw new IllegalArgumentException ();
     if (! this.delegateSimJobMap.containsKey (job))
       throw new IllegalStateException ();
@@ -344,7 +344,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
         throw new IllegalArgumentException ();
       if (firstQueue != null)
-        firstQueue.arrive (delegateJob, time);
+        firstQueue.arrive (time, delegateJob);
       else
       {
         // We do not get a queue to arrive at.
@@ -390,7 +390,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   {
     final DJ delegateJob = getDelegateJob (job);
     final SimQueue queue = delegateJob.getQueue ();
-    if (queue != null && ! queue.revoke (delegateJob, time, interruptService))
+    if (queue != null && ! queue.revoke (time, delegateJob, interruptService))
       return false;
     if (queue == null)
       exitJobFromQueues (job, delegateJob);
@@ -428,7 +428,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
           if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
             throw new IllegalArgumentException ();
           if (firstQueue != null)
-            firstQueue.arrive (delegateJob, time);
+            firstQueue.arrive (time, delegateJob);
           else
           {
             // We do not get a queue to arrive at.
@@ -488,11 +488,22 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * 
    */
   @Override
-  public final void notifyUpdate (final double t, final DQ queue)
+  public final void notifyUpdate (final double t, final SimEntity entity)
   {
-    if (queue == null || ! getQueues ().contains (queue))
+    if (entity == null || ! getQueues ().contains ((DQ) entity))
       throw new IllegalStateException ();
     super.update (t);
+  }
+  
+  /** Calls super method.
+   * 
+   */
+  @Override
+  public final void notifyStateChanged (final double t, final SimEntity entity)
+  {
+    if (entity == null || ! getQueues ().contains ((DQ) entity))
+      throw new IllegalStateException ();
+    super.stateChanged (t);
   }
   
   /** Checks if the job is a known delegate job, and calls {@link #update}.
@@ -521,7 +532,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * <p>
    * Calls {@link #update}.
    * If needed, fires a start event for the real job, and
-   * puts that job in {@link #jobsExecuting}.
+   * puts that job in {@link #jobsInServiceArea}.
    * 
    * <p>
    * This implementation does not allow the start of foreign delegate jobs.
@@ -534,9 +545,9 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   {
     final J realJob = getRealJob (job, queue);
     update (t);
-    if (! this.jobsExecuting.contains (realJob))
+    if (! this.jobsInServiceArea.contains (realJob))
     {
-      this.jobsExecuting.add (realJob);
+      this.jobsInServiceArea.add (realJob);
       fireStart (t, realJob, (Q) this);
       startForSubClass (t, job, queue);
       
@@ -568,7 +579,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     {
       if (! getQueues ().contains (dropDestinationQueue))
         throw new RuntimeException ();
-      dropDestinationQueue.arrive (job, t);
+      dropDestinationQueue.arrive (t, job);
     }
     else
     {
@@ -653,7 +664,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       fireDeparture (t, realJob, (Q) this);  
     }
     else
-      nextQueue.arrive (job, t);
+      nextQueue.arrive (t, job);
   }
 
   /** Calls {@link #update} and {@link #reassessNoWaitArmed}.

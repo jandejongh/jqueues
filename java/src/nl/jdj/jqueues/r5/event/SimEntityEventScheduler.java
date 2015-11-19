@@ -30,7 +30,7 @@ public abstract class SimEntityEventScheduler
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /**  Schedules all {@link SimEntityEvent}s on the given {@link SimEventList}, optionally after resetting it to a specific time.
+  /** Schedules all {@link SimEntityEvent}s on the given {@link SimEventList}, optionally after resetting it to a specific time.
    * 
    * @param eventList   The event list.
    * @param reset       Whether to reset the event list before scheduling.

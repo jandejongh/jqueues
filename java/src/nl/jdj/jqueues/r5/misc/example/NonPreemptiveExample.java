@@ -22,7 +22,7 @@ import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** Example code for <code>nl.jdj.jqueues.nonpreemptive</code>.
+/** Example code for <code>nonpreemptive</code> package.
  * 
  */
 public final class NonPreemptiveExample
@@ -51,7 +51,7 @@ public final class NonPreemptiveExample
    */
   public static void main (String[] args)
   {
-    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.nonpreemptive PACKAGE ===");
+    System.out.println ("=== EXAMPLE PROGRAM FOR nonpreemptive PACKAGE ===");
     System.out.println ("-> Creating jobs...");
     final List<SimJob> jobList = new ArrayList<>  ();
     for (int n = 1; n <= 10; n++)
@@ -75,7 +75,7 @@ public final class NonPreemptiveExample
         @Override
         public void action (final SimEvent event)
         {
-          fcfsQueue.arrive (j, arrTime);
+          fcfsQueue.arrive (arrTime, j);
         }
       }));
     }

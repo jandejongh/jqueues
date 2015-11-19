@@ -57,10 +57,10 @@ implements MediumPhyStateObserver
   {
     final Set<FCFS> set = new LinkedHashSet<>  ();
     final FCFS waitQueue = new FCFS (eventList);
-    waitQueue.setServerAccessCredits (1);
+    waitQueue.setServerAccessCredits (Double.NEGATIVE_INFINITY, 1);
     set.add (waitQueue);
     final FCFS contentionQueue = new FCFS (eventList);
-    contentionQueue.setServerAccessCredits (0);
+    contentionQueue.setServerAccessCredits (Double.NEGATIVE_INFINITY, 0);
     set.add (contentionQueue);
     return set;
   }
@@ -496,8 +496,8 @@ implements MediumPhyStateObserver
     {
       // Initiate transmission.
       // transmit (time);
-      this.contentionQueue.setServerAccessCredits (1);
-      this.waitQueue.setServerAccessCredits (1);
+      this.contentionQueue.setServerAccessCredits (time, 1);
+      this.waitQueue.setServerAccessCredits (time, 1);
     }
     this.state = state;
   }

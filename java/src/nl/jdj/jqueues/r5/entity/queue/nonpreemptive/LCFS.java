@@ -29,7 +29,7 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
     super (eventList);
   }
   
-  /**  Returns a new {@link LCFS} object on the same {@link SimEventList}.
+  /** Returns a new {@link LCFS} object on the same {@link SimEventList}.
    * 
    * @return A new {@link LCFS} object on the same {@link SimEventList}.
    * 
@@ -53,15 +53,6 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
     this.jobQueue.add (0, job);
   }
   
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
   /** Calls super method (in order to make implementation final).
    * 
    */

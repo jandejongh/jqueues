@@ -21,7 +21,7 @@ extends AbstractSimQueueStat<J, Q>
   
   // Our actual statistics, with corresponding (calculated) average.
   private double cumNrOfJobs  = 0, avgNrOfJobs  = 0; // Number of jobs residing at queue.
-  private double cumNrOfJobsX = 0, avgNrOfJobsX = 0; // Number of jobs executing at queue.
+  private double cumNrOfJobsX = 0, avgNrOfJobsX = 0; // Number of jobs in service area at queue.
   
   /** Resets all the statistics.
    * 
@@ -49,7 +49,7 @@ extends AbstractSimQueueStat<J, Q>
     if (queue == null)
       return;
     this.cumNrOfJobs  += queue.getNumberOfJobs () * dt;
-    this.cumNrOfJobsX += queue.getNumberOfJobsExecuting ()* dt;
+    this.cumNrOfJobsX += queue.getNumberOfJobsInServiceArea ()* dt;
     // Add others here...
   }
   
@@ -92,12 +92,12 @@ extends AbstractSimQueueStat<J, Q>
     return this.avgNrOfJobs;
   }
 
-  /** Returns the average number of jobs executing at the queue.
+  /** Returns the average number of jobs in the service area at the queue.
    * 
-   * @return The average number of jobs executing at the queue.
+   * @return The average number of jobs in the service area at the queue.
    * 
    */
-  public final double getAvgNrOfJobsExecuting ()
+  public final double getAvgNrOfJobsInServiceArea ()
   {
     calculate ();
     return this.avgNrOfJobsX;

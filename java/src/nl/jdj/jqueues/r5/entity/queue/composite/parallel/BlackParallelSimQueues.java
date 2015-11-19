@@ -65,7 +65,7 @@ public class BlackParallelSimQueues
     super (eventList, queues, simQueueSelector, delegateSimJobFactory);
   }
 
-  /**  Returns a new {@link BlackParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
+  /** Returns a new {@link BlackParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
    *  the same {@link SimQueueSelector} (bearing in mind <code>this</code> could be its own selector),
    *  and the same delegate-job factory.
    * 

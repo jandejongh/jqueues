@@ -66,22 +66,22 @@ extends AbstractSimQueuePredictor<SimQueue>
       throw new IllegalArgumentException ();
     queueEventTypes.clear ();
     final double time = queueState.getTime ();
-    final int numberOfJobsExecuting = queueState.getJobRemainingServiceTimeMap ().size ();
-    if (numberOfJobsExecuting == 0)
+    final int numberOfJobsInServiceArea = queueState.getJobRemainingServiceTimeMap ().size ();
+    if (numberOfJobsInServiceArea == 0)
       return Double.NaN;
     if (Double.isNaN (time))
       throw new IllegalStateException ();
-    if (this.hasc && numberOfJobsExecuting > this.c)
+    if (this.hasc && numberOfJobsInServiceArea > this.c)
       throw new IllegalStateException ();
     if (queueState.getStartTimesMap ().isEmpty ())
       throw new IllegalStateException ();
     if (this.hasc && queueState.getStartTimesMap ().size () > this.c)
       throw new IllegalStateException ();
     double minDepartureTime = Double.NaN;
-    for (final Entry<SimJob, Double> jobExecutingEntry : queueState.getStartTimesMap ().entrySet ())
+    for (final Entry<SimJob, Double> jobInServiceAreaEntry : queueState.getStartTimesMap ().entrySet ())
     {
-      final SimJob jobExecuting = jobExecutingEntry.getKey ();
-      final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobExecuting);
+      final SimJob jobInServiceArea = jobInServiceAreaEntry.getKey ();
+      final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobInServiceArea);
       final double departureTime = time + remainingServiceTime;
       if (departureTime < time)
         throw new RuntimeException ();
@@ -97,7 +97,7 @@ extends AbstractSimQueuePredictor<SimQueue>
    final SimQueueState<SimJob, SimQueue> queueState)
    throws SimQueuePredictionException
   {
-    return queueState.getJobsWaitingOrdered ().iterator ().next ();
+    return queueState.getJobsInWaitingAreaOrdered ().iterator ().next ();
   }
   
   @Override
@@ -130,10 +130,7 @@ extends AbstractSimQueuePredictor<SimQueue>
     else if (eventType == SimQueueSimpleEventType.QUEUE_ACCESS_VACATION)
     {
       final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (time);
-      if (queueAccessVacation)
-        queueState.startQueueAccessVacation (time);
-      else
-        queueState.stopQueueAccessVacation (time);
+      queueState.setQueueAccessVacation (time, queueAccessVacation);
     }
     else if (eventType == SimEntitySimpleEventType.ARRIVAL)
     {
@@ -144,17 +141,17 @@ extends AbstractSimQueuePredictor<SimQueue>
         queueState.doArrivals (time, arrivals, visitLogsSet);
       else
       {
-        if (this.hasB && queueState.getJobsWaiting ().size () > this.B)
+        if (this.hasB && queueState.getJobsInWaitingArea ().size () > this.B)
           throw new IllegalStateException ();
-        if (this.hasB && queueState.getJobsWaiting ().size () == this.B
+        if (this.hasB && queueState.getJobsInWaitingArea ().size () == this.B
           && ! ((queueState.getServerAccessCredits () > 0)
-                && ((! this.hasc) || queueState.getJobsExecuting ().size () < this.c)))
+                && ((! this.hasc) || queueState.getJobsInServiceArea ().size () < this.c)))
           // Drops.
           queueState.doExits (time, arrivals, null, null, null, visitLogsSet);
         else
         {
           queueState.doArrivals (time, arrivals, visitLogsSet);
-          if (((! this.hasc) || queueState.getJobsExecuting ().size () < this.c)
+          if (((! this.hasc) || queueState.getJobsInServiceArea ().size () < this.c)
             && queueState.getServerAccessCredits () >= 1)
             queueState.doStarts (time, arrivals);
         }
@@ -169,17 +166,17 @@ extends AbstractSimQueuePredictor<SimQueue>
       {
         final boolean interruptService =
           workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).get (job);
-        final boolean isExecutingJob = queueState.getJobsExecuting ().contains (job);
-        // Make sure we do not revoke an executing job without the interruptService flag.
-        if (interruptService || ! isExecutingJob)
+        final boolean isJobInServiceArea = queueState.getJobsInServiceArea ().contains (job);
+        // Make sure we do not revoke a job in the service area without the interruptService flag.
+        if (interruptService || ! isJobInServiceArea)
         {
           final Set<SimJob> revocations = new HashSet<> ();
           revocations.add (job);
           queueState.doExits (time, null, revocations, null, null, visitLogsSet);
-          if (isExecutingJob)
+          if (isJobInServiceArea)
           {
             final int sac = queueState.getServerAccessCredits ();
-            if (sac > 0 && queueState.getJobsWaiting ().size () > 0)
+            if (sac > 0 && queueState.getJobsInWaitingArea ().size () > 0)
             {
               final Set<SimJob> starters = new LinkedHashSet<> ();
               starters.add (getJobToStart (queue, queueState));
@@ -194,14 +191,14 @@ extends AbstractSimQueuePredictor<SimQueue>
       final int oldSac = queueState.getServerAccessCredits ();
       final int newSac = workloadSchedule.getServerAccessCreditsMap_SQ_SV_ROEL_U ().get (time);
       queueState.setServerAccessCredits (time, newSac);
-      if (((! this.hasc) || queueState.getJobsExecuting ().size () < this.c)
+      if (((! this.hasc) || queueState.getJobsInServiceArea ().size () < this.c)
         && oldSac == 0
         && newSac > 0)
       {
         int remainingMaxStarters = newSac;
         if (this.hasc)
-          remainingMaxStarters = Math.min (remainingMaxStarters, this.c - queueState.getJobsExecuting ().size ());
-        remainingMaxStarters = Math.min (remainingMaxStarters, queueState.getJobsWaiting ().size ());
+          remainingMaxStarters = Math.min (remainingMaxStarters, this.c - queueState.getJobsInServiceArea ().size ());
+        remainingMaxStarters = Math.min (remainingMaxStarters, queueState.getJobsInWaitingArea ().size ());
         while (remainingMaxStarters > 0)
         {
           final Set<SimJob> starters = new LinkedHashSet<> ();
@@ -245,14 +242,14 @@ extends AbstractSimQueuePredictor<SimQueue>
     }
     else if (eventType == SimEntitySimpleEventType.DEPARTURE)
     {
-      if (queueState.getJobsExecuting ().size () < 1)
+      if (queueState.getJobsInServiceArea ().size () < 1)
         throw new IllegalStateException ();
-      if (this.hasc && queueState.getJobsExecuting ().size () > this.c)
+      if (this.hasc && queueState.getJobsInServiceArea ().size () > this.c)
         throw new IllegalStateException ();
       final Set<SimJob> departures = new HashSet<> (queueState.getRemainingServiceMap ().firstEntry ().getValue ());
       queueState.doExits (time, null, null, departures, null, visitLogsSet);
       final int sac = queueState.getServerAccessCredits ();
-      if (sac > 0 && queueState.getJobsWaiting ().size () > 0)
+      if (sac > 0 && queueState.getJobsInWaitingArea ().size () > 0)
       {
         final Set<SimJob> starters = new LinkedHashSet<> ();
         starters.add (getJobToStart (queue, queueState));

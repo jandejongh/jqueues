@@ -174,12 +174,12 @@ implements SimQueueListener
     g2d.drawLine (middleX + 30, middleY - 40, middleX + 30, middleY - 20);
     g2d.setStroke (savedStroke);
     // Draw number of jobs waiting.
-    g2d.drawString ("W:" + (this.queue.getNumberOfJobs () - this.queue.getNumberOfJobsExecuting ()), middleX - 20, middleY - 30);
+    g2d.drawString ("W:" + (this.queue.getNumberOfJobs () - this.queue.getNumberOfJobsInServiceArea ()), middleX - 20, middleY - 30);
     // Draw (single) server.
     g2d.setColor (Color.black);
     g2d.drawOval (middleX - 30, middleY + 10, 60, 60);
-    // Draw number of jobs executing.
-    g2d.drawString ("E:" + this.queue.getNumberOfJobsExecuting (), middleX - 20, middleY + 45);    
+    // Draw number of jobs in the service area.
+    g2d.drawString ("S:" + this.queue.getNumberOfJobsInServiceArea (), middleX - 20, middleY + 45);    
     // Draw queue name.
     g2d.setColor (Color.black);
     g2d.drawString (this.queue.toString (), middleX - 40, middleY + 90);
@@ -244,11 +244,16 @@ implements SimQueueListener
   }
   
   @Override
-  public void notifyUpdate (final double t, final SimQueue queue)
+  public void notifyUpdate (final double t, final SimEntity entity)
   {
-    notifyQueueChanged (t, queue);
   }
 
+  @Override
+  public void notifyStateChanged (final double t, final SimEntity entity)
+  {
+    notifyQueueChanged (t, (SimQueue) entity);    
+  }
+  
   @Override
   public void notifyArrival (final double t, final SimJob job, final SimQueue queue)
   {

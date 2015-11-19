@@ -58,7 +58,7 @@ implements SimQueueWithGate<J, Q>
     super (eventList);
   }
   
-  /**  Returns a new {@link GATE} object on the same {@link SimEventList}.
+  /** Returns a new {@link GATE} object on the same {@link SimEventList}.
    * 
    * @return A new {@link GATE} object on the same {@link SimEventList}.
    * 
@@ -190,21 +190,6 @@ implements SimQueueWithGate<J, Q>
     openGate (time, 0);
   }
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // UPDATE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
-  }
-
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // MAIN OPERATIONS

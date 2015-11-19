@@ -33,6 +33,20 @@ implements SimEntityListener<J, Q>
   }
 
   @Override
+  public void notifyUpdate (final double time, final SimEntity entity)
+  {
+    System.out.print (getHeaderString () + " ");
+    System.out.println ("t=" + time + ", entity=" + entity + ": UPDATE.");
+  }
+
+  @Override
+  public void notifyStateChanged (final double time, final SimEntity entity)
+  {
+    System.out.print (getHeaderString () + " ");
+    System.out.println ("t=" + time + ", entity=" + entity + ": STATE CHANGED.");
+  }
+
+  @Override
   public void notifyArrival (final double time, final J job, final Q queue)
   {
     System.out.print (getHeaderString () + " ");

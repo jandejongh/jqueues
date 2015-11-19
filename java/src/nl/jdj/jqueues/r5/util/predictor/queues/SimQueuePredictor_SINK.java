@@ -66,10 +66,7 @@ extends AbstractSimQueuePredictor<SINK>
     else if (eventType == SimQueueSimpleEventType.QUEUE_ACCESS_VACATION)
     {
       final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (time);
-      if (queueAccessVacation)
-        queueState.startQueueAccessVacation (time);
-      else
-        queueState.stopQueueAccessVacation (time);
+      queueState.setQueueAccessVacation (time, queueAccessVacation);
     }
     else if (eventType == SimEntitySimpleEventType.ARRIVAL)
     {

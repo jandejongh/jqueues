@@ -34,7 +34,7 @@ extends AbstractServerlessSimQueue<J, Q>
     super (eventList);
   }
   
-  /**  Returns a new {@link SINK} object on the same {@link SimEventList}.
+  /** Returns a new {@link SINK} object on the same {@link SimEventList}.
    * 
    * @return A new {@link SINK} object on the same {@link SimEventList}.
    * 
@@ -79,21 +79,6 @@ extends AbstractServerlessSimQueue<J, Q>
   public final boolean isNoWaitArmed ()
   {
     return false;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // UPDATE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +142,7 @@ extends AbstractServerlessSimQueue<J, Q>
   {
     if (job == null || ! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
-    if (! this.jobsExecuting.isEmpty ())
+    if (! this.jobsInServiceArea.isEmpty ())
       throw new IllegalStateException ();
     this.jobQueue.remove (job);
     return true;

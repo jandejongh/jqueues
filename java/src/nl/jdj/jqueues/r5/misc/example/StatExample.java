@@ -46,13 +46,13 @@ public final class StatExample
           return queue.getNumberOfJobs ();
         }
       }));
-      list.add (new AutoSimQueueStatEntry<> ("number of jobs executing", new SimQueueProbe<SimQueue>  ()
+      list.add (new AutoSimQueueStatEntry<> ("number of jobs in service area", new SimQueueProbe<SimQueue>  ()
       {
 
         @Override
         public double get (SimQueue queue)
         {
-          return queue.getNumberOfJobsExecuting ();
+          return queue.getNumberOfJobsInServiceArea ();
         }
       }));
       return list;
@@ -101,14 +101,14 @@ public final class StatExample
         @Override
         public void action (final SimEvent event)
         {
-          FCFS_QUEUE.arrive (j, arrTime);
+          FCFS_QUEUE.arrive (arrTime, j);
         }
       }));
     }
     EVENT_LIST.run ();
     System.out.println ("   ==> SimpleSimQueueStat");
     System.out.println ("     ==> Average number of jobs in queue:  " + fcfsStat.getAvgNrOfJobs () + ".");
-    System.out.println ("     ==> Average number of jobs executing: " + fcfsStat.getAvgNrOfJobsExecuting () + ".");
+    System.out.println ("     ==> Average number of jobs in service area: " + fcfsStat.getAvgNrOfJobsInServiceArea () + ".");
     System.out.println ("   ==> AutoSimQueueStat");
     autoFcfsStat.report (9);
     System.out.println ("-> LCFS...");
@@ -124,14 +124,14 @@ public final class StatExample
         @Override
         public void action (final SimEvent event)
         {
-          LCFS_QUEUE.arrive (j, arrTime);
+          LCFS_QUEUE.arrive (arrTime, j);
         }
       }));
     }
     EVENT_LIST.run ();
     System.out.println ("   ==> SimpleSimQueueStat");
     System.out.println ("     ==> Average number of jobs in queue:  " + lcfsStat.getAvgNrOfJobs () + ".");
-    System.out.println ("     ==> Average number of jobs executing: " + lcfsStat.getAvgNrOfJobsExecuting () + ".");
+    System.out.println ("     ==> Average number of jobs in service area: " + lcfsStat.getAvgNrOfJobsInServiceArea () + ".");
     System.out.println ("   ==> AutoSimQueueStat");
     autoLcfsStat.report (9);
     System.out.println ("-> IS...");
@@ -147,14 +147,14 @@ public final class StatExample
         @Override
         public void action (final SimEvent event)
         {
-          IS_QUEUE.arrive (j, arrTime);
+          IS_QUEUE.arrive (arrTime, j);
         }
       }));
     }
     EVENT_LIST.run ();
     System.out.println ("   ==> SimpleSimQueueStat");
     System.out.println ("     ==> Average number of jobs in queue:  " + isStat.getAvgNrOfJobs () + ".");
-    System.out.println ("     ==> Average number of jobs executing: " + isStat.getAvgNrOfJobsExecuting () + ".");
+    System.out.println ("     ==> Average number of jobs in service area: " + isStat.getAvgNrOfJobsInServiceArea () + ".");
     System.out.println ("   ==> AutoSimQueueStat");
     autoIsStat.report (9);
     System.out.println ("=== FINISHED ===");

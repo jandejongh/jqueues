@@ -5,7 +5,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 
-/**  An arrival {@link SimEvent} of a job at a queue.
+/** An arrival {@link SimEvent} of a job at a queue.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -30,7 +30,7 @@ extends SimEntityEvent<J, Q>
       throw new IllegalArgumentException ();
     return (final SimEvent<J> event) ->
     {
-      queue.arrive (job, event.getTime ());
+      queue.arrive (event.getTime (), job);
     };
   }
   

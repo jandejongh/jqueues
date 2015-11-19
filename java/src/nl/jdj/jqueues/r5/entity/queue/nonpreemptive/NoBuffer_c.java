@@ -36,7 +36,7 @@ public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends Abstract
     super (eventList, c);
   }
   
-  /**  Returns a new {@link NoBuffer_c} object on the same {@link SimEventList} with the same number of servers.
+  /** Returns a new {@link NoBuffer_c} object on the same {@link SimEventList} with the same number of servers.
    * 
    * @return A new {@link NoBuffer_c} object on the same {@link SimEventList} with the same number of servers.
    * 
@@ -63,15 +63,6 @@ public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends Abstract
   {
     if (getNumberOfJobs () + 1 <= getNumberOfServers () && hasServerAcccessCredits ())
       this.jobQueue.add (job);
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
   }
 
   /** Calls super method (in order to make implementation final).

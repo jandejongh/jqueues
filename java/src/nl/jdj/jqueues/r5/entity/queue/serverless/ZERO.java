@@ -35,7 +35,7 @@ extends AbstractServerlessSimQueue<J, Q>
     super (eventList);
   }
   
-  /**  Returns a new {@link ZERO} object on the same {@link SimEventList}.
+  /** Returns a new {@link ZERO} object on the same {@link SimEventList}.
    * 
    * @return A new {@link ZERO} object on the same {@link SimEventList}.
    * 
@@ -80,21 +80,6 @@ extends AbstractServerlessSimQueue<J, Q>
   public final boolean isNoWaitArmed ()
   {
     return true;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // UPDATE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void update (final double time)
-  {
-    super.update (time);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
