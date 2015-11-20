@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r5;
 
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.AbstractSimEntity;
+import nl.jdj.jqueues.r5.extensions.qos.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 import nl.jdj.jsimulation.r5.SimEventListResetListener;
 
@@ -41,7 +42,7 @@ import nl.jdj.jsimulation.r5.SimEventListResetListener;
  *
  */
 public interface SimEntity<J extends SimJob, Q extends SimQueue>
-extends SimEventListResetListener
+extends SimEventListResetListener, SimQoS<J, Q>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
