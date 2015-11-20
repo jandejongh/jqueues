@@ -9,6 +9,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.queue.preemptive.AbstractPreemptiveSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.preemptive.PreemptionStrategy;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
@@ -17,11 +18,30 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 
 /** An abstract {@link SimQueuePredictor} for preemptive queues.
  * 
+ * @param <Q> The type of {@link SimQueue}s supported.
+ * 
  */
 public abstract class SimQueuePredictor_Preemptive<Q extends AbstractPreemptiveSimQueue>
 extends AbstractSimQueuePredictor<Q>
 {
 
+  /** Preempts a job in given {@link SimQueueState}.
+   * 
+   * <p>
+   * Updates all relevant fields in the {@link SimQueueState} and takes the appropriate action
+   * on the job that is being preempted, depending on the {@link PreemptionStrategy} on the queue.
+   * 
+   * @param queue        The queue, non-{@code null}.
+   * @param queueState   The queue state, non-{@code null}.
+   * @param executingJob The job to preempt, non-{@code null}.
+   * @param visitLogsSet The visit-logs for logging dropped or departed jobs, may be {@code null}.
+   * 
+   * @throws SimQueuePredictionException   If the predictor cannot finish (e.g., due to ambiguity, complexity or plain errors).
+   * @throws IllegalArgumentException      If one or more of the mandatory arguments is {@code null}.
+   * @throws UnsupportedOperationException If the preemption strategy is {@link PreemptionStrategy#REDRAW}
+   *                                         of {@link PreemptionStrategy#CUSTOM}.
+   * 
+   */
   protected void preemptJob
   (final Q queue,
    final SimQueueState<SimJob, Q> queueState,
@@ -29,6 +49,8 @@ extends AbstractSimQueuePredictor<Q>
    final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
    throws SimQueuePredictionException
   {
+    if (queue == null || queueState == null || executingJob == null)
+      throw new IllegalArgumentException ();
     final double time = queueState.getTime ();
     final Map<SimJob, Double> rsTimeMap = queueState.getJobRemainingServiceTimeMap ();
     final NavigableMap<Double,List<SimJob>> rsMap = queueState.getRemainingServiceMap ();
@@ -45,7 +67,7 @@ extends AbstractSimQueuePredictor<Q>
         break;
       case RESTART:
         final double oldRs = rsTimeMap.get (executingJob);
-              // RESTART: Must always take the service time from the job!
+        // RESTART: Must always take the service time from the job!
         // final double newRs = ((DefaultSimQueueState) queueState).getServiceTime (queue, executingJob);
         final double newRs = executingJob.getServiceTime (queue);
         rsTimeMap.put (executingJob, newRs);
@@ -76,9 +98,9 @@ extends AbstractSimQueuePredictor<Q>
           rsMap.put (newRs, new ArrayList<> ());
           rsMap.get (newRs).add (executingJob);
         }
-        throw new UnsupportedOperationException ();
-      case REDRAW:
         break;
+      case REDRAW:
+        throw new UnsupportedOperationException ();
       case DEPART:
         final Set<SimJob> departures = new HashSet<> ();
         final SimJob departingJob = executingJob;
