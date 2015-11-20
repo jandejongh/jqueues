@@ -15,6 +15,7 @@ import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LJF;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF;
+import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
@@ -40,7 +41,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
    * 
    * <p>
    * For specific queue types, i.c.,
-   * {@link FCFS_B}, {@link NoBuffer_c}, {@link LCFS}, {@link SJF}, {@link LJF},
+   * {@link FCFS_B}, {@link NoBuffer_c}, {@link LCFS}, {@link SJF}, {@link LJF}, {@link P_LCFS},
    * a jitter from U[-0.01, +0.01] is added to the service time.
    * 
    * @param queue The queue.
@@ -59,7 +60,8 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
         || (queue instanceof NoBuffer_c)
         || (queue instanceof LCFS)
         || (queue instanceof SJF)
-        || (queue instanceof LJF))
+        || (queue instanceof LJF)
+        || (queue instanceof P_LCFS))
       ? 0.01 * (2.0 * this.rngRequestedServiceTimeJitter.nextDouble () - 1.0)
       : 0.0);
     requestedServiceTimeMap.put (queue, ((double) n) + requestedServiceTimeJitter);
