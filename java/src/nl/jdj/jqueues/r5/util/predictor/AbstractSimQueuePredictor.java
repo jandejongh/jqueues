@@ -12,6 +12,7 @@ import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LJF;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF;
+import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
@@ -260,7 +261,8 @@ implements SimQueuePredictor<Q>
               || (queue instanceof LCFS)
               || (queue instanceof NoBuffer_c)
               || (queue instanceof SJF)
-              || (queue instanceof LJF)))
+              || (queue instanceof LJF)
+              || (queue instanceof P_LCFS)))
           return false;
     return true;
   }
