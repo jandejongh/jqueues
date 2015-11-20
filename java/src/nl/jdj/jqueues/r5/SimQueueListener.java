@@ -33,8 +33,7 @@ extends SimEntityListener<J, Q>
    * @param time  The (current) time.
    * @param queue The queue.
    * 
-   * @see SimQueue#startQueueAccessVacation()
-   * @see SimQueue#startQueueAccessVacation(double)
+   * @see SimQueue#setQueueAccessVacation
    * 
    */
   public void notifyStartQueueAccessVacation (double time, Q queue);
@@ -44,7 +43,7 @@ extends SimEntityListener<J, Q>
    * @param time  The (current) time.
    * @param queue The queue.
    * 
-   * @see SimQueue#stopQueueAccessVacation
+   * @see SimQueue#setQueueAccessVacation
    * 
    */
   public void notifyStopQueueAccessVacation (double time, Q queue);

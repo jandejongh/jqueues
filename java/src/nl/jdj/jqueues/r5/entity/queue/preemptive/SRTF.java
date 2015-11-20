@@ -258,7 +258,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   /** Removes the job from the internal data structures and takes another one into service if needed.
    * 
    * <p>
-   * Removes any {@link DefaultDepartureEvent} for the job that leaves.
+   * Removes any departure event for the job that leaves.
    * 
    * <p>
    * Central entry for jobs leaving the system,

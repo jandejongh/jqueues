@@ -1,5 +1,7 @@
 package nl.jdj.jqueues.r5;
 
+import nl.jdj.jqueues.r5.util.stat.AbstractSimQueueStat;
+
 /** A listener to one or multiple {@link SimEntity}s.
  *
  * @param <J> The type of {@link SimJob}s supported.

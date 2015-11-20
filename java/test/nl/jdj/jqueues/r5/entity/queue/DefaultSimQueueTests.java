@@ -67,7 +67,7 @@ public class DefaultSimQueueTests
           assert predictor.matchVisitLogs_SQ_SV
             (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, accuracy, System.err);
           el.reset ();
-        }
+          }
     return true;
   }
     

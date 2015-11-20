@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
+import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.queue.preemptive.AbstractPreemptiveSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.preemptive.PreemptionStrategy;

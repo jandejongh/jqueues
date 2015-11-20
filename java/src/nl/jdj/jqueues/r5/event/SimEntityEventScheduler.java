@@ -116,8 +116,7 @@ public abstract class SimEntityEventScheduler
    * @param <Q> The type of {@link SimQueue}s supported.
    * 
    * @see SimQueueAccessVacationEvent
-   * @see SimQueue#startQueueAccessVacation
-   * @see SimQueue#stopQueueAccessVacation
+   * @see SimQueue#setQueueAccessVacation
    * @see #schedule(SimEventList, SimEntityEvent) 
    * 
    */

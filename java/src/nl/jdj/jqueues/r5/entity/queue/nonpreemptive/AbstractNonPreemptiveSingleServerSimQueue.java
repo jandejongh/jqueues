@@ -31,7 +31,7 @@ public abstract class AbstractNonPreemptiveSingleServerSimQueue
    * 
    * @param eventList The event list to use.
    *
-   * @see AbstractNonPreemptiveMultipleServerSimQueue#AbstractNonPreemptiveMultipleServerSimQueue
+   * @see AbstractNonPreemptiveFiniteServerSimQueue#AbstractNonPreemptiveFiniteServerSimQueue
    * 
    */
   protected AbstractNonPreemptiveSingleServerSimQueue (final SimEventList eventList)

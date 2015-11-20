@@ -275,7 +275,7 @@ implements SimQueueListener<J, Q>
    * @return The time of the last update.
    * 
    * @see #update(double)
-   * @see #notifyUpdate(double, SimQueue)
+   * @see #notifyUpdate(double, SimEntity) 
    * 
    */
   public final double getLastUpdateTime ()

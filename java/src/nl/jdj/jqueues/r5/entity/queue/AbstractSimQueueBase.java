@@ -113,7 +113,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * 
    * @param time The current time.
    * 
-   * @see SimQueue#startQueueAccessVacation
+   * @see SimQueue#setQueueAccessVacation
    * @see SimQueueListener#notifyStartQueueAccessVacation
    * 
    */
@@ -128,7 +128,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    * 
    * @param time The current time.
    * 
-   * @see SimQueue#stopQueueAccessVacation
+   * @see SimQueue#setQueueAccessVacation
    * @see SimQueueListener#notifyStopQueueAccessVacation
    * 
    */
