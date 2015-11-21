@@ -3,6 +3,7 @@
 \usepackage{color}
 \usepackage{listings}
 \usepackage{array}
+\usepackage{geometry}
 
 \title{Discrete-Event Simulation\\
        of Queueing Systems in Java:\\
@@ -27,6 +28,8 @@
 \chapter*{}
 
 {\em This book is dedicated to Dick Epema and Graham Birtwistle.}
+
+\tableofcontents
 
 \chapter{Preface}
 
@@ -74,9 +77,9 @@ The following code snipplet shows how to create an event list and
   schedule two (empty) events, one at $t_{1}=5.0$ and one at $t_{2}=10$,
   and print the resulting event list on \lstinline{System.out}:
 \begin{lstlisting}
-final SimEventList el = new SimEventList ();
-final SimEvent e1 = new SimEvent (5.0);
-final SimEvent e2 = new SimEvent (10.0);
+final SimEventList el = new DefaultSimEventList ();
+final SimEvent e1 = new DefaultSimEvent (5.0);
+final SimEvent e2 = new DefaultSimEvent (10.0);
 el.add (e1);
 el.add (e2);
 el.print ();
@@ -85,20 +88,23 @@ In \lstinline{jsimulation},
   the event list is of type \lstinline{SimEventList};
   events are of type \lstinline{SimEvent},
   respectively.
+Since both of them are Java {\em interfaces}, you need implementing classes
+  to instantiate them: \lstinline{DefaultSimEventList} for an event list;
+  \lstinline{DefaulSimEvent} for an event.
 Typically,
   you instantiate a single event list for a simulation experiment,
   and numerous events.
 
-The \lstinline{double} argument in the \lstinline{SimEvent} constructor
+The \lstinline{double} argument in the \lstinline{DefaultSimEvent} constructor
   (of which there are several)
   is the {\em schedule time\/} of the event on the event list.
 Perhaps surprisingly,
   in \lstinline{jsimulation},
   the schedule time is actually held on the event,
  {\em not\/} on the event list.
-Moreover, a \lstinline{SimEventList} is implemented as a \lstinline{TreeSet}
+Also, a \lstinline{SimEventList} is inheriting from \lstinline{SortedSet}
   from the Java Collections Framework.
-These implementation choices have the following consequences:
+These choices have the following consequences:
 \begin{itemize}
   \item Each \lstinline{SimEvent} can be present {\em at most once\/} in a \lstinline{SimEventList}.
         You cannot reuse a single event instance (like a job creation and arrival event)
@@ -110,18 +116,26 @@ These implementation choices have the following consequences:
   \item You always have access to the (intended) schedule time of the event, without having to
           refer to an event list (if the event is scheduled at all) or use a separate
           variable to keep and maintain that time.
+  \item The events must be equipped with a {\em total ordering\/} (imposed by \lstinline{SortedSet})
+          and distinct events should not be equal (imposed by us).
+          This means that for each pair of (distinct) events scheduled on a \lstinline{SimEventList},
+          one of them is always strictly larger than the other
+          (in the ordering, they cannot be "equal").
 \end{itemize}
 
 The output of the code snipplet is something like\footnote{
 We may have improved the layout in the meantime.}:
 \begin{lstlisting}[basicstyle=\tiny]
-SimEventList nl.jdj.jsimulation.r4.SimEventList@159bfbe, time=-Infinity:
-  time=5.0, name=No Name, object=null, action=null.
-  time=10.0, name=No Name, object=null, action=null.
+SimEventList {X}.DefaultSimEventList@{Y}, class=DefaultSimEventList, time=-Infinity:
+  t=5.0, name=No Name, object=null, action=null.
+  t=10.0, name=No Name, object=null, action=null.
 \end{lstlisting}
 The output shows the name of the event list (as obtained from its \lstinline{toString} method)
   and the current time ($-\infty$) in the first row, and then the events in the list
   in the proper order.
+By the way, we modified the output; the markers \lstinline|{X}| and \lstinline|{Y}|
+  represents strings that most likely deviate on your system.
+
 The output also shows the four properties of an event: its time, name, user object, and action.
 These will be described in more detail in the next section.
 
@@ -129,17 +143,61 @@ These will be described in more detail in the next section.
 
 A \lstinline{SimEvent} has the following properties:
 \begin{itemize}
-\item Time:   The (intended) schedule time of the event.
-\item Name:   The name of the event, which is only used for logging and output.
+\item Time:   The (intended) schedule time of the event (default $-\infty$).
+\item Name:   The name of the event, which is only used for logging and output (default "No Name").
 \item Object: A general-purpose object available for storing information associated with the event
-              (\lstinline{jsimulation} nor \lstinline{jqueues} use this field).
-\item Action: The action to take, a \lstinline{SimEventAction}, described in the next section.
+              (\lstinline{jsimulation} nor \lstinline{jqueues} uses this field; its
+              default value is \lstinline{null}).
+\item Action: The action to take, a \lstinline{SimEventAction} (default \lstinline{null}),
+                described in the next section.
 \end{itemize}
+Each property has corresponding getter and setter methods:
+
+\begin{tabular}{|l|}
+  \hline
+  {\bf Properties of \lstinline|SimEvent|} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!double getTime ()! \\
+  \lstinline[basicstyle=\footnotesize]!void setTime (double)! \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!String getName ()! \\
+  \lstinline[basicstyle=\footnotesize]!void setName (String)! \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!T getObject ()! \\
+  \lstinline[basicstyle=\footnotesize]!void setObject (T)! \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!SimEventAction getEventAction ()! \\
+  \lstinline[basicstyle=\footnotesize]!void setEventAction (SimEventAction)! \\
+  \hline
+\end{tabular}
+
+Note that \lstinline{T} refers to the so-called {\em generic-type argument\/}
+  of \lstinline{SimEvent} (and also of \lstinline|DefaultSimEvent|).
+The prototype is \lstinline|SimEvent<T>|, so \lstinline|T| can be any object type.
+The use of generic types is explained in some more details in the "Advanced Topics" section,
+  but for now \lstinline!T! can be simply read as a \lstinline{Object}.
+
+The next section describes the actions in more detail, but we first provide a list
+  of constructors for \lstinline{DefaultSimEvent}:
+
+\begin{tabular}{|l|}
+  \hline
+  {\bf Constructors of \lstinline|DefaultSimEvent|} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!DefaultSimEvent (String, double, T, SimEventAction)! \\
+  \lstinline[basicstyle=\footnotesize]!DefaultSimEvent (double, T, SimEventAction)! \\
+  \lstinline[basicstyle=\footnotesize]!DefaultSimEvent (double, SimEventAction)! \\
+  \lstinline[basicstyle=\footnotesize]!DefaultSimEvent (double)! \\
+  \lstinline[basicstyle=\footnotesize]!DefaultSimEvent ()! \\
+  \hline
+\end{tabular}
+
+Any non-listed property in a constructor will obtain its default value.
 
 \section{Actions}
 
 A \lstinline{SimEventAction} defined what needs to be done by the time an event
-  is {\em executec} or {\em processed}.
+  is {\em executed\/} or {\em processed}.
 In Java terms, a \lstinline{SimEventAction} is an interface with
   a single abstract method which is invoked when the event is processed.
 Below we show the declaration of the interface:
@@ -163,9 +221,9 @@ public interface SimEventAction<T>
 There are several ways to create actions for events.
 The first and most often used way in our own code is to use anonymous inner classes:
 \begin{lstlisting}[basicstyle=\tiny]
-final SimEventList el = new SimEventList ();
+final SimEventList el = new DefaultSimEventList ();
 final SimEvent e =
-  new SimEvent ("My First Real Event", 5.0, null, new SimEventAction ()
+  new DefaultSimEvent ("My First Real Event", 5.0, null, new SimEventAction ()
   {
     @Override
     public final void action (final SimEvent event)
@@ -183,18 +241,18 @@ el.print ();
 el.run ();
 el.print ();
 \end{lstlisting}
-Note that we are now using the full \lstinline{SimEvent} constructor,
-  giving out own name, and supplying a \lstinline{SimEventAction}
+Note that we are now using the full \lstinline{DefaultSimEvent} constructor,
+  passing a name, and supplying a \lstinline{SimEventAction}
   as an anonymous inner class.
 In the inner class, we define the \lstinline{action} method,
   and in the meantime override the \lstinline{toString} method
   (to be honest, this was merely to keep the generated text within bounds).
 The generated output is:
 \begin{lstlisting}[basicstyle=\tiny]
-SimEventList nl.jdj.jsimulation.r4.SimEventList@106d69c, time=-Infinity:
+SimEventList {X}.DefaultSimEventList@{Y}, class=DefaultSimEventList, time=-Infinity:
   t=5.0, name=My First Real Event, object=null, action=My First Action.
 Event=My First Real Event, time=5.0.
-SimEventList nl.jdj.jsimulation.r4.SimEventList@0, time=5.0:
+SimEventList {X}.DefaultSimEventList@{Y}, class=DefaultSimEventList, time=5.0:
   EMPTY!
 \end{lstlisting}
 Clearly, as expected!
@@ -204,7 +262,7 @@ This is as intended, and will be explained in the next section.
 But first we look at an alternative way of attaching
   actions to events:
 \begin{lstlisting}[basicstyle=\tiny]
-final SimEventList el = new SimEventList ()
+final SimEventList el = new DefaultSimEventList ()
 {
   @Override
   public final String toString ()
@@ -227,7 +285,7 @@ final SimEventAction action = new SimEventAction ()
 };
 for (int i = 1; i <= 10; i++)
 {
-  final SimEvent e = new SimEvent ("Our Event", (double) i, null, action);
+  final SimEvent e = new DefaultSimEvent ("Our Event", (double) i, null, action);
   el.add (e);
 }
 el.print ();
@@ -242,7 +300,7 @@ We also took the opportunity give our
   event list a friendlier name by overriding its \lstinline{toString} method.
 The output is as follows:
 \begin{lstlisting}[basicstyle=\tiny]
-SimEventList My Renamed Event List, time=-Infinity:
+SimEventList My Renamed Event List, class=, time=-Infinity:
   t=1.0, name=Our Event, object=null, action=A Shared Action.
   t=2.0, name=Our Event, object=null, action=A Shared Action.
   t=3.0, name=Our Event, object=null, action=A Shared Action.
@@ -263,18 +321,21 @@ Event=Our Event, time=7.0.
 Event=Our Event, time=8.0.
 Event=Our Event, time=9.0.
 Event=Our Event, time=10.0.
-SimEventList My Renamed Event List, time=10.0:
+SimEventList My Renamed Event List, class=, time=10.0:
   EMPTY!
 \end{lstlisting}
 Again note that the time on the event list after running it
   is the time of the last event we scheduled on it.
+In the output, funny enough, the \lstinline{class} of the event list
+  is now reported as empty.
+This is because we used an anonymous class to construct it!
 
 So, there are different ways of attaching a \lstinline{SimEventAction}
-  to a \lstinline{SimEvent}.
+  to a \lstinline{DefaultSimEvent}.
 The abundant use of anonymous inner classes as shown here
   is certainly not to everyone's taste,
   but it results in relatively compact code
-  (even more through the use of lambda expressions, see XXX).
+  (even more through the use of lambda expressions, see {\bf XXX}).
 
 \section{Processing the Event List}
 
@@ -322,7 +383,7 @@ The example below shows how to schedule new events
   from event actions; it also shows what happens if you schedule
   events in the past.
 \begin{lstlisting}[basicstyle=\tiny]
-final SimEventList el = new SimEventList ()
+final SimEventList el = new DefaultSimEventList ()
 {
   @Override
   public final String toString ()
@@ -330,6 +391,7 @@ final SimEventList el = new SimEventList ()
     return "The Event List";
   } 
 };
+
 final SimEventAction schedulingAction = new SimEventAction ()
 {
   private int counter = 0;
@@ -362,6 +424,7 @@ final SimEventAction schedulingAction = new SimEventAction ()
     return "Scheduling Action";
   }
 };
+    
 el.schedule (0, schedulingAction);
 el.print ();
 el.run ();
@@ -391,7 +454,7 @@ The output of the example is shown below\footnote{
   We will do that without notice in the sequel.
 }.
 \begin{lstlisting}[basicstyle=\tiny]
-SimEventList The Event List, time=-Infinity:
+SimEventList The Event List, class=, time=-Infinity:
   t=0.0, name=No Name, object=null, action=Scheduling Action.
 Event=No Name, time=0.0.
 Event=No Name, time=1.0.
@@ -572,7 +635,7 @@ implements SimEventAction
 So, let us schedule some of these at $t=0$
   in order of increasing index:
 \begin{lstlisting}[basicstyle=\tiny]
-final SimEventList el = new SimEventList ();
+final SimEventList el = new DefaultSimEventList ();
 for (int i = 1; i <= 10; i++)
   el.schedule (0, new IndexedSimEventAction (i), "Event " + i);
 el.print ();
@@ -583,27 +646,27 @@ The probablity of you seeing the same result is $1/(10!)$,
   which equals the probability
   of you being {\em not\/} surprised at all about your own output.}:
 \begin{lstlisting}[basicstyle=\tiny]
-SimEventList nl.jdj.jsimulation.r4.SimEventList@a27aa42, time=-Infinity:
+SimEventList {X}@{Y}, class=DefaultSimEventList, time=-Infinity:
+  t=0.0, name=Event 3, object=null, action=Action 3.
+  t=0.0, name=Event 8, object=null, action=Action 8.
   t=0.0, name=Event 9, object=null, action=Action 9.
   t=0.0, name=Event 5, object=null, action=Action 5.
-  t=0.0, name=Event 8, object=null, action=Action 8.
-  t=0.0, name=Event 7, object=null, action=Action 7.
-  t=0.0, name=Event 6, object=null, action=Action 6.
-  t=0.0, name=Event 4, object=null, action=Action 4.
-  t=0.0, name=Event 3, object=null, action=Action 3.
   t=0.0, name=Event 1, object=null, action=Action 1.
-  t=0.0, name=Event 10, object=null, action=Action 10.
+  t=0.0, name=Event 4, object=null, action=Action 4.
+  t=0.0, name=Event 7, object=null, action=Action 7.
   t=0.0, name=Event 2, object=null, action=Action 2.
+  t=0.0, name=Event 6, object=null, action=Action 6.
+  t=0.0, name=Event 10, object=null, action=Action 10.
+Hello, I am action number 3!
+Hello, I am action number 8!
 Hello, I am action number 9!
 Hello, I am action number 5!
-Hello, I am action number 8!
-Hello, I am action number 7!
-Hello, I am action number 6!
-Hello, I am action number 4!
-Hello, I am action number 3!
 Hello, I am action number 1!
-Hello, I am action number 10!
+Hello, I am action number 4!
+Hello, I am action number 7!
 Hello, I am action number 2!
+Hello, I am action number 6!
+Hello, I am action number 10!
 \end{lstlisting}
 Well, it looks like all our scheduled events were indeed processed,
   {\em but not in the order we inserted them into the list!}
@@ -618,35 +681,944 @@ Well, because we explictly instructed the \lstinline{SimEventList}
 The exact reasoning for doing this is a bit involved,
   and deferred until the "Advanced Topics" section,
   but for now it is important to realize that
-  a \lstinline{SimEventList}
+  a \lstinline{DefaultSimEventList}
 \begin{itemize}
   \item processes its scheduled events in random order
         should they have equal schedule times;
   \item will {\em never\/} preempt or interrupt the current event it is processing
         in favor of another event that is scheduled at the same time from within the
-        action of the current event;
-  \item allows insertion-order processing of simultaneous events if you really want to.
+        action of the current event.
 \end{itemize}
+
+Since there is absolutely nothing wrong with maintaining insertion order,
+  you can switch to a different event-list implementation, viz., \lstinline{DefaultEventList_IOEL}:
+\begin{lstlisting}[basicstyle=\tiny]
+final SimEventList el = new DefaultSimEventList_IOEL ();
+for (int i = 1; i <= 10; i++)
+  el.schedule (0, new IndexedSimEventAction (i), "Event " + i);
+el.print ();
+el.run ();
+\end{lstlisting}
+Now the output looks mores structured:
+\begin{lstlisting}[basicstyle=\tiny]
+SimEventList {X}.DefaultSimEventList_IOEL@{Y}, class=DefaultSimEventList_IOEL,
+    time=-Infinity:
+  t=0.0, name=Event 1, object=null, action=Action 1.
+  t=0.0, name=Event 2, object=null, action=Action 2.
+  t=0.0, name=Event 3, object=null, action=Action 3.
+  t=0.0, name=Event 4, object=null, action=Action 4.
+  t=0.0, name=Event 5, object=null, action=Action 5.
+  t=0.0, name=Event 6, object=null, action=Action 6.
+  t=0.0, name=Event 7, object=null, action=Action 7.
+  t=0.0, name=Event 8, object=null, action=Action 8.
+  t=0.0, name=Event 9, object=null, action=Action 9.
+  t=0.0, name=Event 10, object=null, action=Action 10.
+Hello, I am action number 1!
+Hello, I am action number 2!
+Hello, I am action number 3!
+Hello, I am action number 4!
+Hello, I am action number 5!
+Hello, I am action number 6!
+Hello, I am action number 7!
+Hello, I am action number 8!
+Hello, I am action number 9!
+Hello, I am action number 10!
+\end{lstlisting}
+Just in case you are curious: we use the abbreviations ROEL for Random-Order Event List
+  and IOEL for Insertion-Order Event List.
+The \lstinline|DefaultSimEventList| is obviously a ROEL; actually it
+  subclasses \lstinline|DefaultSimEventList_ROEL| without changes,
+  hence you can also use \lstinline|SimEventList_ROEL|
+  as your event-list implementation
+  (perhaps making more explicit the nature of the event list):
+\begin{lstlisting}[basicstyle=\tiny]
+// Be very careful: this event-list does not respect insertion
+// order for simultaneous events!
+// ROEL = Random-Order Event List.
+final SimEventList el = new DefaultSimEventList_ROEL ();
+\end{lstlisting}
+
+We want to stress that just because our default event-list implementation is
+  a ROEL, it is by no means because ROEL "is just better" than IOEL,
+  or the software in \lstinline|jsimulation| and/or \lstinline|jqueues|
+  "works better" or even "works only" with a ROEL.
+Far from it, the current implementations will probably work slightly faster
+  with an IOEL; maintaining insertion order is likely to be faster
+  that drawing random number upon each insertion.
+So, by all means, use the IOEL implementation if you want to as a
+  replacement to the default ROEL.
 
 \section{Resetting an Event List}
 
+By resetting an event list,
+  through \lstinline|reset|,
+  we remove all the events it contains,
+  and set the time to $t=-\infty$.
+This is typically done before repeating a simulation experiment,
+  for instance with a different seed value for random-number generation.
+
+An event list informs its {\em reset listeners\/} when it is reset.
+The concept of listeners is described in the next section.
+
 \section{Listening to an Event List}
+
+You can listen to changes to a \lstinline{SimEventList} by registering
+  a {\em listener\/} of type \lstinline{SimEventListListener} to it.
+At the present time,
+  there is only support for notifications
+  for an event list reset,
+  and for event-list processing
+  so there is not general "event list changed" notfication.
+
+A listener gets notifications for:
+\begin{itemize}
+\item A {\em reset\/} of the event list.
+      This notification is always sent while the list is {\em not\/} begin processed.
+      In fact, if you are only interested in receiving
+      reset notifications, you can use a \lstinline|SimEventListResetListener| instead
+      of (the full) \lstinline|SimEventListListener|.
+\item An {\em update\/} of the event list.
+      An update is defined as a {\em strictly positive jump in time during processing.}
+\item An {\em empty\/}  event list during processing (this effectively ends processing the event list).
+\item A {\em next event\/} while processing the event list.
+      These notifications, however, are only sent to listeners that implement
+      \lstinline|SimEventListListener.Fine|.
+\end{itemize}
+
+The following table summarizes the listener-related methods on a \lstinline-SimEventList-.
+
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void addListener (SimEventListResetListener)!
+    & Adds a listener. \\
+  \lstinline[basicstyle=\footnotesize]!void removeListener (SimEventListResetListener)!
+    & Removes a listener. \\
+  \hline
+\end{tabular}
+
+The table below list the various notification methods on a listener
+  per listener type; the types are shown in increasing richness.
+
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \multicolumn{2}{|c|}{\bf \lstinline[basicstyle=\small]{SimEventListResetListener}} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyEventListReset (SimEventList)!
+    & Reset of given event list. \\
+  \hline
+  \multicolumn{2}{|c|}{\bf \lstinline[basicstyle=\small]{SimEventListListener}} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyEventListUpdate (SimEventList, double)!
+    & Event list update; {\em new\/} time. \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyEventListEmpty (SimEventList, double)!
+    & Event list empty at given time. \\
+  \hline
+  \multicolumn{2}{|c|}{\bf \lstinline[basicstyle=\small]{SimEventListListener.Fine}} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyNextEvent (SimEventList, double)!
+    & Process next event; {\em old\/} time. \\
+  \hline
+\end{tabular}
 
 \section{Advanced Topics}
 
+In this section we take a closer look at some more advanced topics
+  \lstinline-jsimulation-.
+The sections can be skipped at first reading.
+
 \subsection{Using Generic-Type Arguments}
+
+\begin{tabular}{|l|l|l|}
+  \hline
+  {\bf Interface} & {\bf Type} & Description \\
+  \hline
+  \lstinline|SimEvent<T>| & \lstinline|T| & The type of user object. \\
+  \hline
+  \lstinline|SimEventList<E extends SimEvent>| & \lstinline|E| & The type of events. \\
+  \hline
+  \lstinline|SimEventAction<T>| & \lstinline|T| & The type of user object. \\
+  \hline
+\end{tabular}
+
+The (partial) implementations in \lstinline|jsimulation| follow the same convention
+  as the interface they belong to:
+
+\begin{tabular}{|l|}
+  \hline
+  {\bf Class} \\
+  \hline
+  \lstinline|DefaultSimEvent<T>| \\
+  \hline
+  \lstinline|AbstractSimEventList<E extends SimEvent>| \\
+  \hline
+  \lstinline|DefaultSimEventList_IOEL<E extends SimEvent>| \\
+  \hline
+  \lstinline|DefaultSimEventList_ROEL<E extends SimEvent>| \\
+  \hline
+  \lstinline|DefaultSimEventList<E extends SimEvent>| \\
+  \hline
+\end{tabular}
+
+\subsection{Event Factories}
+
+An {\em event factory\/} has a sole purpose: generating new event instances.
+The use of factories is very common in Java,
+  expecially if one needs to create a "default"
+  instance for a given interface,
+  in our case for \lstinline-SimEvent-.
+
+The \lstinline|SimEventFactory| interface is as follows:
+
+\begin{lstlisting}[basicstyle=\footnotesize]
+@FunctionalInterface
+public interface SimEventFactory<E extends SimEvent>
+{
+  
+  E newInstance
+    (String name, double time, SimEventAction eventAction);
+
+}
+\end{lstlisting}
+
+The generic type argument \lstinline|E| is the (base) type
+  of the generated \lstinline|SimEvent|s.
+The argument list for \lstinline|newInstance| allows
+  for setting all \lstinline|SimEvent| properties except the user object
+  (because we believe it is rarely of use).
+
+One particular use for this is to set the event factory
+  on an arbitary \lstinline|SimEventList|
+  through its \lstinline|setSimEventFactory| method.
+This is a safe way of using an interface (or event multiple ones)
+  as type argument to \lstinline|SimEventList|:
+
+\begin{lstlisting}[basicstyle=\footnotesize]
+interface MySimEvent
+extends SimEvent
+{
+  BigInteger getSeqNumber ();
+}
+  
+static class DefaultMySimEvent
+extends DefaultSimEvent
+implements MySimEvent
+{
+
+  private static BigInteger
+    NEXT_SEQUENCE_NUMBER = BigInteger.ZERO;
+  
+  private final BigInteger seqNumber;
+  
+  @Override
+  public final BigInteger getSeqNumber ()
+  {
+    return this.seqNumber;
+  }
+
+  public DefaultMySimEvent
+    (final String name,
+     final double time,
+     final SimEventAction action)
+  {
+    super (name, time, null, action);
+    this.seqNumber = NEXT_SEQUENCE_NUMBER;
+    NEXT_SEQUENCE_NUMBER =
+      NEXT_SEQUENCE_NUMBER.add (BigInteger.ONE);
+  }
+  
+}
+  
+public static void main (final String[] args)
+{
+  final SimEventList<MySimEvent> el =
+    new DefaultSimEventList (MySimEvent.class);
+  el.add (new DefaultMySimEvent
+    ("MySimEvent instance", 5.0, null));
+  el.print ();
+}
+\end{lstlisting}
+
+In the code fragment, we extended the basic \lstinline{SimEvent}
+  interface with a method to
+  maintain a global instance counter
+  of type \lstinline|BigInteger|
+  (ignoring the total lack of usefulness),
+  and created a default implementation for it
+  in \lstinline|DefaultMySimEvent|.
+Subsequently, we created an event list,
+  using the generic-type argument and
+  the \lstinline|class| argument in the constructor
+  to make sure that the \lstinline-DefaultSimEventList-
+  only accepts \lstinline-MyEventType- as
+  events.
+Note that we use the {\em interface\/} here,
+  not the {\em default implementation}.
+The program runs fine and prints the event
+  scheduled on the event list.
+
+However, if we try to schedule an action
+  (\lstinline|null| in this case):
+\begin{lstlisting}[basicstyle=\footnotesize]
+  el.schedule (10.0, (SimEventAction) null);
+\end{lstlisting}
+we are treated with an exception:
+\begin{lstlisting}[basicstyle=\footnotesize]
+...IllegalStateException: Cannot instantiate MySimEvent!
+\end{lstlisting}
+It is more or less immediately clear what the problem is:
+  the event list has to generate a \lstinline|SimEvent|
+  in order to schedule the action,
+  but it tries to instantiate \lstinline|MySimEvent|,
+  which is an {\em interface\/}.
+(By the way, it also assumes that the event class
+  supports a parameterless constructor!)
+
+We need to tell the event list how to create the events
+  for the various utility methods,
+  and we do that by creating and registering a
+  \lstinline|SimEventFactory| for \lstinline|MySimEvent|\footnote{
+Using a {\em lambda expression\/} this time, see {\bf XXX}.}:
+\begin{lstlisting}[basicstyle=\footnotesize]
+final SimEventList<MySimEvent> el =
+  new DefaultSimEventList (MySimEvent.class);
+el.setSimEventFactory
+(
+  (final String name,
+   final double time,
+   final SimEventAction eventAction)
+    -> new DefaultMySimEvent (name, time, eventAction)
+);
+el.add (new DefaultMySimEvent
+  ("MySimEvent instance", 5.0, null));
+el.schedule (10.0, (SimEventAction) null);
+el.print ();
+\end{lstlisting}
+Now we are out of trouble:
+\begin{lstlisting}[basicstyle=\footnotesize]
+...
+t=5.0, name=MySimEvent instance, object=null, action=null.
+t=10.0, name=null, object=null, action=null.
+\end{lstlisting}
+  
+This section and the previous one on generic-type
+  arguments hopefully showed the maturity of
+  support the generic and runtime type arguments.
+However,
+  we do not recommend their use unless
+  for very specific use cases
+  that require extending the
+  \lstinline|SimEvent| and/or \lstinline|SimEventList|
+  interfaces.
+The problem is that by restricting the
+  allowable compile-time and runtime \lstinline|SimEvent|
+  types, the generated objects
+  become unusable for libraries
+  using "bare" \lstinline|SimEvent|s.
+For instance,
+  the \lstinline|jqueues| library
+  will not work with event-lists
+  not supporting "plain" \lstinline|SimEvent|s.
 
 \subsection{Simultaneous Events: Random-Order and Insertion-Order Event Lists}
 
+In previous sections in this book,
+  we explained that event-list implementations,
+  at least the {\em non-preemptive\/} types,
+  come in two natural variants:
+  the ROEL processes simultaneous events in random order,
+  and the IOEL does that in insertion order.
+We also declared that the default implementation is a
+  ROEL, and that you can easily switch to an IOEL,
+  possibly even gaining some performance.
+This section is dedicated to motivating the use of,
+  or even the consideration of ROEL as an event list implementation,
+  let alone making it the default!
+It does not introduce any new software.
+We already want to stress that ROEL is by no means
+  "better" than IOEL from a user point of view.
+We do not intend to avocate ROEL over IOEL!
+
+The distinction between ROEL and IOEL is all about {\em simultaneous\/}
+  events, and we look at this phenomena from three different viewpoint:
+\begin{itemize}
+\item The {\em physical\/} viewpoint: In physics, we are rarely concerned with occurence of
+        simultaneous events, because physical models (to our knowledge) rarely
+        exhibit a strong behavioral dependence on "things happening at the same time".
+\item The {\em mathematical\/} viewpoint: In mathematical models, we {\em are\/}
+        nearly always dealing with teh possiblity of "things being equal".
+      For instance, it is "undone" two specify an function on two real variables
+        (say, a "maximum indicator") without exactly specifying the result
+        for equal inputs.
+      However, in applications of probability theory, like queueing theory,
+        we often deal with continuous distrubutions and
+        the probability of simulteneous events is often zero.
+      Although simulteneous events still require attention,
+        one can usually get away with noting that
+        "ties are broken at random (with equal probabilities)".
+      Almost always, this solution approach is preferred over trying
+        to impose an additional ordering on the events, as in
+        "Jobs A and B both arrived at $t=0$, but job A was first."
+\item The {\em software-engineering\/} viewpoint: In software-engineering,
+        we are not that used to simultaneous events.
+      Sure, there are cases of {\em concurrency\/}
+        but the problems that arise are usually fixed by
+        imposing some {\em order\/} into which statements,
+        programs, expressions, etc. are to be processed.
+      As a result, software engineering is very much concerned with
+        "doing the right thing given a strict order of input".
+      A prime example of this are Finite-State Machines supporting
+        state transitions upon external events.
+      Rarely, if ever, does this take into account the possiblity
+        of simultaneous events.
+\end{itemize}
+Needless to say, our argument is that {\em the occurence of simulatenous events
+  is very natural in mathematics, yet the concept of "insertion order"
+  is purely relevant to software-engineering.}
+In other words, there is no equivalence in this context for "insertion order"
+  in mathematics, nor is there is physics.
+
+The reasons for choosing a Random-Order Event List are
+  primarily motivated by its use in \lstinline|jqueues|:
+\begin{itemize}
+  \item We do not want to {\em specify\/} queueing systems with the notion of
+          insertion order, and we probably cannot.
+        Such a specification would be overly complicated, and, as mentioned before,
+          in the mathematical context we rather break ties at random.
+  \item We do not want to {\em imply\/} to users the conservation of insertion order
+          in the implementations.
+  \item We do not want to {\em rely\/} on insertion order of events in our tests.
+\end{itemize}
+
+Admittedly, for simple queueing systems like FCFS,
+  it seems simple enough to maintain the order of arrival of jobs
+  in the output process.
+But as soon as queueing systems become more complicated,
+  especially if multiple queues are involved or feedback,
+  the specification becomes just unnecessarily difficult.
+To give an example: Suppose we have a feedback FCFS queue with
+  feedback probability $1/4$ and two jobs arriving at $t=0$;
+  jobs A and B having required service times (for each visit)
+  of zero and unity, respectively.
+Suppose with an insertion-order event list, job A's first
+  arrival is before job B's.
+So, trusting the conservation of insertion order,
+  the queue starts processing job A,
+  which is fed back to the queue's input immediately
+  with probability $1/4$.
+If so, we are in trouble because we now have to specify
+  whether to first serve job A reappearing at the input
+  or job B.
+Of course we can find a solution by indeed specifying that
+  a job that is fed back is always inserted {\em after\/} jobs
+  already there, but the real problem is that
+  {\em we have to specify all cases of simultaneus events through
+  insertion-order arguments.}
+And this is just a simple example.
+
+\subsection{Event Comparators}
+
+In order to obtain the required  total order on the \lstinline|SimEvent|s 
+  in a \lstinline|SimEventList|,
+  the latter uses a \lstinline|Comparator|,
+  which by default is an instance of \lstinline|DefaultSimEventComparator|,
+  both for ROEL (the default) and IOEL event lists.
+Its core implementation is
+\begin{lstlisting}[basicstyle=\footnotesize]
+@Override
+public int compare (E e1, E e2)
+{
+  int c = Double.compare (e1.getTime (), e2.getTime ());
+  if (c == 0)
+  {
+    c = e1.getSimEventListDeconflictValue ()
+        .compareTo
+        (e2.getSimEventListDeconflictValue ());
+  }
+  if ((e1 == e2 && c != 0)
+      || (e1 != e2 && c == 0))
+    throw new RuntimeException
+     ("Error attempting to order events.");
+  return c;
+}
+\end{lstlisting}
+Not surprisingly,
+  the comparator uses the time property on the events to make a first
+  comparison.
+In case of a tie,
+  it uses the so-called {\em deconflict value\/} on the events,
+  throwing an exception if this still yields a tie.
+What is intteresting to note is that the deconflict value
+  on an event is generated when an event is {\em added\/} to
+  an event list by overriding the \lstinline|add| and \lstinline|addAll|
+  methods from the super class (i.c., \lstinline|TreeSet|),
+  e.g., in case of ROEL:
+\begin{lstlisting}[basicstyle=\footnotesize]
+@Override
+public final boolean add (final E e)
+{
+  if (e == null)
+    throw new NullPointerException
+      ("Attempt to add null event to event list!");
+  if (! contains (e))
+  {
+    e.setSimEventListDeconflictValue
+      (this.rngDeconflict_ROEL.nextLong ());
+    return super.add (e);
+  }
+  return false;
+}
+\end{lstlisting}
+In ROEL, the deconflict value is,
+  as expected drawn from a random-number generator (RNG)
+  \lstinline|rngDeconflict_ROEL|.
+Using this approach has the major advantage that
+  even though events with equal times will
+  be ordered at random,
+  their ordering remains fixed as long as they are
+  in the event list.
+So, the random ordering in ROEL is {\em not\/} implemented
+  by drawing from a RNG the moment it is needed from
+  the event list (which would, actually, be substantially more difficult),
+  but it is already fixed upon insertion.
+This, for instance, has the nice feature that
+  consecutive iterators over the (same) event set will always
+  return the events in the same order.
+By the way, you can set an alternative \lstinline|Comparator|
+  by using one of \lstinline|AbstractSimEventList| constructors.
+You cannot change it on the default implementations.
+
 \subsection{Action is a Functional Interface}
 
+Because a \lstinline|SimEventAction| is an interface with
+  exactly one abstract method,
+  it can be used in so-called {\em lambda expressions\/} in Java 8.
+So, instead of
+
+\begin{lstlisting}[basicstyle=\small]
+final SimEventAction action = new SimEventAction ()
+{
+  @Override
+  public final void action (final SimEvent event)
+  {
+    // Do something with event...
+  }
+};
+\end{lstlisting}
+
+you can also write:
+
+\begin{lstlisting}[basicstyle=\small]
+final SimEventAction action =
+  (SimEventAction) (final SimEvent event) ->
+  {
+    // Do something with event...
+  };
+\end{lstlisting}
+
+or even make it a one-liner.
+
+The \lstinline{SimEventAction} interface has been marked a \lstinline|@FunctionalInterface|.
+
+\section{Timers}
+
+The abstract \lstinline|AbstractSimTimer| class is a small
+  utility class for scheduling a timer on a \lstinline-SimEventList-.
+In view of the classes and methods described before it
+  is not all that useful, but it has been kept
+  in the library for support of legacy code.
+An \lstinline|AbstractSimTimer| features a
+  \lstinline|schedule (double, SimEventList)| method
+  that schedules an appropriate event after a delay
+  (the \lstinline|double| argument).
+When the event is processed,
+  the (abstract) method \lstinline-expireAction- is invoked,
+  which needs to be defined in a subclass.
+Also, a pending timer can be (safely) cancelled
+  through its \lstinline-cancel- method.
+
+Below is a small, naive example of its use:
+\begin{lstlisting}[basicstyle=\small]
+private static class MyTimer
+extends AbstractSimTimer
+{
+  @Override
+  public final void expireAction
+  (final double time)
+  {
+    System.out.println ("t=" + time + ": Timer expired!");
+  }
+}
+  
+public static void main (final String[] args)
+{
+  final SimEventList el = new DefaultSimEventList ();
+  final MyTimer myTimer = new MyTimer ();
+  // Progress event list until t=10.
+  // Note that AbstractSimTimer does not support t=-\infty.
+  el.runUntil (10.0, true, true);
+  myTimer.schedule (5, el);
+  el.print ();
+  el.run ();
+}
+\end{lstlisting}
+The result of which is:
+\begin{lstlisting}[basicstyle=\footnotesize]
+SimEventList {X}@{Y}, class=DefaultSimEventList, time=10.0:
+  t=15.0, name=_expire, object=null, action={...}.
+t=15.0: Timer expired!
+\end{lstlisting}
+
+Note that you cannot easily {\em reschedule\/} the timer
+  from within the action, because there is no
+  access to the \lstinline-SimEventList-,
+  and that you cannot schedule the timer
+  when the time on the event list is infinite
+  (hence the \lstinline|runUntil| in the example!).
+
+\section{Summary and Conclusions}
+
+This chapter introduced \lstinline|jsimulation|,
+  a small Java library for discrete-event simulation.
+An overview of the main interfaces and classes is given below:
+
+\noindent
+\begin{tabular}{|l|l|l|}
+  \hline
+  {\bf Interface} & {\bf Class} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]|SimEvent<T>|     & & Event \\
+                              & \lstinline[basicstyle=\footnotesize]|DefaultSimEvent<T>| & Default Event \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]|SimEventList<E>| & & \\
+                              & \lstinline[basicstyle=\footnotesize]|AbstractSimEventList<E>|     & Event List (partial) \\
+                              & \lstinline[basicstyle=\footnotesize]|DefaultSimEventList_ROEL<E>| & Random-Order Event List \\
+                              & \lstinline[basicstyle=\footnotesize]|DefaultSimEventList_IOEL<E>| & Insertion-Order Event List \\
+                              & \lstinline[basicstyle=\footnotesize]|DefaultSimEventList<E>|      & Default Event List \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]|SimEventAction<T>| & & Action \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]|SimEventListResetListener| & & Reset Listener \\
+  \lstinline[basicstyle=\footnotesize]|SimEventListListener|      & & Normal Listener \\
+  \lstinline[basicstyle=\footnotesize]|SimEventListResetListener| & & Detailed Listener \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]|SimEventFactory<E>|     & & Event Factory \\
+                              & \lstinline[basicstyle=\footnotesize]|DefaultSimEventFactory| & Default Event Factory \\
+  \hline
+\end{tabular}
+
+The remainder of this book is about \lstinline|jqueues|,
+  a library for discrete-event simulation of queueing systems.
+The \lstinline|jqueues| library depends on \lstinline|jsimulation|
+  for scheduling and processing events and actions.
+
 \chapter{Queueing Systems; Entities, Queues, and Jobs}
+
+\section{Introduction and Definitions}
+
+Despite the fact that we deal with queueing, waiting, being served (or not),
+  and being denied service on a daily basis,
+  it is,
+  unfortunately,
+  not that easy at all to precisely define a system
+  that captures these "facts of life".
+In our, admittedly unsatisfactory, definition,
+  a {\em queue\/} or {\em queueing system\/} is an entity
+  that can be visited
+  by other entities called {\em jobs};
+  each visit being initiated by a so-called {\em arrival\/} of a specific job
+  at that queue.
+A job can only visit only a single queue at a time,
+  yet it can hop to another (or the same) queue
+  once its visit to a particular queue has ended.
+A queue, on the other hand,
+  can be visited by multiple jobs.
+
+In {\em queueing theory},
+  a branch of mathematics,
+  one attempts to predict the behavior of queues and jobs
+  without being (too) concerned about the particular {\em reasons\/} of a job visit.
+A very common setting is that jobs visit a queue in order to
+  get a particular {\em service\/}
+  from that queue
+  taking a non-trivial amount of time to complete,
+  the {\em required service time\/}
+  associated with the visit.
+In other words,
+  visiting jobs have to {\em wait\/} for the completion of their service request.
+Even worse,
+  the queue is often limited in providing the required services
+  to multiple jobs simultaneously,
+  so jobs have to {\em compete\/}
+  for the {\em service capacity} of the server.
+The outcome of this competition is determined by the so-called
+  {\em service discipline\/} or {\em queue discipline\/}
+  of the queueing system:
+  the way in which it distributes its limited (finite)
+  service {\em capacity\/} among its currently visiting jobs.
+
+{\bf XXX Other settings of a queueing system: waiting for an external event.}
+{\bf XXX Also explain processor sharing.}
+{\bf Bridge to SimEntity, SimQueue and SimJob.}
+
+\begin{verbatim}
+ A SimQueue is an abstraction of a queueing system from queueing theory. Such a system has an input accepting jobs (in our case SimJobs), each of which resides for a certain amount of time in the system and eventually departs at its output. The general notion is that jobs arrive at a queueing system in order to receive some kind of service, without actually being concerned about the actual type of service provided; all that matters is a relative indication of the required service time from the queueing system, and the resulting sojourn time in the system, which may be different from the job's required service time due to other jobs requesting service from the same (usually finite-capacity) server, in other words, due to server contention. The way in which the queueing system divides its serving capacity among competing jobs and the order of service and relative priority given to them is often referred to a its queueing discipline or policy.
+
+For many types of queueing systems with simple policies, the internal structure can be seen as an area in which jobs that arrived wait until preceding jobs have finished, and another area (the server(s)) that serves jobs (in turn) until completion. A notorious example of this is the classic First-Come First Served (FCFS) queueing system which serves jobs (a single one a a time) until completion in their order of arrival. This gives rise to the idea that a queueing system can be seen as an area holding jobs awaiting service (the waiting area, or 'queue'), and an area holding one or more jobs exclusively being served (the service area, or 'server(s)').
+
+Unfortunately, this viewpoint is incomplete in the sense that such a hard distinction between 'waiting' and 'being served exclusively' often cannot be made. Several useful (idealized) policies serve multiple jobs at once (like the Processor-Sharing (PS) policy, sharing the server's capacity equally among all jobs present), or switch the entire service capacity from one job to another with a certain service period (as in the Round-Robin (RR) policy).
+
+Therefore, in a SimQueue, the notion of 'waiting' is exclusively reserved for the situation in which a job has arrived at a queueing system, but has not yet received any service at all. For policies like FCFS, this notion coincides with the classical viewpoint on queueing systems, whereas for policies like PS, this notion agrees with the general idea that arriving jobs do not have to wait before receiving service. In our interface, it is (just) important to note that 'started jobs' do not necessarily have exclusive access to the server.
+
+The life-cycle of a queue visit of a job thus is as follows. SimJobs are offered for service through arrive(J, double). Depending on the queueing discipline, the job may be taking into service, in other words, start. Between arrival and start, a job is said to be waiting. After its start, a job is said to be started. Once the job finishes, the job departs from the queue. Note, however, that a job may also depart from the SimQueue without having started!
+
+Once a job has been offered, revoke(J, double, boolean) tries to revoke the job, if (still) possible and if supported by the queue discipline at all. A queue may also choose to drop a job, whether in service or not. Note the difference between a revocation (at the caller's discretion) and a drop (at the queue's discretion). If a job is neither dropped nor revoked, and receives sufficient service from the queue, it will depart from it (a departure).
+
+Despite the large number of freedom degrees for SimQueues, there is also a number of (obvious) restrictions on the behavior of a queue. For instance,
+
+    a job cannot start, be dropped or be revoked before having arrived;
+    a job can start at most once during a queue visit;
+    a job can only leave the queueing system through departure (with or without being served), successful revocation or drop. 
+
+Note that with the current interface, a SimJob cannot visit multiple SimQueues simultaneously. The SimQueue currently being visited by a SimJob can be obtained from SimJob.getQueue(); this must be maintained by implementations of arrive(J, double).
+
+In general, the required service ('execution') time of the job during a queue visit must be provided by each job through SimJob.getServiceTime(Q). It must remain constant during a queue visit (but may be changed in between visits). Not all SimQueue implementations use the notion of service time (e.g., SINK), but if they do, the service time is to be interpreted as follows: If a queue spends unit capacity on serving this and only this job, it will leave the queue exactly after the requested service time has elapsed since its start. Unless explicitly specified by the implementation, the default capacity of a server (or each server in case of a multi-server queue) is assumed to be unity throughout. Since the notion of variable-capacity servers is not that common, it has not been incorporated into this interface. Although queues are not allowed to increase the requested service time of a job (e.g., to compensate overhead), they are allowed to serve jobs at a rate lower than their capacity, or to take vacation periods.
+
+Some queueing systems override the requested service time as (would be) obtained through SimJob.getServiceTime(Q), and instead use a different source to obtain the service time. Implementations are strongly encouraged to document the source of the job's service time, if different from (default) requesting this at the job. In any case, the requested service time of a job, irrespective of its source, has to remain constant during a job's visit to a particular queue.
+
+A SimQueue supports two types of vacations:
+
+    During a queue-access vacation, access to the SimQueue is prohibited and all jobs are dropped immediately upon arrival, see startQueueAccessVacation(), startQueueAccessVacation(double), stopQueueAccessVacation() and isQueueAccessVacation(). A queue-access vacation affects the queue's behavior only upon arrivals. Note that the vacation may be for a given duration, or for undetermined time until explicitly stopped.
+    During a server-access vacation, jobs are prohibited to start, i.e., there is no access for jobs waiting to the server. It does not affect jobs that have already started. Server-access vacations are actually somewhat more flexible through the notion of server-access credits, denoting the number of jobs still admissible to the server, see getServerAccessCredits(). A server-access vacation starts when there are no more server-access credits (due to jobs starting), and ends when credits are explicitly granted to the interface through setServerAccessCredits(int). Note that by default, each SimQueue has infinite server-access credits. 
+
+Each SimQueue maintains and reports changes to the state in which it guarantees that the next arriving job will
+
+    start service immediately without waiting, or,
+    departs immediately, without service and without waiting. 
+
+If either condition is met, the queueing system is said to be in noWaitArmed state. Note that this state setting ignores queue and server-access vacations.
+
+A convenient queue-centric way to be notified of SimQueue events is by registering as a SimQueueListener or as a SimEntityListener through SimEntity.registerSimEntityListener(nl.jdj.jqueues.r5.SimEntityListener<J, Q>). Arrival-related notifications are always issued immediately at the time a job arrives at a queue, in other words, at a point where the queue does not even know yet about the existence of the job (and vice versa, for that matter). All other notifications are issued at the point where the queue has reached a consistent state (e.g., after a departure).
+
+A SimQueueListener also get notifications right before a state change in the queue occurs, e.g., right before a job departure. Such notifications are named updates, see SimQueueListener.notifyUpdate(double, Q).
+
+If a job is successfully revoked, or if it is dropped, none of the departure events are fired. Also, be aware that there is no guarantee that a start-service or a departure event is ever called for a SimJob at all.
+
+A SimQueues relies on an underlying SimEventList for scheduling events (SimEvent) in time and invoking the actions (SimEventAction). Implementations must also listen to the underlying event list for resets, see SimEventListResetListener.notifyEventListReset(nl.jdj.jsimulation.r5.SimEventList).
+
+Basic implementations of the most important non-preemptive queueing disciplines are provided in the AbstractNonPreemptiveSimQueue class and its concrete implementations in the same package like FCFS, LCFS and SJF. For the processor-sharing queue see PS, and for various server-less queues see AbstractServerlessSimQueue and descendants. For composite queues like Jackson networks and the like, see SimQueueComposite and its implementations.
+
+Partial utility implementations of SimQueue are available in this package through AbstractSimQueueBase and its descendant AbstractSimQueue.
+\end{verbatim}
+
+\section{Entities, Queues, and Jobs}
+
+\subsection{The \lstinline|SimEntity| Interface}
+
+\subsection{The \lstinline|SimQueue| Interface}
+
+\subsection{The \lstinline|SimJob| Interface}
 
 \chapter{Fundamental Queues}
 
 \section{Introduction}
 
 \section{Serverless Queues}
+
+The {\em serverless\/} queueing systems in \lstinline|jqueues| 
+  have no servers and (effectively) no service area.
+All state operations and state changes concentrate
+  at the waiting area of the queue,
+  and typically upon arrivals.
+Note that just because the serverless queues have no service area
+  does not mean that visiting jobs cannot depart from it.
+
+\subsection{The \lstinline{DROP} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{DROP}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Drops jobs immediately upon arrival.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & QAVs have no effect. \\
+\hline
+NoWaitArmed & \lstinline|true| & Since jobs are immediately dropped. \\
+\hline
+Waiting Area & Absent & There is no waiting area. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\hline
+Service Area & Absent & There is no service area. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Has no effect. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+        &     & (But jobs are dropped immediately.) \\
+\hline
+Drop & Yes & All jobs are dropped upon arrival. \\
+\hline
+Revocation & No & Job cannot be revoked \\
+           &    & since there are never jobs present. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\hline
+Start & No & Jobs cannot start. \\
+\hline
+Departure & No & Jobs cannot depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{The set of jobs present is empty.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList| & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "DROP"; non-\lstinline|null|; RW.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{SINK} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{SINK}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Lets jobs wait indefinitely.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & \lstinline|false| & Since non-dropped jobs must wait. \\
+\hline
+Waiting Area & Present & Infinite waiting area, non-ordered. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\hline
+Service Area & Absent & There is no service area. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Has no effect. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked from the waiting area. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\hline
+Start & No & Jobs cannot start. \\
+\hline
+Departure & No & Jobs cannot depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{The set of jobs present in the service area is empty.} \\
+\multicolumn{3}{|l|}{All jobs present are in the waiting area.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList| & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "SINK"; non-\lstinline|null|; RW.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{ZERO} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{ZERO}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Lets jobs depart immediately upon arrival.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & \lstinline|true| & Since non-dropped jobs depart immediately. \\
+\hline
+Waiting Area & Absent & There is no waiting area. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\hline
+Service Area & Absent & There is no service area. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Has no effect. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+        &     & (But jobs depart immediately.) \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & No & Job cannot be revoked \\
+           &    & since there are never jobs present. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\hline
+Start & No & Jobs cannot start. \\
+\hline
+Departure & No & Jobs cannot depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{The set of jobs present is empty.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList| & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "ZERO"; non-\lstinline|null|; RW.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{DELAY} \lstinline{SimQueue}}
+
+\subsection{The \lstinline{GATE} \lstinline{SimQueue}}
 
 \section{Single-Server Queues}
 
@@ -702,9 +1674,67 @@ The sequence of visits to the embedded queues is
 
 \subsection{Drop-Collector Queues}
 
-\section{Building Custom Queues and Jobs}
+\chapter{Building Custom Queues and Jobs}
 
-\section{Test Infrastructure}
+\section{Introduction}
+
+\section{Building Custom Entities}
+
+\subsection{Introduction}
+
+\subsection{The \lstinline{AbstractSimEntity} Class}
+
+\section{Building Custom Queues}
+
+\subsection{Introduction}
+
+\subsection{The \lstinline{AbstractSimQueueBase} Class}
+
+\subsection{The \lstinline{AbstractSimQueue} Class}
+
+\section{Building Custom Jobs}
+
+\subsection{Introduction}
+
+\subsection{The \lstinline{AbstractSimJob} Class}
+
+\subsection{The \lstinline{DefaultSimJob} Class}
+
+\chapter{Other Topics}
+
+\section{Introduction}
+
+\section{Building Custom Listeners}
+
+\chapter{Test Infrastructure}
+
+\section{Introduction}
+
+\section{Test-Infrastructure Overview}
+
+\subsection{Introduction}
+
+\subsection{Queue Workloads}
+
+\subsection{Queue Predictors}
+
+\subsection{Confronting Queue Workloads, Predictors, and Queues}
+
+\section{Workloads}
+
+\subsection{Creating Workloads}
+
+\subsection{Workload Ambiguities}
+
+\subsection{Standardized Workload Patterns}
+
+\subsection{Building a Workload}
+
+\section{Predictors}
+
+\subsection{Using a Predictor}
+
+\subsection{Building a Predictor}
 
 \chapter{Conclusions}
 
