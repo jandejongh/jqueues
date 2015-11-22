@@ -14,14 +14,13 @@ public interface SimQueueWithGateListener<J extends SimJob, Q extends SimQueue>
 extends SimQueueListener<J, Q>
 {
  
-  /** Notification of a change of in status of the gate of a {@link SimQueueWithGate}.
+  /** Notification of a change of in status (in terms of open/close) of the gate of a {@link SimQueueWithGate}.
    * 
    * @param time  The (current) time.
    * @param queue The queue.
    * @param open  Whether the gate opened ({@code true}) or closed ({@code false}).
    * 
-   * @see SimQueueWithGate#openGate
-   * @see SimQueueWithGate#closeGate
+   * @see SimQueueWithGate#setGatePassageCredits
    * 
    */
   public void notifyNewGateStatus (double time, Q queue, boolean open);

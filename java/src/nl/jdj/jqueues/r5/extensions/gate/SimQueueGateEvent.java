@@ -38,7 +38,7 @@ extends SimEntityEvent<J, Q>
     else if (gatePassageCredits == 0)
       return "GATE_CLOSE@" + queue;
     else if (gatePassageCredits < Integer.MAX_VALUE)
-      return "GATE[" + gatePassageCredits + "]@" + queue;
+      return "GATE_OPEN[" + gatePassageCredits + "]@" + queue;
     else
       return "GATE_OPEN@" + queue;
   }
@@ -53,7 +53,7 @@ extends SimEntityEvent<J, Q>
     return (final SimEvent<J> event) ->
     {
       if (queue instanceof SimQueueWithGate)
-        ((SimQueueWithGate) queue).openGate (event.getTime (), gatePassageCredits);
+        ((SimQueueWithGate) queue).setGatePassageCredits (event.getTime (), gatePassageCredits);
     };
   }
   
@@ -69,8 +69,7 @@ extends SimEntityEvent<J, Q>
    * 
    * @throws IllegalArgumentException If <code>queue == null</code>, or the number of gate-passage credits is strictly negative.
    * 
-   * @see SimQueueWithGate#openGate
-   * @see SimQueueWithGate#closeGate
+   * @see SimQueueWithGate#setGatePassageCredits
    * 
    */
   public SimQueueGateEvent

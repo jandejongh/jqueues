@@ -15,13 +15,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * The gate status is a {@link SimQueue} <i>state variable</i>, i.e., it can be changed from an event list being run.
  * 
  * <p>
- * By default, the gate is open without limit on the number of jobs passing.
- * It can be closed ({@link #closeGate}),
- * opened limitless ({@link #openGate(double)}),
- * or opened with a limit on the number of jobs to pass before closing ({@link #openGate(double,int)}).
- * 
- * <p>
- * The state of the gate can in fact be represented by a single non-negative number, the <i>gate passage credits</i>.
+ * The state of the gate is represented by a single non-negative number, the <i>gate passage credits</i>.
  * If the credits are zero, the gate is closed, and if infinite ({@link Integer#MAX_VALUE}), the gate is open without limits.
  * If the number of credits is in between, the gate is also open, but only for that number of job passages.
  * 
@@ -94,13 +88,11 @@ implements SimQueueWithGate<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns <code>true</code> if the gate is not closed.
+  /** Returns <code>true</code> if the gate is not closed ({@link #getGatePassageCredits} {@code > 0}).
    * 
    * @return True if the gate is not closed.
    * 
-   * @see #openGate(double)
-   * @see #openGate(double, int)
-   * @see #closeGate
+   * @see #setGatePassageCredits
    * 
    */
   @Override
@@ -111,50 +103,24 @@ implements SimQueueWithGate<J, Q>
 
   private int gatePassageCredits = Integer.MAX_VALUE;
 
-  /** Returns the remaining gate-passage credits, i.e., the number of jobs still allowed to pass before the gate closes.
-   * 
-   * @return The remaining gate-passage credits, i.e., the number of jobs still allowed to pass before the gate closes.
-   * 
-   */
   @Override
   public int getGatePassageCredits ()
   {
     return this.gatePassageCredits;
   }
   
-  /** Opens the gate without limits on the number of jobs allowed to pass.
+  /** Updates the internal administration and releases (makes depart) waiting jobs if applicable.
    * 
-   * <p>
-   * All waiting jobs depart.
-   * 
-   * @param time The current time.
-   * 
-   * @see #openGate(double, int)
-   * @see #closeGate
-   * 
-   */
-  @Override
-  public final void openGate (final double time)
-  {
-    update (time);
-    openGate (time, Integer.MAX_VALUE);
-  }
-  
-  /** Opens the gate with a limit on the number of jobs allowed to pass.
-   * 
-   * <p>
-   * If allowed by the <code>gatePassageCredits</code> parameter, some waiting jobs will depart.
-   * 
-   * @param time               The current time.
-   * @param gatePassageCredits The (remaining) number of passages to allow (will override, not add to, any previous value);
-   *                           {@link Integer#MAX_VALUE} is treated as infinity.
-   * 
-   * @see #openGate(double)
-   * @see #closeGate
+   * @see #update
+   * @see #jobQueue
+   * @see SimJob#setQueue
+   * @see #fireDeparture
+   * @see #fireNewNoWaitArmed
+   * @see #fireNewGateStatus
    * 
    */
   @Override
-  public final void openGate (final double time, final int gatePassageCredits)
+  public final void setGatePassageCredits (final double time, final int gatePassageCredits)
   {
     update (time);
     if (gatePassageCredits < 0)
@@ -174,20 +140,6 @@ implements SimQueueWithGate<J, Q>
       fireDeparture (time, job, (Q) this);
     fireNewNoWaitArmed (time, isNoWaitArmed ());
     fireNewGateStatus (time, oldGatePassageCredits);
-  }
-  
-  /** Closes the gate.
-   * 
-   * @param time The current time.
-   * 
-   * @see #openGate(double)
-   * @see #openGate(double, int)
-   * 
-   */
-  @Override
-  public final void closeGate (final double time)
-  {
-    openGate (time, 0);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

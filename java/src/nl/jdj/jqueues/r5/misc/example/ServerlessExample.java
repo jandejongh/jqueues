@@ -170,21 +170,21 @@ public final class ServerlessExample
     // Close gate between t = 2.5 and t = 3.5.
     el.schedule (2.5, (SimEventAction) (SimEvent event) ->
     {
-      ((GATE) gateQueue).closeGate (event.getTime ());
+      ((GATE) gateQueue).setGatePassageCredits (event.getTime (), 0);
     });
     el.schedule (3.5, (SimEventAction) (SimEvent event) ->
     {
-      ((GATE) gateQueue).openGate (event.getTime ());
+      ((GATE) gateQueue).setGatePassageCredits (event.getTime (), Integer.MAX_VALUE);
     });
     // Open gate for two jobs at t=5.5.
     el.schedule (5.5, (SimEventAction) (SimEvent event) ->
     {
-      ((GATE) gateQueue).openGate (event.getTime (), 2);
+      ((GATE) gateQueue).setGatePassageCredits (event.getTime (), 2);
     });
     // Open gate t=11.5.    
     el.schedule (11.5, (SimEventAction) (SimEvent event) ->
     {
-      ((GATE) gateQueue).openGate (event.getTime ());
+      ((GATE) gateQueue).setGatePassageCredits (event.getTime (), Integer.MAX_VALUE);
     });
     System.out.println ("-> Executing event list...");
     el.run ();

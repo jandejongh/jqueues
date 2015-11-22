@@ -82,7 +82,7 @@ implements SimQueueStateHandler
   /** Sets the remaining number of passage credits for the gate.
    * 
    * <p>
-   * Mimics {@link SimQueueWithGate#openGate(double, int)}.
+   * Mimics {@link SimQueueWithGate#getGatePassageCredits}.
    * 
    * <p>
    * The time cannot be in the past.

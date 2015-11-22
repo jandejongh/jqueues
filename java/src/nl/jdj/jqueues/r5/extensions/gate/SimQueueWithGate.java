@@ -28,25 +28,11 @@ extends SimQueue<J, Q>
    */
   public int getGatePassageCredits ();
   
-  /** Opens the gate (without limits on the number of passages).
-   * 
-   * @param time The current time.
-   * 
-   */
-  public void openGate (double time);
-  
-  /** Closes the gate.
-   * 
-   * @param time The current time.
-   * 
-   */
-  public void closeGate (double time);
-  
-  /** Opens the gate for a limited number of remaining passages.
+  /** Sets (overwrites) the (remaining) gate-passage credits.
    * 
    * <p>
    * Note that setting the remaining number of passage credits to zero effectively closes the gate,
-   * and setting it to {@link Integer#MAX_VALUE} open it without limits on the number of passages.
+   * and setting it to {@link Integer#MAX_VALUE} (treated as infinity) opens it without limits on the number of passages.
    * 
    * <p>
    * If a {@link SimQueueWithGate} does not support this operation, it is to consider every strictly positive value
@@ -59,6 +45,6 @@ extends SimQueue<J, Q>
    * @throws IllegalArgumentException If the number of passages passed is strictly negative.
    * 
    */
-  public void openGate (double time, int gatePassageCredits);
+  public void setGatePassageCredits (double time, int gatePassageCredits);
   
 }
