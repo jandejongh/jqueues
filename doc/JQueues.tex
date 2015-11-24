@@ -1472,7 +1472,7 @@ Arrival & Yes & The queue accepts arrivals. \\
 \hline
 Drop & Yes & All jobs are dropped upon arrival. \\
 \hline
-Revocation & No & Job cannot be revoked \\
+Revocation & No & Jobs cannot be revoked \\
            &    & since there are never jobs present. \\
 \hline
 Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
@@ -1525,7 +1525,7 @@ Service Area & Absent & There is no service area. \\
 \multicolumn{3}{|c|}{\bf State Operations} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Has no effect. \\
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
 \hline
 Arrival & Yes & The queue accepts arrivals. \\
 \hline
@@ -1584,21 +1584,21 @@ Service Area & Absent & There is no service area. \\
 \multicolumn{3}{|c|}{\bf State Operations} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Has no effect. \\
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
 \hline
 Arrival & Yes & The queue accepts arrivals. \\
         &     & (But jobs depart immediately.) \\
 \hline
 Drop & Yes & Drops arriving jobs during QAVs. \\
 \hline
-Revocation & No & Job cannot be revoked \\
+Revocation & No & Jobs cannot be revoked \\
            &    & since there are never jobs present. \\
 \hline
 Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
 \hline
 Start & No & Jobs cannot start. \\
 \hline
-Departure & No & Jobs cannot depart. \\
+Departure & Yes & Non-dropped jobs depart upon arrival. \\
 \hline
 \multicolumn{3}{|c|}{} \\
 \multicolumn{3}{|c|}{\bf State  Invariants} \\
@@ -1618,17 +1618,556 @@ Departure & No & Jobs cannot depart. \\
 
 \subsection{The \lstinline{DELAY} \lstinline{SimQueue}}
 
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{DELAY}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Lets jobs depart after a fixed wait time.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & WaitTime & Since non-dropped jobs depart immediately \\
+            & == 0     & when the wait time is zero. \\
+\hline
+Waiting Area & Present & Infinite waiting area, non-ordered. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\hline
+Service Area & Absent & There is no service area. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+        &     & (Immediate departure if WaitTime == 0.) \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\hline
+Start & No & Jobs cannot start. \\
+\hline
+Departure & Yes & Non-dropped/revoked jobs depart \\
+          &     & WaitTime after arrival. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{The set of jobs present in the service area is empty.} \\
+\multicolumn{3}{|l|}{All jobs present are in the waiting area.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList| & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "DELAY[\lstinline|WaitTime|]";
+                                             non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|WaitTime|  & \multicolumn{2}{|l|}{The wait time, zero or positive; RO.} \\
+\hline
+\end{tabular}
+
 \subsection{The \lstinline{GATE} \lstinline{SimQueue}}
 
-\section{Single-Server Queues}
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{GATE}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Depending on the state of its "gate", let jobs} \\
+            & \multicolumn{2}{|l|}{depart immediately or puts them into the waiting area.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & GPC $> 0$ & Since non-dropped jobs depart immediately upon arrival \\
+            &           & provided that there are gate-passage credits (GPCs). \\
+\hline
+Waiting Area & Present & Infinite waiting area, arrival order. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\hline
+Service Area & Absent & There is no service area. \\
+\hline
+GPC & $\{0, 1, 2, \ldots\}$ & Number of jobs to depart immediately upon arrival. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\hline
+Start & No & Jobs cannot start. \\
+\hline
+Departure & Yes & Non-dropped/revoked jobs depart upon arrival \\
+          &     & or if (sufficient) GPCs become available. \\
+\hline
+Set GPC & $\{0, 1, 2, \ldots\}$ & Overwrites the remaining number of GPCs. \\
+        &                       & (Letting jobs depart if waiting and GPC $ > 0$). \\
+        &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{The set of jobs present in the service area is empty.} \\
+\multicolumn{3}{|l|}{All jobs present are in the waiting area.} \\
+\multicolumn{3}{|l|}{If GPC $> 0$, the set of jobs present is empty.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList| & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "GATE"; non-\lstinline|null|; RW.} \\
+\hline
+\end{tabular}
 
-\section{Finite-Server Queues}
+\section{Nonpreemptive Queues}
 
-\section{Infinite-Server Queues}
+\subsection{The \lstinline{FCFS} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{FCFS}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Serves jobs in arrival order with a single server.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & No Jobs & Since non-dropped arriving jobs are taken into \\
+            &         & service immediately if no other jobs are present. \\
+\hline
+Waiting Area & Present & Infinite waiting area, arrival order. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the job currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
+\hline
+Start & Yes & Starts jobs if there are SACs and the server is idle. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{At most one job is present in the service area.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "FCFS"; non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{FCFS_B} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{FCFS_B}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Serves jobs in arrival order with a single server} \\
+            & \multicolumn{2}{|l|}{but has limited capacity for waing jobs.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & No Jobs & Since arriving jobs are dropped or taken into \\
+            &         & service immediately if no other jobs are present. \\
+\hline
+Waiting Area & Present & Finite waiting area of size \lstinline|BufferSize|, arrival order. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the job currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs \\
+     &     & and while there are \lstinline|BufferSize| waiting jobs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
+\hline
+Start & Yes & Starts jobs if there are SACs and the server is idle. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{At most one job is present in the service area.} \\
+\multicolumn{3}{|l|}{At most \lstinline|BufferSize| jobs are present in the waiting area.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "FCFS\_B[\lstinline|BufferSize|]";
+                                                   non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\hline
+\lstinline|BufferSize|      & \multicolumn{2}{|l|}{The buffer size; non-negative; RO.} \\
+                            & \multicolumn{2}{|l|}{\lstinline|Integer.MAX_VALUE| is treated as $+\infty$.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{FCFS_c} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{FCFS_c}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Serves jobs in arrival order with multiple ($c$) servers.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & \lstinline|NumberOfJobs| & Since non-dropped arriving jobs are taken into \\
+            & $< c$                    & service immediately if at least one server is idle. \\
+\hline
+Waiting Area & Present & Infinite waiting area, arrival order. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the jobs (upto $c$) currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting job(s) if SAC $> 0$ and it least one server is idle. \\
+\hline
+Start & Yes & Starts jobs if there are SACs and at least one server is idle. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{At most $c$ jobs are present in the service area.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, a server cannot be idle in the presence of waiting jobs.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "FCFS\_\lstinline{NumberOfServers}";
+                                                   non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number $c$ of servers; non-negative; RO.} \\
+                            & \multicolumn{2}{|l|}{\lstinline|Integer.MAX_VALUE| is treated as $+\infty$.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{IS} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{IS}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Serves jobs in arrival order with an infinite number of servers.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs \\
+            &                  & are taken into service immediately. \\
+\hline
+Waiting Area & Present & Infinite waiting area, arrival order. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the jobs currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting jobs in arrival order while SAC $> 0$. \\
+\hline
+Start & Yes & Starts jobs if there are SACs. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{If SAC $> 0$, there are no jobs in the waiting area.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "IS"; non-\lstinline|null|; RW.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{IS_CST} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{IS_CST}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Serves jobs in arrival order with an infinite number of servers.} \\
+            & \multicolumn{2}{|l|}{Each job is served for a queue-determined fixed service time.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs \\
+            &                  & are taken into service immediately. \\
+\hline
+Waiting Area & Present & Infinite waiting area, arrival order. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the jobs currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting jobs in arrival order while SAC $> 0$. \\
+\hline
+Start & Yes & Starts jobs if there are SACs. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{If SAC $> 0$, there are no jobs in the waiting area.} \\
+\multicolumn{3}{|l|}{If \lstinline|ServiceTime| $== 0$, there are no jobs in the service area.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "IS\_CST[\lstinline|ServiceTime|]";
+                                                   non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|ServiceTime|     & \multicolumn{2}{|l|}{The service time for each job; non-negative; RO.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{IC} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{IC}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Serves jobs in arrival order with an infinite number of servers,} \\
+            & \multicolumn{2}{|l|}{each of which is of infinite capacity and serves any job in zero time.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs \\
+            &                  & are taken into service immediately. \\
+\hline
+Waiting Area & Present & Infinite waiting area, arrival order. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the jobs currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting for SACs. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting jobs in arrival order while SAC $> 0$. \\
+\hline
+Start & Yes & Starts jobs if there are SACs. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{If SAC $> 0$, there are no jobs in the waiting area.} \\
+\multicolumn{3}{|l|}{There are no jobs in the service area.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "IC"; non-\lstinline|null|; RW.} \\
+\hline
+\end{tabular}
+
+\section{Preemptive Queues}
 
 \section{Processor-Sharing Queues}
 
-\section{Preemptive Queues}
+\section{\lstinline|SimQueue| Equalities}
+
+\begin{tabular}{|l|l|}
+\hline
+\lstinline|DELAY[0]| & \lstinline|ZERO| \\
+\hline
+\lstinline|DELAY[Double.POSITIVE_INFINITY]| & \lstinline|SINK| \\
+\hline
+\lstinline|FCFS_B[0]| & \lstinline|DROP| \\
+\hline
+\lstinline|FCFS_B[Integer.MAX_VALUE]| & \lstinline|FCFS| \\
+\hline
+\lstinline|FCFS_0| & \lstinline|SINK| \\
+\hline
+\lstinline|FCFS_1| & \lstinline|FCFS| \\
+\hline
+\lstinline|FCFS_Integer.MAX_VALUE| & \lstinline|IS| \\
+\hline
+\lstinline|IS_CST[0]| & \lstinline|IC| \\
+\hline
+\end{tabular}
 
 \chapter{Visualization of Queues and Jobs with Swing Components}
 
