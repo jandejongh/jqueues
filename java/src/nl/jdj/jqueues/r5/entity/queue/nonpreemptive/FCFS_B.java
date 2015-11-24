@@ -19,6 +19,14 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
   
   private final int bufferSize;
   
+  /** Returns the buffer size.
+   * 
+   * <p>
+   * The buffer size is fixed upon construction and cannot be changed.
+   * 
+   * @return The buffer size (non-negative).
+   * 
+   */
   public final int getBufferSize ()
   {
     return this.bufferSize;
