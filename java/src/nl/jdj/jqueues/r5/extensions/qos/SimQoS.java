@@ -37,7 +37,7 @@ public interface SimQoS<J extends SimJob, Q extends SimQueue>
     return null;
   }
   
-  /** Returns the QoS value.
+  /** Gets the QoS value.
    * 
    * <p>
    * If the {@link SimEntity} does not support QoS, {@code null} should be returned.
@@ -52,7 +52,7 @@ public interface SimQoS<J extends SimJob, Q extends SimQueue>
    * <p>
    * The QoS value cannot change during the lifetime of a {@link SimEntity}.
    * 
-   * @return The Java class used for QoS behavior, may be {@code null}.
+   * @return The QoS value, may be {@code null}.
    * 
    */
   default Object getQoS ()
