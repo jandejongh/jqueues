@@ -127,7 +127,7 @@ extends SimEntity<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Get the set of jobs currently visiting this queue.
+  /** Gets the set of jobs currently visiting this queue.
    *
    * @return The set of jobs currently visiting the queue, non-{@code null}.
    * 
