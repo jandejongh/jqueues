@@ -2143,6 +2143,262 @@ Departure & Yes & Started and non-revoked jobs depart. \\
 \hline
 \end{tabular}
 
+\subsection{The \lstinline{LCFS} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{LCFS}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Serves jobs in reverse arrival order with a single server.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & No Jobs & Since non-dropped arriving jobs are taken into \\
+            &         & service immediately if no other jobs are present. \\
+\hline
+Waiting Area & Present & Infinite waiting area, reverse arrival order. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the job currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
+\hline
+Start & Yes & Starts jobs if there are SACs and the server is idle. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{At most one job is present in the service area.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "LCFS"; non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{SJF} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{SJF}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Serves jobs in increasing service-time order with a single server.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & No Jobs & Since non-dropped arriving jobs are taken into \\
+            &         & service immediately if no other jobs are present. \\
+\hline
+Waiting Area & Present & Infinite waiting area, ordered increasing in service time. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the job currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
+\hline
+Start & Yes & Starts jobs if there are SACs and the server is idle. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{At most one job is present in the service area.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "SJF"; non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{LJF} \lstinline{SimQueue}}
+ 
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{LJF}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Serves jobs in decreasing service-time order with a single server.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & No Jobs & Since non-dropped arriving jobs are taken into \\
+            &         & service immediately if no other jobs are present. \\
+\hline
+Waiting Area & Present & Infinite waiting area, ordered decreasing in service time. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the job currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
+\hline
+Start & Yes & Starts jobs if there are SACs and the server is idle. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{At most one job is present in the service area.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "LJF"; non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{RANDOM} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{RANDOM}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Serves jobs in random order with a single server.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & No Jobs & Since non-dropped arriving jobs are taken into \\
+            &         & service immediately if no other jobs are present. \\
+\hline
+Waiting Area & Present & Infinite waiting area, random order with equal probabilities. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the job currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
+\hline
+Start & Yes & Starts jobs if there are SACs and the server is idle. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{At most one job is present in the service area.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "RANDOM"; non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\hline
+\end{tabular}
+
 \section{Preemptive Queues}
 
 \section{Processor-Sharing Queues}
