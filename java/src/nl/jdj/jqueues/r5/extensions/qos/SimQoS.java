@@ -26,9 +26,6 @@ public interface SimQoS<J extends SimJob, Q extends SimQueue>
    * <p>
    * The default implementation returns {@code null}.
    * 
-   * <p>
-   * The QoS class cannot change during the lifetime of a {@link SimEntity}.
-   * 
    * @return The Java class used for QoS behavior, may be {@code null}.
    * 
    */
@@ -36,7 +33,7 @@ public interface SimQoS<J extends SimJob, Q extends SimQueue>
   {
     return null;
   }
-  
+
   /** Gets the QoS value.
    * 
    * <p>
@@ -48,9 +45,6 @@ public interface SimQoS<J extends SimJob, Q extends SimQueue>
    * 
    * <p>
    * The default implementation returns {@code null}.
-   * 
-   * <p>
-   * The QoS value cannot change during the lifetime of a {@link SimEntity}.
    * 
    * @return The QoS value, may be {@code null}.
    * 

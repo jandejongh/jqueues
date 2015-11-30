@@ -9,7 +9,7 @@ import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimJobFactory;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJobFactory;
+import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJobQoSFactory;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
@@ -51,7 +51,8 @@ public class DefaultSimQueueTests
         {
           if (! deadSilent)
             System.out.println ("===== Test: " + klf + ", pass " + pass + " =====");
-          final SimJobFactory jobFactory = new DefaultVisitsLoggingSimJobFactory<> ();
+          //final SimJobFactory jobFactory = new DefaultVisitsLoggingSimJobFactory<> ();
+          final SimJobFactory jobFactory = new DefaultVisitsLoggingSimJobQoSFactory<> ();
           final NavigableMap<Double, Set<SimEntityEvent>> queueEvents = new TreeMap<> ();
           final LoadFactory_SQ_SV loadFactory = klf.getLoadFactory ();
           final Set<SimJob> jobs = loadFactory.generate
@@ -67,7 +68,7 @@ public class DefaultSimQueueTests
           assert predictor.matchVisitLogs_SQ_SV
             (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, accuracy, System.err);
           el.reset ();
-          }
+        }
     return true;
   }
     

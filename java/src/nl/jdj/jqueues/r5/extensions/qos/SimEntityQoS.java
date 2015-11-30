@@ -21,14 +21,38 @@ extends SimEntity<J, Q>, SimQoS<J, Q>
    * 
    */
   @Override
-  public P getQoS ();
+  public Class<? extends P> getQoSClass ();
 
+  /** Sets the Java class used for QoS behavior.
+   * 
+   * @param qosClass The new Java class used for QoS behavior, may be {@code null}.
+   * 
+   * @throws UnsupportedOperationException Always thrown by the default implementation.
+   * 
+   */
+  default void setQoSClass (final Class<? extends P> qosClass)
+  {
+    throw new UnsupportedOperationException ();
+  }
+  
   /** Overridden in order to restrict the return type.
    * 
    * {@inheritDoc}
    * 
    */
   @Override
-  public Class<? extends P> getQoSClass ();
+  public P getQoS ();
+
+  /** Sets the QoS value.
+   * 
+   * @param qos The new QoS value, may be {@code null}.
+   * 
+   * @throws UnsupportedOperationException Always thrown by the default implementation.
+   * 
+   */
+  default void setQoS (final P qos)
+  {
+    throw new UnsupportedOperationException ();
+  }
   
 }
