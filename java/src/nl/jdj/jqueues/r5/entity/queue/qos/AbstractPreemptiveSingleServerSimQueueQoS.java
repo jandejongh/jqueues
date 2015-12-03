@@ -192,7 +192,7 @@ public abstract class AbstractPreemptiveSingleServerSimQueueQoS
    */
   protected final J getNextJobToServeInWaitingArea ()
   {
-    for (final Set<J> jobsP: jobsQoSMap.values ())
+    for (final Set<J> jobsP: this.jobsQoSMap.values ())
       if (jobsP == null || jobsP.isEmpty ())
         throw new IllegalStateException ();
       else
