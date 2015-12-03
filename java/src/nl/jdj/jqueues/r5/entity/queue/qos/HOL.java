@@ -111,6 +111,11 @@ implements SimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  /** Inserts the job into {@link #jobQueue} (tail) and {@link #jobsQoSMap}.
+   * 
+   * @see #getAndCheckJobQoS
+   * 
+   */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
