@@ -139,6 +139,10 @@ public abstract class AbstractPreemptiveSimQueue
   /** Preempts a job in {@link #jobsBeingServed}, taking actions depending on the preemption
    * strategy of this queue.
    * 
+   * <p>
+   * XXX This method issues listener notifications for drops and departures,
+   * whereas in most cases these should be deferred.
+   * 
    * @param time The (current) time.
    * @param job  The job to preempt.
    * 
