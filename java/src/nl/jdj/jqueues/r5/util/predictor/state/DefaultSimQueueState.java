@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r5.util.predictor.state;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ implements SimQueueState<J, Q>
     this.time = Double.NaN;
     this.queueAccessVacation = false;
     this.jobArrivalsMap = new TreeMap<> ();
-    this.arrivalTimesMap = new HashMap<> ();
+    this.arrivalTimesMap = new LinkedHashMap<> ();
     this.serverAccessCredits = Integer.MAX_VALUE;
     this.startTimesMap = new HashMap<> ();
     this.jobsInServiceAreaMap = new TreeMap<> ();

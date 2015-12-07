@@ -140,6 +140,9 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
   /** Gets a map from jobs present in the queue onto their arrival times.
    * 
    * <p>
+   * The key set of this map must be in arrival order.
+   * 
+   * <p>
    * Every job present in the queue must have an entry,
    * and, vice versa, every entry refers to a job actually present in the queue.
    * Null keys or values are not allowed.
@@ -150,6 +153,9 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
   public Map<J, Double> getArrivalTimesMap ();
   
   /** Get the set of all jobs currently residing at the queue, either in the waiting area or in the service area.
+   * 
+   * <p>
+   * Jobs are returned in arrival order.
    * 
    * <p>
    * Mimics {@link SimQueue#getJobs}.
