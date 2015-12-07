@@ -149,7 +149,7 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
    */
   public Map<J, Double> getArrivalTimesMap ();
   
-  /** Get the set of all jobs currently residing at the queue, either in the waiting area pr in the service area.
+  /** Get the set of all jobs currently residing at the queue, either in the waiting area or in the service area.
    * 
    * <p>
    * Mimics {@link SimQueue#getJobs}.
