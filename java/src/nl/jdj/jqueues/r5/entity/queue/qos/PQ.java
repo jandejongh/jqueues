@@ -156,26 +156,22 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Throws an {@link IllegalStateException} because drops are unexpected.
-   * 
-   * @throws IllegalStateException Always.
+  /** Calls super method (in order to make implementation final).
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
-    throw new IllegalStateException ();
+    super.removeJobFromQueueUponDrop (job, time);
   }
 
-  /** Throws an {@link IllegalStateException} because drops are unexpected.
-   * 
-   * @throws IllegalStateException Always.
+  /** Invokes {@link #rescheduleAfterDeparture}.
    * 
    */
   @Override
   protected final void rescheduleAfterDrop (final J job, final double time)
   {
-    throw new IllegalStateException ();
+    rescheduleAfterDeparture (job, time);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -378,8 +374,9 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
     if (jobToServe != jobBeingServed)
     {
       if (jobBeingServed != null)
+        // Note that preemptJob may already reschedule in case of DROP and DEPART preemption policies (for instance)!
         preemptJob (time, jobBeingServed);
-      if (jobToServe != null)
+      if (jobToServe != null && ! this.jobsBeingServed.keySet ().contains (jobToServe))
       {
         if (! this.jobsInServiceArea.contains (jobToServe))
         {
