@@ -70,6 +70,15 @@ public abstract class AbstractPreemptiveSingleServerSimQueueQoS
     return this.qosClass;
   }
   
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void setQoSClass (final Class<? extends P> qosClass)
+  {
+    SimQueueQoS.super.setQoSClass (qosClass);
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // QoS
@@ -87,6 +96,15 @@ public abstract class AbstractPreemptiveSingleServerSimQueueQoS
     return null;
   }
   
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final void setQoS (P qos)
+  {
+    SimQueueQoS.super.setQoS (qos);
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // (DEFAULT) JOB QoS
