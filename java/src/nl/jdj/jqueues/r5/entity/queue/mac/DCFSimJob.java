@@ -17,7 +17,7 @@ extends AbstractSimJob<DCFSimJob, DCF>
 
   public DCFSimJob ()
   {
-    super (null, null);
+    super (null, "DCFSimJob");
   }
   
 }

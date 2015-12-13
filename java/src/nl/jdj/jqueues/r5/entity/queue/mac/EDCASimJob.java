@@ -1,19 +1,17 @@
 package nl.jdj.jqueues.r5.entity.queue.mac;
 
+import nl.jdj.jqueues.r5.entity.job.qos.DefaultSimJobQoS;
+
 /**
  *
  */
-public class EDCASimJob
-extends DCFSimJob
+public class EDCASimJob<P extends Enum<P> & AC>
+extends DefaultSimJobQoS<EDCASimJob, EDCA, P>
 {
 
-  public final ACParameters acParameters;
-  
-  public EDCASimJob (ACParameters acParameters)
+  public EDCASimJob (final Class<P> qosClass, final P qos)
   {
-    if (acParameters == null)
-      throw new IllegalArgumentException ();
-    this.acParameters = acParameters;
+    super (null, "EDCASimJob", 0.0, qosClass, qos);
   }
-  
+
 }

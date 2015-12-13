@@ -52,6 +52,11 @@ implements MediumPhyStateObserver
   private final FCFS contentionQueue;
   
   private final MediumPhyStateMonitor mediumPhyStateMonitor;
+
+  public final MediumPhyStateMonitor getMediumPhyStateMonitor ()
+  {
+    return mediumPhyStateMonitor;
+  }
   
   private static Set<FCFS> createQueues (final SimEventList eventList)
   {
@@ -161,11 +166,17 @@ implements MediumPhyStateObserver
       throw new IllegalArgumentException ();
     if (mediumPhyState != this.lastMediumPhyState)
     {
+//    System.out.println ("[mediumPhyStateUpdate] on " + this + ": " + this.lastMediumPhyState + " -> " + mediumPhyState + ".");
+//    System.out.println ("                   state: " + this.state + ".");
       update (time);
-      final boolean wasTx = (this.lastMediumPhyState == MediumPhyState.TX_BUSY);
       this.lastMediumPhyState = mediumPhyState;
-      if (wasTx)
-        txOwnTransmissionEnds (time);
+      if (this.state == DCFState.BUSY_TX)
+      {
+        if (this.lastMediumPhyState == MediumPhyState.TX_BUSY)
+          txMediumGoesBusy (time);
+        else
+          txOwnTransmissionEnds (time);        
+      }
       else
         switch (this.lastMediumPhyState)
         {
@@ -173,8 +184,10 @@ implements MediumPhyStateObserver
             rxMediumGoesBusy (time);
             break;
           case TX_BUSY:
-            txMediumGoesBusy (time);
-            break;
+            throw new RuntimeException ("[mediumPhyStateUpdate] Illegal PHY-state transition on "
+              + this
+              + " with state "
+              + this.state + ": medium -> TX_BUSY.");
           case IDLE:
             rxMediumGoesIdle (time);
             break;
@@ -787,7 +800,10 @@ implements MediumPhyStateObserver
       }
       default:
       {
-        throw new RuntimeException ("Illegal state and/or event.");
+        throw new RuntimeException ("[rxMediumGoesBusy] Illegal state and/or event on "
+          + this
+          + " during "
+          + this.state + ".");
       }
     }
   }
@@ -826,7 +842,7 @@ implements MediumPhyStateObserver
       }
       default:
       {
-        throw new RuntimeException ("Illegal state and/or event.");
+        throw new RuntimeException ("Illegal state and/or event on " + this + ", current state = " + this.state + ".");
       }
     }
   }
@@ -894,15 +910,15 @@ implements MediumPhyStateObserver
   {
     // NOTE: WE ARE CALLED FROM A NOTIFICATION!
     // SCHEDULE STATE_CHANGE ON EVENT LIST!
-    getEventList ().add (new DefaultSimEvent (time, null, new SimEventAction ()
-    {
-
-      @Override
-      public void action (SimEvent event)
-      {
+//    getEventList ().add (new DefaultSimEvent (time, null, new SimEventAction ()
+//    {
+//
+//      @Override
+//      public void action (SimEvent event)
+//      {        
         DCF.this.mediumPhyStateMonitor.startTransmission (time, DCF.this, job);
-      }
-    }));
+//      }
+//    }));
   }
   
   
