@@ -61,7 +61,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "SRTF[" + getPreemptionStrategy () + "]";
   }

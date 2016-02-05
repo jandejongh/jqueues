@@ -103,7 +103,7 @@ public class BlackProbabilisticFeedbackSimQueue
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "FB_" + this.p_feedback * 100.0 + "%[" + getQueues ().iterator ().next () + "]";
   }

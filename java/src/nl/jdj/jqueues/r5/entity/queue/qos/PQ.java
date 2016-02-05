@@ -71,7 +71,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "PQ[" + getPreemptionStrategy () + "]";
   }

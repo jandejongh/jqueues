@@ -77,7 +77,7 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "IC";
   }

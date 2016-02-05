@@ -68,7 +68,7 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "LCFS";
   }

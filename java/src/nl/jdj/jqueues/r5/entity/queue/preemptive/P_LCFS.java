@@ -59,7 +59,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "P_LCFS[" + getPreemptionStrategy () + "]";
   }

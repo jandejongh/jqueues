@@ -73,7 +73,7 @@ public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveS
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "SJF";
   }

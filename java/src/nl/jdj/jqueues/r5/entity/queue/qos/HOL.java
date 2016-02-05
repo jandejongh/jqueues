@@ -66,7 +66,7 @@ implements SimQueueQoS<J, Q, P>
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "HOL";
   }

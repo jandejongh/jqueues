@@ -77,7 +77,7 @@ public class FCFS_c<J extends SimJob, Q extends FCFS_c> extends AbstractNonPreem
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "FCFS_" + getNumberOfServers ();
   }

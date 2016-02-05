@@ -69,7 +69,7 @@ public class FCFS<J extends SimJob, Q extends FCFS> extends AbstractNonPreemptiv
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "FCFS";
   }

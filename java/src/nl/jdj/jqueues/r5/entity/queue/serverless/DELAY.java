@@ -67,7 +67,7 @@ extends AbstractServerlessSimQueue<J, Q>
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "DELAY[" + getWaitTime () + "]";
   }

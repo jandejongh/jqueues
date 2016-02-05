@@ -113,6 +113,10 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * in case the user did not set an instance-specific name
    * through {@link #setName}.
    * 
+   * <p>
+   * Implementation classes are recommended to <i>not</i> make this method final
+   * unless the class itself is final.
+   * 
    * @return A default, type-specific name for this {@link SimEntity}.
    * 
    * @see #setName

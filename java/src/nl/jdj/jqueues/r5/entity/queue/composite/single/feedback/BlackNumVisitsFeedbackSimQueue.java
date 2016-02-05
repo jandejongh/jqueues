@@ -98,7 +98,7 @@ public class BlackNumVisitsFeedbackSimQueue
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "FB_" + this.numberOfVisits + "[" + getQueues ().iterator ().next () + "]";
   }

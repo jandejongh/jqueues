@@ -94,7 +94,7 @@ public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue,
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     String string = "Tandem[";
     boolean first = true;

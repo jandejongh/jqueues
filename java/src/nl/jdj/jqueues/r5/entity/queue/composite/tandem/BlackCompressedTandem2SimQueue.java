@@ -140,7 +140,7 @@ public class BlackCompressedTandem2SimQueue
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "ComprTandem2[" + getWaitQueue () + "," + getServeQueue () + "]";
   }

@@ -74,7 +74,7 @@ extends DefaultSimJobQoS<J, Q, P>
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "DefaultExampleSimJobQoS[" + this.n + "]";
   }

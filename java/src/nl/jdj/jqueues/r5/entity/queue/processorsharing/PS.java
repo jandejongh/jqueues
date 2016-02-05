@@ -70,7 +70,7 @@ public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharing
    * 
    */
   @Override
-  public final String toStringDefault ()
+  public String toStringDefault ()
   {
     return "PS";
   }
