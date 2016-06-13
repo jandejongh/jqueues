@@ -263,7 +263,7 @@ implements SimEntity<J, Q>
    * For a precise definition of an update of an entity, refer to {@link SimEntityListener#notifyUpdate}.
    * 
    * <p>
-   * This method should <i>not<i> be called from user code, as it <i>must</i> be immediately followed by an imminent state change
+   * This method should <i>not</i> be called from user code, as it <i>must</i> be immediately followed by an imminent state change
    * of this entity.
    * 
    * <p>
