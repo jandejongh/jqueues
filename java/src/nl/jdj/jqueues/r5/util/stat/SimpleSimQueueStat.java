@@ -3,8 +3,15 @@ package nl.jdj.jqueues.r5.util.stat;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 
-/** An concrete class for gathering the most basic statistics on a {@link SimQueue}.
+/** An concrete class for gathering the most basic queue-related statistics on a {@link SimQueue}.
  *
+ * <p>
+ * We call a performance measure <i>queue</i>-related if its value depends only on the state of the queue.
+ * By definition of a queue's state, a queue-related performance measure is a so-called <i>simple</i> function, i.e.,
+ * in this context, a function yielding a constant value during non-trivial intervals between queue updates,
+ * and integration is easily achieved by maintaining the current value of the performance measure and the time of the
+ * last update. Note that the actual value of the function at the "switch times" is irrelevant.
+ * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
