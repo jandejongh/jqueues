@@ -33,5 +33,26 @@ import nl.jdj.jqueues.r5.SimQueue;
 public interface BlackSimQueueComposite<DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends SimQueue>
 extends SimQueueComposite<DJ, DQ, J, Q>
 {
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DELEGATE SIMJOB FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the factory to create delegate {@link SimJob}s, non-<code>null</code>.
+   * 
+   * @return The factory to create delegate {@link SimJob}s, non-<code>null</code>.
+   */
+  DelegateSimJobFactory<? extends DJ, DQ, J, Q> getDelegateSimJobFactory ();
+  
+  /** Sets the factory to create delegate {@link SimJob}s, non-<code>null</code>.
+   * 
+   * @param delegateSimJobFactory The new factory to create delegate {@link SimJob}s, non-<code>null</code>.
+   * 
+   * @throws IllegalArgumentException If the argument is {@code null} or otherwise illegal.
+   * 
+   */
+  void setDelegateSimJobFactory (DelegateSimJobFactory<? extends DJ, DQ, J, Q> delegateSimJobFactory);
   
 }

@@ -101,15 +101,20 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   /** The factory to create delegate {@link SimJob}s, non-<code>null</code>.
    * 
    */
-  private final DelegateSimJobFactory<? extends DJ, DQ, J, Q> delegateSimJobFactory;
+  private DelegateSimJobFactory<? extends DJ, DQ, J, Q> delegateSimJobFactory;
   
-  /** Returns the factory to create delegate {@link SimJob}s, non-<code>null</code>.
-   * 
-   * @return The factory to create delegate {@link SimJob}s, non-<code>null</code>.
-   */
+  @Override
   public final DelegateSimJobFactory<? extends DJ, DQ, J, Q> getDelegateSimJobFactory ()
   {
     return this.delegateSimJobFactory;
+  }
+  
+  @Override
+  public final void setDelegateSimJobFactory (final DelegateSimJobFactory<? extends DJ, DQ, J, Q> delegateSimJobFactory)
+  {
+    if (delegateSimJobFactory == null)
+      throw new IllegalArgumentException ();
+    this.delegateSimJobFactory = delegateSimJobFactory;
   }
   
   /** Maps "real" jobs onto delegate jobs.
