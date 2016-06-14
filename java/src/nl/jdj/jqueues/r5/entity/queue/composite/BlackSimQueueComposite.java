@@ -50,7 +50,8 @@ extends SimQueueComposite<DJ, DQ, J, Q>
    * 
    * @param delegateSimJobFactory The new factory to create delegate {@link SimJob}s, non-<code>null</code>.
    * 
-   * @throws IllegalArgumentException If the argument is {@code null} or otherwise illegal.
+   * @throws IllegalArgumentException      If the argument is {@code null} or otherwise illegal.
+   * @throws UnsupportedOperationException If this composite queue does not allow setting the delegate-job factory.
    * 
    */
   void setDelegateSimJobFactory (DelegateSimJobFactory<? extends DJ, DQ, J, Q> delegateSimJobFactory);
