@@ -42,7 +42,7 @@ implements SimQueueListener<J, Q>
    * All other required internal bookkeeping has already been taken care of.
    * 
    * Unfortunately, you must reset the statistics yourself upon construction, because this class avoids the trickery of
-   * calling overridable methods from its constructors.
+   * calling override-able methods from its constructors.
    * 
    */
   protected abstract void resetStatistics ();
