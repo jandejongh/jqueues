@@ -17,7 +17,7 @@ public abstract class AbstractSimQueueStat<J extends SimJob, Q extends SimQueue>
 implements SimQueueListener<J, Q>
 {
 
-  // The queue we are gathering statistics on.
+  // The queue we are gathering statistics on, may be {@code null}.
   private Q queue = null;
   
   // The start time for gathering statistics, and the last update time.
@@ -61,11 +61,11 @@ implements SimQueueListener<J, Q>
    * 
    * All other required internal bookkeeping has already been taken care of.
    * 
-   * @param time The time of the last update.
-   * @param dT The time interval between start and the last update, zero or positive.
+   * @param startTime The start time of the statistics gathering.
+   * @param endTime   The last time the statistic was updated.
    * 
    */
-  protected abstract void calculateStatistics (double time, double dT);
+  protected abstract void calculateStatistics (double startTime, double endTime);
   
   //
   // END: STUFF YOU NEED TO OVERRIDE IN A SUBCLASS.
@@ -83,8 +83,9 @@ implements SimQueueListener<J, Q>
 
   /** Resets all statistics and start a new batch of statistics gathering.
    * 
-   * The start time is set to the current time (last update time), all statistics are invalidated
-   * and prepared for the new batch.
+   * <p>
+   * The start time is set to the current time (the time on the event list of the queue, or minus infinity if no queue is present),
+   * all statistics are invalidated and prepared for the new batch.
    * 
    * <p>
    * Only override this method with a call to <code>super</code> if you have special actions to be performed upon a reset
@@ -105,13 +106,17 @@ implements SimQueueListener<J, Q>
   // Auxiliary (final) method for private use in constructor.
   private void resetInt ()
   {
-    this.startTime = this.lastUpdateTime;
-    this.statisticsValid = false;    
+    if (this.queue != null)
+      this.startTime = this.queue.getEventList ().getTime ();
+    else
+      this.startTime = Double.NEGATIVE_INFINITY;    
+    this.lastUpdateTime = this.startTime;
+    this.statisticsValid = false;
   }
   
   /** Updates all statistics at given time.
    * 
-   * Note that updates timed before our latest update are silently ignored.
+   * Note that updates timed before our latest update yield an exception.
    * 
    * <p>
    * Only override this method with a call to <code>super</code> if you have special actions to be performed upon an update
@@ -119,12 +124,13 @@ implements SimQueueListener<J, Q>
    * 
    * @param time The (new) current time.
    * 
+   * @throws IllegalArgumentException If the time is in the past (i.e., strictly smaller than our last update time).
+   * 
    */
   protected void update (double time)
   {
     if (time < this.lastUpdateTime)
-      // Ignored...
-      return;
+      throw new IllegalArgumentException ();
     if (time == this.lastUpdateTime)
       return;
     this.statisticsValid = false;
@@ -141,23 +147,33 @@ implements SimQueueListener<J, Q>
    * Only override this method with a call to <code>super</code> if you have special actions to be performed upon a calculation
    * <i>other</i> than calculating statistics. Otherwise, override {@link #calculateStatistics}.
    * 
+   * @param time The current time, may be beyond the last update time.
+   * 
    */
-  protected void calculate ()
+  protected void calculate (final double time)
   {
-    if (this.statisticsValid)
+    if (this.statisticsValid && time == this.lastUpdateTime)
       return;
-    final double dT = this.lastUpdateTime - this.startTime;
-    if (dT < 0)
+    this.statisticsValid = false;
+    if (time < this.lastUpdateTime)
+      throw new IllegalArgumentException ();
+    if (this.lastUpdateTime < this.startTime)
       throw new RuntimeException ();
-    if (dT == 0)
-    {
-      this.statisticsValid = true;
-      return;      
-    }
-    calculateStatistics (this.lastUpdateTime, dT);
+    if (time > this.lastUpdateTime)
+      update (time);
+    calculateStatistics (this.startTime, this.lastUpdateTime);
     this.statisticsValid = true;
   }
 
+  protected void calculate ()
+  {
+    final SimQueue queue = getQueue ();
+    if (queue != null)
+      calculate (queue.getEventList ().getTime ());
+    else
+      calculate (getLastUpdateTime ());    
+  }
+  
   //
   // END: MAIN ENTRY POINTS FOR STATISTICS MANAGEMENT: RESET/UPDATE/CALCULATE.
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -204,15 +220,15 @@ implements SimQueueListener<J, Q>
    */
   public void setQueue (Q queue)
   {
-    reset ();
     setQueueCommon (queue);
+    reset ();
   }
   
   // Auxiliary (final) method for private use in constructor.
   private void setQueueInt (Q queue)
   {
-    resetInt ();
     setQueueCommon (queue);
+    resetInt ();
   }
   
   // Common code between setQueue and setQueueInt
@@ -240,34 +256,6 @@ implements SimQueueListener<J, Q>
   public final double getStartTime ()
   {
     return this.startTime;
-  }
-  
-  /** Sets the start time for gathering statistics.
-   * 
-   * <p>
-   * Override this method is discouraged, even with a call to <code>super</code>.
-   * Also, an internal version of this method is used upon object construction.
-   * 
-   * @param startTime The new start time for gathering statistics.
-   */
-  public void setStartTime (double startTime)
-  {
-    reset ();
-    setStartTimeCommon (startTime);
-  }
-  
-  // Auxiliary (final) method for private use in constructor.
-  private void setStartTimeInt (double startTime)
-  {
-    resetInt ();
-    setStartTimeCommon (startTime);
-  }
-  
-  // Common code between setStartTime and setStartTimeInt
-  private void setStartTimeCommon (double startTime)
-  {
-    this.startTime = startTime;
-    this.lastUpdateTime = this.startTime;        
   }
   
   /** Returns the time of the last update.
@@ -438,23 +426,21 @@ implements SimQueueListener<J, Q>
   /** Constructor.
    * 
    * @param queue The queue to gather statistics from.
-   * @param startTime The start time for gathering statistics.
    * 
    */
-  public AbstractSimQueueStat (Q queue, double startTime)
+  public AbstractSimQueueStat (final Q queue)
   {
     setQueueInt (queue);
-    setStartTimeInt (startTime);
   }
   
   /** Constructor.
    * 
-   * The queue property is set to <code>null</code>, the startTime property to zero.
+   * The queue property is set to <code>null</code>.
    * 
    */
   public AbstractSimQueueStat ()
   {
-    this (null, 0.0);
+    this (null);
   }
   
   //

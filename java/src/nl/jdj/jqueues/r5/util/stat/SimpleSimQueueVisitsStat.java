@@ -1,25 +1,20 @@
 package nl.jdj.jqueues.r5.util.stat;
 
+import java.util.HashMap;
+import java.util.Map;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 
-/** An concrete class for gathering the most basic queue-related statistics on a {@link SimQueue}.
+/** An concrete class for gathering the most basic visits-related statistics on a {@link SimQueue}.
  *
- * <p>
- * We call a performance measure <i>queue</i>-related if its value depends only on the state of the queue.
- * By definition of a queue's state, a queue-related performance measure is a so-called <i>simple</i> function, i.e.,
- * in this context, a function yielding a constant value during non-trivial intervals between queue updates,
- * and integration is easily achieved by maintaining the current value of the performance measure and the time of the
- * last update. Note that the actual value of the function at the "switch times" is irrelevant.
- * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
-public class SimpleSimQueueStat<J extends SimJob, Q extends SimQueue>
+public class SimpleSimQueueVisitsStat<J extends SimJob, Q extends SimQueue>
 extends AbstractSimQueueStat<J, Q>
 {
-  
+    
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,8 +22,19 @@ extends AbstractSimQueueStat<J, Q>
   //
   
   // Our actual statistics, with corresponding (calculated) average.
-  private double cumNrOfJobs  = 0, avgNrOfJobs  = 0; // Number of jobs residing at queue.
-  private double cumNrOfJobsX = 0, avgNrOfJobsX = 0; // Number of jobs in service area at queue.
+  
+  private int Narrivals;   // Number of arrivals.
+  private int Nstarted;    // Number of jobs started.
+  private int Ndepartures; // Number of departures.
+  
+  private double cumWaitingTime = 0; // Cumulative waiting time (over jobs started).
+  private double cumSojournTime = 0; // Cumulative sojourn time (over departures).
+  
+  private double avgWaitingTime = Double.NaN; // Average waiting time, when calculated (over jobs started).
+  private double avgSojournTime = Double.NaN; // Average sojourn time, when calculated (over jobs departed).
+  
+  private final Map<J, Double> arrivals = new HashMap<> ();
+  private final Map<J, Double> started  = new HashMap<> ();
   
   /** Resets all the statistics.
    * 
@@ -37,27 +43,30 @@ extends AbstractSimQueueStat<J, Q>
    */
   private void resetStatisticsInt ()
   {
-    this.cumNrOfJobs  = 0; this.avgNrOfJobs  = 0;
-    this.cumNrOfJobsX = 0; this.avgNrOfJobsX = 0;
+    this.Narrivals = 0;
+    this.Nstarted = 0;
+    this.Ndepartures = 0;
+    this.cumWaitingTime = 0;
+    this.cumSojournTime = 0;
+    this.avgWaitingTime = Double.NaN;
+    this.avgSojournTime = Double.NaN;
+    this.arrivals.clear ();
+    this.started.clear ();
     // Add others here...
   }
   
   /** Updates all the statistics from the state of the queue.
    * 
-   * All other required internal bookkeeping has already been taken care of.
+   * Nothing to do here...
    * 
    * @param time The actual (new) time.
    * @param dt The time since the last update.
    * 
    */
-  private void updateStatisticsInt (double time, double dt)
+  private void updateStatisticsInt (final double time, final double dt)
   {
-    final SimQueue queue = getQueue ();
-    if (queue == null)
-      return;
-    this.cumNrOfJobs  += queue.getNumberOfJobs ()  * dt;
-    this.cumNrOfJobsX += queue.getNumberOfJobsInServiceArea () * dt;
-    // Add others here...
+    // How to obtain the queue; may be null.
+    // final SimQueue queue = getQueue ();
   }
   
   /** Calculates all the statistics from the accumulated updates.
@@ -70,43 +79,67 @@ extends AbstractSimQueueStat<J, Q>
   {
     if (endTime < startTime)
       throw new IllegalArgumentException ();
-    else if (startTime == endTime)
-    {
-      this.avgNrOfJobs  = 0.0;
-      this.avgNrOfJobsX = 0.0;
-      // Add others here...
-    }
-    else
-    {
-      final double dT = endTime - startTime;
-      this.avgNrOfJobs  = this.cumNrOfJobs  / dT;
-      this.avgNrOfJobsX = this.cumNrOfJobsX / dT;
-      // Add others here...
-    }
+    if (this.Nstarted > 0)
+      this.avgWaitingTime = this.cumWaitingTime / Nstarted;
+    if (this.Ndepartures > 0)
+      this.avgSojournTime = this.cumSojournTime / Ndepartures;    
   }
-
+  
   // Add getters for your favorite performance measures below...
   
-  /** Returns the average number of jobs residing at the queue.
+  /** Returns the number of arrivals.
    * 
-   * @return The average number of jobs residing at the queue.
+   * @return The number of arrivals.
    * 
    */
-  public final double getAvgNrOfJobs ()
+  public final int getNumberOfArrivals ()
   {
     calculate ();
-    return this.avgNrOfJobs;
+    return this.Narrivals;
+  }
+  
+  /** Returns the number of started jobs.
+   * 
+   * @return The number of started jobs.
+   * 
+   */
+  public final int getNumberOfStartedJobs ()
+  {
+    calculate ();
+    return this.Nstarted;
+  }
+  
+  /** Returns the number departures.
+   * 
+   * @return The number of departures.
+   * 
+   */
+  public final int getNumberOfDepartures ()
+  {
+    calculate ();
+    return this.Nstarted;
+  }
+  
+  /** Returns the average waiting time at the queue.
+   * 
+   * @return The average waiting time at the queue.
+   * 
+   */
+  public final double getAvgWaitingTime ()
+  {
+    calculate ();
+    return this.avgWaitingTime;
   }
 
-  /** Returns the average number of jobs in the service area at the queue.
+  /** Returns the average sojourn time at the queue.
    * 
-   * @return The average number of jobs in the service area at the queue.
+   * @return The average sojourn time at the queue.
    * 
    */
-  public final double getAvgNrOfJobsInServiceArea ()
+  public final double getAvgSojournTime ()
   {
     calculate ();
-    return this.avgNrOfJobsX;
+    return this.avgSojournTime;
   }
 
   //
@@ -144,7 +177,7 @@ extends AbstractSimQueueStat<J, Q>
    * 
    */
   @Override
-  protected void updateStatistics (double time, double dt)
+  protected void updateStatistics (final double time, final double dt)
   {
     updateStatisticsInt (time, dt);
   }
@@ -158,15 +191,67 @@ extends AbstractSimQueueStat<J, Q>
   @Override
   protected void calculateStatistics (final double startTime, final double endTime)
   {
-    calculateStatisticsInt (startTime, endTime);
+    calculateStatisticsInt (startTime,endTime);
   }
   
+  @Override
+  public void notifyArrival (final double time, final J job, final Q queue)
+  {
+    super.notifyArrival (time, job, queue);
+    if (time < getLastUpdateTime () || job == null || queue == null || queue != getQueue ()
+      || this.arrivals.containsKey (job) || this.started.containsKey (job))
+      throw new IllegalArgumentException ();
+    this.arrivals.put (job, time);
+    this.Narrivals++;
+  }
+    
+  @Override
+  public void notifyStart (final double time, final J job, final Q queue)
+  {
+    super.notifyStart (time, job, queue);
+    if (time < getLastUpdateTime () || job == null || queue == null || queue != getQueue ()
+      || (! this.arrivals.containsKey (job)) || this.started.containsKey (job))
+      throw new IllegalArgumentException ();
+    this.started.put (job, time);
+    this.cumWaitingTime += (this.started.get (job) - this.arrivals.get (job));
+    this.Nstarted++;
+  }
+
+  @Override
+  public void notifyDrop (final double time, final J job, final Q queue)
+  {
+    super.notifyDrop (time, job, queue);
+    // XXX To be implemented later; also think about semantics of the performance measures!
+    throw new UnsupportedOperationException ();
+  }
+
+  @Override
+  public void notifyRevocation (final double time, final J job, final Q queue)
+  {
+    super.notifyRevocation (time, job, queue);
+    // XXX To be implemented later; also think about semantics of the performance measures!
+    throw new UnsupportedOperationException ();
+  }
+
+  @Override
+  public void notifyDeparture (final double time, final J job, final Q queue)
+  {
+    super.notifyDeparture (time, job, queue);
+    if (time < getLastUpdateTime () || job == null || queue == null || queue != getQueue ()
+      || ! this.arrivals.containsKey (job))
+      throw new IllegalArgumentException ();
+    this.cumSojournTime += (time - this.arrivals.get (job));
+    this.Ndepartures++;
+    this.arrivals.remove (job);
+    this.started.remove (job);
+  }
+
   //
   // END: STUFF YOU NEED TO CHANGE WHEN ADDING STATISTICS / PERFORMANCE MEASURES IN A SUBCLASS.
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
   
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,7 +265,7 @@ extends AbstractSimQueueStat<J, Q>
    * @param queue The queue to gather statistics from.
    * 
    */
-  public SimpleSimQueueStat (final Q queue)
+  public SimpleSimQueueVisitsStat (final Q queue)
   {
     super (queue);
     resetStatisticsInt ();
@@ -191,7 +276,7 @@ extends AbstractSimQueueStat<J, Q>
    * The queue property is set to <code>null</code>.
    * 
    */
-  public SimpleSimQueueStat ()
+  public SimpleSimQueueVisitsStat ()
   {
     super ();
     resetStatisticsInt ();

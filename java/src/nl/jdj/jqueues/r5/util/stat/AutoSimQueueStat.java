@@ -17,11 +17,17 @@ public class AutoSimQueueStat<J extends SimJob, Q extends SimQueue>
 extends AbstractSimQueueStat<J, Q>
 {
   
-  private final List<AutoSimQueueStatEntry<Q>> entries;
+  private List<AutoSimQueueStatEntry<Q>> entries;
   
   public final List<AutoSimQueueStatEntry<Q>> getEntries ()
   {
     return this.entries;
+  }
+  
+  protected final void setEntries (final List<AutoSimQueueStatEntry<Q>> entries)
+  {
+    this.entries = entries;
+    reset ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,12 +67,12 @@ extends AbstractSimQueueStat<J, Q>
    * 
    */
   @Override
-  protected final void calculateStatistics (double time, double dT)
+  protected void calculateStatistics (final double startTime, final double endTime)
   {
     if (this.entries != null)
       for (AutoSimQueueStatEntry<Q> e : this.entries)
         if (e != null)
-          e.calculate (dT);
+          e.calculate (startTime, endTime);
   }
   
   //
@@ -85,21 +91,20 @@ extends AbstractSimQueueStat<J, Q>
   
   /** Constructor.
    * 
-   * @param queue The queue to gather statistics from.
-   * @param startTime The start time for gathering statistics.
+   * @param queue   The queue to gather statistics from.
    * @param entries The list of statistics to monitor on the queue.
    * 
    */
-  public AutoSimQueueStat (Q queue, double startTime, List<AutoSimQueueStatEntry<Q>> entries)
+  public AutoSimQueueStat (final Q queue, final List<AutoSimQueueStatEntry<Q>> entries)
   {
-    super (queue, startTime);
+    super (queue);
     this.entries = entries;
     resetStatistics ();
   }
   
   /** Constructor.
    * 
-   * The queue property is set to <code>null</code>, the startTime property to zero.
+   * The queue property is set to <code>null</code>; the probe entries are empty.
    * 
    */
   public AutoSimQueueStat ()
@@ -122,7 +127,7 @@ extends AbstractSimQueueStat<J, Q>
     report (0);
   }
   
-  public void report (int indent)
+  public void report (final int indent)
   {
     calculate ();
     if (this.entries != null)
