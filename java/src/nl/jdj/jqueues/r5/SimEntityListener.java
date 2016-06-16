@@ -22,7 +22,7 @@ public interface SimEntityListener<J extends SimJob, Q extends SimQueue>
    * 
    * An update at an entity is defined as a moment in time at which the entity is about to change its state.
    * The main advantage of an update notification is that you can inspect the entity right before it is about to change.
-   * This leads the way to maintaining time-based statistics on the entity.
+   * This leads the way to (efficiently) maintaining time-based statistics on the entity.
    * 
    * <p>
    * The general contract is that in between entity notifications, the entity does not change its state.
