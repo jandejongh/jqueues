@@ -92,7 +92,6 @@ implements SimQueueListener<J, Q>
    * <i>other</i> than resetting statistics. Otherwise, override {@link #resetStatistics}.
    * 
    * @see #getLastUpdateTime
-   * @see #setStartTime
    * @see #resetStatistics
    * @see #getStatisticsValid
    * 
