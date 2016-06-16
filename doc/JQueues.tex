@@ -753,12 +753,52 @@ So, by all means, use the IOEL implementation if you want to as a
 By resetting an event list,
   through \lstinline|reset|,
   we remove all the events it contains,
-  and set the time to $t=-\infty$.
-This is typically done before repeating a simulation experiment,
+  and set the time to $t=-\infty$,
+  or to a user-specified time through
+  \lstinline|reset (double)|.
+Resetting an event list is typically done before repeating a simulation experiment,
   for instance with a different seed value for random-number generation.
 
-An event list informs its {\em reset listeners\/} when it is reset.
+Despite the simplicitly of the concept, we cannot stress enough the importance and consequences of
+  resetting an event list.
+Although not mandated by \lstinline|jsimulation|,
+  the general convention we follow is that an even-list reset puts
+  the event list itself, but also all "entities" (like queues) that use it
+  {\em in a well-known, default, often "empty", state.}
+Partially to that purpose,
+  an event list informs its so-called {\em reset listeners\/} when it is reset.
 The concept of listeners is described in the next section.
+
+For reasons that will become clear later,
+  in particular when discussing obtaining statistics on queueing systems in {\bf XXX},
+  it is {\em highly recommended\/} to always reset the event list to a {\em finite\/}
+  time, even before running it for the first time.
+
+One may wonder why we chose $-\infty$ as the default new time upon a reset,
+  instead of a finite value (zero comes to mind here...).
+Well, first, we wanted a "fresh" event list to accept all events scheduled at
+  {\em arbitrary\/} time.
+(Recall that even without running an event list,
+  it will throw an exception if events are scheduled "in the past".)
+Second, we wanted to avoid the ubiquitous "a simulation starts at $t=0$" assumption,
+  at least in our own code.
+For instance,
+  it would be very hard to debug the case in which a statistics-gathering object
+  (e.g., measuring the average number of jobs in a queue)
+  silently assumes that all simulations start at $t=0$,
+  and the user decides to run a simulation at (for whatever reason) $t=+100$.
+
+On the other hand,
+  having to remember to pass a finite time upon every reset is, admittedly, far from ideal.
+The \lstinline|setDefaultResetTime (double)| therefore allow for changing the
+  default event-list start time used by \lstinline|reset ()|.
+Note though, that this still requires explicit resets of the event list,
+  even before using it for the first time.
+We are still seeking to improve the reset semantics,
+  in particular related to the new time on the event list
+  and its effect on statistics gathering.
+
+{\bf ADD AN EXAMPLE OR TWO HERE!}
 
 \section{Listening to an Event List}
 
@@ -1318,6 +1358,12 @@ The \lstinline|jqueues| library depends on \lstinline|jsimulation|
 
 \chapter{Queueing Systems; Entities, Queues, and Jobs}
 
+This chapter introduces the concepts behind and implementation of the
+  \lstinline|jqueues| package.
+Together with the underlying \lstinline|jsimulation| package,
+  this package allows for discrete-event simulation of
+  a very broad range of queueing systems.
+
 \section{Introduction and Definitions}
 
 Despite the fact that we deal with queueing, waiting, being served (or not),
@@ -1361,8 +1407,42 @@ The outcome of this competition is determined by the so-called
   the way in which it distributes its limited (finite)
   service {\em capacity\/} among its currently visiting jobs.
 
-{\bf XXX Other settings of a queueing system: waiting for an external event.}
-{\bf XXX Also explain processor sharing.}
+Unfortunately,
+  the view of a queueing system as consisting of a waiting area
+  in which jobs wait before being served by one or more servers
+  (i.e., a finite number of them)
+  for a given required service time is too narrow in many
+  interesting applications.
+For instance, in Medium-Access Control systems,
+  the required "service" to waiting jobs
+  (i.e., {\em frames to be transmitted\/})
+  is largely determined by external events,
+  viz.,
+  the availability of the {\em medium\/} for transmissions.
+In such cases, jobs are not staying in the queue because of an
+  {\em intrincic\/} requirement of service from that queue,
+  but merely because they are waiting for an event {\em external\/}
+  to that queue.
+In other words, the notion of "servers" in a queueing system
+  providing "service" works for many cases, but not for all.
+And from (theoretical) examples like the Processor-Sharing\footnote{
+In Processor-Sharing (PS),
+  a server equally distributes its service capacity
+  among jobs present, see {\bf XXX}.}
+  queueing discipline,
+  it is clear that the notion of servers serving
+  at any time a single job exclusively,
+  needs refinement as well.
+So, a single server is not constrained,
+  in the general case,
+  to serving only a single job.
+In Infinite-Server (IS), on the other hand,
+  each job present is served by its own server
+  (of which there are infinitely many),
+  meaning that the "total service capacity"
+  is not a fixed constant, let alone be known in advance.
+The capacity may not even be finite.
+
 {\bf Bridge to SimEntity, SimQueue and SimJob.}
 
 \begin{verbatim}
@@ -2402,6 +2482,89 @@ Departure & Yes & Started and non-revoked jobs depart. \\
 \section{Preemptive Queues}
 
 \subsection{The \lstinline{P_LCFS} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{P_LCFS}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l|}{Serves jobs in reverse arrival order with a single server,} \\
+            & \multicolumn{2}{|l|}{preempting the current job in service, if any, upon an arrival.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs are taken into \\
+            &                  & service immediately. \\
+\hline
+Waiting Area & Present & Infinite waiting area, reverse arrival order. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the job currently in service (if any), \\
+             &         & and all {\em preempted\/} jobs (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals, \\
+        &     & preempting the job currently in service (if any). \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs and preempted jobs \\
+     &     & with \lstinline|DROP| preemption strategy. \\
+\hline
+Revocation & Yes & Jobs can be revoked while waiting, while being served, \\
+           &     & and if having been preempted in the service area. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
+\hline
+Start & Yes & Starts jobs if there are SACs and the server is idle. \\
+\hline
+Preemption & Yes & Job in service is preempted upon a new (non-dropped) arrival. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+          &     & Jobs with \lstinline|DROP| preemption strategy only \\
+          &     & depart if not preempted after start. \\
+\hline
+\end{tabular}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{P_LCFS} (continued)} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
+\multicolumn{3}{|l|}{The server cannot be idle in the presence of preempted jobs in the service area.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|          & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|               & \multicolumn{2}{|l|}{The name, default "P\_LCFS[\lstinline|PreemptionStrategy|]";} \\
+                               & \multicolumn{2}{|l|}{non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|PreemptionStrategy| & \multicolumn{2}{|l|}{The preemption strategy, default \lstinline|RESUME|;
+                                                      non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|NumberOfServers|    & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\hline
+\end{tabular}
 
 \subsection{The \lstinline{SRTF} \lstinline{SimQueue}}
 
