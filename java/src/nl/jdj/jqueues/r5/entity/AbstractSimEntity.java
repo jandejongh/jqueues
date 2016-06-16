@@ -204,11 +204,19 @@ implements SimEntity<J, Q>
     /* EMPTY */
   }
   
-  /** Calls {@link #resetEntitySubClass} and {@link #fireResetEntity}.
+  /** Copies the last-update time from the event list and invokes {@link #resetEntitySubClass} and {@link #fireResetEntity}.
+   * 
+   * <p>
+   * If the reset is the result of an event-list reset, this takes the new "start time" from the event list,
+   * which has been set already.
+   * In the (more unlikely) case of an autonomous reset of the entity, copying the last update time from the
+   * event list (before notifying listeners) assures that statistics-gathering listeners restart their jobs from
+   * the current time.
    * 
    * <p>
    * This method is <code>final</code>; use {@link #resetEntitySubClass} to override/augment behavior.
    * 
+   * @see #getLastUpdateTime
    * @see #resetEntitySubClass
    * @see #notifyEventListReset
    * 
@@ -216,7 +224,8 @@ implements SimEntity<J, Q>
   @Override
   public final void resetEntity ()
   {
-    this.lastUpdateTime = Double.NEGATIVE_INFINITY;
+    // this.lastUpdateTime = Double.NEGATIVE_INFINITY;
+    this.lastUpdateTime = getEventList ().getTime ();
     resetEntitySubClass ();
     fireResetEntity (this);
   }
@@ -245,6 +254,11 @@ implements SimEntity<J, Q>
   private double lastUpdateTime = Double.NEGATIVE_INFINITY;
 
   /** Gets the time of the last update of this entity.
+   * 
+   * <p>Upon construction, the last-update time is set to minus infinity, mimicking the behavior of {@link SimEventList}.
+   * Upon an explicit reset of this entity, the last-update time is copied from the event list.
+   * In all other cases, the time returned corresponds to the time argument of the last update of the entity,
+   * see {@link SimEntityListener#notifyUpdate} for more details.
    * 
    * @return The time of the last update of this entity.
    * 
