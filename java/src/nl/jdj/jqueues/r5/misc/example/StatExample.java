@@ -58,9 +58,9 @@ public final class StatExample
       return list;
     }
     
-    public MyAutoSimQueueStat (SimQueue queue, double startTime)
+    public MyAutoSimQueueStat (SimQueue queue)
     {
-      super (queue, startTime, createEntries ());
+      super (queue, createEntries ());
     }
     
   }
@@ -85,13 +85,13 @@ public final class StatExample
     final int N = 100000;
     System.out.println ("-> Simulating queue with " + N + " jobs, arriving at 1, 2, 3, ...");
     System.out.println ("   Requesting service times 1, 2, 3, ...");
-    System.out.println ("   Taking statistics over the busy period.");
     System.out.println ("-> FCFS...");
+    EVENT_LIST.reset (1);
     final List<DefaultExampleSimJob> jobList = new ArrayList<>  ();
     for (int n = 1; n <= N; n++)
       jobList.add (new DefaultExampleSimJob (false, n));
-    final SimpleSimQueueStat fcfsStat = new SimpleSimQueueStat (FCFS_QUEUE, 1.0);
-    final MyAutoSimQueueStat autoFcfsStat = new MyAutoSimQueueStat (FCFS_QUEUE, 1.0);
+    final SimpleSimQueueStat fcfsStat = new SimpleSimQueueStat (FCFS_QUEUE);
+    final MyAutoSimQueueStat autoFcfsStat = new MyAutoSimQueueStat (FCFS_QUEUE);
     for (int i = 0; i < jobList.size (); i++)
     {
       final SimJob j = jobList.get (i);
@@ -112,9 +112,9 @@ public final class StatExample
     System.out.println ("   ==> AutoSimQueueStat");
     autoFcfsStat.report (9);
     System.out.println ("-> LCFS...");
-    EVENT_LIST.reset ();
-    final SimpleSimQueueStat lcfsStat = new SimpleSimQueueStat (LCFS_QUEUE, 1.0);
-    final MyAutoSimQueueStat autoLcfsStat = new MyAutoSimQueueStat (LCFS_QUEUE, 1.0);
+    EVENT_LIST.reset (1);
+    final SimpleSimQueueStat lcfsStat = new SimpleSimQueueStat (LCFS_QUEUE);
+    final MyAutoSimQueueStat autoLcfsStat = new MyAutoSimQueueStat (LCFS_QUEUE);
     for (int i = 0; i < jobList.size (); i++)
     {
       final SimJob j = jobList.get (i);
@@ -135,9 +135,9 @@ public final class StatExample
     System.out.println ("   ==> AutoSimQueueStat");
     autoLcfsStat.report (9);
     System.out.println ("-> IS...");
-    EVENT_LIST.reset ();
-    final SimpleSimQueueStat isStat = new SimpleSimQueueStat (IS_QUEUE, 1.0);
-    final MyAutoSimQueueStat autoIsStat = new MyAutoSimQueueStat (IS_QUEUE, 1.0);
+    EVENT_LIST.reset (1);
+    final SimpleSimQueueStat isStat = new SimpleSimQueueStat (IS_QUEUE);
+    final MyAutoSimQueueStat autoIsStat = new MyAutoSimQueueStat (IS_QUEUE);
     for (int i = 0; i < jobList.size (); i++)
     {
       final SimJob j = jobList.get (i);
