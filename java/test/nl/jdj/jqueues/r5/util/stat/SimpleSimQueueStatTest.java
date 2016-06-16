@@ -73,42 +73,9 @@ public class SimpleSimQueueStatTest
     result = instance.getQueue ();
     assertEquals (null, result);
     expResult = new IS<> (new DefaultSimEventList (DefaultSimEvent.class));
-    instance = new SimpleSimQueueStat (expResult, 500.0);
+    instance = new SimpleSimQueueStat (expResult);
     result = instance.getQueue ();
     assertEquals (expResult, result);
-  }
-
-  /**
-   * Test of getStartTime/setStartTime methods, of class SimpleSimQueueStat.
-   */
-  @Test
-  public void testStartTime ()
-  {
-    System.out.println ("StartTime");
-    final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
-    final SimQueue lifo  = new LCFS<> (eventList);
-    SimpleSimQueueStat instance = new SimpleSimQueueStat (lifo, 400.5);
-    Double expResult = 400.5;
-    Double result = instance.getStartTime ();
-    assertEquals (expResult, result, 0.0);
-    instance.setStartTime (-123.87);
-    expResult = -123.87;
-    result = instance.getStartTime ();
-    assertEquals (expResult, result, 0.0);
-    RandomTest.scheduleJobArrivals (false, 10, eventList, lifo);
-    eventList.run ();
-    // Should not have changed...
-    result = instance.getStartTime ();
-    assertEquals (expResult, result, 0.0);
-    instance.reset ();
-    // Should pick the last update time now as start time.
-    expResult = eventList.getTime ();
-    result = instance.getStartTime ();
-    assertEquals (expResult, result, 0.0);
-    expResult = Double.NEGATIVE_INFINITY;
-    instance.setStartTime (expResult);
-    result = instance.getStartTime ();
-    assertEquals (expResult, result, 0.0);
   }
 
   /**
@@ -119,8 +86,9 @@ public class SimpleSimQueueStatTest
   {
     System.out.println ("StatisticsValid");
     final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
+    eventList.reset (0);
     final SimQueue random  = new RANDOM<>(eventList);
-    SimpleSimQueueStat instance = new SimpleSimQueueStat (random, 400.5);
+    SimpleSimQueueStat instance = new SimpleSimQueueStat (random);
     Boolean expResult = false;
     Boolean result = instance.getStatisticsValid ();
     assertEquals (expResult, result);
@@ -138,8 +106,9 @@ public class SimpleSimQueueStatTest
   {
     System.out.println ("LastUpdateTime");
     final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
+    eventList.reset (-10.0);
     final SimQueue lifo  = new LCFS<> (eventList);
-    SimpleSimQueueStat instance = new SimpleSimQueueStat (lifo, -10.0);
+    SimpleSimQueueStat instance = new SimpleSimQueueStat (lifo);
     Double expResult = -10.0;
     Double result = instance.getLastUpdateTime ();
     assertEquals (expResult, result, 0.0);
@@ -161,7 +130,8 @@ public class SimpleSimQueueStatTest
     System.out.println ("Stats: AvgNumberOfJobs/AvgNumberOfJobsInServiceArea");
     final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     SimQueue queue  = new LCFS<> (eventList);
-    SimpleSimQueueStat instance = new SimpleSimQueueStat (queue, 0.0);
+    eventList.reset (0);
+    SimpleSimQueueStat instance = new SimpleSimQueueStat (queue);
     // 1 Job arriving at t = 1, S = 1.
     // So: [0,1)->0 job, [1,2]->1 job.
     // Average expected: 0.5.
@@ -176,9 +146,9 @@ public class SimpleSimQueueStatTest
     assertEquals (expResult, result, 0.0);
     // Compared to the first case: start at -2.
     // Average expected: 0.25.
-    eventList.reset ();
+    eventList.reset (-2.0);
     queue = new FCFS<> (eventList);
-    instance = new SimpleSimQueueStat (queue, -2.0);
+    instance = new SimpleSimQueueStat (queue);
     RandomTest.scheduleJobArrivals (false, 1, eventList, queue);
     eventList.run ();
     expResult = 0.25;
@@ -195,9 +165,9 @@ public class SimpleSimQueueStatTest
     // 4:                  XXXXXXXXXXXXXXXXXXXXXXXXXXXX
     // J =   0   1   1   2   2   2   2   1   1   1   1
     // AvgJ = 14/11.
-    eventList.reset ();
+    eventList.reset (0.0);
     queue = new FCFS<> (eventList);
-    instance = new SimpleSimQueueStat (queue, 0.0);
+    instance = new SimpleSimQueueStat (queue);
     RandomTest.scheduleJobArrivals (false, 4, eventList, queue);
     eventList.run ();
     expResult = 14.0/11.0;
@@ -215,9 +185,9 @@ public class SimpleSimQueueStatTest
     // 4:                  XXXXXXXXXXXXXXXX
     // J =   0   1   1   2   2   2   1   1
     // AvgJ = 10/8.
-    eventList.reset ();
+    eventList.reset (0.0);
     queue = new IS<> (eventList);
-    instance = new SimpleSimQueueStat (queue, 0.0);
+    instance = new SimpleSimQueueStat (queue);
     RandomTest.scheduleJobArrivals (false, 4, eventList, queue);
     eventList.run ();
     expResult = 10.0/8.0;
