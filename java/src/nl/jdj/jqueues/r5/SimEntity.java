@@ -146,6 +146,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * This method is used in order to restart a simulation.
    * By contract, a {@link SimEntity} must reset if its underlying {@link SimEventList} resets.
    * 
+   * <p>
    * Implementations must ensure that only a single {@link SimEntityListener#notifyResetEntity} is invoked <i>after</i>
    * the entity is in the new (valid) state.
    * 
