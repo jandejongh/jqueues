@@ -63,6 +63,19 @@ public class AutoSimQueueStatEntry<Q extends SimQueue>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // NUMBER OF PROBES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private int numberOfProbes = 0;
+
+  public final int getNumberOfProbes ()
+  {
+    return this.numberOfProbes;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // CUMULATIVE VALUE
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,14 +102,43 @@ public class AutoSimQueueStatEntry<Q extends SimQueue>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // MINIMUM VALUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private double minValue = Double.NaN;
+  
+  public final double getMinValue ()
+  {
+    return this.minValue;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // MAXIMUM VALUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private double maxValue = Double.NaN;
+  
+  public final double getMaxValue ()
+  {
+    return this.maxValue;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   private void resetInt ()
   {
-    this.cumValue  = 0.0;
-    this.avgValue  = 0.0;
+    this.numberOfProbes = 0;
+    this.cumValue = 0.0;
+    this.avgValue = 0.0;
+    this.minValue = Double.NaN;
+    this.maxValue = Double.NaN;
   }
   
   public void reset ()
@@ -119,6 +161,17 @@ public class AutoSimQueueStatEntry<Q extends SimQueue>
       final double probeValue = this.probe.get (queue);
       LOGGER.log (Level.FINEST, "Updating {0} for queue={1}, value={2}, dt={3}.", new Object[]{this.name, queue, probeValue, dt});
       this.cumValue += probeValue * dt;
+      if (this.numberOfProbes == 0)
+      {
+        this.minValue = probeValue;
+        this.maxValue = probeValue;
+      }
+      else
+      {
+        this.minValue = Math.min (this.minValue, probeValue);
+        this.maxValue = Math.max (this.maxValue, probeValue);        
+      }
+      this.numberOfProbes++;
     }
   }
   
@@ -139,8 +192,8 @@ public class AutoSimQueueStatEntry<Q extends SimQueue>
       final double dT = endTime - startTime;
       this.avgValue = this.cumValue / dT;
     }
-    LOGGER.log (Level.FINER, "Calculating {0} with dT={1}, cumValue={2}: avgValue={3}.",
-      new Object[]{this.name, endTime - startTime, this.cumValue, this.avgValue});
+    LOGGER.log (Level.FINER, "Calculating {0} with dT={1}, cumValue={2}: avgValue={3}, minValue={4}, maxValue={5}.",
+      new Object[]{this.name, endTime - startTime, this.cumValue, this.avgValue, this.minValue, this.maxValue});
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

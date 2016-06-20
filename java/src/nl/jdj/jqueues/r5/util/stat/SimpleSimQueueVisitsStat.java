@@ -33,6 +33,12 @@ extends AbstractSimQueueStat<J, Q>
   private double avgWaitingTime = Double.NaN; // Average waiting time, when calculated (over jobs started).
   private double avgSojournTime = Double.NaN; // Average sojourn time, when calculated (over jobs departed).
   
+  private double minWaitingTime = Double.NaN; // Minimum waiting time (over jobs started).
+  private double minSojournTime = Double.NaN; // Minimum sojourn time (over jobs departed).
+  
+  private double maxWaitingTime = Double.NaN; // Maximum waiting time (over jobs started).
+  private double maxSojournTime = Double.NaN; // Maximum sojourn time (over jobs departed).
+  
   private final Map<J, Double> arrivals = new HashMap<> ();
   private final Map<J, Double> started  = new HashMap<> ();
   
@@ -50,6 +56,10 @@ extends AbstractSimQueueStat<J, Q>
     this.cumSojournTime = 0;
     this.avgWaitingTime = Double.NaN;
     this.avgSojournTime = Double.NaN;
+    this.minWaitingTime = Double.NaN;
+    this.minSojournTime = Double.NaN;
+    this.maxWaitingTime = Double.NaN;
+    this.maxSojournTime = Double.NaN;
     this.arrivals.clear ();
     this.started.clear ();
     // Add others here...
@@ -142,6 +152,46 @@ extends AbstractSimQueueStat<J, Q>
     return this.avgSojournTime;
   }
 
+  /** Returns the minimum waiting time at the queue.
+   * 
+   * @return The minimum waiting time at the queue.
+   * 
+   */
+  public final double getMinWaitingTime ()
+  {
+    return this.minWaitingTime;
+  }
+
+  /** Returns the minimum sojourn time at the queue.
+   * 
+   * @return The minimum sojourn time at the queue.
+   * 
+   */
+  public final double getMinSojournTime ()
+  {
+    return this.minSojournTime;
+  }
+
+  /** Returns the maximum waiting time at the queue.
+   * 
+   * @return The maximum waiting time at the queue.
+   * 
+   */
+  public final double getMaxWaitingTime ()
+  {
+    return this.maxWaitingTime;
+  }
+
+  /** Returns the maximum sojourn time at the queue.
+   * 
+   * @return The maximum sojourn time at the queue.
+   * 
+   */
+  public final double getMaxSojournTime ()
+  {
+    return this.maxSojournTime;
+  }
+
   //
   // END: STUFF YOU NEED TO CHANGE WHEN ADDING STATISTICS / PERFORMANCE MEASURES IN THIS CLASS.
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -213,7 +263,18 @@ extends AbstractSimQueueStat<J, Q>
       || (! this.arrivals.containsKey (job)) || this.started.containsKey (job))
       throw new IllegalArgumentException ();
     this.started.put (job, time);
-    this.cumWaitingTime += (this.started.get (job) - this.arrivals.get (job));
+    final double waitingTime = (this.started.get (job) - this.arrivals.get (job));
+    this.cumWaitingTime += waitingTime;
+    if (this.Nstarted == 0)
+    {
+      this.minWaitingTime = waitingTime;
+      this.maxWaitingTime = waitingTime;
+    }
+    else
+    {
+      this.minWaitingTime = Math.min (this.minWaitingTime, waitingTime);
+      this.maxWaitingTime = Math.max (this.maxWaitingTime, waitingTime);      
+    }
     this.Nstarted++;
   }
 
@@ -240,7 +301,18 @@ extends AbstractSimQueueStat<J, Q>
     if (time < getLastUpdateTime () || job == null || queue == null || queue != getQueue ()
       || ! this.arrivals.containsKey (job))
       throw new IllegalArgumentException ();
-    this.cumSojournTime += (time - this.arrivals.get (job));
+    final double sojournTime = (time - this.arrivals.get (job));
+    this.cumSojournTime += sojournTime;
+    if (this.Ndepartures == 0)
+    {
+      this.minSojournTime = sojournTime;
+      this.maxSojournTime = sojournTime;
+    }
+    else
+    {
+      this.minSojournTime = Math.min (this.minSojournTime, sojournTime);
+      this.maxSojournTime = Math.max (this.maxSojournTime, sojournTime);      
+    }
     this.Ndepartures++;
     this.arrivals.remove (job);
     this.started.remove (job);

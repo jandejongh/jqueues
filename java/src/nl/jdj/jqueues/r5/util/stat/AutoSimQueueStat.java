@@ -137,6 +137,12 @@ extends AbstractSimQueueStat<J, Q>
           for (int i = 1; i <= indent; i++)
             System.out.print (" ");
           System.out.println ("Average " + e.getName () + ": " + e.getAvgValue () + ".");
+          for (int i = 1; i <= indent; i++)
+            System.out.print (" ");
+          System.out.println ("Minimum " + e.getName () + ": " + e.getMinValue () + ".");
+          for (int i = 1; i <= indent; i++)
+            System.out.print (" ");
+          System.out.println ("Maximum " + e.getName () + ": " + e.getMaxValue () + ".");
         }    
   }
   

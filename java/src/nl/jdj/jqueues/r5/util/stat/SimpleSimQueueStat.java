@@ -27,8 +27,16 @@ extends AbstractSimQueueStat<J, Q>
   //
   
   // Our actual statistics, with corresponding (calculated) average.
-  private double cumNrOfJobs  = 0, avgNrOfJobs  = 0; // Number of jobs residing at queue.
-  private double cumNrOfJobsX = 0, avgNrOfJobsX = 0; // Number of jobs in service area at queue.
+  private int nrOfUpdates = 0;
+  private double cumNrOfJobs  = 0, avgNrOfJobs  = 0,
+                 minNrOfJobs = Double.NaN, maxNrOfJobs = Double.NaN; // Number of jobs residing at queue.
+  private double cumNrOfJobsX = 0, avgNrOfJobsX = 0,
+                 minNrOfJobsX = Double.NaN, maxNrOfJobsX = Double.NaN; // Number of jobs in service area at queue.
+  
+  public final int getNumberOfUpdates ()
+  {
+    return this.nrOfUpdates;
+  }
   
   /** Resets all the statistics.
    * 
@@ -37,8 +45,9 @@ extends AbstractSimQueueStat<J, Q>
    */
   private void resetStatisticsInt ()
   {
-    this.cumNrOfJobs  = 0; this.avgNrOfJobs  = 0;
-    this.cumNrOfJobsX = 0; this.avgNrOfJobsX = 0;
+    this.nrOfUpdates = 0;
+    this.cumNrOfJobs  = 0; this.avgNrOfJobs  = 0; this.minNrOfJobs  = Double.NaN; this.maxNrOfJobs  = Double.NaN;
+    this.cumNrOfJobsX = 0; this.avgNrOfJobsX = 0; this.minNrOfJobsX = Double.NaN; this.maxNrOfJobsX = Double.NaN;
     // Add others here...
   }
   
@@ -55,8 +64,25 @@ extends AbstractSimQueueStat<J, Q>
     final SimQueue queue = getQueue ();
     if (queue == null)
       return;
-    this.cumNrOfJobs  += queue.getNumberOfJobs ()  * dt;
-    this.cumNrOfJobsX += queue.getNumberOfJobsInServiceArea () * dt;
+    final int J  = queue.getNumberOfJobs ();
+    final int JX = queue.getNumberOfJobsInServiceArea ();
+    this.cumNrOfJobs  += J  * dt;
+    this.cumNrOfJobsX += JX * dt;
+    if (this.nrOfUpdates == 0)
+    {
+      this.minNrOfJobs  = J;
+      this.maxNrOfJobs  = J;
+      this.minNrOfJobsX = JX;
+      this.maxNrOfJobsX = JX;
+    }
+    else
+    {
+      this.minNrOfJobs  = Math.min (this.minNrOfJobs,  J);
+      this.maxNrOfJobs  = Math.max (this.maxNrOfJobs,  J);
+      this.minNrOfJobsX = Math.min (this.minNrOfJobsX, JX);
+      this.maxNrOfJobsX = Math.max (this.maxNrOfJobsX, JX);
+    }
+    this.nrOfUpdates++;
     // Add others here...
   }
   
@@ -98,6 +124,26 @@ extends AbstractSimQueueStat<J, Q>
     return this.avgNrOfJobs;
   }
 
+  /** Returns the minimum number of jobs residing at the queue.
+   * 
+   * @return The minimum number of jobs residing at the queue.
+   * 
+   */
+  public final double getMinNrOfJobs ()
+  {
+    return this.minNrOfJobs;
+  }
+
+  /** Returns the maximum number of jobs residing at the queue.
+   * 
+   * @return The maximum number of jobs residing at the queue.
+   * 
+   */
+  public final double getMaxNrOfJobs ()
+  {
+    return this.maxNrOfJobs;
+  }
+
   /** Returns the average number of jobs in the service area at the queue.
    * 
    * @return The average number of jobs in the service area at the queue.
@@ -107,6 +153,26 @@ extends AbstractSimQueueStat<J, Q>
   {
     calculate ();
     return this.avgNrOfJobsX;
+  }
+
+  /** Returns the minimum number of jobs in the service area at the queue.
+   * 
+   * @return The minimum number of jobs in the service area at the queue.
+   * 
+   */
+  public final double getMinNrOfJobsInServiceArea ()
+  {
+    return this.minNrOfJobsX;
+  }
+
+  /** Returns the maximum number of jobs in the service area at the queue.
+   * 
+   * @return The maximum number of jobs in the service area at the queue.
+   * 
+   */
+  public final double getMaxNrOfJobsInServiceArea ()
+  {
+    return this.maxNrOfJobsX;
   }
 
   //

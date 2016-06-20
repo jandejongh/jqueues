@@ -122,12 +122,12 @@ public class SimpleSimQueueStatTest
   }
 
   /**
-   * Test of getAvgNrOfJobs method, of class SimpleSimQueueStat.
+   * Test of statistics of class SimpleSimQueueStat.
    */
   @Test
-  public void testGetAvgNrOfJobs ()
+  public void testStatistcs ()
   {
-    System.out.println ("Stats: AvgNumberOfJobs/AvgNumberOfJobsInServiceArea");
+    System.out.println ("Stats: Avg/Min/Max NumberOfJobs and Avg/Min/Max NumberOfJobsInServiceArea");
     final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     SimQueue queue  = new LCFS<> (eventList);
     eventList.reset (0);
@@ -135,6 +135,8 @@ public class SimpleSimQueueStatTest
     // 1 Job arriving at t = 1, S = 1.
     // So: [0,1)->0 job, [1,2]->1 job.
     // Average expected: 0.5.
+    // Minimum expected: 0.0.
+    // Maximum expected: 1.0;
     RandomTest.scheduleJobArrivals (false, 1, eventList, queue);
     eventList.run ();
     Double expResult;
@@ -144,8 +146,16 @@ public class SimpleSimQueueStatTest
     assertEquals (expResult, result, 0.0);
     result = instance.getAvgNrOfJobsInServiceArea ();
     assertEquals (expResult, result, 0.0);
+    expResult = 0.0;
+    result = instance.getMinNrOfJobs ();
+    assertEquals (expResult, result, 0.0);
+    expResult = 1.0;
+    result = instance.getMaxNrOfJobs ();
+    assertEquals (expResult, result, 0.0);
     // Compared to the first case: start at -2.
     // Average expected: 0.25.
+    // Minimum expected: 0.0.
+    // Maximum expected: 1.0;
     eventList.reset (-2.0);
     queue = new FCFS<> (eventList);
     instance = new SimpleSimQueueStat (queue);
@@ -156,6 +166,18 @@ public class SimpleSimQueueStatTest
     assertEquals (expResult, result, 0.0);
     result = instance.getAvgNrOfJobsInServiceArea ();
     assertEquals (expResult, result, 0.0);
+    expResult = 0.0;
+    result = instance.getMinNrOfJobs ();
+    assertEquals (expResult, result, 0.0);
+    expResult = 1.0;
+    result = instance.getMaxNrOfJobs ();
+    assertEquals (expResult, result, 0.0);
+    expResult = 0.0;
+    result = instance.getMinNrOfJobsInServiceArea ();
+    assertEquals (expResult, result, 0.0);
+    expResult = 1.0;
+    result = instance.getMaxNrOfJobsInServiceArea ();
+    assertEquals (expResult, result, 0.0);
     // Try a few more (4) jobs with FCFS.
     // Start sim at 0.
     // t = 0   1   2   3   4   5   6   7   8   9   10   11
@@ -165,6 +187,10 @@ public class SimpleSimQueueStatTest
     // 4:                  XXXXXXXXXXXXXXXXXXXXXXXXXXXX
     // J =   0   1   1   2   2   2   2   1   1   1   1
     // AvgJ = 14/11.
+    // minJ: 0.
+    // maxJ: 2.
+    // minJX: 0.
+    // maxJX: 1.
     eventList.reset (0.0);
     queue = new FCFS<> (eventList);
     instance = new SimpleSimQueueStat (queue);
@@ -176,6 +202,18 @@ public class SimpleSimQueueStatTest
     expResult = 10.0/11.0;
     result = instance.getAvgNrOfJobsInServiceArea ();
     assertEquals (expResult, result, 0.000000001);
+    expResult = 0.0;
+    result = instance.getMinNrOfJobs ();
+    assertEquals (expResult, result, 0.0);
+    expResult = 2.0;
+    result = instance.getMaxNrOfJobs ();
+    assertEquals (expResult, result, 0.0);
+    expResult = 0.0;
+    result = instance.getMinNrOfJobsInServiceArea ();
+    assertEquals (expResult, result, 0.0);
+    expResult = 1.0;
+    result = instance.getMaxNrOfJobsInServiceArea ();
+    assertEquals (expResult, result, 0.0);
     // Try the same scenario with IS.
     // Start sim at 0.
     // t = 0   1   2   3   4   5   6   7   8
@@ -185,6 +223,11 @@ public class SimpleSimQueueStatTest
     // 4:                  XXXXXXXXXXXXXXXX
     // J =   0   1   1   2   2   2   1   1
     // AvgJ = 10/8.
+    // minJ: 0.
+    // maxJ: 2.
+    // minJX: 0.
+    // maxJX: 2.
+    // XXX In terms of maxJ/maxJX, this test is ambiguous...
     eventList.reset (0.0);
     queue = new IS<> (eventList);
     instance = new SimpleSimQueueStat (queue);
@@ -195,6 +238,18 @@ public class SimpleSimQueueStatTest
     assertEquals (expResult, result, 0.000000001);
     result = instance.getAvgNrOfJobsInServiceArea ();
     assertEquals (expResult, result, 0.000000001);
+    expResult = 0.0;
+    result = instance.getMinNrOfJobs ();
+    assertEquals (expResult, result, 0.0);
+    expResult = 2.0;
+    result = instance.getMaxNrOfJobs ();
+    assertEquals (expResult, result, 0.0);
+    expResult = 0.0;
+    result = instance.getMinNrOfJobsInServiceArea ();
+    assertEquals (expResult, result, 0.0);
+    expResult = 2.0;
+    result = instance.getMaxNrOfJobsInServiceArea ();
+    assertEquals (expResult, result, 0.0);
   }
 
 }
