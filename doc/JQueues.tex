@@ -1443,67 +1443,534 @@ In Infinite-Server (IS), on the other hand,
   is not a fixed constant, let alone be known in advance.
 The capacity may not even be finite.
 
-{\bf Bridge to SimEntity, SimQueue and SimJob.}
+In our conceptual model of a queueing system,
+  we include explicitly the notions of waiting and of being served,
+  but we do not impose {\em any\/} structure on the service.
+In our implementation, queues and jobs are
+  named \lstinline-SimQueue-s and \lstinline-SimJob-s, respectively.
+Their common features are implemented in an abstract base class
+  \lstinline-SimEntity-; for simulation entity.
 
-\begin{verbatim}
- A SimQueue is an abstraction of a queueing system from queueing theory. Such a system has an input accepting jobs (in our case SimJobs), each of which resides for a certain amount of time in the system and eventually departs at its output. The general notion is that jobs arrive at a queueing system in order to receive some kind of service, without actually being concerned about the actual type of service provided; all that matters is a relative indication of the required service time from the queueing system, and the resulting sojourn time in the system, which may be different from the job's required service time due to other jobs requesting service from the same (usually finite-capacity) server, in other words, due to server contention. The way in which the queueing system divides its serving capacity among competing jobs and the order of service and relative priority given to them is often referred to a its queueing discipline or policy.
+\section{The \lstinline|SimEntity| Interface}
 
-For many types of queueing systems with simple policies, the internal structure can be seen as an area in which jobs that arrived wait until preceding jobs have finished, and another area (the server(s)) that serves jobs (in turn) until completion. A notorious example of this is the classic First-Come First Served (FCFS) queueing system which serves jobs (a single one a a time) until completion in their order of arrival. This gives rise to the idea that a queueing system can be seen as an area holding jobs awaiting service (the waiting area, or 'queue'), and an area holding one or more jobs exclusively being served (the service area, or 'server(s)').
+A \lstinline-SimEntity-
+  is an entity relevant to event-list scheduling in a queueing system simulation.
+Presently, it is either a queue (\lstinline-SimQueue-) or a job (\lstinline-SimJob-).
+A queue is an object capable of holding {\em visiting\/} jobs,
+  providing (generic) service to these jobs,
+  and deciding when (or if) they will leave the queue,
+  and end the visit.
+A \lstinline-SimEntity- is the common part of queues and jobs.
+What they share in common is the event list (\lstinline-SimEventList-) they are attached to,
+  the fact that they have a name,
+  and their obligation to propagate
+  state changes
+    (including the currently visited queue of a job,
+    and the jobs currently visiting a queue)
+  to registered {\em listeners}.
+In addition,
+  they must notify such listeners of a reset of the event list.
+In the table below, we summarize the \lstinline-SimEntity- methods.
 
-Unfortunately, this viewpoint is incomplete in the sense that such a hard distinction between 'waiting' and 'being served exclusively' often cannot be made. Several useful (idealized) policies serve multiple jobs at once (like the Processor-Sharing (PS) policy, sharing the server's capacity equally among all jobs present), or switch the entire service capacity from one job to another with a certain service period (as in the Round-Robin (RR) policy).
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!SimEventList getEventList ()!
+    & Gets the non-\lstinline|null| event list.
+    \\ \hline
+  \lstinline[basicstyle=\footnotesize]!void registerSimEntityListener!
+    & Adds a listener.
+    \\
+  \lstinline[basicstyle=\footnotesize]!(SimEntityListener<J, Q> listener)!
+    & \\ \hline
+  \lstinline[basicstyle=\footnotesize]!void unregisterSimEntityListener!
+    & Removes a listener.
+    \\
+  \lstinline[basicstyle=\footnotesize]!(SimEntityListener<J, Q> listener)!
+    & \\ \hline
+  \lstinline[basicstyle=\footnotesize]!Set<SimEntityListener<J, Q>>!
+    & Gets a set of current listeners.
+    \\
+  \lstinline[basicstyle=\footnotesize]!getSimEntityListeners ()!
+    & \\ \hline
+  \lstinline[basicstyle=\footnotesize]!String toStringDefault ()!
+    & Returns a default, \\
+    & type-specific name of the entity. \\ \hline
+  \lstinline[basicstyle=\footnotesize]!setName (String name)!
+    & Sets the name of the entity. \\ \hline
+  \lstinline[basicstyle=\footnotesize]!void resetEntity ()!
+    & Puts the entity in its known initial state. \\
+  \hline
+\end{tabular}
 
-Therefore, in a SimQueue, the notion of 'waiting' is exclusively reserved for the situation in which a job has arrived at a queueing system, but has not yet received any service at all. For policies like FCFS, this notion coincides with the classical viewpoint on queueing systems, whereas for policies like PS, this notion agrees with the general idea that arriving jobs do not have to wait before receiving service. In our interface, it is (just) important to note that 'started jobs' do not necessarily have exclusive access to the server.
+\section{The \lstinline|SimQueue| Interface}
 
-The life-cycle of a queue visit of a job thus is as follows. SimJobs are offered for service through arrive(J, double). Depending on the queueing discipline, the job may be taking into service, in other words, start. Between arrival and start, a job is said to be waiting. After its start, a job is said to be started. Once the job finishes, the job departs from the queue. Note, however, that a job may also depart from the SimQueue without having started!
+\subsection{Structure of a \lstinline|SimQueue|}
 
-Once a job has been offered, revoke(J, double, boolean) tries to revoke the job, if (still) possible and if supported by the queue discipline at all. A queue may also choose to drop a job, whether in service or not. Note the difference between a revocation (at the caller's discretion) and a drop (at the queue's discretion). If a job is neither dropped nor revoked, and receives sufficient service from the queue, it will depart from it (a departure).
+A \lstinline|SimQueue| consists of two areas,
+  and while a \lstinline|SimJob| visits a queue,
+  it is present in either one of them:
+\begin{itemize}
+\item The {\em waiting area\/}: After a successful arrival at the queue,
+        the visiting job always enters the waiting area;
+        in the waiting area, jobs wait before they can be "served",
+        or until they leave the queue otherwise.
+\item The {\em service area\/}: In the service area,
+        jobs receive some sort of (otherwise irrelevant) service from the queue.
+      A job can only enter the service area {\em from the waiting area\/};
+        it cannot directly enter the service area.
+\end{itemize}
 
-Despite the large number of freedom degrees for SimQueues, there is also a number of (obvious) restrictions on the behavior of a queue. For instance,
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!Set<J>!
+    & The current visitor jobs.
+    \\
+  \lstinline[basicstyle=\footnotesize]!getJobs ()!
+    &
+    \\ \hline
+  \lstinline[basicstyle=\footnotesize]!int!
+    & The number of current visitor jobs.
+    \\
+  \lstinline[basicstyle=\footnotesize]!getNumberOfJobs ()!
+    &
+    \\ \hline
+  \lstinline[basicstyle=\footnotesize]!Set<J>!
+    & The current visitor jobs in the waiting area.
+    \\
+  \lstinline[basicstyle=\footnotesize]!getJobsInWaitingArea ()!
+    &
+    \\ \hline
+  \lstinline[basicstyle=\footnotesize]!int!
+    & The number of current visitor jobs in the waiting area.
+    \\
+  \lstinline[basicstyle=\footnotesize]!getNumberOfJobsInWaitingArea ()!
+    &
+    \\ \hline
+  \lstinline[basicstyle=\footnotesize]!Set<J>!
+    & The current visitor jobs in the service area.
+    \\
+  \lstinline[basicstyle=\footnotesize]!getJobsInServiceArea ()!
+    &
+    \\ \hline
+  \lstinline[basicstyle=\footnotesize]!int!
+    & The number of current visitor jobs in the service area.
+    \\
+  \lstinline[basicstyle=\footnotesize]!getNumberOfJobsInServiceArea ()!
+    &
+    \\ \hline
+\end{tabular}
 
-    a job cannot start, be dropped or be revoked before having arrived;
-    a job can start at most once during a queue visit;
-    a job can only leave the queueing system through departure (with or without being served), successful revocation or drop. 
+\subsection{The \lstinline|SimQueue|-Visit Lifecycle}
 
-Note that with the current interface, a SimJob cannot visit multiple SimQueues simultaneously. The SimQueue currently being visited by a SimJob can be obtained from SimJob.getQueue(); this must be maintained by implementations of arrive(J, double).
+\subsubsection{Job Arrival}
 
-In general, the required service ('execution') time of the job during a queue visit must be provided by each job through SimJob.getServiceTime(Q). It must remain constant during a queue visit (but may be changed in between visits). Not all SimQueue implementations use the notion of service time (e.g., SINK), but if they do, the service time is to be interpreted as follows: If a queue spends unit capacity on serving this and only this job, it will leave the queue exactly after the requested service time has elapsed since its start. Unless explicitly specified by the implementation, the default capacity of a server (or each server in case of a multi-server queue) is assumed to be unity throughout. Since the notion of variable-capacity servers is not that common, it has not been incorporated into this interface. Although queues are not allowed to increase the requested service time of a job (e.g., to compensate overhead), they are allowed to serve jobs at a rate lower than their capacity, or to take vacation periods.
+A queue visit starts with the arrival of a job
+  through \lstinline|arrive(double, J)|.
+The first argument of \lstinline|arrive| is the arrival time;
+  typically an arrival is scheduled as the result of
+  processing a \lstinline|SimEvent| on the event list,
+  and the time argument is taken from the event.
+The second argument is the \lstinline|SimJob| that arrives;
+  note the use of the generic type \lstinline|J|
+  restricting the type of jobs (at compile time)
+  allowed at the \lstinline|SimQueue|.
 
-Some queueing systems override the requested service time as (would be) obtained through SimJob.getServiceTime(Q), and instead use a different source to obtain the service time. Implementations are strongly encouraged to document the source of the job's service time, if different from (default) requesting this at the job. In any case, the requested service time of a job, irrespective of its source, has to remain constant during a job's visit to a particular queue.
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void!
+    & Arrival of a job at the queue.
+    \\
+  \lstinline[basicstyle=\footnotesize]!arrive (double, J)!
+    &
+    \\ \hline
+\end{tabular}
 
-A SimQueue supports two types of vacations:
+\subsubsection{Job Drop}
 
-    During a queue-access vacation, access to the SimQueue is prohibited and all jobs are dropped immediately upon arrival, see startQueueAccessVacation(), startQueueAccessVacation(double), stopQueueAccessVacation() and isQueueAccessVacation(). A queue-access vacation affects the queue's behavior only upon arrivals. Note that the vacation may be for a given duration, or for undetermined time until explicitly stopped.
-    During a server-access vacation, jobs are prohibited to start, i.e., there is no access for jobs waiting to the server. It does not affect jobs that have already started. Server-access vacations are actually somewhat more flexible through the notion of server-access credits, denoting the number of jobs still admissible to the server, see getServerAccessCredits(). A server-access vacation starts when there are no more server-access credits (due to jobs starting), and ends when credits are explicitly granted to the interface through setServerAccessCredits(int). Note that by default, each SimQueue has infinite server-access credits. 
+At the discretion of the \lstinline-SimQueue-,
+  a job can be forced to leave the queue;
+  this is referred to as a {\em job drop}.
+Implementations of the \lstinline-SimQueue- interface must
+  specify under which conditions they decide to drop jobs.
+Typical examples are the unavailability of buffer space,
+  or exceeding a maximum allowed service time.
+Note that job drops cannot be requested by the user of the queue.
+A job can be dropped
+  from the waiting area
+  as well as
+  from the service area.
+(For completeness, we note that a job
+  can also be dropped immediately upon arrival due
+  to queue-access vacations; see next section.)
 
-Each SimQueue maintains and reports changes to the state in which it guarantees that the next arriving job will
+\subsubsection{Queue-Access Vacation}
+\label{queue-access-vacation}
 
-    start service immediately without waiting, or,
-    departs immediately, without service and without waiting. 
+During a queue-access vacation,
+  access to the \lstinline|SimQueue| is prohibited
+  and all jobs are dropped immediately upon arrival.
+A queue-access vacation affects the queue's behavior only upon arrivals;
+  it has no effects whatsoever on jobs that are already present
+  at the queue.
+Note that formally, a job arrival at a queue
+  with queue-access vacation
+  is {\em not\/} a visit,
+  because the job is never actually present at the queue.
 
-If either condition is met, the queueing system is said to be in noWaitArmed state. Note that this state setting ignores queue and server-access vacations.
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void!
+    & Starts or stops a QAV at given time.
+    \\
+  \lstinline[basicstyle=\footnotesize]!setQueueAccessVacation (double, boolean)!
+    &
+    \\ \hline
+  \lstinline[basicstyle=\footnotesize]!boolean!
+    & Checks for an ongoing QAV.
+    \\
+  \lstinline[basicstyle=\footnotesize]!isQueueAccessVacation ()!
+    &
+    \\ \hline
+\end{tabular}
 
-A convenient queue-centric way to be notified of SimQueue events is by registering as a SimQueueListener or as a SimEntityListener through SimEntity.registerSimEntityListener(nl.jdj.jqueues.r5.SimEntityListener<J, Q>). Arrival-related notifications are always issued immediately at the time a job arrives at a queue, in other words, at a point where the queue does not even know yet about the existence of the job (and vice versa, for that matter). All other notifications are issued at the point where the queue has reached a consistent state (e.g., after a departure).
+\subsubsection{Job Start}
 
-A SimQueueListener also get notifications right before a state change in the queue occurs, e.g., right before a job departure. Such notifications are named updates, see SimQueueListener.notifyUpdate(double, Q).
+At the discretion of the \lstinline-SimQueue-,
+  a visiting \lstinline-SimJob- can be moved from
+  the waiting area to the service area.
+This is referred to as a {\em job start}.
+The start of a job cannot be (directly) controlled by the user.
+In our interface, it is important to note that 'started jobs'
+  do not necessarily have exclusive access to the server(s).
+Between arrival and start, a job is said to be {\em waiting}.
+After its start, a job is said to be {\em started}.
 
-If a job is successfully revoked, or if it is dropped, none of the departure events are fired. Also, be aware that there is no guarantee that a start-service or a departure event is ever called for a SimJob at all.
+\subsubsection{Job Revocation}
 
-A SimQueues relies on an underlying SimEventList for scheduling events (SimEvent) in time and invoking the actions (SimEventAction). Implementations must also listen to the underlying event list for resets, see SimEventListResetListener.notifyEventListReset(nl.jdj.jsimulation.r5.SimEventList).
+Once a job has been offered,
+  \lstinline|revoke(double, J, boolean)|
+  tries to revoke the job,
+  if (still) possible
+  and if supported by the queue discipline at all.
+The return value indicates if the revocation succeeded.
+The first argument is the time of the revocation attempt,
+  the second is the job to be revoked.
+The third argument indicates whether it is allowed to
+  revoke the job from the service area.
+If \lstinline|false|, the revocation attempt will always fail
+  if the job is already in the service area.
+Note the difference between
+  a revocation (at the caller's discretion)
+  and a drop (at the queue's discretion).
 
-Basic implementations of the most important non-preemptive queueing disciplines are provided in the AbstractNonPreemptiveSimQueue class and its concrete implementations in the same package like FCFS, LCFS and SJF. For the processor-sharing queue see PS, and for various server-less queues see AbstractServerlessSimQueue and descendants. For composite queues like Jackson networks and the like, see SimQueueComposite and its implementations.
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!boolean!
+    & Revocation attempt of a job at the queue.
+    \\
+  \lstinline[basicstyle=\footnotesize]!revoke (double, J, boolean)!
+    &
+    \\ \hline
+\end{tabular}
 
-Partial utility implementations of SimQueue are available in this package through AbstractSimQueueBase and its descendant AbstractSimQueue.
-\end{verbatim}
+\subsubsection{Server-Access Credits}
 
-\section{Entities, Queues, and Jobs}
+During a {\em server-access vacation},
+  jobs are prohibited to start,
+  i.e.,
+  there is no access to the service area for jobs in the waiting area.
+It does not affect jobs that have already started.
+Server-access vacations are actually
+  somewhat more flexible through the notion of {\em server-access credits},
+  denoting the number of jobs still admissible to the service area,
+  see \lstinline|getServerAccessCredits()|.
+A server-access vacation starts
+  when there are no more server-access credits (due to jobs starting),
+  and ends when credits are explicitly granted to the interface through
+  \lstinline|setServerAccessCredits(double, int)|.
+Note that by default, each \lstinline|SimQueue| has infinite server-access credits.
 
-\subsection{The \lstinline|SimEntity| Interface}
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void!
+    & Sets the remaining SACs at given time.
+    \\
+  \lstinline[basicstyle=\footnotesize]!setServerAccessCredits (double, int)!
+    &
+    \\ \hline
+  \lstinline[basicstyle=\footnotesize]!int!
+    & Gets the actual SACs.
+    \\
+  \lstinline[basicstyle=\footnotesize]!getServerAccessCredits ()!
+    &
+    \\ \hline
+\end{tabular}
 
-\subsection{The \lstinline|SimQueue| Interface}
+Note that the value \lstinline-Integer.MAX_VALUE- is interpreted as $+\infty$.
 
-\subsection{The \lstinline|SimJob| Interface}
+\subsubsection{Job Departure}
+
+At the discretion of the \lstinline|SimQueue|,
+  a visiting job may leave the queue
+  because it "got what it came for",
+  i.e.,
+  its visit comes to an end
+  according to the queueing discpline in place.
+This is referred to a {\em job departure\/};
+  and it cannot be enforced by the user.
+We want to stress that jobs do not necessarily
+  depart from the service area,
+  but can depart from the waiting area as well,
+  or even immediately upon arrival
+  (in which case we formally do not speak of a visit).
+
+\subsubsection{The \lstinline|NoWaitArmed| Property of a \lstinline|SimQueue|}
+
+\subsubsection{Copying a \lstinline|SimQueue|}
+
+\section{The \lstinline|SimJob| Interface}
+
+Compared to the \lstinline|SimQueue| interface,
+  the \lstinline|SimJob| interface is remarkably simple.
+Apart from the internal maintenace of the \lstinline-SimQueue-
+  being visited,
+  a \lstinline-SimJob- only needs to provide information on the
+  so-called {\em requested service time\/} for a queue visit,
+  through implementation of
+  \lstinline-getServiceTime (Q)-.
+This method is used by a {@link SimQueue} to query the requested service time,
+  and appropriately schedule a departure event for the job,
+  but it can be called anytime.
+However, the returned value should not change during a visit to a \lstinline-SimQueue-,
+  and it is not manipulated by the queue being visited, in other words,
+  it cannot be used to query the remaining service time of a job at a queue.
+It is safe though to change the return value in-between queue visits.
+However, the convention is
+  that the method then returns the required service time at the {\em next} visit to
+  the queue.
+For instance, many test and job-factory classes depend on this, as they often directly probe a non-visiting job for
+its required service time at a queue.
+Obviously, implementations must be prepared for invocations of this method while not visiting a queue.
+If \lstinline|null|,s passed as agrument
+  the service time at the current queue is used,
+  or zero if the job is not currently visiting a queue.
+
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!Q!
+    & The queue currently visiting.
+    \\
+  \lstinline[basicstyle=\footnotesize]!getQueue ()!
+    &
+    \\ \hline
+  \lstinline[basicstyle=\footnotesize]!void!
+    & Sets the queue currently visiting.
+    \\
+  \lstinline[basicstyle=\footnotesize]!setQueue (Q)!
+    &
+    \\ \hline
+  \lstinline[basicstyle=\footnotesize]!double!
+    & Gets the service time for a visit.
+    \\
+  \lstinline[basicstyle=\footnotesize]!getServiceTime (Q)!
+    &
+    \\ \hline
+\end{tabular}
+
+\section{Invariants and Constraints}
+
+Despite the large number of freedom degrees for \lstinline-SimQueue-s,
+  there is also a number of (obvious) restrictions on the behavior of a queue.
+For instance,
+\begin{itemize}
+  \item a job cannot start, be dropped or be revoked before having arrived;
+  \item a job can start at most once during a queue visit;
+  \item a job can only leave the queueing system through departure (with or without being served),
+        successful revocation or drop; 
+  \item a job may not leave the queue at all (a {\em sticky\/} job).
+\end{itemize}
+Note that with the current interface, a \lstinline|SimJob| cannot visit multiple SimQueues simultaneously.
+The \lstinline|SimQueue| currently being visited by a \lstinline|SimJob|
+  can be obtained from \lstinline|SimJob.getQueue ()|;
+  this must be maintained by implementations of \lstinline|arrive (J, double)|.
+
+\section{Listening to a \lstinline|SimEntity|}
+
+One can listen to relevant events at a \lstinline|SimEntity| by registering with the entity
+  as a \lstinline|SimEntityListener|, the methods of which are summarized in the table below.
+
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyResetEntity!
+  & Notification of the reset of an entity
+  \\
+  \lstinline[basicstyle=\footnotesize]!(SimEntity)!
+  &
+  \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyUpdate!
+  & Notification of an update at an entity
+  \\
+  \lstinline[basicstyle=\footnotesize]!(double, SimEntity)!
+  &
+  \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyStateChanged!
+  & Notification of a state change at an entity
+  \\
+  \lstinline[basicstyle=\footnotesize]!(double, SimEntity)!
+  &
+  \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyArrival!
+  & Notification of the arrival
+  \\
+  \lstinline[basicstyle=\footnotesize]!(double, J, Q)!
+  & of a job at a queue
+  \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyStart!
+  & Notification of the start
+  \\
+  \lstinline[basicstyle=\footnotesize]!(double, J, Q)!
+  & of a job at a queue
+  \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyDrop!
+  & Notification of the drop
+  \\
+  \lstinline[basicstyle=\footnotesize]!(double, J, Q)!
+  & of a job at a queue
+  \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyRevocation!
+  & Notification of the successful revocation
+  \\
+  \lstinline[basicstyle=\footnotesize]!(double, J, Q)!
+  & of a job at a queue
+  \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyDeparture!
+  & Notification of the departure
+  \\
+  \lstinline[basicstyle=\footnotesize]!(double, J, Q)!
+  & of a job at a queue
+  \\
+  \hline
+\end{tabular}
+
+It is important to realize that most notifications are fired
+  at the time the \lstinline|SimEntity| has processed the
+ corresponding event, and attained its new state.
+However, there are the following exceptions:
+\begin{itemize}
+\item Update notifications are, by their nature, fired {\em before\/} any state change;
+\item Arrival notifications are fired {\em before\/} the job enters the queue (or before it is dropped);
+\item Unsuccessful revocations are {\em not\/} reported as notification.
+\end{itemize}
+
+Notifications can have tricky semantics, and one should be careful
+  at making assumptions of the \lstinline|SimEntity|
+  upon receiving a notification.
+This is because with notifications, we attempt to achieve two potentially conflicting objectives:
+\begin{itemize}
+\item Each state change is reported as notification;
+\item Notification listeners always find the \lstinline|SimEntity| in a valid state.
+\end{itemize}
+So, for instance, one should not assume that during an arrival notification,
+  the job is actually present at the queue,
+  because a queue-access vacation may be active.
+In that case,
+  the queue will report an arrival of the job,
+  immediately followed by a notification of the job having been dropped.
+However, upon reception of the arrival notification,
+  the job will not be present at the \lstinline|SimQueue|,
+  because that would exhibit an illegal state of that queue.
+What we would actually like here,
+  is a notification of a {\em sequence\/} of events at the
+  queue, all happening at the same time,
+  yet in a particular order.
+In this particular example, a notification of the sequence
+  \lstinline|(ARRIVAL(t,j,q), DROP(t,j,q))|
+  would be required,
+  where \lstinline|t| is the time,
+  \lstinline|j| is the job
+  and \lstinline|q| is the queue.
+And even though this may not seem important right now,
+  realize that certain queue types depend on maintaining the validity
+  of invariants throughout their lifetime.
+For instance, the \lstinline|DROP| queue drops jobs immediately upon arrival,
+  irrespective of the state of the queue-access vacation.
+An important sensible invariant for the \lstinline|DROP| queue,
+  is that the set of jobs visiting it {\em is always empty}.
+Analogeous invariants exist for other queue types,
+  and we take great care to enforce these invariants
+  to listeners as well as to independently scheduled events.
+
+For \lstinline|SimQueue|s, one can ontain additional information by registering as
+  a \lstinline|SimQueueListener|, the methods of which are summarized in the table below.
+
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!void notifyNewNoWaitArmed!
+  & Notification of a change 
+  \\
+  \lstinline[basicstyle=\footnotesize]!(double, Q, boolean)!
+  & of the \lstinline|noWaitArmed| state
+  \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]|void notifyStartQueueAccessVacation|
+  & Notification of the start
+  \\
+  \lstinline[basicstyle=\footnotesize]|(double, Q)|
+  & of a queue-access vacation
+  \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]|void notifyStopQueueAccessVacation|
+  & Notification of the end
+  \\
+  \lstinline[basicstyle=\footnotesize]|(double, Q)|
+  & of a queue-access vacation
+  \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]|void notifyOutOfServerAccessCredits|
+  & Notification that a queue
+  \\
+  \lstinline[basicstyle=\footnotesize]|(double, Q)|
+  & has run out of server-access credits
+  \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]|void notifyRegainedServerAccessCredits|
+  & Notification that a queue
+  \\
+  \lstinline[basicstyle=\footnotesize]|(double, Q)|
+  & has regained server-access credits
+  \\
+  \hline
+\end{tabular}
 
 \chapter{Fundamental Queues}
+
+In this chapter we describe implementations of \lstinline|SimQueue| corresponding
+  to well-knwon queueing disciplines.
 
 \section{Introduction}
 
@@ -2608,19 +3075,9 @@ Departure & Yes & Started and non-revoked jobs depart. \\
 \hline
 \end{tabular}
 
-\chapter{Visualization of Queues and Jobs with Swing Components}
-
-\chapter{Queue and Job Statistics}
-
 \chapter{Multiclass Queues and Jobs}
 
-\chapter{Advanced Topics}
-
-\section{Job Factories}
-
-\section{Queue Events and Schedules}
-
-\section{Load Factories}
+\chapter{Fundamental Multiclass Queues}
 
 \chapter{Composite Queues}
 
@@ -2635,6 +3092,10 @@ The sequence of visits to the embedded queues is
 {\bf XXX}
 
 \section{Types (Colors) of Composite Queues}
+
+\chapter{Fundamental Composite Queues}
+
+\section{Introduction}
 
 \section{Tandem Queues}
 
@@ -2651,6 +3112,18 @@ The sequence of visits to the embedded queues is
 \subsection{Encapsulator Queues}
 
 \subsection{Drop-Collector Queues}
+
+\chapter{Queue and Job Statistics}
+
+\chapter{Visualization of Queues and Jobs with Swing Components}
+
+\chapter{Advanced Topics}
+
+\section{Job Factories}
+
+\section{Queue Events and Schedules}
+
+\section{Load Factories}
 
 \chapter{Building Custom Queues and Jobs}
 
