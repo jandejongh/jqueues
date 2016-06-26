@@ -3115,6 +3115,85 @@ The sequence of visits to the embedded queues is
 
 \chapter{Queue and Job Statistics}
 
+\section{Introduction}
+
+If you have read this book linearly up to this point,
+  we hope you are wondering by now how to compute
+  statistics like average job sojourn time at a queue,
+  or average server utilization (just to name a few).
+Actually, this is somewhat on purpose: None of the
+  interfaces and concrete implementations
+  of jobs and queues
+  provide direct support for maintaining and calculating statistics.
+This has three important reasons:
+\begin{itemize}
+\item It relieves the concrete \lstinline|SimQueue|
+        and \lstinline|SimJob| implementations of the
+        tedious and error-prone responsability of
+        maintaining and calculting statistics;
+        their basis functionality in terms of
+        e.g. implementing the proper queueing discipline is
+        complicated enough as it is.
+\item It forces the implementation of statistics in a generic way,
+      e.g., applicable to {\em any\/} queue type.
+\item It allows for easy replacement of {\em all\/} statistics-gathering
+        and maintenance code with that of a professional
+        third-party statistics package like {\bf XXX}.
+\end{itemize}
+
+Needless to say, \lstinline|jqueues| has full support for the implementation of
+  statistics, and actually, provides a few basic, but highly effective and extensible
+  classes for statistics gathering itself.
+The starting point for gathering statistics of a \lstinline|SimEntity|
+  is to register as a suitable \lstinline|SimEntityListener| to it,
+  and update statistics upon notifications from the entity,
+  inparticular update notifications and
+  visit-related notifications like arrivals, drops and departures.
+Recall that a \lstinline|SimEntity| is required to notify registered listeners
+  {\em just before\/} it state changes through an update notification,
+  allowing for easy maintenance of "time-average-type" statistics
+  like the average number of jobs present at a queue.
+In addition (and often requiring a bit more work) the visit-related notifications
+  allow for maintenance of "visit-related" statistics,
+  like the average job sojourn time at a queue.
+
+In the following section, we will first explain how to obtain statistics
+  for a \lstinline|SimQueue| or \lstinline|SimJob| manually,
+  following the approach outline above.
+Subsequently,
+  we will introduce a few statistics-related class
+  that intend to make it easier to
+  obtain such statistics.
+
+\subsection{Example: The Average Number of Jobs at a Queue}
+
+In this statistics-related example,
+  we create a \lstinline|SimQueue| and
+  a workload consisting of arriving \lstinline|SimJob|s.
+Our objective is to run the simulation,
+  and calculate the average number of jobs at the queue.
+{\bf XXX}
+
+\subsection{Example: The Total Sojourn of a Job at Visited Queues}
+
+\section{The \lstinline|AbstractSimQueueStat| Base Class}
+
+\section{The \lstinline|SimpleSimQueueStat| Class}
+
+\section{The \lstinline|AutoSimQueueStat| Class}
+
+\subsection{Introduction}
+
+\subsection{The \lstinline|SimQueueProbe| Interface}
+
+\subsection{Example}
+
+\section{The \lstinline|SimpleSimQueueVisitsStat| Class}
+
+\subsection{Introduction}
+
+\subsection{Example}
+
 \chapter{Visualization of Queues and Jobs with Swing Components}
 
 \chapter{Advanced Topics}
