@@ -1,6 +1,7 @@
 \documentclass[12pt]{book}
 
-\usepackage{color}
+%\usepackage{color}
+\usepackage{xcolor}
 \usepackage{listings}
 \usepackage{array}
 \usepackage{geometry}
@@ -18,7 +19,8 @@
   commentstyle=\textit,
   keywordstyle=\color{blue}\bfseries,
   tabsize=2,
-  frame=single
+  frame=single,
+  escapeinside={<@}{@>}
 }
 
 \begin{document}
@@ -1451,7 +1453,7 @@ In our implementation, queues and jobs are
 Their common features are implemented in an abstract base class
   \lstinline-SimEntity-; for simulation entity.
 
-\section{The \lstinline|SimEntity| Interface}
+\section{Simulation Entities}
 
 A \lstinline-SimEntity-
   is an entity relevant to event-list scheduling in a queueing system simulation.
@@ -1504,9 +1506,9 @@ In the table below, we summarize the \lstinline-SimEntity- methods.
   \hline
 \end{tabular}
 
-\section{The \lstinline|SimQueue| Interface}
+\section{Queues}
 
-\subsection{Structure of a \lstinline|SimQueue|}
+\subsection{Structure of a SimQueue}
 
 A \lstinline|SimQueue| consists of two areas,
   and while a \lstinline|SimJob| visits a queue,
@@ -1564,7 +1566,7 @@ A \lstinline|SimQueue| consists of two areas,
     \\ \hline
 \end{tabular}
 
-\subsection{The \lstinline|SimQueue|-Visit Lifecycle}
+\subsection{The SimQueue-Visit Lifecycle}
 
 \subsubsection{Job Arrival}
 
@@ -1736,11 +1738,11 @@ We want to stress that jobs do not necessarily
   or even immediately upon arrival
   (in which case we formally do not speak of a visit).
 
-\subsubsection{The \lstinline|NoWaitArmed| Property of a \lstinline|SimQueue|}
+\subsubsection{The NoWaitArmed Property of a SimQueue}
 
-\subsubsection{Copying a \lstinline|SimQueue|}
+\subsubsection{Copying a SimQueue}
 
-\section{The \lstinline|SimJob| Interface}
+\section{The SimJob Interface}
 
 Compared to the \lstinline|SimQueue| interface,
   the \lstinline|SimJob| interface is remarkably simple.
@@ -1808,7 +1810,7 @@ The \lstinline|SimQueue| currently being visited by a \lstinline|SimJob|
   can be obtained from \lstinline|SimJob.getQueue ()|;
   this must be maintained by implementations of \lstinline|arrive (J, double)|.
 
-\section{Listening to a \lstinline|SimEntity|}
+\section{Listening to a SimEntity}
 
 One can listen to relevant events at a \lstinline|SimEntity| by registering with the entity
   as a \lstinline|SimEntityListener|, the methods of which are summarized in the table below.
@@ -3116,6 +3118,7 @@ The sequence of visits to the embedded queues is
 \chapter{Queue and Job Statistics}
 
 \section{Introduction}
+\label{stat-intro}
 
 If you have read this book linearly up to this point,
   we hope you are wondering by now how to compute
@@ -3166,33 +3169,673 @@ Subsequently,
   obtain such statistics.
 
 \subsection{Example: The Average Number of Jobs at a Queue}
+\label{stat-intro-avgJ}
 
 In this statistics-related example,
   we create a \lstinline|SimQueue| and
   a workload consisting of arriving \lstinline|SimJob|s.
 Our objective is to run the simulation,
   and calculate the average number of jobs at the queue.
-{\bf XXX}
+To make the example more interesting, we create two queues,
+  a FCFS queue and a Preemptive (Resume) LCFS queue.
+We equip each with a listener that maintains the
+  number of jobs at the queue over time.
+As shown in Listing \ref{statAvgJ_listener} below,
+  we use a \lstinline|DefaultSimEntityListener| as
+  base classs,
+  making it easier to ignore all the notifications
+  we are not interested in.
+Note that we are silently assuming that the listener
+  is registered at a \lstinline|SimQueue|,
+  and not at some other \lstinline|SimEntity| type.
+In addition, we left out some sanity checking,
+  e.g., on the \lstinline|time| parameter
+  (should not be in the past).
+
+\begin{lstlisting}[
+% XXX Do now know how to use \lstinline inside the caption...
+caption={Simple listener for maintaining and calculating
+  the average number of jobs at a SimQueue.},
+label=statAvgJ_listener,
+basicstyle=\tiny
+]
+private final static class AvgJStatListener
+extends DefaultSimEntityListener
+{
+  
+  public AvgJStatListener (SimQueue queue)
+  {
+    notifyResetEntity (queue);
+    queue.registerSimEntityListener (this);
+  }
+    
+  private double tStart = Double.NEGATIVE_INFINITY;
+  private double tLast = Double.NEGATIVE_INFINITY;
+  private double cumJ = 0;
+
+  @Override
+  public void notifyResetEntity (SimEntity entity)
+  {
+    tStart = entity.getEventList ().getTime ();
+    tLast = tStart;
+    cumJ = 0;
+  }
+
+  @Override
+  public void notifyUpdate (double time, SimEntity entity)
+  {
+    cumJ += ((SimQueue) entity).getNumberOfJobs () * (time - tLast);
+    tLast = time;
+  }
+      
+  public final double getStartTime ()
+  {
+    return this.tStart;
+  }
+    
+  public final double getEndTime ()
+  {
+    return this.tLast;
+  }
+    
+  public final double calculate ()
+  {
+    if (tLast > tStart)
+    {
+      if (! Double.isInfinite (tLast - tStart))
+        return cumJ / (tLast - tStart);
+      else
+        return 0;
+    }
+    else
+      return 0;
+  }
+
+}
+\end{lstlisting}
+
+Note that we are only interested in two notifications from the \lstinline|SimQueue|,
+  {\em reset\/} and {\em update\/} notifications.
+Because the number of jobs at a \lstinline|SimQueue| is a {\em simple function},
+  we can easily integrate it over time by considering all
+  points in time at which the function value
+  {\em can} change,
+  and cumulating the product of the interval since the last update with the current value.
+By definition, such points in time are the {\em updates\/} of a
+  \lstinline|SimQueue| and the constract of the latter  mandates
+  that each update results in a notification
+  at its listeners {\em before\/} any changes have been applied to the queue.
+Needless to say, this requires substantial discipline for implementations of \lstinline|SimQueue|,
+  but we use it here to our advantage.
+In the end, all we need to do it divide the cumulated value with
+  the total time interval,
+  taking special care of the possibility that the interval is $+\infty$.
+
+For the start of the interval, we use the reset notification from the queue.
+At each reset, we take the start time from the current time of the
+  event list (note that we cannot take the time from the \lstinline-SimQueue- directly),
+  and reset our internal statistics.
+Note that we call \lstinline|notifyResetEntity| directly from the constructor as well,
+  because we cannot rely on receiving a reset between construction of the object
+  and starting the simulation.
+Also note that we may assume that the number of jobs at a reset,
+  as well as upon construction of a \lstinline-SimQueue- is zero,
+  conform the contract of a \lstinline-SimQueue-.
+However, unless the event list or the \lstinline-SimQueue- attached to it
+  is reset to a finite time value,
+  we must use \lstinline-Double.NEGATIVE_INFINITY- as time value.
+This explains the default values used in
+  \lstinline-AvgJStatListener-.
+
+We list the example program using the \lstinline|AvgJStatListener|
+  and its output in
+  Listings \ref{statAvgJ_main}
+  and
+  \ref{statAvgJ_out}
+  below.
+Note the very important \lstinline-el.reset (0)- line in the main program.
+We will later show the effect of leaving out or forgetting this statement.
+The correctness of the calculated values in the output
+  can be assessed easily
+  as is shown in the comments of the main program.
+For \lstinline-P_LCFS-, the program outputs one of two distinct values for the average,
+  both of which are actually correct, due to an ambiguity in the event scheduling.
+(Which we, in all honesty, overlooked while constructing the example.)
+This is also explained in the comments of the program.
+
+\begin{lstlisting}[
+caption=Example program for calculating the average number of jobs at two queues.,
+label=statAvgJ_main,
+basicstyle=\tiny
+]
+public static void main (final String[] args)
+{
+  final SimEventList el = new DefaultSimEventList ();
+  el.reset (0);
+  // Schedule 5 jobs, 0 through 4 at t = 0, 1, 2, 3, 4
+  // and service times 0, 1, 2, 3, 4, respectively.
+  //
+  // Departure times with FCFS: 0, 2, 4, 7, 11.
+  // cumJ = 0 + 1 + 1 + 2 + 2 + 2 + 2 + 1 + 1 + 1 + 1 = 14.
+  // avgJ = 14 / 11 = 1.2727.
+  //
+  // WITH P_LCFS: AMBIGUITY!
+  //
+  // Departure times with P_LCFS [2 arrives after departure of 1]: 0, 2, 8, 10, 11.
+  // cumJ = 0 + 1 + 1 + 2 + 3 + 3 + 3 + 3 + 2 + 2 + 1 = 21.
+  // avgJ = 21 / 11 = 1.9090.
+  //
+  // Departure times with P_LCFS [2 arrives before departure of 1]: 0, 8, 10, 11, 11.
+  // cumJ = 0 + 1 + 2 + 3 + 4 + 4 + 4 + 4 + 3 + 3 + 2 = 30.
+  // avgJ = 30 / 11 = 2.7272.    
+  //
+  final FCFS fcfs = new FCFS (el);
+  final P_LCFS lcfs = new P_LCFS (el, null);
+  for (int j = 0; j <= 4; j++)
+  {
+    fcfs.scheduleJobArrival (j, new DefaultSimJob (el, "JobF " + j, j));
+    lcfs.scheduleJobArrival (j, new DefaultSimJob (el, "JobL " + j, j));
+  }
+  final AvgJStatListener avgJStatListener_fcfs = new AvgJStatListener (fcfs);
+  final AvgJStatListener avgJStatListener_lcfs = new AvgJStatListener (lcfs);
+  el.run ();
+  System.out.println ("FCFS:");
+  System.out.println ("  Start time: " + avgJStatListener_fcfs.getStartTime () + ".");
+  System.out.println ("  End Time  : " + avgJStatListener_fcfs.getEndTime () + ".");
+  System.out.println ("  Average number of jobs: " + avgJStatListener_fcfs.calculate () + ".");
+  System.out.println ("P_LCFS:");
+  System.out.println ("  Start time: " + avgJStatListener_lcfs.getStartTime () + ".");
+  System.out.println ("  End Time  : " + avgJStatListener_lcfs.getEndTime () + ".");
+  System.out.println ("  Average number of jobs: " + avgJStatListener_lcfs.calculate () + ".");
+}
+\end{lstlisting}
+
+\begin{lstlisting}[
+caption={Output from the example program in Listing \ref{statAvgJ_main}.},
+label=statAvgJ_out,
+basicstyle=\tiny
+]
+FCFS:
+  Start time: 0.0.
+  End Time  : 11.0.
+  Average number of jobs: 1.2727272727272727.
+P_LCFS:
+  Start time: 0.0.
+  End Time  : 11.0.
+  Average number of jobs: 1.9090909090909092 <@\color{red}{\bf [OR 2.727272727272727, see comments]}@>.
+\end{lstlisting}
+
+As mentioned earlier,
+  it is essential to reset the event list to a finite time value before use.
+Below in Listing \ref{statAvgJ_out_inf} we show the output of the program if we leave out the
+  \lstinline-el.reset (0)- statement,
+  essentially starting the simulation and,
+  more importantly,
+  gathering the statistics at $t=-\infty$.
+The result is zero, because we are taking the average value
+  of a function over an infinite interval,
+  knowing that is is only non-zero over a finite interval.
+Despite that fact that for this particular case,
+  we seem to get away with the
+  infinite interval, and are able to return a sensible value
+  for the average,
+  this does not hold for the general case.
+(For instance, suppose we would have scheduled an arrival at $t=-\infty$,
+  the program would still return the incorrect zero value for the average.)
+As a rule of thumb, the use of statistics involving infinite values
+  should be avoided at all times,
+  again stressing the importance of resetting the event list to
+  a finite value before its use.
+  
+\begin{lstlisting}[
+caption={Output from the example program in Listing \ref{statAvgJ_main}
+         without resetting the event list to zero (i.e., starting at $t=-\infty$).},
+label=statAvgJ_out_inf,
+basicstyle=\tiny
+]
+FCFS:
+  Start time: -Infinity.
+  End Time  : 11.0.
+  Average number of jobs: 0.0.
+P_LCFS:
+  Start time: -Infinity.
+  End Time  : 11.0.
+  Average number of jobs: 0.0.
+\end{lstlisting}
 
 \subsection{Example: The Total Sojourn of a Job at Visited Queues}
+\label{stat-intro-total-sojourn}
 
-\section{The \lstinline|AbstractSimQueueStat| Base Class}
+\section{The AbstractSimQueueStat Base Class}
+\label{stat-AbstractSimQueueStat}
 
-\section{The \lstinline|SimpleSimQueueStat| Class}
+The examples in the previous sections explained how to
+  obtain statistics on \lstinline|SimQueue|s and \lstinline|SimJob|s.
+The next sections in this chapter
+  introduce a few classes that either directly provide a few of the
+  most basic statistics
+  or allow you to define your own statistics more easily.
 
-\section{The \lstinline|AutoSimQueueStat| Class}
+The \lstinline|AbstractSimQueueStat| is the (abstract) base class for all
+  subsequent classes.
+Its functionality is comparable to \lstinline|AvgJStatListener| introduced in
+  Section \ref{stat-intro-avgJ}, with a few new functions and increased robustness,
+  and delegating the actual maintenance and calulation of the statistic(s)
+  to only a few abstract methods.
+To illustrate its use,
+  we show in
+  Listings
+  \ref{statAbstractSimQueueStat_listener}
+  and
+  \ref{statAbstractSimQueueStat_main}
+  the modified listener and main program, respectively,
+  from the example in Section \ref{stat-intro-avgJ}
+  now using \lstinline|AbstractSimQueueStat|.
+
+\begin{lstlisting}[
+% XXX Do now know how to use \lstinline inside the caption...
+caption={Using AbstractSimQueueStat for a listener for maintaining and calculating
+  the average number of jobs at a SimQueue.},
+label=statAbstractSimQueueStat_listener,
+basicstyle=\tiny
+]
+private static class AvgJStatListener
+extends AbstractSimQueueStat
+{
+
+  public AvgJStatListener (SimQueue queue)
+  {
+    super (queue);
+  }
+    
+  private double cumJ = 0;
+    
+  private double avgJ = 0;
+    
+  @Override
+  protected void resetStatistics ()
+  {
+    cumJ = 0;
+    avgJ = 0;
+  }
+
+  @Override
+  protected void updateStatistics (double time, double dt)
+  {
+    cumJ += getQueue ().getNumberOfJobs () * dt;
+  }
+
+  @Override
+  protected void calculateStatistics (double startTime, double endTime)
+  {
+    if (startTime == endTime)
+      return;
+    if (! Double.isInfinite (endTime - startTime))
+      avgJ = cumJ / (endTime - startTime);
+    else
+      avgJ = 0;
+  }
+    
+  public double getAvgJ ()
+  {
+    calculate ();
+    return this.avgJ;
+  }
+    
+}
+\end{lstlisting}
+
+\begin{lstlisting}[
+% XXX Do now know how to use \lstinline inside the caption...
+caption=Example program for calculating the average number of jobs at two queues using AbstractSimQueueStat.,
+label=statAbstractSimQueueStat_main,
+basicstyle=\tiny
+]
+public static void main (final String[] args)
+{
+  final SimEventList el = new DefaultSimEventList ();
+  el.reset (0);
+  // Schedule 5 jobs, 0 through 4 at t = 0, 1, 2, 3, 4
+  // and service times 0, 1, 2, 3, 4, respectively.
+  //
+  // Departure times with FCFS: 0, 2, 4, 7, 11.
+  // cumJ = 0 + 1 + 1 + 2 + 2 + 2 + 2 + 1 + 1 + 1 + 1 = 14.
+  // avgJ = 14 / 11 = 1.2727.
+  //
+  // WITH P_LCFS: AMBIGUITY!
+  //
+  // Departure times with P_LCFS [2 arrives after departure of 1]: 0, 2, 8, 10, 11.
+  // cumJ = 0 + 1 + 1 + 2 + 3 + 3 + 3 + 3 + 2 + 2 + 1 = 21.
+  // avgJ = 21 / 11 = 1.9090.
+  //
+  // Departure times with P_LCFS [2 arrives before departure of 1]: 0, 8, 10, 11, 11.
+  // cumJ = 0 + 1 + 2 + 3 + 4 + 4 + 4 + 4 + 3 + 3 + 2 = 30.
+  // avgJ = 30 / 11 = 2.7272.    
+  //
+  final FCFS fcfs = new FCFS (el);
+  final P_LCFS lcfs = new P_LCFS (el, null);
+  for (int j = 0; j <= 4; j++)
+  {
+    fcfs.scheduleJobArrival (j, new DefaultSimJob (el, "JobF " + j, j));
+    lcfs.scheduleJobArrival (j, new DefaultSimJob (el, "JobL " + j, j));
+  }
+  final AvgJStatListener avgJStatListener_fcfs = new AvgJStatListener (fcfs);
+  final AvgJStatListener avgJStatListener_lcfs = new AvgJStatListener (lcfs);
+  el.run ();
+  System.out.println ("FCFS:");
+  System.out.println ("  Start time: " + avgJStatListener_fcfs.getStartTime () + ".");
+  System.out.println ("  End Time  : " + avgJStatListener_fcfs.getLastUpdateTime () + ".");
+  System.out.println ("  Average number of jobs: " + avgJStatListener_fcfs.getAvgJ () + ".");
+  System.out.println ("P_LCFS:");
+  System.out.println ("  Start time: " + avgJStatListener_lcfs.getStartTime () + ".");
+  System.out.println ("  End Time  : " + avgJStatListener_lcfs.getLastUpdateTime () + ".");
+  System.out.println ("  Average number of jobs: " + avgJStatListener_lcfs.getAvgJ () + ".");
+}
+\end{lstlisting}
+
+Compared to the manual approach in Section \ref{stat-intro-avgJ},
+  we highlight the following differences:
+\begin{itemize}
+\item In the listener, we only have to implement what to do upon a reset
+        (\lstinline|resetStatistics|) and upon an update (\lstinline|updateStatistics|),
+        and how to calculate the (internally stored) result (\lstinline|calculateStatistics|);
+        the base class takes care of registering at \lstinline-SimQueue-
+        and internally storing the times of the last reset (or the time at construction)
+        and of the last update.
+\item In the concrete listener, we provide a method for access to the internally
+        stored result, but that method automatically invokes the base class'
+        \lstinline-calculate ()- method first.
+      The base class attempts to avoid unnecessary recalculations of the result
+        in its subclass.
+\item Users of the concrete subclass have access to the methods \lstinline|getStartTime|
+        and \lstinline|getLastUpdateTime| at all times.
+      Upon calculation (without a time argument), the time of the last update
+        determines the upper boundary of the measurement interval.
+\item Users may also invoke \lstinline|calculate (double endTime)| which allows the extension
+        of the measurement interval beyond the last update time.
+      This, however, prevents subsequent update {\em before\/} the \lstinline|endTime| provided,
+        unless the object (or the queue, or the underlying event list) is reset.
+      Nonetheless, the feature is handy because in many practical cases,
+        one wants to take the time average over a fixed time interval,
+        instead of a time interval of which the upper boundary is determined by the last update.
+      Unfortunately, one cannot chose and \lstinline|endTime| smaller than the last
+        update time (at the expense of an exception thrown).
+\item Users can change the \lstinline|SimQueue| from which the statistics are obtained
+        through \lstinline|setQueue (Q)|.
+      Setting the queue will immediately reset the statistics object.
+      As expected, the base class \lstinline|AbstractSimQueueStat| takes care of
+        registering at the new queue (if any) after unregistering at the old queue.
+      The only sensible use for that feature that we can think of is delayed initialization.
+\end{itemize}
+
+\section{The SimpleSimQueueStat Class}
+\label{stat-SimpleSimQueueStat}
+
+The \lstinline|SimpleSimQueueStat| class implements
+  \lstinline|AbstractSimQueueStat| described in Section \ref{stat-AbstractSimQueueStat}
+  for some important statistics on a \lstinline|SimQueue|:
+\begin{itemize}
+\item The average number of jobs;
+\item The average number of jobs in the service area;
+\item The maximum and minimum number of jobs;
+\item The maximum and minimum number of jobs in the service area.
+\end{itemize}
+Attaching a \lstinline|SimpleSimQueueStat| to a \lstinline|SimQueue| is a very conventient
+  way of obtaining a first impression of the performance of the queue;
+  we have used it a lot ourselves during testing.
+Below in Listing \ref{statSimpleSimQueueStat_main}
+  we illustrate its use for the example in Section \ref{stat-intro-avgJ};
+  the output (still ambiguous!) is shown in Listing \ref{statSimpleSimQueueStat_out}.
+Note that the number of updates is also available from \lstinline-SimpleSimQueueStat-,
+  which is very handy for detailed update-related debugging on \lstinline-SimQueue- implementations.
+
+\begin{lstlisting}[
+% XXX Do now know how to use \lstinline inside the caption...
+caption=Example program for obtaing basic statistics using SimpleSimQueueStat.,
+label=statSimpleSimQueueStat_main,
+basicstyle=\tiny
+]
+public static void main (final String[] args)
+{
+  final SimEventList el = new DefaultSimEventList ();
+  el.reset (0);
+  // Schedule 5 jobs, 0 through 4 at t = 0, 1, 2, 3, 4
+  // and service times 0, 1, 2, 3, 4, respectively.
+  //
+  // Departure times with FCFS: 0, 2, 4, 7, 11.
+  // cumJ = 0 + 1 + 1 + 2 + 2 + 2 + 2 + 1 + 1 + 1 + 1 = 14.
+  // avgJ = 14 / 11 = 1.2727.
+  //
+  // WITH P_LCFS: AMBIGUITY!
+  //
+  // Departure times with P_LCFS [2 arrives after departure of 1]: 0, 2, 8, 10, 11.
+  // cumJ = 0 + 1 + 1 + 2 + 3 + 3 + 3 + 3 + 2 + 2 + 1 = 21.
+  // avgJ = 21 / 11 = 1.9090.
+  //
+  // Departure times with P_LCFS [2 arrives before departure of 1]: 0, 8, 10, 11, 11.
+  // cumJ = 0 + 1 + 2 + 3 + 4 + 4 + 4 + 4 + 3 + 3 + 2 = 30.
+  // avgJ = 30 / 11 = 2.7272.    
+  //
+  final FCFS fcfs = new FCFS (el);
+  final P_LCFS lcfs = new P_LCFS (el, null);
+  for (int j = 0; j <= 4; j++)
+  {
+    fcfs.scheduleJobArrival (j, new DefaultSimJob (el, "JobF " + j, j));
+    lcfs.scheduleJobArrival (j, new DefaultSimJob (el, "JobL " + j, j));
+  }
+  final SimpleSimQueueStat avgJStatListener_fcfs = new SimpleSimQueueStat (fcfs);
+  final SimpleSimQueueStat avgJStatListener_lcfs = new SimpleSimQueueStat (lcfs);
+  el.run ();
+  System.out.println ("FCFS:");
+  System.out.println ("  Start time: " + avgJStatListener_fcfs.getStartTime () + ".");
+  System.out.println ("  End Time  : " + avgJStatListener_fcfs.getLastUpdateTime () + ".");
+  System.out.println ("  Number of updates                     : "
+    + avgJStatListener_fcfs.getNumberOfUpdates () + ".");
+  System.out.println ("  Average number of jobs                : "
+    + avgJStatListener_fcfs.getAvgNrOfJobs () + ".");
+  System.out.println ("  Average number of jobs in service area: "
+    + avgJStatListener_fcfs.getAvgNrOfJobsInServiceArea () + ".");
+  System.out.println ("  Maximum number of jobs                : "
+    + avgJStatListener_fcfs.getMaxNrOfJobs () + ".");
+  System.out.println ("P_LCFS:");
+  System.out.println ("  Start time: " + avgJStatListener_lcfs.getStartTime () + ".");
+  System.out.println ("  End Time  : " + avgJStatListener_lcfs.getLastUpdateTime () + ".");
+  System.out.println ("  Number of updates                     : "
+    + avgJStatListener_fcfs.getNumberOfUpdates () + ".");
+  System.out.println ("  Average number of jobs                : "
+    + avgJStatListener_lcfs.getAvgNrOfJobs () + ".");
+  System.out.println ("  Average number of jobs in service area: "
+    + avgJStatListener_lcfs.getAvgNrOfJobsInServiceArea ()+ ".");
+  System.out.println ("  Maximum number of jobs                : "
+    + avgJStatListener_lcfs.getMaxNrOfJobs () + ".");
+}
+\end{lstlisting}
+
+\begin{lstlisting}[
+caption={Output from the example program in Listing \ref{statSimpleSimQueueStat_main}},
+label=statSimpleSimQueueStat_out,
+basicstyle=\tiny
+]
+FCFS:
+  Start time: 0.0.
+  End Time  : 11.0.
+  Number of updates                     : 6.
+  Average number of jobs                : 1.2727272727272727.
+  Average number of jobs in service area: 0.9090909090909091.
+  Maximum number of jobs                : 2.0.
+P_LCFS:
+  Start time: 0.0.
+  End Time  : 11.0.
+  Number of updates                     : 6.
+  Average number of jobs                : 1.9090909090909092 <@\color{red}{\bf [OR 2.727272727272727, see comments]}@>.
+  Average number of jobs in service area: 1.9090909090909092 <@\color{red}{\bf [OR 2.727272727272727, see comments]}@>.
+  Maximum number of jobs                : 3.0 <@\color{red}{\bf [OR 4.0, see comments]}@>.
+\end{lstlisting}
+
+Note the remarkable difference in the average number of jobs in the service area between
+  \lstinline|FCFS| and \lstinline|P_LCFS|.
+In the former, jobs waiting are only admitted to the service area if the previously arrived job
+  has departed, whereas in the latter,
+  jobs are admitted immediately to the service area upon arrival (because their service
+  starts immediately), and preempted jobs are {\em not\/} transferred back into the waiting area.
+This illustrates the (surprising) distinction between the number of jobs {\em in service\/}
+  (a concept not directly supported by \lstinline|SimQueue|)
+  and the number of jobs {\em in the service area\/}
+  (in which service is allowed, but not guaranteed).
+
+\section{The AutoSimQueueStat Class}
+\label{stat-autosimqueuestat}
 
 \subsection{Introduction}
+\label{stat-autosimqueuestat-intro}
 
-\subsection{The \lstinline|SimQueueProbe| Interface}
+The \lstinline|SimpleSimQueueStat| class
+  described in Section \ref{stat-SimpleSimQueueStat}
+  provides a convenient way of obtaining some important
+  statistics related to the number of jobs at a queue
+  or at its service area.
+Although it is fairly easy to extend \lstinline|SimpleSimQueueStat|,
+  or even \lstinline|AbstractSimQueueStat| for that matter,
+  for other time-dependent performance measures,
+  we quickly realize that the resulting code would only differ
+  in {\em which\/} statistic we take from the queue upon updates.
+The \lstinline|AutoSimQueueStat| class introduced in this section
+  honors this observation, and relies on a so-called
+  \lstinline|SimQueueProbe| to obtain the momentary value of
+  a specific performance measure at a \lstinline|SimQueue|.
+It then automatically maintains the average, maximum and minimum
+  values for all registered probes.
+
+\subsection{The SimQueueProbe Interface}
+\label{stat-autosimqueuestat-simqueueprobe}
+
+As described in the previous section,
+  the \lstinline-SimQueueProbe- interface
+  features obtaining the momentary value of a specific performance measure
+  at a queue (the queue is actually a parameter, so probes can be reused).
+Its interface definition is shown in Listing \ref{statAutoSimQueueStat_SimQueueProbe}.
+Note that only double values (or values that can be cast to double)
+  are supported.
+
+\begin{lstlisting}[
+% XXX Do now know how to use \lstinline inside the caption...
+caption=The SimQueueProbe interface.,
+label=statAutoSimQueueStat_SimQueueProbe,
+basicstyle=\tiny
+]
+public interface SimQueueProbe<Q extends SimQueue>
+{
+  
+  public double get (Q queue);
+  
+}
+\end{lstlisting}
+
+\subsection{The AutoSimQueueStatEntry Class}
+\label{stat-autosimqueuestat-autosimqueuestatentry}
+
+The \lstinline|AutoSimQueueStatEntry| class connects a \lstinline|SimQueueProbe| with a name,
+  and adds statistics maintenance for the values the probe provides.
+Unfortunately, unlike a \lstinline|SimQueueProbe|,
+  you cannot reuse a \lstinline|AutoSimQueueStatEntry| among different queues.
 
 \subsection{Example}
 
-\section{The \lstinline|SimpleSimQueueVisitsStat| Class}
+Below in Listing \ref{statAutoSimQueueStat_main}
+  we illustrate the use of \lstinline|AutoSimQueueStat|
+  for the example in Section \ref{stat-intro-avgJ};
+  the output (still ambiguous!) is shown in Listing \ref{statAutoSimQueueStat_out}.
+Note that two probes are created, one for the number of jobs at a queue,
+  and one for the number of jobs in the service area at a queue.
+For each queue, \lstinline|FCFS| and \lstinline|P_LCFS|,
+  an array of entries is created, holding
+  unique entries for the statistics required.
+Finally, note that \lstinline|AutoSimQueueStat| features a method \lstinline|report ()|
+  (optionally, with an integer indentation parameter)
+  for quickly reporting the calculated statistics for all registered probes.
+
+\begin{lstlisting}[
+% XXX Do now know how to use \lstinline inside the caption...
+caption=Example program for obtaing statistics using AutoSimQueueStat.,
+label=statAutoSimQueueStat_main,
+basicstyle=\tiny
+]
+public static void main (final String[] args)
+{
+  final SimEventList el = new DefaultSimEventList ();
+  el.reset (0);
+  // Schedule 5 jobs, 0 through 4 at t = 0, 1, 2, 3, 4
+  // and service times 0, 1, 2, 3, 4, respectively.
+  //
+  // Departure times with FCFS: 0, 2, 4, 7, 11.
+  // cumJ = 0 + 1 + 1 + 2 + 2 + 2 + 2 + 1 + 1 + 1 + 1 = 14.
+  // avgJ = 14 / 11 = 1.2727.
+  //
+  // WITH P_LCFS: AMBIGUITY!
+  //
+  // Departure times with P_LCFS [2 arrives after departure of 1]: 0, 2, 8, 10, 11.
+  // cumJ = 0 + 1 + 1 + 2 + 3 + 3 + 3 + 3 + 2 + 2 + 1 = 21.
+  // avgJ = 21 / 11 = 1.9090.
+  //
+  // Departure times with P_LCFS [2 arrives before departure of 1]: 0, 8, 10, 11, 11.
+  // cumJ = 0 + 1 + 2 + 3 + 4 + 4 + 4 + 4 + 3 + 3 + 2 = 30.
+  // avgJ = 30 / 11 = 2.7272.    
+  //
+  final FCFS fcfs = new FCFS (el);
+  final P_LCFS lcfs = new P_LCFS (el, null);
+  for (int j = 0; j <= 4; j++)
+  {
+    fcfs.scheduleJobArrival (j, new DefaultSimJob (el, "JobF " + j, j));
+    lcfs.scheduleJobArrival (j, new DefaultSimJob (el, "JobL " + j, j));
+  }
+  final SimQueueProbe probeJ  =
+    (SimQueueProbe) (SimQueue queue) -> queue.getNumberOfJobs ();
+  final SimQueueProbe probeJX =
+    (SimQueueProbe) (SimQueue queue) -> queue.getNumberOfJobsInServiceArea ();
+  final List<AutoSimQueueStatEntry> entries_fcfs = new ArrayList<> ();
+  final List<AutoSimQueueStatEntry> entries_lcfs = new ArrayList<> ();
+  entries_fcfs.add (new AutoSimQueueStatEntry ("J",  probeJ));
+  entries_fcfs.add (new AutoSimQueueStatEntry ("JX", probeJX));
+  entries_lcfs.add (new AutoSimQueueStatEntry ("J",  probeJ));
+  entries_lcfs.add (new AutoSimQueueStatEntry ("JX", probeJX));
+  final AutoSimQueueStat stat_fcfs = new AutoSimQueueStat (fcfs, entries_fcfs);
+  final AutoSimQueueStat stat_lcfs = new AutoSimQueueStat (lcfs, entries_lcfs);
+  el.run ();
+  System.out.println ("FCFS:");
+  stat_fcfs.report (2);
+  System.out.println ("P_LCFS:");
+  stat_lcfs.report (2);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[
+caption={Output from the example program in Listing \ref{statSimpleSimQueueStat_main}},
+label=statAutoSimQueueStat_out,
+basicstyle=\tiny
+]
+FCFS:
+  Average J: 1.2727272727272727.
+  Minimum J: 0.0.
+  Maximum J: 2.0.
+  Average JX: 0.9090909090909091.
+  Minimum JX: 0.0.
+  Maximum JX: 1.0.
+P_LCFS:
+  Average J: 1.9090909090909092 <@\color{red}{\bf [OR 2.727272727272727, see comments]}@>.
+  Minimum J: 0.0.
+  Maximum J: 3.0 <@\color{red}{\bf [OR 4.0, see comments]}@>.
+  Average JX: 1.9090909090909092 <@\color{red}{\bf [OR 2.727272727272727, see comments]}@>.
+  Minimum JX: 0.0.
+  Maximum JX: 3.0 <@\color{red}{\bf [OR 4.0, see comments]}@>.
+\end{lstlisting}
+
+\section{The SimpleSimQueueVisitsStat Class}
 
 \subsection{Introduction}
 
 \subsection{Example}
+
+\section{Conclusions}
 
 \chapter{Visualization of Queues and Jobs with Swing Components}
 

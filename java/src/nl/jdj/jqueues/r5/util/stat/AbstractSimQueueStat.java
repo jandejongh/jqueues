@@ -17,6 +17,32 @@ public abstract class AbstractSimQueueStat<J extends SimJob, Q extends SimQueue>
 implements SimQueueListener<J, Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Constructor.
+   * 
+   * @param queue The queue to gather statistics from.
+   * 
+   */
+  public AbstractSimQueueStat (final Q queue)
+  {
+    setQueueInt (queue);
+  }
+  
+  /** Constructor.
+   * 
+   * The queue property is set to <code>null</code>.
+   * 
+   */
+  public AbstractSimQueueStat ()
+  {
+    this (null);
+  }
+  
   // The queue we are gathering statistics on, may be {@code null}.
   private Q queue = null;
   
@@ -421,26 +447,6 @@ implements SimQueueListener<J, Q>
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // BEGIN: CONSTRUCTORS.
   //
-  
-  /** Constructor.
-   * 
-   * @param queue The queue to gather statistics from.
-   * 
-   */
-  public AbstractSimQueueStat (final Q queue)
-  {
-    setQueueInt (queue);
-  }
-  
-  /** Constructor.
-   * 
-   * The queue property is set to <code>null</code>.
-   * 
-   */
-  public AbstractSimQueueStat ()
-  {
-    this (null);
-  }
   
   //
   // END: CONSTRUCTORS.
