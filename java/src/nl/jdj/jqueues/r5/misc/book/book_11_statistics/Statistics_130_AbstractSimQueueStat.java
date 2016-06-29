@@ -1,73 +1,63 @@
-package nl.jdj.jqueues.r5.misc.book;
+package nl.jdj.jqueues.r5.misc.book.book_11_statistics;
 
-import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
-import nl.jdj.jqueues.r5.listener.DefaultSimEntityListener;
+import nl.jdj.jqueues.r5.util.stat.AbstractSimQueueStat;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-final class Ex11010_SimStatAverageNumberOfJobsAtQueue
+final class Statistics_130_AbstractSimQueueStat
 {
 
-  private final static class AvgJStatListener
-  extends DefaultSimEntityListener
+  private static class AvgJStatListener
+  extends AbstractSimQueueStat
   {
-    
+
     public AvgJStatListener (SimQueue queue)
     {
-      notifyResetEntity (queue);
-      queue.registerSimEntityListener (this);
+      super (queue);
     }
     
-    private double tStart = Double.NEGATIVE_INFINITY;
-    private double tLast = Double.NEGATIVE_INFINITY;
     private double cumJ = 0;
-
+    
+    private double avgJ = 0;
+    
     @Override
-    public void notifyResetEntity (SimEntity entity)
+    protected void resetStatistics ()
     {
-      tStart = entity.getEventList ().getTime ();
-      tLast = tStart;
       cumJ = 0;
+      avgJ = 0;
     }
 
     @Override
-    public void notifyUpdate (double time, SimEntity entity)
+    protected void updateStatistics (double time, double dt)
     {
-      cumJ += ((SimQueue) entity).getNumberOfJobs () * (time - tLast);
-      tLast = time;
+      cumJ += getQueue ().getNumberOfJobs () * dt;
     }
-      
-    public final double getStartTime ()
+
+    @Override
+    protected void calculateStatistics (double startTime, double endTime)
     {
-      return this.tStart;
-    }
-    
-    public final double getEndTime ()
-    {
-      return this.tLast;
-    }
-    
-    public final double calculate ()
-    {
-      if (tLast > tStart)
-      {
-        if (! Double.isInfinite (tLast - tStart))
-          return cumJ / (tLast - tStart);
-        else
-          return 0;
-      }
+      if (startTime == endTime)
+        return;
+      if (! Double.isInfinite (endTime - startTime))
+        avgJ = cumJ / (endTime - startTime);
       else
-        return 0;
+        avgJ = 0;
     }
-      
+    
+    public double getAvgJ ()
+    {
+      calculate ();
+      return this.avgJ;
+    }
+    
   }
   
   public static void main (final String[] args)
-  {    
+  {
     final SimEventList el = new DefaultSimEventList ();
     el.reset (0);
     // Schedule 5 jobs, 0 through 4 at t = 0, 1, 2, 3, 4
@@ -99,12 +89,12 @@ final class Ex11010_SimStatAverageNumberOfJobsAtQueue
     el.run ();
     System.out.println ("FCFS:");
     System.out.println ("  Start time: " + avgJStatListener_fcfs.getStartTime () + ".");
-    System.out.println ("  End Time  : " + avgJStatListener_fcfs.getEndTime () + ".");
-    System.out.println ("  Average number of jobs: " + avgJStatListener_fcfs.calculate () + ".");
+    System.out.println ("  End Time  : " + avgJStatListener_fcfs.getLastUpdateTime () + ".");
+    System.out.println ("  Average number of jobs: " + avgJStatListener_fcfs.getAvgJ () + ".");
     System.out.println ("P_LCFS:");
     System.out.println ("  Start time: " + avgJStatListener_lcfs.getStartTime () + ".");
-    System.out.println ("  End Time  : " + avgJStatListener_lcfs.getEndTime () + ".");
-    System.out.println ("  Average number of jobs: " + avgJStatListener_lcfs.calculate () + ".");
+    System.out.println ("  End Time  : " + avgJStatListener_lcfs.getLastUpdateTime () + ".");
+    System.out.println ("  Average number of jobs: " + avgJStatListener_lcfs.getAvgJ () + ".");
   }
   
 }

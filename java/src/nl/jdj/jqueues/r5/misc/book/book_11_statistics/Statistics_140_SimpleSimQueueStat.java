@@ -1,61 +1,15 @@
-package nl.jdj.jqueues.r5.misc.book;
+package nl.jdj.jqueues.r5.misc.book.book_11_statistics;
 
-import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
-import nl.jdj.jqueues.r5.util.stat.AbstractSimQueueStat;
+import nl.jdj.jqueues.r5.util.stat.SimpleSimQueueStat;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-final class Ex11030_AbstractSimQueueStat
+final class Statistics_140_SimpleSimQueueStat
 {
 
-  private static class AvgJStatListener
-  extends AbstractSimQueueStat
-  {
-
-    public AvgJStatListener (SimQueue queue)
-    {
-      super (queue);
-    }
-    
-    private double cumJ = 0;
-    
-    private double avgJ = 0;
-    
-    @Override
-    protected void resetStatistics ()
-    {
-      cumJ = 0;
-      avgJ = 0;
-    }
-
-    @Override
-    protected void updateStatistics (double time, double dt)
-    {
-      cumJ += getQueue ().getNumberOfJobs () * dt;
-    }
-
-    @Override
-    protected void calculateStatistics (double startTime, double endTime)
-    {
-      if (startTime == endTime)
-        return;
-      if (! Double.isInfinite (endTime - startTime))
-        avgJ = cumJ / (endTime - startTime);
-      else
-        avgJ = 0;
-    }
-    
-    public double getAvgJ ()
-    {
-      calculate ();
-      return this.avgJ;
-    }
-    
-  }
-  
   public static void main (final String[] args)
   {
     final SimEventList el = new DefaultSimEventList ();
@@ -84,17 +38,31 @@ final class Ex11030_AbstractSimQueueStat
       fcfs.scheduleJobArrival (j, new DefaultSimJob (el, "JobF " + j, j));
       lcfs.scheduleJobArrival (j, new DefaultSimJob (el, "JobL " + j, j));
     }
-    final AvgJStatListener avgJStatListener_fcfs = new AvgJStatListener (fcfs);
-    final AvgJStatListener avgJStatListener_lcfs = new AvgJStatListener (lcfs);
+    final SimpleSimQueueStat avgJStatListener_fcfs = new SimpleSimQueueStat (fcfs);
+    final SimpleSimQueueStat avgJStatListener_lcfs = new SimpleSimQueueStat (lcfs);
     el.run ();
     System.out.println ("FCFS:");
     System.out.println ("  Start time: " + avgJStatListener_fcfs.getStartTime () + ".");
     System.out.println ("  End Time  : " + avgJStatListener_fcfs.getLastUpdateTime () + ".");
-    System.out.println ("  Average number of jobs: " + avgJStatListener_fcfs.getAvgJ () + ".");
+    System.out.println ("  Number of updates                     : "
+      + avgJStatListener_fcfs.getNumberOfUpdates () + ".");
+    System.out.println ("  Average number of jobs                : "
+      + avgJStatListener_fcfs.getAvgNrOfJobs () + ".");
+    System.out.println ("  Average number of jobs in service area: "
+      + avgJStatListener_fcfs.getAvgNrOfJobsInServiceArea () + ".");
+    System.out.println ("  Maximum number of jobs                : "
+      + avgJStatListener_fcfs.getMaxNrOfJobs () + ".");
     System.out.println ("P_LCFS:");
     System.out.println ("  Start time: " + avgJStatListener_lcfs.getStartTime () + ".");
     System.out.println ("  End Time  : " + avgJStatListener_lcfs.getLastUpdateTime () + ".");
-    System.out.println ("  Average number of jobs: " + avgJStatListener_lcfs.getAvgJ () + ".");
+    System.out.println ("  Number of updates                     : "
+      + avgJStatListener_fcfs.getNumberOfUpdates () + ".");
+    System.out.println ("  Average number of jobs                : "
+      + avgJStatListener_lcfs.getAvgNrOfJobs () + ".");
+    System.out.println ("  Average number of jobs in service area: "
+      + avgJStatListener_lcfs.getAvgNrOfJobsInServiceArea ()+ ".");
+    System.out.println ("  Maximum number of jobs                : "
+      + avgJStatListener_lcfs.getMaxNrOfJobs () + ".");
   }
   
 }

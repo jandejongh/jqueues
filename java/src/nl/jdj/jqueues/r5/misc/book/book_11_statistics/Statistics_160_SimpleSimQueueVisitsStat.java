@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r5.misc.book;
+package nl.jdj.jqueues.r5.misc.book.book_11_statistics;
 
 import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
@@ -7,7 +7,7 @@ import nl.jdj.jqueues.r5.util.stat.SimpleSimQueueVisitsStat;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-final class Ex11060_SimpleSimQueueVisitsStat
+final class Statistics_160_SimpleSimQueueVisitsStat
 {
 
   public static void main (final String[] args)

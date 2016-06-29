@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r5.misc.book;
+package nl.jdj.jqueues.r5.misc.book.book_11_statistics;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +12,7 @@ import nl.jdj.jqueues.r5.util.stat.SimQueueProbe;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-final class Ex11050_AutoSimQueueStat
+final class Statistics_150_AutoSimQueueStat
 {
 
   public static void main (final String[] args)
