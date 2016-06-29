@@ -28,12 +28,25 @@ implements SimJobListener<J, Q>
     
   /** Creates a new {@link DefaultSelfListeningSimJob}.
    * 
-   * @see DefaultSimJob#DefaultSimJob For detailed explanation on the parameters.
+   * @see DefaultSimJob#DefaultSimJob(nl.jdj.jsimulation.r5.SimEventList, java.lang.String, java.util.Map)
+   *        For detailed explanation of the parameters.
    * 
    */
   public DefaultSelfListeningSimJob (final SimEventList eventList, final String name, final Map<Q, Double> requestedServiceTimeMap)
   {
     super (eventList, name, requestedServiceTimeMap);
+    registerSimEntityListener (this);
+  }
+
+  /** Creates a new {@link DefaultSelfListeningSimJob}.
+   * 
+   * @see DefaultSimJob#DefaultSimJob(nl.jdj.jsimulation.r5.SimEventList, java.lang.String, double)
+   *        For detailed explanation of the parameters.
+   * 
+   */
+  public DefaultSelfListeningSimJob (final SimEventList eventList, final String name, final double requestedServiceTime)
+  {
+    super (eventList, name, requestedServiceTime);
     registerSimEntityListener (this);
   }
 
