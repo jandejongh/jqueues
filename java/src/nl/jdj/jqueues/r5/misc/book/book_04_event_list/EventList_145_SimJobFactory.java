@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r5.misc.book;
+package nl.jdj.jqueues.r5.misc.book.book_04_event_list;
 
 import java.math.BigInteger;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
@@ -7,7 +7,7 @@ import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-final class Ex00145_SimJobFactory
+final class EventList_145_SimJobFactory
 {
 
   interface MySimEvent

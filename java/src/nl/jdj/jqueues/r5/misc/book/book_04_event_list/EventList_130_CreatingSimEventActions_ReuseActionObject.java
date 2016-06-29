@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r5.misc.book;
+package nl.jdj.jqueues.r5.misc.book.book_04_event_list;
 
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
@@ -6,7 +6,7 @@ import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-final class Ex00130_CreatingSimEventActions_ReuseActionObject
+final class EventList_130_CreatingSimEventActions_ReuseActionObject
 {
   
   public static void main (final String[] args)

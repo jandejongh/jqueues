@@ -1,10 +1,10 @@
-package nl.jdj.jqueues.r5.misc.book;
+package nl.jdj.jqueues.r5.misc.book.book_04_event_list;
 
 import nl.jdj.jsimulation.r5.AbstractSimTimer;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-final class Ex00170_SimTimer
+final class EventList_170_SimTimer
 {
 
   private static class MyTimer

@@ -1,11 +1,11 @@
-package nl.jdj.jqueues.r5.misc.book;
+package nl.jdj.jqueues.r5.misc.book.book_04_event_list;
 
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-final class Ex00150_SimultaneousEvents
+final class EventList_150_SimultaneousEvents
 {
   
   private static class IndexedSimEventAction
