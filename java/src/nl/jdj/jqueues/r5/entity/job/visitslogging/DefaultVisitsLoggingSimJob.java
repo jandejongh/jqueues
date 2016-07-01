@@ -35,6 +35,8 @@ extends DefaultSelfListeningSimJob<J, Q>
    * 
    */
   private final TreeMap<Double, TreeMap<Integer, JobQueueVisitLog>> visitLogs
+   // XXX Why not use a simple ArrayList for the "value" part???
+   // private final TreeMap<Double, List<JobQueueVisitLog>> visitLogs
     = new TreeMap<> ();
   
   /** Returns the {@link JobQueueVisitLog}s; indexed by arrival time.
@@ -71,12 +73,24 @@ extends DefaultSelfListeningSimJob<J, Q>
     
   /** Creates a new {@link DefaultVisitsLoggingSimJob}.
    * 
-   * @see DefaultSimJob#DefaultSimJob For detailed explanation on the parameters.
+   * @see DefaultSimJob#DefaultSimJob(nl.jdj.jsimulation.r5.SimEventList, java.lang.String, java.util.Map)
+   *        For detailed explanation on the parameters.
    * 
    */
   public DefaultVisitsLoggingSimJob (final SimEventList eventList, final String name, final Map<Q, Double> requestedServiceTimeMap)
   {
     super (eventList, name, requestedServiceTimeMap);
+  }
+
+  /** Creates a new {@link DefaultVisitsLoggingSimJob}.
+   * 
+   * @see DefaultSimJob#DefaultSimJob(nl.jdj.jsimulation.r5.SimEventList, java.lang.String, double)
+   *        For detailed explanation on the parameters.
+   * 
+   */
+  public DefaultVisitsLoggingSimJob (final SimEventList eventList, final String name, final double requestedServiceTime)
+  {
+    super (eventList, name, requestedServiceTime);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
