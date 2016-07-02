@@ -99,17 +99,24 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of the job queue.
+  /** Inserts the job in the job queue maintaining non-decreasing (required) service-time ordering.
+   * 
+   * In case of ties, jobs are inserted in order of arrival.
    * 
    * @see #jobQueue
+   * @see SimJob#getServiceTime
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (job);
+    int newPosition = 0;
+    while (newPosition < this.jobQueue.size ()
+      && this.jobQueue.get (newPosition).getServiceTime (this) <= job.getServiceTime (this))
+      newPosition++;
+    this.jobQueue.add (newPosition, job);    
   }
-
+  
   /** Does sanity checks and invokes {@link #rescheduleForNewServerAccessCredits} if there are server-access credits.
    * 
    */
