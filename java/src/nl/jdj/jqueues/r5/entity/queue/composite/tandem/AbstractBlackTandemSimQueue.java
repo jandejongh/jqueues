@@ -18,7 +18,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * <p>
  * Under the hood, a delegate job for each {@link SimJob} visits each of the
  * embedded {@link SimQueue}s in a predetermined sequence, as controlled
- * by the order in the order of the queues in the set offered upon construction.
+ * by the (deterministic) iteration order in the set offered upon construction.
  * 
  * <p>
  * After the delegate job departs from the last queue, the "real" job departs
