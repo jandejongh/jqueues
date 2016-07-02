@@ -187,7 +187,7 @@ public class BlackJacksonSimQueueNetwork
    * 
    */
   @Override
-  public final void resetEntitySubClass ()
+  protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
   }
