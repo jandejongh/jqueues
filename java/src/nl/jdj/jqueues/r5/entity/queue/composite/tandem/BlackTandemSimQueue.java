@@ -137,7 +137,7 @@ public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue,
    * 
    */
   @Override
-  public final void resetEntitySubClass ()
+  protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
   }

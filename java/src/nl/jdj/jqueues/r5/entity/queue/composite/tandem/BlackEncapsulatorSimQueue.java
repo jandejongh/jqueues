@@ -140,7 +140,7 @@ public class BlackEncapsulatorSimQueue
    * 
    */
   @Override
-  public final void resetEntitySubClass ()
+  protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
   }

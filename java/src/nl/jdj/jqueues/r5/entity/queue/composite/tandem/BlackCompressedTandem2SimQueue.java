@@ -172,7 +172,7 @@ public class BlackCompressedTandem2SimQueue
    * 
    */
   @Override
-  public final void resetEntitySubClass ()
+  protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
   }
