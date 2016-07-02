@@ -266,6 +266,7 @@ extends SimEntity<J, Q>
   
   /** Arrival of a job at the queue.
    *
+   * <p>
    * This methods should be called from the {@link SimEventList} as a result of scheduling the job arrival.
    * Implementations can rely on the fact that the time argument supplied is actually the current time in the simulation.
    * 
