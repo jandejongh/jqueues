@@ -125,7 +125,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   /** Returns the first job in {@link #getJobs} that <i>is not</i> in {@link #getJobsInServiceArea}.
    * 
    * @return The first job in {@link #getJobs} that is not in {@link #getJobsInServiceArea},
-             <code>null</code> if there are no waiting jobs.
+   *         <code>null</code> if there are no waiting jobs.
    * 
    */
   protected final J getFirstJobInWaitingArea ()
@@ -179,7 +179,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    */
   @Override
-  public void resetEntitySubClass ()
+  protected void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
     for (SimJob j : this.jobQueue)
