@@ -19,7 +19,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public class PS<J extends SimJob, Q extends PS> extends AbstractProcessorSharingSimQueue<J, Q>
+public class PS<J extends SimJob, Q extends PS>
+extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
