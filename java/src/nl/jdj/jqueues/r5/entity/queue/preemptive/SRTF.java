@@ -8,6 +8,16 @@ import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The single-server preemptive Shortest-Remaining (Service) Time First (SRTF) queueing discipline.
  *
+ * <p>
+ * In SRTF, the job present (and admitted to the server in view of server-access credits) with
+ * the minimum remaining service time is in service until completion.
+ * In case of a tie, the job in service is <i>not</i> preempted.
+ * 
+ * <p>
+ * This implementation admits waiting jobs to the service area (server) as soon as server-access credits are available,
+ * irrespective of their remaining (i.c., required) service time.
+ * Once admitted to the server, they wait until being served in the service area.
+ * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
