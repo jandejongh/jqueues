@@ -7,7 +7,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link FCFS} queue with finite buffer size.
  *
- * Job arriving when the buffer is full are dropped.
+ * Jobs arriving when the buffer is full are dropped.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -17,21 +17,20 @@ public class FCFS_B<J extends SimJob, Q extends FCFS_B>
 extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
 {
   
-  private final int bufferSize;
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / CLONING / FACTORIES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns the buffer size.
-   * 
-   * <p>
-   * The buffer size is fixed upon construction and cannot be changed.
-   * 
-   * @return The buffer size (non-negative).
+  /** Creates a single-server FCFS queue given an event list and finite buffer size.
+   *
+   * @param eventList  The event list to use.
+   * @param bufferSize The buffer size (non-negative).
+   *
+   * @throws IllegalArgumentException If the buffer size is negative.
    * 
    */
-  public final int getBufferSize ()
-  {
-    return this.bufferSize;
-  }
-
   public FCFS_B (final SimEventList eventList, final int bufferSize)
   {
     super (eventList);
@@ -53,6 +52,48 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
   {
     return new FCFS_B<> (getEventList (), getBufferSize ());
   }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // BUFFER SIZE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final int bufferSize;
+  
+  /** Returns the buffer size.
+   * 
+   * <p>
+   * The buffer size is fixed upon construction and cannot be changed.
+   * 
+   * @return The buffer size (non-negative).
+   * 
+   */
+  public final int getBufferSize ()
+  {
+    return this.bufferSize;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void resetEntitySubClass ()
+  {
+    super.resetEntitySubClass ();
+  }  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ARRIVAL
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Inserts the job at the tail of the job queue if it will be taken into service immediately,
    * or else if there is still waiting room available.
@@ -80,14 +121,11 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
       this.jobQueue.add (job);
   }
 
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void resetEntitySubClass ()
-  {
-    super.resetEntitySubClass ();
-  }  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME / toString
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Returns "FCFS_B[buffer size]".
    * 

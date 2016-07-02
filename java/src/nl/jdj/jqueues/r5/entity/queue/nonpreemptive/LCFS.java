@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link LCFS} queue serves jobs one at a time in reverse order of arrival times.
@@ -15,10 +16,19 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
+ * @see FCFS
+ * @see P_LCFS
+ * 
  */
 public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / CLONING / FACTORIES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Creates a LCFS queue given an event list.
    *
    * @param eventList The event list to use.
@@ -42,6 +52,27 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
     return new LCFS<> (getEventList ());
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void resetEntitySubClass ()
+  {
+    super.resetEntitySubClass ();
+  }  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ARRIVAL
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Inserts the job at the head of the job queue.
    * 
    * @see #jobQueue
@@ -53,14 +84,11 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
     this.jobQueue.add (0, job);
   }
   
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void resetEntitySubClass ()
-  {
-    super.resetEntitySubClass ();
-  }  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME / toString
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Returns "LCFS".
    * 

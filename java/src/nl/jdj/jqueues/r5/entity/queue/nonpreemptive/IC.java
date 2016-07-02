@@ -15,11 +15,6 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * In the presence of vacations, i.e., jobs are not immediately admitted to service,
  * this implementation respects the arrival order of jobs.
  *
- * <p>
- * For jobs with identical arrival times, it is <i>not</i> guaranteed that they will depart in order of arrival.
- * In that case, a job may even depart before the arrival of another job (should the underlying {@link SimEventList} not
- * respect insertion order).
- *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
@@ -28,6 +23,12 @@ public class IC<J extends SimJob, Q extends IC>
 extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / CLONING / FACTORIES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Creates a new {@link IC} queue with given {@link SimEventList}.
    * 
    * @param eventList The event list to use.
@@ -51,14 +52,26 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     return new IC<> (getEventList ());
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Calls super method (in order to make implementation final).
    * 
    */
   @Override
-  public final void resetEntitySubClass ()
+  protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
   }  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Returns zero.
    * 
@@ -66,10 +79,16 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
    * 
    */
   @Override
-  protected final double getServiceTime (final J job)
+  protected final double getServiceTimeForJob (final J job)
   {
     return 0;
   }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME / toString
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Returns "IC".
    * 

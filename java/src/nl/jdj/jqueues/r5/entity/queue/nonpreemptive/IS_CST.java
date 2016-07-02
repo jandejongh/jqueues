@@ -27,28 +27,11 @@ public class IS_CST<J extends SimJob, Q extends IS_CST>
 extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
 {
 
-  private final double serviceTime;
-  
-  /** Returns the service time for all jobs.
-   * 
-   * @return The service time for all jobs, non-negative.
-   * 
-   */
-  public final double getServiceTime ()
-  {
-    return this.serviceTime;
-  }
-  
-  /** Returns the service time for all jobs.
-   * 
-   * @return The service time for all jobs as obtained through {@link #getServiceTime()}.
-   * 
-   */
-  @Override
-  protected final double getServiceTime (final J job)
-  {
-    return getServiceTime ();
-  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / CLONING / FACTORIES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Creates a new {@link IS_CST} queue with given {@link SimEventList} and (fixed) service time.
    * 
@@ -80,14 +63,55 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
     return new IS_CST<> (getEventList (), getServiceTime ());
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME (FOR JOB)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final double serviceTime;
+  
+  /** Returns the service time for all jobs.
+   * 
+   * @return The service time for all jobs, non-negative.
+   * 
+   */
+  public final double getServiceTime ()
+  {
+    return this.serviceTime;
+  }
+  
+  /** Returns the service time for all jobs.
+   * 
+   * @return The service time for all jobs as obtained through {@link #getServiceTime()}.
+   * 
+   */
+  @Override
+  protected final double getServiceTimeForJob (final J job)
+  {
+    return getServiceTime ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Calls super method (in order to make implementation final).
    * 
    */
   @Override
-  public final void resetEntitySubClass ()
+  protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
   }  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME / toString
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Returns "IS_CST[service time]".
    * 

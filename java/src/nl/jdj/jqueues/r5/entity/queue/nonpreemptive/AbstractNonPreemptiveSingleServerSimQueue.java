@@ -24,6 +24,12 @@ public abstract class AbstractNonPreemptiveSingleServerSimQueue
   implements SimQueue<J, Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Creates a non-preemptive single-server queue given an event list.
    *
    * <p>
@@ -31,8 +37,6 @@ public abstract class AbstractNonPreemptiveSingleServerSimQueue
    * 
    * @param eventList The event list to use.
    *
-   * @see AbstractNonPreemptiveFiniteServerSimQueue#AbstractNonPreemptiveFiniteServerSimQueue
-   * 
    */
   protected AbstractNonPreemptiveSingleServerSimQueue (final SimEventList eventList)
   {

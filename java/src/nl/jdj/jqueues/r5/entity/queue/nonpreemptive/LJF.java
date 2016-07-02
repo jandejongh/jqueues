@@ -6,6 +6,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link LJF} queue serves jobs one at a time in order of descending requested service times.
  *
+ * <p>
  * Longest-Job First.
  *
  * @param <J> The type of {@link SimJob}s supported.
@@ -17,6 +18,12 @@ import nl.jdj.jsimulation.r5.SimEventList;
 public class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / CLONING / FACTORIES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Creates a LJF queue given an event list.
    *
    * @param eventList The event list to use.
@@ -40,6 +47,27 @@ public class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreemptiveS
     return new LJF<> (getEventList ());
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void resetEntitySubClass ()
+  {
+    super.resetEntitySubClass ();
+  }  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ARRIVAL
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Inserts the job in the job queue maintaining non-increasing service-time ordering.
    * 
    * In case of ties, jobs are scheduled for service in order of arrival from the underlying event list.
@@ -58,14 +86,11 @@ public class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreemptiveS
     this.jobQueue.add (newPosition, job);
   }
 
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void resetEntitySubClass ()
-  {
-    super.resetEntitySubClass ();
-  }  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME / toString
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Returns "LJF".
    * 
