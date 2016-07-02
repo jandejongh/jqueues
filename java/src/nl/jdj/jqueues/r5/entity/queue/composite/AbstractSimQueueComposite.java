@@ -242,5 +242,5 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
     else
       return null;
   }
-
+  
 }

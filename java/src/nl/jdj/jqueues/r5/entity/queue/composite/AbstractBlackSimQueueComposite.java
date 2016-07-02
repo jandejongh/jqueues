@@ -277,7 +277,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * 
    */
   @Override
-  public void resetEntitySubClass ()
+  protected void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
     this.delegateSimJobMap.clear ();
@@ -555,7 +555,6 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       this.jobsInServiceArea.add (realJob);
       fireStart (t, realJob, (Q) this);
       startForSubClass (t, job, queue);
-      
     }
   }
 
