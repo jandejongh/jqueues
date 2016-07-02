@@ -176,7 +176,7 @@ public abstract class AbstractBlackFeedbackSimQueue
    * 
    */
   @Override
-  public final void resetEntitySubClass ()
+  protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
     // This is good, BUT:
