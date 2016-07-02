@@ -158,7 +158,7 @@ implements SimQueueQoS<J, Q, P>
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public void resetEntitySubClass ()
+  protected void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
     this.jobsQoSMap.clear ();

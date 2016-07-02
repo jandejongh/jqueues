@@ -103,7 +103,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
    * 
    */
   @Override
-  public final void resetEntitySubClass ()
+  protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
   }  
@@ -337,7 +337,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
             throw new IllegalStateException ();
           else if (this.jobsInServiceArea.contains (job) || hasServerAcccessCredits ())
             return job;
-    return null;    
+    return null;
   }
   
   /** Reschedules through assessment of which job to serve.

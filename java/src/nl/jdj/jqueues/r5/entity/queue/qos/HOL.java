@@ -81,7 +81,7 @@ implements SimQueueQoS<J, Q, P>
    * 
    */
   @Override
-  public final void resetEntitySubClass ()
+  protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
   }

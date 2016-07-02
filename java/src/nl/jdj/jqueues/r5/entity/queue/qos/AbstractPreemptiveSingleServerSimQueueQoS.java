@@ -169,7 +169,7 @@ public abstract class AbstractPreemptiveSingleServerSimQueueQoS
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public void resetEntitySubClass ()
+  protected void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
     this.jobsQoSMap.clear ();
