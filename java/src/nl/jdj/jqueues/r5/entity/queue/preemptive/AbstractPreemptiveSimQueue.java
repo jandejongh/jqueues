@@ -129,7 +129,7 @@ public abstract class AbstractPreemptiveSimQueue
    * 
    */
   @Override
-  public void resetEntitySubClass ()
+  protected void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
     this.remainingServiceTime.clear ();
