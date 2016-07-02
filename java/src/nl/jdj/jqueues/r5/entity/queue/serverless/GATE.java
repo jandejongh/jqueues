@@ -152,7 +152,7 @@ implements SimQueueWithGate<J, Q>
    * 
    */
   @Override
-  public final void resetEntitySubClass ()
+  protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
     this.gatePassageCredits = Integer.MAX_VALUE;

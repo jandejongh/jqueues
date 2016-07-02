@@ -91,7 +91,7 @@ extends AbstractServerlessSimQueue<J, Q>
    * 
    */
   @Override
-  public final void resetEntitySubClass ()
+  protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
   }  
