@@ -13,7 +13,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * Processor Sharing.
  * 
  * <p>
- * The Processor-Sharing queueing system distributes its service capacity equally among the jobs in execution.
+ * The (Egalitarian) Processor-Sharing queueing system distributes its service capacity equally among the jobs in execution.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
