@@ -604,7 +604,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * current number of credits, to serve statistics on the number of server-access credits.
    * The method does nothing if the number has not changed.
    * Otherwise, it updates the internal administration of the number of server-access credits.
-   * Subsequently, it invokes {@link #fireIfOutOfServerAccessCredits} or {@link #fireRegainedServerAccessCredits} if appropriate.
+   * Subsequently, it invokes {@link #setServerAccessCreditsSubClass} to notify interested subclasses of the new value for
+   * the server-access-credits,
+   * and {@link #fireIfOutOfServerAccessCredits} or {@link #fireRegainedServerAccessCredits} if appropriate.
    * In the latter case, it also invokes {@link #rescheduleForNewServerAccessCredits}.
    * 
    * @see #getServerAccessCredits
@@ -627,6 +629,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
         fireRegainedServerAccessCredits (time);
         rescheduleForNewServerAccessCredits (time);
       }
+      setServerAccessCreditsSubClass ();
     }
   }
   
@@ -694,6 +697,40 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    */
   protected abstract void rescheduleForNewServerAccessCredits (double time);
+
+  /** Notifies subclasses of a new externally-set value for the server-access credits through {@link #setServerAccessCredits}.
+   * 
+   * <p>
+   * Typical implementations would not be very interested in the <i>actual</i> value of the server-access credits,
+   * as long as it is strictly positive and properly maintained by this abstract base class.
+   * Hence, changes to the actual server-access credits are only reported
+   * if the credits become zero (prohibiting the start of jobs),
+   * or become non-zero (allowing waiting jobs to start).
+   * 
+   * <p>
+   * This method, however, allows subclasses to closely follow (and take action upon) the exact value of the server-access
+   * credits if changed through {@link #setServerAccessCredits}, i.e., changed by an external entity.
+   * 
+   * <p>
+   * The method is called from {@link #setServerAccessCredits} after the new value has been effectuated into the internal
+   * administration, rescheduling has taken place but (right) <i>before</i> any listeners have been notified.
+   * Concrete implementations should not change the server-access-credits, obviously,
+   * and should try to refrain from issuing {@link SimQueue}-level notifications.
+   * 
+   * 
+   * <p>
+   * The default implementation does nothing.
+   * 
+   * @see #getServerAccessCredits
+   * @see #setServerAccessCredits
+   * @see #rescheduleForNewServerAccessCredits
+   * @see #fireIfOutOfServerAccessCredits
+   * @see #fireRegainedServerAccessCredits
+   * 
+   */
+  protected void setServerAccessCreditsSubClass ()
+  {
+  }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
