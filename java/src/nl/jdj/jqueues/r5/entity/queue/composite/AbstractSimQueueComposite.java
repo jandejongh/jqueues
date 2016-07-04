@@ -37,7 +37,8 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * @param simQueueSelector The object for routing jobs through the network of embedded queues;
    *                         if {@code null}, no sub-queues will be visited.
    * 
-   * @throws IllegalArgumentException If the <code>queue</code> argument is <code>null</code> or has <code>null</code> members.
+   * @throws IllegalArgumentException If the event list is {@code null},
+   *                                    or the <code>queue</code> argument is <code>null</code> or has <code>null</code> members.
    * 
    */
   protected AbstractSimQueueComposite
