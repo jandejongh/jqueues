@@ -301,6 +301,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * Implementations should not set the queue on the job, as this is done by the base class.
    * See {@link SimJob#setQueue}.
    * 
+   * <p>
+   * Implementations do no have to invoke {@link #update}; this has been done already before the call to this method.
+   * 
    * @param job The job that arrived.
    * @param time The current time (i.e., arrival time of the job).
    * 
@@ -519,6 +522,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
         return false;
     }
     update (time);
+    // XXX We should really take care of interruptService == false on jobs in the service area ourselves here!!
+    // XXX And change the interface: with interruptService == true, revocations should never fail!!
+    // if ((! interruptService) && getJobsInServiceArea ().contains (job))
+    //   return false;
     final boolean revoked = removeJobFromQueueUponRevokation (job, time, interruptService);
     if (! revoked)
       return false;
