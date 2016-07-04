@@ -58,7 +58,7 @@ implements SimQueueSelector<J, DQ>
   @Override
   public final DQ selectFirstQueue (final double time, final J job)
   {
-    return ((queues == null || queues.isEmpty ()) ? null : queues.iterator ().next ());
+    return ((this.queues == null || this.queues.isEmpty ()) ? null : this.queues.iterator ().next ());
   }
       
   /** Returns the next {@link SimQueue} to visit by a delegate {@link SimJob}.
@@ -74,11 +74,11 @@ implements SimQueueSelector<J, DQ>
   @Override
   public final DQ selectNextQueue (final double time, final J job, final DQ previousQueue)
   {
-    if (queues == null || queues.isEmpty ())
+    if (this.queues == null || this.queues.isEmpty ())
       throw new IllegalStateException ();
     if (previousQueue == null)
       throw new IllegalStateException ();
-    final Iterator<DQ> iterator = queues.iterator ();
+    final Iterator<DQ> iterator = this.queues.iterator ();
     boolean found = false;
     while (iterator.hasNext () && ! found)
       found = (iterator.next () == previousQueue);
