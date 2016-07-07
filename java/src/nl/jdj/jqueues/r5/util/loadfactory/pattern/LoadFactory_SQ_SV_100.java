@@ -61,7 +61,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
    * <li> draws from U[0.5, 9.5] the requested service time for each job;
    * <li> sets the QoS class to {@link Double} for each job;
    * <li> sets the QoS value to one of ten preselected yet random double values
-   *     (however, including 0, {@link Double#NEGATIVE_INFINITY}, and {@link Double#POSITIVE_INFINITY}).
+   *      (however, including 0, {@link Double#NEGATIVE_INFINITY}, and {@link Double#POSITIVE_INFINITY}).
    * <li> schedules a single arrival for each job at time equal to its job number.
    * </ul>
    * 
