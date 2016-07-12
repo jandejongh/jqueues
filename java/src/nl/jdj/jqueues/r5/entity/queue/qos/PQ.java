@@ -184,9 +184,9 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
    * 
    */
   @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
-    return super.removeJobFromQueueUponRevokation (job, time, interruptService);
+    super.removeJobFromQueueUponRevokation (job, time);
   }
 
   /** Invokes {@link #rescheduleAfterDeparture}.

@@ -179,11 +179,10 @@ implements SimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** If possible, removes the job from the internal data structures, and cancels a pending departure event.
+  /** Removes the job from the internal data structures, and if needed, cancels a pending departure event.
    * 
-   * If the job is already in service, and the <code>interruptService</code> argument is set to <code>false</code>,
-   * this method returns <code>false</code>, by contract of {@link SimQueue}.
-   * Otherwise, if the job is in service, its departure event is canceled through {@link #cancelDepartureEvent},
+   * <p>
+   * If the job is in service, its departure event is canceled through {@link #cancelDepartureEvent},
    * and the job is removed from {@link #jobsInServiceArea}.
    * Subsequently, whether the job was in service or not,
    * it is removed from {@link #jobQueue},
@@ -197,19 +196,14 @@ implements SimQueueQoS<J, Q, P>
    * 
    */
   @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
     if (! this.jobQueue.contains (job))
       throw new IllegalStateException ();
     if (this.jobsInServiceArea.contains (job))
     {
-      if (interruptService)
-      {
-        this.jobsInServiceArea.remove (job);
-        cancelDepartureEvent (job);
-      }
-      else
-        return false;
+      this.jobsInServiceArea.remove (job);
+      cancelDepartureEvent (job);
     }
     this.jobQueue.remove (job);
     final P qos = getAndCheckJobQoS (job);
@@ -220,7 +214,6 @@ implements SimQueueQoS<J, Q, P>
     this.jobsQoSMap.get (qos).remove (job);
     if (this.jobsQoSMap.get (qos).isEmpty ())
       this.jobsQoSMap.remove (qos);
-    return true;
   }
 
   /** Invokes {@link #rescheduleAfterDeparture} passing revoked job as argument.
@@ -330,7 +323,7 @@ implements SimQueueQoS<J, Q, P>
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
     if (hasServerAcccessCredits ()
-      && hasJobsWaitingInWaitingArea ()
+      && hasJobsInWaitingArea ()
       && getNumberOfJobsInServiceArea () < 1)
     {
       takeServerAccessCredit (false);
