@@ -10,11 +10,10 @@ import nl.jdj.jsimulation.r5.SimEventList;
  *  and a default service time.
  * 
  * <p>
- * Note that despite the flexibility of setting per-queue requested service-times, you cannot change this for a specific
- * {@link SimQueue} in between visits.
+ * All other methods in this class aim at influencing the result from the {@link SimJob#getServiceTime} implementation.
  * 
- * @param <J>  The job type.
- * @param <Q>  The queue type for jobs.
+ * @param <J> The job type.
+ * @param <Q> The queue type for jobs.
  *
  * @see DefaultSimJobFactory
  * 
@@ -91,7 +90,8 @@ implements SimJob<J, Q>
    * If the map fails to yield a service time, this method returns the result from {@link #getFallbackRequestedServiceTime}.
    * 
    * <p>
-   * Note that the default implementation accepts any {@link SimQueue}.
+   * Note that certain {@link SimQueue} types may <i>not</i> consult the jobs for the requested service time, but
+   * decide it themselves!
    * 
    */
   @Override
@@ -111,6 +111,32 @@ implements SimJob<J, Q>
       return this.requestedServiceTimeMap.get (null);
     else
       return this.fallbackRequestedServiceTime;
+  }
+  
+  /** Sets the requested service-time for future visits to a specific queue.
+   * 
+   * <p>
+   * This method is intended to be used before the job is actually used in a simulation.
+   * For instance, note that the setting imposed by this method survives resets of the job.
+   * 
+   * @param queue       The queue, non-{@code null}.
+   * @param serviceTime The requested service time for that queue, zero or positive.
+   * 
+   * @throws IllegalArgumentException If the queue is {@code null} or the requested service time is strictly negative.
+   * @throws IllegalStateException    If the queue is the currently visited queue.
+   * 
+   * @see #getServiceTime
+   * @see #resetEntity
+   * @see #getQueue
+   * 
+   */
+  public void setRequestedServiceTimeMappingForQueue (final Q queue, final double serviceTime)
+  {
+    if (queue == null || serviceTime < 0)
+      throw new IllegalArgumentException ();
+    if (getQueue () == queue)
+      throw new IllegalStateException ();
+    this.requestedServiceTimeMap.put (queue, serviceTime);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,7 +164,7 @@ implements SimJob<J, Q>
     if (requestedServiceTimeMap != null)
       this.requestedServiceTimeMap = new HashMap<> (requestedServiceTimeMap);
     else
-      this.requestedServiceTimeMap = null;
+      this.requestedServiceTimeMap = new HashMap<> ();
   }
 
   /** Creates a new {@link DefaultSimJob} with fixed service time request at any {@link SimQueue}.
