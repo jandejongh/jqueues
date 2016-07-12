@@ -2950,6 +2950,41 @@ Departure & Yes & Started and non-revoked jobs depart. \\
 
 \section{Preemptive Queues}
 
+In preemptive queues,
+  the service area consists of a countable number of servers,
+  each capable of serving a single job at a time,
+  yet this service to a job can be {\em preempted\/} in favor of another job.
+
+\subsection{Preemption Strategies; the \lstinline{PreemptionStrategy} Class}
+
+At the moment a job is preempted at a server, one of several things can happen,
+  as determined by the {\em preemption strategy}.
+In \lstinline|jqueues|, the preemption strategy is implemented in an \lstinline|enum|
+  name \lstinline|PreemptionStrategy|, and it can take the following values:
+\begin{itemize}
+  \item \lstinline|DROP|: The preemped job is dropped.
+  \item \lstinline|RESUME|: The preempted job is put on hold, after calculating the remaining service time.
+                            Future service resumption continues at the point where the previous service was interrupted.
+  \item \lstinline|RESTART|: The preempted job is put on hold.
+                             Future service resumption requires the job to be served from scratch.
+  \item \lstinline|REDRAW|: The preempted job is put on hold.
+                            Future service resumption requires the job to be served from scratch
+                            with a new required service time.
+  \item \lstinline|DEPART|: The preempted job departs, even though it may not have finished its service requirements.
+  \item \lstinline|CUSTOM|: A different strategy that those mentioned above is applied to preempted jobs.
+                            The strategy needs to be specified in the concrete \lstinline|SimQueue| implementation.
+\end{itemize}
+Not all preemptive-queue implementations support all preemption strategies.
+For instance, the \lstinline|REDRAW| strategy is not supported by any implementation,
+  because it conflicts with the contract the the service time of a \lstinline|SimJob| has
+  to remain constant during a (single) \lstinline|SimQueue| visit.
+
+The preemption strategy is a parameter that can be passed upon construction by all implemented
+  preemptive queues in \lstinline|jqueues|.
+Its default value is \lstinline|RESUME|.
+If you pass an unsupported preemption strategy,
+  the queue will throw an \lstinline|UnsupportedOperationException|.
+
 \subsection{The \lstinline{P_LCFS} \lstinline{SimQueue}}
 
 \begin{tabular}{|l|l|l|}
@@ -2958,8 +2993,11 @@ Departure & Yes & Started and non-revoked jobs depart. \\
 \multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{P_LCFS}} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Serves jobs in reverse arrival order with a single server,} \\
-            & \multicolumn{2}{|l|}{preempting the current job in service, if any, upon an arrival.} \\
+Description & \multicolumn{2}{l|}{Serves jobs in reverse arrival order with a single server,} \\
+            & \multicolumn{2}{l|}{preempting the current job in service, if any, upon an arrival.} \\
+\hline
+Preemption  & \multicolumn{2}{l|}{\lstinline|DROP|, \lstinline|RESUME|, \lstinline|RESTART|, \lstinline|DEPART|} \\
+Strategies  & \multicolumn{2}{l|}{ } \\
 \hline
 \multicolumn{3}{|c|}{} \\
 \multicolumn{3}{|c|}{\bf State} \\
@@ -2970,13 +3008,15 @@ QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
 NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs are taken into \\
             &                  & service immediately. \\
 \hline
-Waiting Area & Present & Infinite waiting area, reverse arrival order. \\
+Waiting Area & Present & Infinite waiting area, only used for SAC, LIFO. \\
 \hline
 SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
     &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
 Service Area & Present & Holds the job currently in service (if any), \\
-             &         & and all {\em preempted\/} jobs (if any). \\
+             &         & and (\lstinline|RESUME|, \lstinline|RESTART| only) \\
+             &         & all {\em preempted\/} jobs \\
+             &         & that have not departed yet (if any). \\
 \hline
 \multicolumn{3}{|c|}{} \\
 \multicolumn{3}{|c|}{\bf State Operations} \\
@@ -2990,19 +3030,18 @@ Arrival & Yes & The queue accepts arrivals, \\
 Drop & Yes & Drops arriving jobs during QAVs and preempted jobs \\
      &     & with \lstinline|DROP| preemption strategy. \\
 \hline
-Revocation & Yes & Jobs can be revoked while waiting, while being served, \\
-           &     & and if having been preempted in the service area. \\
+Revocation & Yes & Jobs present can be revoked anytime. \\
 \hline
 Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
-        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
+        &                       & Starts waiting job(s) if SAC $> 0$. \\
 \hline
-Start & Yes & Starts jobs if there are SACs and the server is idle. \\
+Start & Yes & Starts jobs in waiting area if there are SACs. \\
 \hline
-Preemption & Yes & Job in service is preempted upon a new (non-dropped) arrival. \\
+Preemption & Yes & Upon a new arrival (in absence of a QAV) \\
+           &     & and if SACs are/become available. \\
 \hline
-Departure & Yes & Started and non-revoked jobs depart. \\
-          &     & Jobs with \lstinline|DROP| preemption strategy only \\
-          &     & depart if not preempted after start. \\
+Departure & Yes & Started and non-revoked jobs depart; \\
+          &     & with \lstinline|DROP|, only if not preempted after start. \\
 \hline
 \end{tabular}
 
@@ -3016,7 +3055,8 @@ Departure & Yes & Started and non-revoked jobs depart. \\
 \multicolumn{3}{|c|}{\bf State  Invariants} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, the waiting area is empty.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of jobs.} \\
 \multicolumn{3}{|l|}{The server cannot be idle in the presence of preempted jobs in the service area.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
@@ -3037,11 +3077,241 @@ Departure & Yes & Started and non-revoked jobs depart. \\
 
 \subsection{The \lstinline{SRTF} \lstinline{SimQueue}}
 
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{SRTF}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{l|}{Serves jobs in reverse order of remaining service time,} \\
+            & \multicolumn{2}{l|}{preempting the current job in service, if any,} \\
+            & \multicolumn{2}{l|}{upon an arrival of another job with required service time} \\
+            & \multicolumn{2}{l|}{strictly smaller than the remaining service time of the job in service.} \\
+\hline
+Preemption  & \multicolumn{2}{l|}{\lstinline|DROP|, \lstinline|RESUME|, \lstinline|RESTART|, \lstinline|DEPART|} \\
+Strategies  & \multicolumn{2}{l|}{ } \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs are taken into \\
+            &                  & service immediately. \\
+\hline
+Waiting Area & Present & Infinite waiting area; only used for SAC. \\
+             &         & Ordered increasing in required service time. \\
+             &         & (Arrival order in case of a tie.) \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the job currently in service (if any), \\
+             &         & and (\lstinline|RESUME|, \lstinline|RESTART| only) \\
+             &         & all {\em preempted\/} jobs \\
+             &         & that have not departed yet (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals, \\
+        &     & preempting the job currently in service \\
+        &     & if the newly started job has required service time \\
+        &     & strictly smaller than the remaining service time \\
+        &     & of the job currently in service. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs and preempted jobs \\
+     &     & with \lstinline|DROP| preemption strategy. \\
+\hline
+Revocation & Yes & Jobs present can be revoked anytime. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting job(s) if SAC $> 0$. \\
+\hline
+Start & Yes & Starts jobs in waiting area if there are SACs. \\
+\hline
+Preemption & Yes & Job in service is preempted upon a new (non-dropped) arrival \\
+           & Yes & of a job with sufficiently small required service time. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+          &     & Jobs with \lstinline|DROP| preemption strategy only \\
+          &     & depart if not preempted after start. \\
+\hline
+\end{tabular}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{SRTF} (continued)} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{If SAC $> 0$, the waiting area is empty.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of jobs.} \\
+\multicolumn{3}{|l|}{The server cannot be idle in the presence of preempted jobs in the service area.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|          & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|               & \multicolumn{2}{|l|}{The name, default "SRTF[\lstinline|PreemptionStrategy|]";} \\
+                               & \multicolumn{2}{|l|}{non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|PreemptionStrategy| & \multicolumn{2}{|l|}{The preemption strategy, default \lstinline|RESUME|;
+                                                      non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|NumberOfServers|    & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\hline
+\end{tabular}
+
 \section{Processor-Sharing Queues}
 
+In Processor-Sharing (PS) queues,
+  the service area consists of a countable number of servers,
+  each capable of serving multiple jobs at a time,
+  sharing its capacity among those jobs.
+  
 \subsection{The \lstinline{PS} \lstinline{SimQueue}}
 
-\subsection{The \lstinline{CATCH-UP-PS} \lstinline{SimQueue}}
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{PS}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{|l}{The single-server processor-sharing (PS) queue.} \\
+            & \multicolumn{2}{l|}{Distributes its capacity equally among started jobs.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs are taken into \\
+            &                  & service immediately. \\
+\hline
+Waiting Area & Present & Infinite waiting area, only used for SAC, FIFO. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the job currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs present can be revoked anytime. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting job(s) if SAC $> 0$. \\
+\hline
+Start & Yes & Starts jobs in waiting area if there are SACs. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{If SAC $> 0$, the waiting area is empty.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of jobs.} \\
+\multicolumn{3}{|l|}{The server cannot be idle in the presence jobs in the service area.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "PS"; non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{CUPS} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{CUPS}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Description & \multicolumn{2}{l|}{The single-server "catch-up" processor-sharing queue.} \\
+            & \multicolumn{2}{l|}{Distributes its capacity equally among started jobs} \\
+            & \multicolumn{2}{l|}{with the least obtained service times.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs are taken into \\
+            &                  & service immediately. \\
+\hline
+Waiting Area & Present & Infinite waiting area, only used for SAC, FIFO. \\
+\hline
+SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
+    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Present & Holds the job currently in service (if any). \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\hline
+Arrival & Yes & The queue accepts arrivals. \\
+\hline
+Drop & Yes & Drops arriving jobs during QAVs. \\
+\hline
+Revocation & Yes & Jobs present can be revoked anytime. \\
+\hline
+Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        &                       & Starts waiting job(s) if SAC $> 0$. \\
+\hline
+Start & Yes & Starts jobs in waiting area if there are SACs. \\
+\hline
+Departure & Yes & Started and non-revoked jobs depart. \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf State  Invariants} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{If SAC $> 0$, the waiting area is empty.} \\
+\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of jobs.} \\
+\multicolumn{3}{|l|}{The server cannot be idle in the presence jobs in the service area.} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\hline
+\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "CUPS"; non-\lstinline|null|; RW.} \\
+\hline
+\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\hline
+\end{tabular}
 
 \section{\lstinline|SimQueue| Equalities}
 
@@ -3360,21 +3630,150 @@ StdOutSimEntityListener t=194.0, queue=Tandem[Q1,Q2]: DEPARTURE of job J4.
 StdOutSimEntityListener t=205.0, queue=Tandem[Q1,Q2]: DEPARTURE of job J5.
 \end{lstlisting}
 
-{\bf Why is this better?}
+The latter example shows exactly what we want:
+  The creation of a new \lstinline|SimQueue|
+  that behaves exactly like a tandem configuration of two other queues.
+Admittedly, the code in the example is not particularly smaller
+  than that of the previous examples,
+  and the latter examples can certainly be used as a starting point
+  for the study of tandem (and other composite) queues.
+However, if, for instance, you want to create a new \lstinline|SimQueue| type
+  that is the equivalent of other queues that are somehow interconnected,
+  or if you want to study nested composite queues,
+  then constructing a composite queue is a much faster
+  (and more reliable) approach.
 
-{\bf Why to proceed to this chapter and next one?}
+The extensive support for composite queues
+  is one of the most distinguishing features of \lstinline|jqueues|.
+Next to tandem queues, there is support for various types of
+  {\em feedback\/} queues, {\em encapsulated\/} queues
+  and {\em parallel\/} queues.
+In the next chapter we describe these composite queues in detail.
+In the remainder of the present chapter,
+  we introduce some important concepts that
+  apply to {\em any\/} composite queue.
 
-{\bf This is a distinguising feature of jqueues!}
+\section{The SimQueueComposite Interface}
 
-\section{Colors of Composite Queues}
+In the \lstinline|jqueues| implementation,
+  composite queues implement the \lstinline|SimQueueComposite| interface,
+  which, in turn, inherits from \lstinline|SimQueue|.
+
+\subsection{The 'Queues' property of a SimQueueComposite}
+
+The value of the 'Queues' property of a \lstinline|SimQueueComposite|
+  is a \lstinline|Set| holding the subqueues of the composite queue.
+The property can only be set upon construction of the composite queue;
+  and cannot be changed thereafter,
+  but the subqueues can be accessed through \lstinline|getQueues ()|.
+(Note that the \lstinline|Set| returned should {\em not\/} be modified.)
+Since the order of the subqueues is important to most composite-queue types,
+  the implementation of \lstinline|getQueues ()| {\em must\/} maintain
+  a deterministic ordering of the subqueues.
+  
+\subsection{Colors of Composite Queues}
+
+Composite queues come in different so-called {\em colors},
+  determining the level of transparency of the queue:
+\begin{itemize}
+\item A {\em black\/} composite queue completely hides its internal structure,
+        and uses so-called {\em delegate\/} jobs
+        to represent visiting jobs.
+      Black composite queues implement the \lstinline|BlackSimQueueComposite| interface.
+\item A {\em gray\/} composite queue lets jobs visit the sub-queues directly,
+        but adds zero-time visits to itself at the start and the end of a job visit.
+      Obviously, such composite queues do not use delegate jobs.
+      Gray composite queues implement the \lstinline|GraySimQueueComposite| interface.
+\item A {\em white\/} composite queue immediately redirects a visiting job to the first sub-queue to visit;
+        jobs never actually visit a white composite queue.
+      White composite queues implement the \lstinline|WhiteSimQueueComposite| interface.
+\end{itemize}
 
 \chapter{Fundamental Composite Queues}
 
 \section{Introduction}
 
-\section{Encapsulator Queues}
+In this chapter we describe implementations of
+  \lstinline|SimQueueComposite| in \lstinline|jqueues|.
 
 \section{Tandem Queues}
+
+In tandem queues, visiting jobs must visit each subqueue one in a predetermined (and fixed) sequence.
+The list of (distinct) subqueues is passed upon construction, and cannot be changed afterwards.
+
+\subsection{The \lstinline{BlackTandemSimQueue}}
+ 
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{|c|}{} \\
+\multicolumn{2}{|c|}{\lstinline[basicstyle=\large]{BlackTandemSimQueue}} \\
+\multicolumn{2}{|c|}{} \\
+\hline
+Description & Serves jobs by letting their delegate jobs visit \\
+            & the sequence of subqueues $\cal{Q}$ exactly once. \\
+\hline
+Color       & Black. \\
+\hline
+\multicolumn{2}{|c|}{} \\
+\multicolumn{2}{|c|}{\bf State} \\
+\multicolumn{2}{|c|}{} \\
+\hline
+QAV & Drops arriving jobs during QAVs. \\
+\hline
+NoWaitArmed & Always \lstinline|true|. \\
+\hline
+Waiting Area & Infinite waiting area, FIFO discipine. \\
+\hline
+SAC & The remaining number of arriving jobs that can have a delegate job \\
+    & arrive at the tandem queue. \\
+    & If zero, arriving jobs wait in the waiting area. \\
+    & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+Service Area & Holds the jobs whose delegate job have arrived {\em anywhere}. \\
+\hline
+\multicolumn{2}{|c|}{} \\
+\multicolumn{2}{|c|}{\bf State Operations} \\
+\multicolumn{2}{|c|}{} \\
+\hline
+Set QAV & Ends/starts a QAV. \\
+\hline
+Arrival & The queue accepts arrivals. \\
+\hline
+Drop & Drops arriving jobs during QAVs. \\
+     & Drops a visiting job if its delegate job is dropped on any subqueue. \\
+\hline
+Revocation & Jobs can be revoked while waiting and while being served. \\
+\hline
+Set SAC & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
+        & Starts waiting jobs if SAC $> 0$. \\
+\hline
+Start & Starts a job if its delegate job arrives {\em anywhere}. \\
+\hline
+Departure & Jobs depart if its delegate job departs from the last subqueue. \\
+\hline
+\multicolumn{2}{|c|}{} \\
+\multicolumn{2}{|c|}{\bf State  Invariants} \\
+\multicolumn{2}{|c|}{} \\
+\hline
+\multicolumn{2}{|l|}{$|J(t)| = |J_{w}(t)| + \sum_{q \in \cal{Q}} |J_{q}(t)|.$} \\
+\hline
+\multicolumn{2}{|c|}{} \\
+\multicolumn{2}{|c|}{\bf Properties} \\
+\multicolumn{2}{|c|}{} \\
+\hline
+\lstinline|EventList|  & The event list; non-\lstinline|null|; RO. \\
+\hline
+\lstinline|Name|       & The name, default "LJF"; non-\lstinline|null|; RW. \\
+\hline
+\lstinline|Queues|     & The set (and list) of subqueues $\cal{Q}$; ordered; RO. \\
+\hline
+\lstinline|QueueColor| & The color of the queue; \lstinline|QUEUE_COLOR_BLACK|; RO. \\
+\hline
+\end{tabular}
+
+\section{Encapsulator Queues}
+
+An {\em encapsulator\/} queue has exactly one subqueue.
 
 \section{Compressed Tandem Queues}
 
