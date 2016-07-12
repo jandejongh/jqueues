@@ -13,7 +13,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackCompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.util.swing.JBlackSimQueueNetwork;
 import nl.jdj.jqueues.r5.util.swing.JSimQueueCreationDialog;
