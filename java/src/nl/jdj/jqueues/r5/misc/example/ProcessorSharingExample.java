@@ -2,9 +2,11 @@ package nl.jdj.jqueues.r5.misc.example;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.processorsharing.CUPS;
 import nl.jdj.jqueues.r5.entity.queue.processorsharing.PS;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
@@ -54,6 +56,31 @@ public final class ProcessorSharingExample
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
       psQueue.scheduleJobArrival (arrTime, j);
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Creating CUPS queue...");
+    final AbstractSimQueue cupsQueue = new CUPS (el);
+    System.out.println ("-> Submitting jobs to CUPS queue (one second inter-arrival time)...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + 1;
+      cupsQueue.scheduleJobArrival (arrTime, j);
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Submitting jobs to CUPS queue (U[0,1] inter-arrival time)...");
+    final Random RNG = new Random ();
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + RNG.nextDouble ();
+      cupsQueue.scheduleJobArrival (arrTime, j);
     }
     System.out.println ("-> Executing event list...");
     el.run ();
