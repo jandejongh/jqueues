@@ -67,43 +67,4 @@ public abstract class AbstractBlackTandemSimQueue
     super (eventList, queues, new TandemSimQueueSelector<> (queues), delegateSimJobFactory);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // allowSubQueueAccessVacationChanges
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns {@code false}.
-   * 
-   * @return {@code false}.
-   * 
-   */
-  @Override
-  protected final boolean getAllowSubQueueAccessVacationChanges ()
-  {
-    return false;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // noWaitArmed
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns <code>true</code> if there are no queues in {@link #getQueues}
-   * or if the first queue in that list is in <code>noWaitArmed</code> state.
-   * 
-   * This overrides the default implementation {@link AbstractBlackSimQueueComposite#isNoWaitArmed} which demands <i>all</i> queues
-   * to be in <code>noWaitArmed</code> state.
-   * 
-   * @return True if there are no queues in {@link #getQueues}
-   *           or if the first queue in that list is in <code>noWaitArmed</code> state.
-   * 
-   */
-  @Override
-  public final boolean isNoWaitArmed ()
-  {
-    return getQueues ().isEmpty () ? true : getQueues ().iterator ().next ().isNoWaitArmed ();
-  }
-  
 }

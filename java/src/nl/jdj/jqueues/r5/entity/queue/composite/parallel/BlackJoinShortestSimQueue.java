@@ -279,29 +279,4 @@ public class BlackJoinShortestSimQueue
     throw new RuntimeException ();
   }
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // noWaitArmed
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns <code>true</code> if {@link #getQueues} is empty
-   *  or all members in it with the shortest queue length are in <code>noWaitArmed</code> state.
-   * 
-   * @return <code>True</code> if {@link #getQueues} is empty
-   *           or all members in it with the shortest queue length are in <code>noWaitArmed</code> state.
-   * 
-   */
-  @Override
-  public final boolean isNoWaitArmed ()
-  {
-    final Set<SimQueue> shortestQueues = selectShortestQueues ((Set<SimQueue>) getQueues (), isOnlyWaitingJobs ());
-    if (shortestQueues.isEmpty ())
-      return true;
-    for (SimQueue q : shortestQueues)
-      if (! q.isNoWaitArmed ())
-        return false;
-    return true;
-  }
-
 }

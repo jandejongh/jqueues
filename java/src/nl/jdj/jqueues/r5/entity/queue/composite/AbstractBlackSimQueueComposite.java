@@ -1,22 +1,29 @@
 package nl.jdj.jqueues.r5.entity.queue.composite;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.single.encap.BlackEncapsulatorSimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A partial implementation of a {@link BlackSimQueueComposite}.
  *
  * <p>
- * Implementations only have to route a job (actually, its delegate job) through the
+ * Implementations (well, most of them) only have to route a job (actually, its delegate job) through the
  * internal network of {@link SimQueue}s,
  * see {@link #selectFirstQueue} and {@link #selectNextQueue}.
  * 
  * <p>
  * This allows for many types of queueing networks, including "feedback"-type networks.
+ * 
+ * <p>
+ * For details about the semantics of the waiting and service areas of a black composite queue,
+ * see {@link StartModel}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -45,7 +52,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
    * 
    * 
-   * @throws IllegalArgumentException If the <code>queue</code> argument is <code>null</code> or has <code>null</code> members.
+   * @throws IllegalArgumentException If the event list is {@code null},
+   *                                    or the <code>queue</code> argument is <code>null</code> or has <code>null</code> members.
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
@@ -59,37 +67,98 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   {
     super (eventList, queues, simQueueSelector);
     this.delegateSimJobFactory = ((delegateSimJobFactory == null) ? new DefaultDelegateSimJobFactory () : delegateSimJobFactory);
+    resetEntitySubClassLocal ();
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START MODEL
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private StartModel startModel = StartModel.LOCAL;
+  
+  @Override
+  public final StartModel getStartModel ()
+  {
+    return this.startModel;
+  }
+  
+  /** Sets the start model of this composite queue (for use by sub-classes only).
+   * 
+   * <p>
+   * This method should only be used by sub-classes upon construction, if needed, and should not
+   * be called afterwards. The start-model setting should survive queue resets.
+   * 
+   * @param startModel The new start model (non-{@code null}).
+   * 
+   * @throws IllegalArgumentException If the argument is {@code null}, or {@link StartModel#ENCAPSULATOR_QUEUE} is chosen
+   *                                  while there are fewer or more that <i>one</i> sub-queues,
+   *                                  or {@link StartModel#COMPRESSED_TANDEM_2_QUEUE} is chosen
+   *                                  while there are fewer or more that <i>two</i> sub-queues,
+   * 
+   * @see BlackEncapsulatorSimQueue
+   * @see BlackCompressedTandem2SimQueue
+   * 
+   */
+  protected final void setStartModel (final StartModel startModel)
+  {
+    if (startModel == null)
+      throw new IllegalArgumentException ();
+    if (startModel == StartModel.ENCAPSULATOR_QUEUE && getQueues ().size () != 1)
+      throw new IllegalArgumentException ();
+    if (startModel == StartModel.COMPRESSED_TANDEM_2_QUEUE && getQueues ().size () != 2)
+      throw new IllegalArgumentException ();
+    this.startModel = startModel;
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // DROP DESTINATION QUEUE
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  private DQ dropDestinationQueue = null;
+  
   /** Returns an optional destination (delegate) {@link SimQueue} for dropped jobs.
    * 
    * <p>
    * Normally, dropping a delegate job as noted by {@link #notifyDrop} results in dropping the corresponding real job.
-   * By overriding this method the default behavior can be changed, and such jobs can be sent to one of the
+   * By setting the "drop queue", the default behavior can be changed, and such jobs can be sent to one of the
    * sub-queues as an arrival.
    * 
    * <p>
-   * The default implementation returns <code>null</code>, implying that the real job is to be dropped as well.
+   * The default value is <code>null</code>, implying that the real job is to be dropped if its delegate job is dropped.
    * 
-   * @param t The time the delegate job was dropped, i.e., the current time.
-   * @param job The (delegate) job that was dropped.
-   * @param queue The queue at which it was dropped.
-   * 
-   * @return Any {@link SimQueue} in {@link #getQueues} to which the dropped job is to be sent as an arrival, or <code>null</code>
-   *           if the corresponding real job is to be dropped as well.
+   * @return Any {@link SimQueue} in {@link #getQueues} to which the dropped delegate job is to be sent as an arrival,
+   *           or <code>null</code> if the corresponding real job is to be dropped as well.
    * 
    * @see #notifyDrop
    * 
    */
-  protected DQ getDropDestinationQueue (final double t, final DJ job, final DQ queue)
+  protected final DQ getDropDestinationQueue ()
   {
-    return null;
+    return this.dropDestinationQueue;
+  }
+  
+  /** Sets the destination sub-queue for dropped delegate jobs.
+   * 
+   * <p>
+   * The drop destination queue is only to be used by sub-classes for specific behavior related to dropping of jobs
+   * on sub-queues. It should be set at most once (upon construction) and it should survive entity resets.
+   * 
+   * @param queue The destination sub-queue for dropped delegate jobs; non-{@code null}.
+   * 
+   * @see #getDropDestinationQueue
+   * 
+   * @throws IllegalArgumentException If the queue is {@code null} or not a sub-queue of this composite queue.
+   * 
+   */
+  protected final void setDropDestinationQueue (final DQ queue)
+  {
+    if (queue == null || ! getQueues ().contains (queue))
+      throw new IllegalArgumentException ();
+    this.dropDestinationQueue = queue;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +230,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * Performs various sanity checks on the arguments and the internal administration consistency.
    * 
    * @param delegateJob The delegate job.
-   * @param queue The queue at which the delegate job currently resides.
+   * @param queue       The queue at which the delegate job currently resides.
    * 
    * @return The real job.
    * 
@@ -184,11 +253,14 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
 
   /** Removes a real job and a delegate job from the internal data structures.
    * 
-   * @param realJob The real job.
-   * @param delegateJob The delegate job.
+   * <p>
+   * The jobs do not have to be present; if not, this method has (with respect to that job) no effect.
+   * 
+   * @param realJob     The real job     (may be {@code null} meaning no real job is to be removed).
+   * @param delegateJob The delegate job (may be {@code null} meaning no delegate job is to be removed).
    * 
    */
-  private /* final */ void exitJobFromQueues (final J realJob, final DJ delegateJob)
+  private /* final */ void removeJobsFromQueueLocal (final J realJob, final DJ delegateJob)
   {
     this.jobQueue.remove (realJob);
     this.jobsInServiceArea.remove (realJob);
@@ -196,30 +268,392 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     this.realSimJobMap.remove (delegateJob);    
   }
   
+  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // SimQueue.isNoWaitArmed
+  // AbstractSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Returns <code>true</code> if and only if all queues in {@link #getQueues} are in <code>noWaitArmed</code> state.
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Resets this {@link AbstractBlackSimQueueComposite}.
    * 
-   * This is a default implementation, and may be overridden by subclasses.
-   * 
-   * @return True if and only if all queues in {@link #getQueues} are in <code>noWaitArmed</code> state.
+   * <p>
+   * Calls super method,
+   * clears the internal mapping between real and delegate {@link SimJob}s,
+   * clears the internal cache of the <code>noWaitArmed</code> state,
+   * resets all sub-queues,
+   * and, if needed, reassess their initial state for proper functioning of this {@link AbstractSimQueueComposite}.
    * 
    */
   @Override
-  public boolean isNoWaitArmed ()
+  protected void resetEntitySubClass ()
   {
-    for (DQ q : getQueues ())
-      if (! q.isNoWaitArmed ())
-        return false;
-    return true;
+    super.resetEntitySubClass ();
+    // Implemented in private method to make it accessible from the constructor(s).
+    resetEntitySubClassLocal ();
   }
   
+  private void resetEntitySubClassLocal ()
+  {
+    this.delegateSimJobMap.clear ();
+    this.realSimJobMap.clear ();
+    for (final DQ q : getQueues ())
+      q.resetEntity ();
+    this.previousNoWaitArmedSet = true;
+    this.previousNoWaitArmed = isNoWaitArmed ();
+    switch (getStartModel ())
+    {
+      case LOCAL:
+      case ENCAPSULATOR_QUEUE:
+        break;
+      case COMPRESSED_TANDEM_2_QUEUE:
+        // Asses the initial server-access credits on the waitQueue.
+        final Set<DQ> subQueues = getQueues ();
+        if (subQueues == null || subQueues.size () != 2)
+          throw new IllegalStateException ();
+        final Iterator<DQ> i_queues = subQueues.iterator ();
+        final DQ waitQueue = i_queues.next ();
+        final DQ servQueue = i_queues.next ();
+        // No need to check our local SACs; by contract of SimQueue, SACs should be infinite after reset.
+        waitQueue.setServerAccessCredits (getLastUpdateTime (), servQueue.isNoWaitArmed () ? 1 : 0);
+        break;
+    }    
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // EXIT (DROP/REVOCATION/DEPARTURE)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Performs the exit of a real job: Revokes the delegate job if it is still present on a sub-queue,
+   *  and removes the real and delegate jobs from the internal administration.
+   * 
+   * <p>
+   * In case where the delegate job is still present on a sub-queue, we have to remove it from there.
+   * This done through (unconditional) revocation.
+   * 
+   * <p>
+   * The real and delegate jobs are removed from the internal administration through {@link #removeJobsFromQueueLocal}.
+   * 
+   * @param job  The job that exists, non-{@code null}.
+   * @param time The current time.
+   * 
+   * @see #getDelegateJob
+   * @see #revoke
+   * @see #removeJobsFromQueueLocal
+   * 
+   * @throws IllegalStateException If the delegate jobs reports its visiting a queue, but that queue does not agree.
+   * @throws RuntimeException      If sanity checks after revocation of the delegate job fail (somehow still present on sub-queue,
+   *                               or job still reporting a visit to any queue).
+   * 
+   */
+  protected final void removeJobFromQueueUponExit (final J job, final double time)
+  {
+    final DJ delegateJob = getDelegateJob (job);
+    final DQ subQueue = (DQ) delegateJob.getQueue ();
+    if (subQueue != null)
+    {
+      // Santity check...
+      if (! subQueue.getJobs ().contains (delegateJob))
+        throw new IllegalStateException ();
+      subQueue.revoke (time, delegateJob);
+      // More santity checks...
+      if (subQueue.getJobs ().contains (delegateJob)
+        || subQueue.getJobsInWaitingArea ().contains (delegateJob)
+        || subQueue.getJobsInServiceArea ().contains (delegateJob)
+        || delegateJob.getQueue () != null)
+        throw new RuntimeException ();
+    }
+    removeJobsFromQueueLocal (job, delegateJob);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ARRIVAL
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Creates the delegate job, administers it and puts the (real) job into {@link #jobQueue}.
+   * 
+   */
+  @Override
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
+  {
+    if (job == null)
+      throw new IllegalArgumentException ();
+    if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
+      throw new IllegalArgumentException ();
+    if (this.delegateSimJobMap.containsKey (job))
+      throw new IllegalStateException ();
+    if (this.realSimJobMap.containsValue (job))
+      throw new IllegalStateException ();
+    final DJ delegateSimJob = this.delegateSimJobFactory.newInstance (time, job, (Q) this);
+    if (delegateSimJob == null)
+      throw new IllegalArgumentException ();
+    this.delegateSimJobMap.put (job, delegateSimJob);
+    this.realSimJobMap.put (delegateSimJob, job);
+    this.jobQueue.add (job);
+  }
+
+  /** Reschedules after an arrival.
+   * 
+   * <p>
+   * In case of {@link StartModel#LOCAL}, checks the server-access credits and if passed (and after taking a credit),
+   * lets the delegate job arrive at the queue returned by
+   * {@link #selectFirstQueue}.
+   * 
+   * <p>
+   * In case of {@link StartModel#ENCAPSULATOR_QUEUE} and {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
+   * the procedure is the same, except for checking the server-access credits (and taking one);
+   * the delegate job is always scheduled for arrival at the first queue.
+   * 
+   * <p>
+   * With any {@link StartModel}, should <code>null</code> be returned by {@link #selectFirstQueue},
+   * then the real job departs through {@link #depart} with listener notification.
+   * 
+   * @see #getStartModel
+   * @see #hasServerAcccessCredits
+   * @see #takeServerAccessCredit
+   * @see #fireIfOutOfServerAccessCredits
+   * @see #depart
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterArrival (final J job, final double time)
+  {
+    if (job == null)
+      throw new IllegalArgumentException ();
+    if ((! this.jobQueue.contains (job)) || this.jobsInServiceArea.contains (job))
+      throw new IllegalArgumentException ();
+    if (! this.delegateSimJobMap.containsKey (job))
+      throw new IllegalStateException ();
+    if (! this.realSimJobMap.containsValue (job))
+      throw new IllegalStateException ();
+    final DJ delegateJob = this.delegateSimJobMap.get (job);
+    if (delegateJob == null)
+      throw new IllegalStateException ();
+    final boolean needsSac;
+    final boolean mayArrive;
+    switch (getStartModel ())
+    {
+      case LOCAL:
+        needsSac = true;
+        mayArrive = hasServerAcccessCredits ();
+        break;
+      case ENCAPSULATOR_QUEUE:
+      case COMPRESSED_TANDEM_2_QUEUE:
+        needsSac = false;
+        mayArrive = true;
+        break;
+      default:
+        throw new RuntimeException ();
+    }
+    if (mayArrive)
+    {
+      if (needsSac)
+        takeServerAccessCredit (false);
+      final SimQueue<DJ, DQ> firstQueue = selectFirstQueue (time, job);
+      if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
+        throw new IllegalArgumentException ();
+      if (firstQueue != null)
+      {
+        firstQueue.arrive (time, delegateJob);
+        if (needsSac)
+          fireIfOutOfServerAccessCredits (time);
+      }
+      else
+        // We do not get a queue to arrive at.
+        // So we depart; without having been executed!
+        depart (time, job, true);
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DROP
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Drops the given (real) job.
+   * 
+   * <p>
+   * In the {@link AbstractBlackSimQueueComposite}, a (real) job can only be dropped because of one of the following reasons:
+   * <ul>
+   * <li>
+   * A delegate job is dropped on one of the sub-queues, see {@link #notifyDrop},
+   * and the semantics of the composite queue require the real job to be dropped as well (this is not a requirement).
+   * The notification callback relies on {@link #drop} to perform the drop.
+   * The delegate job has already left the sub-queue system when we are called.
+   * <li>
+   * The composite queue <i>itself</i> decides to drop a (real) job, see {@link #drop}.
+   * In this case we are called while the delegate job is still present on one of the sub-queues,
+   * or it resides in our (local) waiting area.
+   * In any way, it has to be removed.
+   * (Note that we cannot forcibly drop it!)
+   * </ul>
+   * 
+   * <p>
+   * All we have to do is invoke {@link #removeJobFromQueueUponExit}.
+   * 
+   * @see #drop
+   * @see #notifyDrop
+   * @see #removeJobFromQueueUponExit
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponDrop (final J job, final double time)
+  {
+    removeJobFromQueueUponExit (job, time);
+  }
+
+  /** Empty, nothing to do.
+   * 
+   * <p>
+   * A real job has been dropped from the composite queue, see {@link #removeJobFromQueueUponDrop} for the potential reasons.
+   * 
+   * <p>
+   * In case of {@link StartModel#LOCAL}, there is nothing to do here since dropping a real job and its corresponding delegate job
+   * does not affect the access to the sub-queues, which is only determined by our (local) server-access credits.
+   * And these are not affected by drops.
+   * 
+   * <p>
+   * In case of {@link StartModel#ENCAPSULATOR_QUEUE}, we rely on (follow) the scheduling on the (single) sub-queue.
+   * Since the delegate job has been dropped now (for whatever reason) on the encapsulated queue,
+   * we can simply wait for notifications from the encapsulated queue for visit events
+   * through the various notification listeners and act upon them. In short, there is nothing to do here.
+   * 
+   * <p>
+   * In case of {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, we immediately realize that dropping a delegate job from the
+   * wait queue (the first queue) does not require any rescheduling: the delegate job was waiting at the first queue,
+   * so it was not eligible for access to the server queue, and the mere fact of dropping it can never result in another
+   * job at the waiting queue getting access to the server, or result in a state change at the server queue (the second queue).
+   * Dropping (or revoking) a (delegate) job from the server queue can certainly affect its {@link #isNoWaitArmed} state,
+   * but this is reported to and handled by {@link #notifyNewNoWaitArmed}.
+   * 
+   * <p>
+   * So, in short, there is really nothing to do here for good reasons.
+   * 
+   * @see StartModel
+   * @see #getStartModel
+   * @see #isNoWaitArmed
+   * @see #notifyNewNoWaitArmed
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterDrop (final J job, final double time)
+  {
+    // EMPTY
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // REVOCATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Removes a job if revocation is successful.
+   * 
+   * <p>
+   * In an {@link AbstractSimQueueComposite}, revocations on real jobs can only be the result of external requests,
+   * in other words, through {@link #revoke}, not because of events on delegate jobs.
+   * 
+   * <p>
+   * All we have to do is invoke {@link #removeJobFromQueueUponExit}.
+   * 
+   * @see #revoke
+   * @see #notifyRevocation
+   * @see #removeJobFromQueueUponExit
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
+  {
+    removeJobFromQueueUponExit (job, time);
+  }
+
+  /** Empty, nothing to do.
+   * 
+   * @see #rescheduleAfterDrop For an explanation as to why this method can be left empty. 
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterRevokation (final J job, final double time)
+  {
+    // EMPTY
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // isNoWaitArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Determines the {@code noWaitArmed} state of the composite queue.
+   * 
+   * <p>
+   * In case of {@link StartModel#LOCAL}, simply returns <code>true</code>.
+   * 
+   * <p>
+   * In case of {@link StartModel#ENCAPSULATOR_QUEUE},
+   *   copies the corresponding value on the sub-queue.
+   * 
+   * <p>
+   * In case of {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
+   *   copies the corresponding value on the service-queue (i.e., the <i>second</i> sub-queue).
+   * This result is only valid if the composite queue is in a stable state, i.e., a state in which
+   *   the {@link noWaitArmed} state on the server queue implies that the waiting queue is empty and
+   *   has server-access credits.
+   * Care should be taken in case this method is used internally.
+   * 
+   * @return The {@code noWaitArmed} state of the composite queue.
+   * 
+   * @see #getStartModel
+   * @see #getQueues
+   * @see #getServerAccessCredits
+   * 
+   */
+  @Override
+  public final boolean isNoWaitArmed ()
+  {
+    final Set<DQ> subQueues;
+    switch (getStartModel ())
+    {
+      case LOCAL:
+        return true;
+      case ENCAPSULATOR_QUEUE:
+        subQueues = getQueues ();
+        if (subQueues.size () != 1)
+          throw new IllegalStateException ();
+        return subQueues.iterator ().next ().isNoWaitArmed ();
+      case COMPRESSED_TANDEM_2_QUEUE:
+        subQueues = getQueues ();
+        if (subQueues.size () != 2)
+          throw new IllegalStateException ();
+        final Iterator<DQ> i_queues = subQueues.iterator ();
+        /* final DQ waitQueue = */ i_queues.next ();
+        final DQ servQueue = i_queues.next ();
+        return servQueue.isNoWaitArmed ();
+      default:
+        throw new RuntimeException ();
+    }
+  }
+
   /** Auxiliary variable to {@link #reassessNoWaitArmed}
-   * indicating whether we have a previous value for the <code>noWaitArmed</code> state.
+   *  indicating whether we have a previous value for the <code>noWaitArmed</code> state.
    * 
    * @see #isNoWaitArmed
    * @see #reassessNoWaitArmed
@@ -229,7 +663,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   private boolean previousNoWaitArmedSet = false;
   
   /** Auxiliary variable to {@link #reassessNoWaitArmed}
-   * being the previous value for the <code>noWaitArmed</code> state.
+   *  being the previous value for the <code>noWaitArmed</code> state.
    * 
    * @see #isNoWaitArmed
    * @see #reassessNoWaitArmed
@@ -264,70 +698,119 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // RESET
+  // SERVER-ACCESS CREDITS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** In case of {@link StartModel#LOCAL} or {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
+   *  does nothing and relies on {@link #rescheduleForNewServerAccessCredits};
+   *  in case of {@link StartModel#ENCAPSULATOR_QUEUE},
+   *  copies the new value for the server-access credits into the sub-queue.
+   * 
+   * @throws IllegalStateException If the start model is {@link StartModel#ENCAPSULATOR_QUEUE} and there is not a single sub-queue.
+   * 
+   * @see #getStartModel
+   * @see #getServerAccessCredits
+   * @see #setServerAccessCredits
+   * 
+   */
+  @Override
+  protected final void setServerAccessCreditsSubClass ()
+  {
+    switch (getStartModel ())
+    {
+      case LOCAL:
+      case COMPRESSED_TANDEM_2_QUEUE:
+        return;
+      case ENCAPSULATOR_QUEUE:
+        if (getQueues ().size () != 1)
+          throw new IllegalStateException ();
+        getQueues ().iterator ().next ().setServerAccessCredits (getLastUpdateTime (), getServerAccessCredits ());
+        break;
+      default:
+        throw new RuntimeException ();
+    }
+  }
   
-  /** Resets this {@link AbstractBlackSimQueueComposite}.
+  /** Reschedules for new server-access credits.
    * 
    * <p>
-   * Calls super method,
-   * clears the internal mapping between real and delegate {@link SimJob}s,
-   * and clears the internal cache of the <code>noWaitArmed</code> state.
-   * 
-   */
-  @Override
-  protected void resetEntitySubClass ()
-  {
-    super.resetEntitySubClass ();
-    this.delegateSimJobMap.clear ();
-    this.realSimJobMap.clear ();
-    this.previousNoWaitArmedSet = false;
-    this.previousNoWaitArmed = false;
-    // No need to reset the queues; they will be reset directly from the event list.
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // AbstractSimQueue
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Creates the delegate job, administers it and puts the job into {@link #jobQueue}.
-   * 
-   */
-  @Override
-  protected final void insertJobInQueueUponArrival (final J job, final double time)
-  {
-    if (job == null)
-      throw new IllegalArgumentException ();
-    if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
-      throw new IllegalArgumentException ();
-    if (this.delegateSimJobMap.containsKey (job))
-      throw new IllegalStateException ();
-    if (this.realSimJobMap.containsValue (job))
-      throw new IllegalStateException ();
-    update (time);
-    final DJ delegateSimJob = this.delegateSimJobFactory.newInstance (time, job, (Q) this);
-    if (delegateSimJob == null)
-      throw new IllegalArgumentException ();
-    this.delegateSimJobMap.put (job, delegateSimJob);
-    this.realSimJobMap.put (delegateSimJob, job);
-    this.jobQueue.add (job);
-  }
-
-  /** Reschedules after an arrival.
+   * In case of {@link StartModel#LOCAL}, schedules delegate jobs for arrival at their first queue until the
+   *  (new) server-access credits are exhausted.
    * 
    * <p>
-   * Checks the server-access credits and if passed,
-   * lets the delegate job arrive at the queue returned by
-   * {@link #selectFirstQueue}.
-   * Should <code>null</code> be returned, then the real job departs, removing it from all internal queues,
-   * setting the job's queue to <code>null</code>, and notifying listeners of the departure.
+   * In case of {@link StartModel#ENCAPSULATOR_QUEUE}, this method does nothing.
+   * 
+   * <p>
+   * In case of {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
+   * sets the server access credits on the wait queue to one if the serve queue is in {@code noWaitArmed} state.
+   * 
+   * @see #getStartModel
+   * @see #hasServerAcccessCredits
+   * @see #takeServerAccessCredit
+   * @see #selectFirstQueue
+   * @see SimQueue#arrive
+   * @see #removeJobsFromQueueLocal 
+   * @see #fireDeparture 
+   * @see SimQueue#isNoWaitArmed 
+   * @see SimQueue#setServerAccessCredits 
    * 
    */
   @Override
-  protected final void rescheduleAfterArrival (final J job, final double time)
+  protected final void rescheduleForNewServerAccessCredits (final double time)
+  {
+    switch (getStartModel ())
+    {
+      case LOCAL:
+        while (hasServerAcccessCredits ())
+        {
+          for (J realJob : this.jobQueue)
+          {
+            final DJ delegateJob = getDelegateJob (realJob);
+            if (delegateJob.getQueue () == null)
+            {
+              // XXX (Almost) Verbatim copy from rescheduleAfterArrival...
+              takeServerAccessCredit (true);
+              final SimQueue<DJ, DQ> firstQueue = selectFirstQueue (time, realJob);
+              if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
+                throw new IllegalArgumentException ();
+              if (firstQueue != null)
+                firstQueue.arrive (time, delegateJob);
+              else
+              {
+                // We do not get a queue to arrive at.
+                // So we depart; without having been executed!
+                removeJobsFromQueueLocal (realJob, delegateJob);
+                fireDeparture (time, realJob, (Q) this);
+              }
+            }
+          }
+        }
+        return;
+      case ENCAPSULATOR_QUEUE:
+        return;
+      case COMPRESSED_TANDEM_2_QUEUE:
+        final Set<DQ> queues = getQueues ();
+        if (queues == null || queues.size () != 2)
+          throw new IllegalStateException ();
+        final Iterator<DQ> i_queues = queues.iterator ();
+        final DQ waitQueue = i_queues.next ();
+        final DQ servQueue = i_queues.next ();
+        if (servQueue.isNoWaitArmed ())
+          waitQueue.setServerAccessCredits (time, 1);
+        return;
+      default:
+        throw new RuntimeException ();
+    }
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  protected final void start (final J job, final double time)
   {
     if (job == null)
       throw new IllegalArgumentException ();
@@ -340,139 +823,95 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     final DJ delegateJob = this.delegateSimJobMap.get (job);
     if (delegateJob == null)
       throw new IllegalStateException ();
-    update (time);
-    if (hasServerAcccessCredits ())
+    final boolean needsSac;
+    final boolean mayArrive;
+    switch (getStartModel ())
     {
-      // XXX
-      takeServerAccessCredit (true);
+      case LOCAL:
+        needsSac = true;
+        mayArrive = hasServerAcccessCredits ();
+        break;
+      case ENCAPSULATOR_QUEUE:
+      case COMPRESSED_TANDEM_2_QUEUE:
+        needsSac = false;
+        mayArrive = true;
+        break;
+      default:
+        throw new RuntimeException ();
+    }
+    if (mayArrive)
+    {
+      if (needsSac)
+        takeServerAccessCredit (false);
       final SimQueue<DJ, DQ> firstQueue = selectFirstQueue (time, job);
       if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
         throw new IllegalArgumentException ();
       if (firstQueue != null)
-        firstQueue.arrive (time, delegateJob);
-      else
       {
+        firstQueue.arrive (time, delegateJob);
+        if (needsSac)
+          fireIfOutOfServerAccessCredits (time);
+      }
+      else
         // We do not get a queue to arrive at.
         // So we depart; without having been executed!
-        exitJobFromQueues (job, delegateJob);
-        job.setQueue (null);
-        fireDeparture (time, job, (Q) this);
-      }
-    }
+        depart (time, job, true);
+    }    
   }
 
-  /** Removes the real and delegate jobs from the internal administration.
-   * 
-   */
-  @Override
-  protected final void removeJobFromQueueUponDrop (final J job, final double time)
-  {
-    final DJ delegateJob = getDelegateJob (job);
-    exitJobFromQueues (job, delegateJob);
-    // XXX Should check for getQueue on delegateJob??
-  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DEPARTURE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Empty, nothing to do.
-   * 
-   */
-  @Override
-  protected final void rescheduleAfterDrop (final J job, final double time)
-  {
-    // EMPTY
-  }
-
-  /** Removes a job after successful revocation.
+  /** Departure of the given (real) job.
    * 
    * <p>
-   * Checks if the delegate job can be revoked (if present at a queue);
-   * returns <code>false</code> if not.
-   * Otherwise, if the delegate job is not currently visiting a {@link SimQueue},
-   * removes the real and delegate jobs from the internal administration.
+   * In the {@link AbstractBlackSimQueueComposite}, a (real) job can only depart because of one of the following reasons:
+   * <ul>
+   * <li>
+   * A delegate job departs on one of the sub-queues, see {@link #notifyDeparture},
+   * and the semantics of the composite queue require the real job to depart as well (this is not a requirement).
+   * The notification callback relies on {@link #depart} to perform the departure.
+   * The delegate job has already left the sub-queue system when we are called.
+   * <li>
+   * The composite queue <i>itself</i> decides that the (real) job is to depart, see {@link #depart}.
+   * In this case we are called while the delegate job is still present on one of the sub-queues,
+   * or it resides in our (local) waiting area.
+   * In any way, it has to be removed.
+   * (Note that we cannot forcibly depart it!)
+   * </ul>
    * 
-   */
-  @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
-  {
-    final DJ delegateJob = getDelegateJob (job);
-    final SimQueue queue = delegateJob.getQueue ();
-    if (queue != null && ! queue.revoke (time, delegateJob, interruptService))
-      return false;
-    if (queue == null)
-      exitJobFromQueues (job, delegateJob);
-    return true;
-  }
-
-  /** Empty, nothing to do.
+   * <p>
+   * All we have to do is invoke {@link #removeJobFromQueueUponExit}.
    * 
-   */
-  @Override
-  protected final void rescheduleAfterRevokation (final J job, final double time)
-  {
-    // EMPTY
-  }
-
-  /** Schedules delegate jobs for arrival at their first queue until the
-   * (new) server-access credits are exhausted.
-   * 
-   */
-  @Override
-  protected final void rescheduleForNewServerAccessCredits (final double time)
-  {
-    update (time);
-    while (hasServerAcccessCredits ())
-    {
-      for (J realJob : this.jobQueue)
-      {
-        final DJ delegateJob = getDelegateJob (realJob);
-        if (delegateJob.getQueue () == null)
-        {
-          // XXX (Almost) Verbatim copy from rescheduleAfterArrival...
-          // XXX
-          takeServerAccessCredit (true);
-          final SimQueue<DJ, DQ> firstQueue = selectFirstQueue (time, realJob);
-          if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
-            throw new IllegalArgumentException ();
-          if (firstQueue != null)
-            firstQueue.arrive (time, delegateJob);
-          else
-          {
-            // We do not get a queue to arrive at.
-            // So we depart; without having been executed!
-            exitJobFromQueues (realJob, delegateJob);
-            fireDeparture (time, realJob, (Q) this);
-          }
-        }
-      }
-      
-    }
-  }
-
-  /** Throws {@link IllegalStateException}.
-   * 
-   * Should never be called.
-   * 
-   * @throws IllegalStateException
+   * @see #depart
+   * @see #notifyDeparture
+   * @see #removeJobFromQueueUponExit
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    throw new IllegalStateException ();
+    removeJobFromQueueUponExit (departingJob, time);
   }
 
-  /** Throws {@link IllegalStateException}.
+  /** Empty, nothing to do.
    * 
-   * Should never be called.
-   * 
-   * @throws IllegalStateException
+   * @see #rescheduleAfterDrop For an explanation as to why this method can be left empty. 
    * 
    */
   @Override
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
-    throw new IllegalStateException ();
+    // EMPTY
   }
-  
+
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // SimQueueListener IMPLEMENTATION
@@ -480,8 +919,27 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   // LISTENS TO ALL "SUBQUEUES"
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE RESET NOTIFICATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /** Does nothing; assumes will have been reset or will soon be reset as well.
+   * 
+   * <p>
+   * The reset of a sub-queue can only be the result of this queue being resetting itself
+   * (and as a result, resetting its sub-queues),
+   * or because the event-list is being reset,
+   * in which case we will be reset ourselves soon, or have reset ourselves and our sub-queues already.
+   * 
+   * <p>
+   * In both case, no response is required upon receiving this notification.
    * 
    */
   @Override
@@ -489,59 +947,196 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   {
   }
   
-  /** Calls super method.
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE UPDATE / STATE CHANGED NOTIFICATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Calls {@link #update}.
+   * 
+   * @throws IllegalArgumentException If the entity is {@code null} or not one of our sub-queues.
    * 
    */
   @Override
   public final void notifyUpdate (final double t, final SimEntity entity)
   {
     if (entity == null || ! getQueues ().contains ((DQ) entity))
-      throw new IllegalStateException ();
-    super.update (t);
+      throw new IllegalArgumentException ();
+    update (t);
   }
   
-  /** Calls super method.
+  /** Calls {@link #stateChanged}.
+   * 
+   * @throws IllegalArgumentException If the entity is {@code null} or not one of our sub-queues.
    * 
    */
   @Override
   public final void notifyStateChanged (final double t, final SimEntity entity)
   {
     if (entity == null || ! getQueues ().contains ((DQ) entity))
-      throw new IllegalStateException ();
-    super.stateChanged (t);
+      throw new IllegalArgumentException ();
+    stateChanged (t);
   }
   
-  /** Checks if the job is a known delegate job, and calls {@link #update}.
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE ARRIVAL NOTIFICATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Checks if the job is a known delegate job.
    * 
    * <p>
    * This implementation does not allow the arrival of foreign delegate jobs.
+   * 
+   * @see #getRealJob
    * 
    */
   @Override
   public final void notifyArrival (final double t, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job, queue);
-    update (t);
-    // NOTHING MORE TO DO.
+    /* final J realJob = */ getRealJob (job, queue);
   }
   
-  /** Does nothing, called from {@link #notifyStart} for special treatment by subclasses.
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE QUEUE-ACCESS-VACATION NOTIFICATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Throws {@link IllegalStateException}.
+   * 
+   * @throws IllegalStateException Because sub-queue-access vacations are not allowed.
    * 
    */
-  protected void startForSubClass (final double t, final DJ job, final DQ queue)
+  @Override
+  public final void notifyStartQueueAccessVacation (final double time, final DQ queue)
   {
+    throw new IllegalStateException ();
   }
-  
-  /** Notification of the start of a delegate job.
+
+  /** Throws {@link IllegalStateException}.
+   * 
+   * @throws IllegalStateException Because sub-queue-access vacations are not allowed.
+   * 
+   */
+  @Override
+  public final void notifyStopQueueAccessVacation (final double time, final DQ queue)
+  {
+    throw new IllegalStateException ();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE NO-WAIT-ARMED NOTIFICATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Calls {@link #update} and {@link #reassessNoWaitArmed}.
+   * 
+   * @see #update
+   * @see #reassessNoWaitArmed
+   * @see #isNoWaitArmed
+   * 
+   * @throws IllegalArgumentException If the entity is {@code null} or not one of our sub-queues.
+   * 
+   */
+  @Override
+  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  {
+    if (! getQueues ().contains (queue))
+      throw new IllegalArgumentException ();
+    switch (getStartModel ())
+    {
+      case LOCAL:
+        break;
+      case ENCAPSULATOR_QUEUE:
+        break;
+      case COMPRESSED_TANDEM_2_QUEUE:
+        final Set<DQ> subQueues = getQueues ();
+        if (subQueues == null || subQueues.size () != 2)
+          throw new IllegalStateException ();
+        final Iterator<DQ> i_queues = subQueues.iterator ();
+        final DQ waitQueue = i_queues.next ();
+        final DQ servQueue = i_queues.next ();
+        if (queue == servQueue)
+          waitQueue.setServerAccessCredits (time, (hasServerAcccessCredits () && noWaitArmed) ? 1 : 0);
+        break;
+      default:
+        throw new RuntimeException ();
+    }
+    reassessNoWaitArmed (time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE SERVER-ACCESS-CREDITS NOTIFICATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** In case of {@link StartModel#LOCAL} does nothing; in case of {@link StartModel#ENCAPSULATOR_QUEUE} fires a
+   *  notification that we are out of server-access credits.
+   * 
+   * @see #getStartModel
+   * @see #fireIfOutOfServerAccessCredits
+   * 
+   */
+  @Override
+  public final void notifyOutOfServerAccessCredits (final double time, final DQ queue)
+  {
+    switch (getStartModel ())
+    {
+      case LOCAL:
+      case COMPRESSED_TANDEM_2_QUEUE:
+        return;
+      case ENCAPSULATOR_QUEUE:
+        fireIfOutOfServerAccessCredits (time);
+        return;
+      default:
+        throw new RuntimeException ();
+    }
+  }
+
+  /** In case of {@link StartModel#LOCAL} does nothing; in case of {@link StartModel#ENCAPSULATOR_QUEUE} fires a
+   *  notification that we have regained server-access credits.
+   * 
+   * @see #getStartModel
+   * @see #fireRegainedServerAccessCredits
+   * 
+   */
+  @Override
+  public final void notifyRegainedServerAccessCredits (final double time, final DQ queue)
+  {
+    switch (getStartModel ())
+    {
+      case LOCAL:
+      case COMPRESSED_TANDEM_2_QUEUE:
+        return;
+      case ENCAPSULATOR_QUEUE:
+        fireRegainedServerAccessCredits (time);
+        return;
+      default:
+        throw new RuntimeException ();
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE START NOTIFICATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** In case of {@link StartModel#LOCAL}, does nothing; in case of {@link StartModel#ENCAPSULATOR_QUEUE},
+   *  readjusts the server access credits, and fires the start of the real job.
    * 
    * <p>
-   * Calls {@link #update}.
-   * If needed, fires a start event for the real job, and
-   * puts that job in {@link #jobsInServiceArea}.
+   * Well, this method always calls {@link #update}.
    * 
    * <p>
    * This implementation does not allow the start of foreign delegate jobs.
    * 
+   * @see #getRealJob
    * @see #fireStart
    * 
    */
@@ -550,13 +1145,50 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   {
     final J realJob = getRealJob (job, queue);
     update (t);
-    if (! this.jobsInServiceArea.contains (realJob))
+    switch (getStartModel ())
     {
-      this.jobsInServiceArea.add (realJob);
-      fireStart (t, realJob, (Q) this);
-      startForSubClass (t, job, queue);
+      case LOCAL:
+        return;
+      case ENCAPSULATOR_QUEUE:
+        if (this.jobsInServiceArea.contains (realJob))
+          throw new IllegalStateException ();
+        takeServerAccessCredit (false);
+        this.jobsInServiceArea.add (realJob);
+        fireStart (t, realJob, (Q) this);
+        return;
+      case COMPRESSED_TANDEM_2_QUEUE:
+        final Set<DQ> subQueues = getQueues ();
+        if (subQueues == null || subQueues.size () != 2)
+          throw new IllegalStateException ();
+        final Iterator<DQ> i_queues = subQueues.iterator ();
+        final DQ waitQueue = i_queues.next ();
+        final DQ servQueue = i_queues.next ();
+        if (queue == waitQueue)
+        {
+          if (this.jobsInServiceArea.contains (realJob))
+            throw new IllegalStateException ();
+          takeServerAccessCredit (false);
+          this.jobsInServiceArea.add (realJob);
+          if (! waitQueue.revoke (t, job, true))
+            throw new RuntimeException ();
+          servQueue.arrive (t, job);
+          fireStart (t, realJob, (Q) this);
+          if (hasServerAcccessCredits () && isNoWaitArmed ())
+            waitQueue.setServerAccessCredits (t, 1);
+          fireIfOutOfServerAccessCredits (t);
+          reassessNoWaitArmed (t);
+        }
+        return;
+      default:
+        throw new RuntimeException ();
     }
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE DROP NOTIFICATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /** Notification of the dropping of a delegate job.
    * 
@@ -568,7 +1200,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * @see #update
    * @see #getDropDestinationQueue
    * @see #arrive
-   * @see #exitJobFromQueues
+   * @see #removeJobsFromQueueLocal
    * @see SimJob#setQueue
    * @see #fireDrop
    * 
@@ -577,194 +1209,68 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   public final void notifyDrop (final double t, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
-    update (t);
-    final DQ dropDestinationQueue = getDropDestinationQueue (t, job, queue);
+    final DQ dropDestinationQueue = getDropDestinationQueue ();
     if (dropDestinationQueue != null)
     {
+      update (t);
       if (! getQueues ().contains (dropDestinationQueue))
         throw new RuntimeException ();
       dropDestinationQueue.arrive (t, job);
     }
     else
-    {
-      exitJobFromQueues (realJob, job);
-      realJob.setQueue (null);
-      fireDrop (t, realJob, (Q) this);
-    }
+      drop (realJob, t);
   }
 
-  /** Returns whether revocations on delegate jobs are allowed.
-   * 
-   * <p>
-   * The default implementation returns {@code false}.
-   * 
-   * <p>
-   * By default, a {@link AbstractBlackSimQueueComposite} does not allow revocations of delegate jobs,
-   * and it will throw an exception if it detects this.
-   * By overriding this method and returning {@code true}, a subclass indicates that it uses
-   * revocations on delegate jobs in order to meet its requirements,
-   * and that relevant notifications are to be ignored.
-   * 
-   * <p>
-   * We want to stress that this method concerns revocations of <i>delegate jobs</i> on <i>sub-queues</i>,
-   * not on "real" jobs on this {@link AbstractBlackSimQueueComposite} itself.
-   * 
-   * @return Whether revocations on delegate jobs are allowed.
-   * 
-   * @see #notifyRevocation
-   * 
-   */
-  protected boolean getAllowDelegateJobRevocations ()
-  {
-    return false;
-  }
-  
-  /** Checks if the job is a known delegate job and revocations are allowed, and if so, calls {@link #update}.
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE REVOCATION NOTIFICATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Checks if the job is a known delegate job, but nothing else.
    * 
    * <p>
    * Otherwise, this method throw an {@link IllegalStateException}.
    * 
    * <p>
-   * This implementation does not allow the revocation of foreign delegate jobs.
+   * A revocation of a delegate job is always the result of a revocation attempt from the composite (this) queue.
    * 
-   * @throws IllegalStateException If delegate-job revocations are not allowed.
-   * 
-   * @see #getAllowDelegateJobRevocations
+   * @see #drop
+   * @see #revoke
    * 
    */
   @Override
   public final void notifyRevocation (final double t, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job, queue);
-    if (getAllowDelegateJobRevocations ())
-      update (t);
-    else
-      throw new IllegalStateException ();
+    /* final J realJob = */ getRealJob (job, queue);
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE DEPARTURE NOTIFICATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /** Notification of the departure of a delegate job.
    * 
    * <p>
-   * Calls {@link #update}.
    * Finds the next queue to visit by the delegate job.
    * If found, schedules the arrival of the delegate job at the next queue.
-   * Otherwise, removes both real and delegate job,
-   * reset the queue on the real job and fires a departure event.
+   * Otherwise, invokes {@link #depart} on the real job (with notification).
    * 
    * @see #selectNextQueue
-   * @see #fireDeparture
+   * @see #depart
    * 
    */
   @Override
   public final void notifyDeparture (final double t, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
-    update (t);
     final SimQueue<DJ, DQ> nextQueue = selectNextQueue (t, realJob, queue);
     if (nextQueue == null)
-    {
-      exitJobFromQueues (realJob, job);
-      realJob.setQueue (null);
-      fireDeparture (t, realJob, (Q) this);  
-    }
+      depart (t, realJob, true);
     else
       nextQueue.arrive (t, job);
-  }
-
-  /** Calls {@link #update} and {@link #reassessNoWaitArmed}.
-   * 
-   * <p>
-   * May be overridden.
-   *
-   * @see #update
-   * @see #reassessNoWaitArmed
-   * @see #isNoWaitArmed
-   * 
-   */
-  @Override
-  public void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
-  {
-    update (time);
-    reassessNoWaitArmed (time);
-  }
-
-  /** Returns whether (changes to) queue-access vacations are allowed on sub-queues.
-   * 
-   * <p>
-   * The default implementation returns {@code false}.
-   * 
-   * <p>
-   * By default, a {@link AbstractBlackSimQueueComposite} does not allow changes to the state of
-   * queue-access vacations from a foreign entity, and it will throw an exception if it detects this.
-   * By overriding this method and returning {@code true}, a subclass indicates that it uses
-   * queue-access vacation on sub-queues in order to meet its requirements,
-   * and that relevant notifications are to be ignored.
-   * 
-   * <p>
-   * We want to stress that this method concerns queue-access vacations on <i>sub-queues</i>,
-   * not on this {@link AbstractBlackSimQueueComposite} itself.
-   * 
-   * @return Whether (changes to) queue-access vacations are allowed on sub-queues.
-   * 
-   * @see #notifyStartQueueAccessVacation
-   * @see #notifyStopQueueAccessVacation
-   * 
-   */
-  protected boolean getAllowSubQueueAccessVacationChanges ()
-  {
-    return false;
-  }
-  
-  /** Throws {@link IllegalStateException} unless (changes to) sub-queue-access vacations are allowed by the subclasses.
-   * 
-   * <p>
-   * Otherwise, this implementation does nothing.
-   * 
-   * @throws IllegalStateException Unless (changes to) sub-queue-access vacations are allowed by the subclasses.
-   * 
-   * @see #getAllowSubQueueAccessVacationChanges
-   * 
-   */
-  @Override
-  public final void notifyStartQueueAccessVacation (final double time, final DQ queue)
-  {
-    if (! getAllowSubQueueAccessVacationChanges ())
-      throw new IllegalStateException ();
-  }
-
-  /** Throws {@link IllegalStateException} unless (changes to) sub-queue-access vacations are allowed by the subclasses.
-   * 
-   * <p>
-   * Otherwise, this implementation does nothing.
-   * 
-   * @throws IllegalStateException Unless (changes to) sub-queue-access vacations are allowed by the subclasses.
-   * 
-   * @see #getAllowSubQueueAccessVacationChanges
-   * 
-   */
-  @Override
-  public final void notifyStopQueueAccessVacation (final double time, final DQ queue)
-  {
-    if (! getAllowSubQueueAccessVacationChanges ())
-      throw new IllegalStateException ();
-  }
-
-  /** Does nothing.
-   * 
-   */
-  @Override
-  public final void notifyOutOfServerAccessCredits (final double time, final DQ queue)
-  {
-    /* EMPTY */
-  }
-
-  /** Does nothing.
-   * 
-   */
-  @Override
-  public final void notifyRegainedServerAccessCredits (final double time, final DQ queue)
-  {
-    /* EMPTY */
   }
 
 }

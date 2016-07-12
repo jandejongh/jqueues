@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r5.entity.queue.composite.tandem;
+package nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -6,33 +6,44 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
+import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
+import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** Tandem (serial) queue with two queues, one for waiting and one for serving.
+/** Compressed tandem (serial) queue with two queues, one used for waiting and one used for serving.
  *
- * This special {@link BlackTandemSimQueue} only allows two distinct queues, one for waiting and a second one for serving.
- * The tandem queue bypasses the service part of the first queue, only using its wait and job-selection policies,
+ * <p>
+ * This special black composite queue only allows two distinct queues, one for waiting and a second one for serving.
+ * The composite queue bypasses the service part of the first queue, only using its wait and job-selection policies,
  * and bypasses the waiting part of the second queue.
  * 
  * <p>The main purpose of this rather exotic {@link SimQueue} is to replace the waiting queue of an existing {@link SimQueue}
- * implementation with another one in order to, e.g., change from FCFS behavior in the waiting area to LCFS behavior.
+ * implementation with another one in order to, e.g., change from FIFO behavior in the waiting area to LIFO behavior.
+ * 
+ * <p>
+ * This queue has non-default semantics for the waiting and service area of the black composite queue.
+ * For more details, refer to {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
  * @param <Q>  The queue type for jobs.
  * 
+ * @see StartModel
+ * @see StartModel#COMPRESSED_TANDEM_2_QUEUE
+ * @see #setStartModel
+ * 
  */
 public class BlackCompressedTandem2SimQueue
   <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackCompressedTandem2SimQueue>
-  extends AbstractBlackTandemSimQueue<DJ, DQ, J, Q>
+  extends AbstractBlackSimQueueComposite<DJ, DQ, J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR(S) / FACTORY
+  // CONSTRUCTOR(S) / CLONING / FACTORY
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -54,11 +65,12 @@ public class BlackCompressedTandem2SimQueue
     return set;
   }
   
-  /** Creates a black compressed tandem queue given an event list, a wait queue and a serve queue.
+  /** Creates a black compressed tandem queue given an event list, a wait queue and a serve queue,
+   *  and an optional factory for delegate jobs.
    *
-   * @param eventList The event list to use.
-   * @param waitQueue  The wait queue.
-   * @param serveQueue The serve queue.
+   * @param eventList             The event list to use.
+   * @param waitQueue             The wait queue.
+   * @param serveQueue            The serve queue.
    * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
    *
    * @throws IllegalArgumentException If the event list is <code>null</code>,
@@ -66,6 +78,9 @@ public class BlackCompressedTandem2SimQueue
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
+   * @see StartModel
+   * @see StartModel#COMPRESSED_TANDEM_2_QUEUE
+   * @see #setStartModel
    * 
    */
   public BlackCompressedTandem2SimQueue
@@ -74,7 +89,29 @@ public class BlackCompressedTandem2SimQueue
    final SimQueue<DJ, DQ> serveQueue,
    final DelegateSimJobFactory delegateSimJobFactory)
   {
-    super (eventList, (Set<DQ>) createQueuesSet (waitQueue, serveQueue), delegateSimJobFactory);
+    super (eventList,
+      (Set<DQ>) createQueuesSet (waitQueue, serveQueue),
+      new SimQueueSelector<J, DQ> ()
+      {
+        @Override
+        public DQ selectFirstQueue (double time, J job)
+        {
+          return (DQ) waitQueue;
+        }
+        @Override
+        public DQ selectNextQueue (double time, J job, DQ previousQueue)
+        {
+          if (previousQueue == null)
+            throw new IllegalArgumentException ();
+          if (previousQueue == waitQueue)
+            return (DQ) serveQueue;
+          if (previousQueue == serveQueue)
+            return null;
+          throw new IllegalArgumentException ();
+        }
+      },
+      delegateSimJobFactory);
+    setStartModel (StartModel.COMPRESSED_TANDEM_2_QUEUE);
   }
 
   /** Returns a new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
@@ -147,19 +184,26 @@ public class BlackCompressedTandem2SimQueue
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // allowDelegateJobRevocations
+  // QoS / QoS CLASS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns {@code true}.
-   * 
-   * @return {@code true}.
+  /** Calls super method (in order to make implementation final).
    * 
    */
   @Override
-  protected final boolean getAllowDelegateJobRevocations ()
+  public final Object getQoS ()
   {
-    return true;
+    return super.getQoS ();
+  }
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Class getQoSClass ()
+  {
+    return super.getQoSClass ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,82 +219,6 @@ public class BlackCompressedTandem2SimQueue
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // DROP DESTINATION QUEUE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  protected final DQ getDropDestinationQueue (final double time, final DJ job, final DQ queue)
-  {
-    return super.getDropDestinationQueue (time, job, queue);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // startForSubClass
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** If the delegate job started on the {@link #getWaitQueue},
-   * revoke it immediately and let it arrive at the {@link #getServeQueue}.
-   * 
-   * <p>
-   * Always calls the super method first.
-   * Jobs starting on the {@link #getServeQueue} are otherwise ignored.
-   * 
-   * @throws RuntimeException If the delegate jobs cannot be revoked from the wait queue.
-   * 
-   * @see SimQueue#revoke
-   * @see SimQueue#arrive
-   * 
-   */
-  @Override
-  protected final void startForSubClass (final double time, final DJ job, final DQ queue)
-  {
-    super.startForSubClass (time, job, queue);
-    if (! getQueues ().contains (queue))
-      throw new IllegalArgumentException ();
-    if (queue == getWaitQueue ())
-    {
-      if (! getWaitQueue ().revoke (time, job, true))
-        throw new RuntimeException ();
-      getServeQueue ().arrive (time, job);
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // notifyNewNoWaitArmed
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Updates the server-access credits on the {@link #getWaitQueue} if the {@code noWaitArmed} state changes on the
-   *  {@link #getServeQueue}.
-   * 
-   * <p>
-   * Always calls the super method first.
-   * Updates from the {@link #getWaitQueue} are otherwise ignored.
-   * 
-   * <p>
-   * If the {@link #getServeQueue} is {@code noWaitArmed}, it sets the server-access credits on the {@link #getWaitQueue}
-   * to one, otherwise (<i>not</i> {@code noWaitArmed}) it sets it to zero.
-   * 
-   */
-  @Override
-  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
-  {
-    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
-    if (! getQueues ().contains (queue))
-      throw new IllegalArgumentException ();
-    if (queue == getServeQueue ())
-      getWaitQueue ().setServerAccessCredits (time, noWaitArmed ? 1 : 0);
   }
 
 }

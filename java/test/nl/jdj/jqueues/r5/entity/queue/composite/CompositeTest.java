@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.TestJob1;
-import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackCompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;

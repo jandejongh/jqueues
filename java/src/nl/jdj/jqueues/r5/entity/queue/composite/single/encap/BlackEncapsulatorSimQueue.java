@@ -1,71 +1,94 @@
-package nl.jdj.jqueues.r5.entity.queue.composite.tandem;
+package nl.jdj.jqueues.r5.entity.queue.composite.single.encap;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.Collections;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
+import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A {@link BlackSimQueueComposite} encapsulating a single {@link SimQueue}.
+/** A black {@link AbstractEncapsulatorSimQueue} encapsulating a single {@link SimQueue}.
  *
+ * <p>
+ * This composite queue mimics the {@link SimQueue} interface of the encapsulated queue.
+ * 
+ * <p>The main purpose of this rather futile {@link SimQueue} is to test the maturity of the {@link SimQueue} interface and
+ * its notifications: Can we reconstruct a {@link SimQueue} interface by acting on and monitoring another {@link SimQueue}?.
+ * It is, however, also useful to extract a bare {@link SimQueue} interface at the {@code Java} level
+ * from a much more complicated queue implementation.
+ * 
+ * <p>
+ * This queue has non-default semantics for the waiting and service area of the black composite queue.
+ * For more details, refer to {@link StartModel#ENCAPSULATOR_QUEUE}.
+ * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
  * @param <Q>  The queue type for jobs.
  * 
+ * @see StartModel
+ * @see StartModel#ENCAPSULATOR_QUEUE
+ * @see #setStartModel
+ * 
  */
 public class BlackEncapsulatorSimQueue
-  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackEncapsulatorSimQueue>
-  extends AbstractBlackTandemSimQueue<DJ, DQ, J, Q>
+  <DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackEncapsulatorSimQueue>
+  extends AbstractBlackSimQueueComposite<DJ, DQ, J, Q>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR(S) / FACTORY
+  // CONSTRUCTOR(S) / CLONING / FACTORY
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Auxiliary method to create the required {@link Set} of a single {@link SimQueue} in the constructor.
-   * 
-   * @param queue  The queue.
-   * 
-   * @return A {@link LinkedHashSet} holding the {@link SimQueue}.
-   * 
-   */
-  private static Set<SimQueue> createQueuesSet (final SimQueue queue)
-  {
-    if (queue == null)
-      throw new IllegalArgumentException ();
-    final Set<SimQueue> set = new LinkedHashSet<> ();
-    set.add (queue);
-    return set;
-  }
-  
-  /** Creates a black encapsulated queue given an event list and a queue.
+  /** Creates a black encapsulator queue given an event list and a queue.
    *
-   * @param eventList The event list to use.
-   * @param queue     The encapsulated queue.
+   * <p>
+   * The constructor sets the {@link StartModel} to {@link StartModel#ENCAPSULATOR_QUEUE}.
+   * 
+   * @param eventList             The event list to use.
+   * @param queue                 The encapsulated queue.
    * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
    *
    * @throws IllegalArgumentException If the event list or the queue is <code>null</code>.
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
+   * @see StartModel
+   * @see StartModel#COMPRESSED_TANDEM_2_QUEUE
+   * @see #setStartModel
    * 
    */
   public BlackEncapsulatorSimQueue
   (final SimEventList eventList,
-   final SimQueue<DJ, DQ> queue,
+   final DQ queue,
    final DelegateSimJobFactory delegateSimJobFactory)
   {
-    super (eventList, (Set<DQ>) createQueuesSet (queue), delegateSimJobFactory);
+    super (eventList,
+      Collections.singleton (queue),
+      new SimQueueSelector<J, DQ> ()
+      {
+        @Override
+        public DQ selectFirstQueue (final double time, final J job)
+        {
+          return queue;
+        }
+        @Override
+        public DQ selectNextQueue (final double time, final J job, final DQ previousQueue)
+        {
+          if (previousQueue != queue)
+            throw new IllegalArgumentException ();
+          return null;
+        }
+      },
+      delegateSimJobFactory);
+    setStartModel (StartModel.ENCAPSULATOR_QUEUE);
   }
   
-  /** Returns a new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
+  /** Returns a new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
    *  queue and the same delegate-job factory.
    * 
    * @return A new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
@@ -82,7 +105,10 @@ public class BlackEncapsulatorSimQueue
   public BlackEncapsulatorSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final SimQueue<DJ, DQ> encapsulatedQueueCopy = getEncapsulatedQueue ().getCopySimQueue ();
-    return new BlackEncapsulatorSimQueue<> (getEventList (), encapsulatedQueueCopy, getDelegateSimJobFactory ());
+    return new BlackEncapsulatorSimQueue
+      (getEventList (),
+        encapsulatedQueueCopy,
+        getDelegateSimJobFactory ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +117,11 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  /** Returns the encapsulated queue.
+   * 
+   * @return The encapsulated queue, non-{@code null}.
+   * 
+   */
   public final SimQueue<DJ, DQ> getEncapsulatedQueue ()
   {
     return getQueues ().iterator ().next ();
@@ -115,21 +146,28 @@ public class BlackEncapsulatorSimQueue
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // allowDelegateJobRevocations
+  // QoS / QoS CLASS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns {@code false}.
-   * 
-   * @return {@code false}.
+  /** Calls super method (in order to make implementation final).
    * 
    */
   @Override
-  protected final boolean getAllowDelegateJobRevocations ()
+  public final Object getQoS ()
   {
-    return false;
+    return super.getQoS ();
   }
-  
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Class getQoSClass ()
+  {
+    return super.getQoSClass ();
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // RESET
@@ -143,51 +181,6 @@ public class BlackEncapsulatorSimQueue
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // DROP DESTINATION QUEUE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  protected final DQ getDropDestinationQueue (final double time, final DJ job, final DQ queue)
-  {
-    return super.getDropDestinationQueue (time, job, queue);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // startForSubClass
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  protected final void startForSubClass (final double time, final DJ job, final DQ queue)
-  {
-    super.startForSubClass (time, job, queue);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // notifyNewNoWaitArmed
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
-  {
-    super.notifyNewNoWaitArmed (time, queue, noWaitArmed);
   }
 
 }
