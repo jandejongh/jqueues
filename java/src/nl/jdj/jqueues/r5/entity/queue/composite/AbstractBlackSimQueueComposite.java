@@ -23,7 +23,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * <p>
  * For details about the semantics of the waiting and service areas of a black composite queue,
- * see {@link StartModel}.
+ * see {@link BlackSimQueueComposite.StartModel}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -92,9 +92,10 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * 
    * @param startModel The new start model (non-{@code null}).
    * 
-   * @throws IllegalArgumentException If the argument is {@code null}, or {@link StartModel#ENCAPSULATOR_QUEUE} is chosen
+   * @throws IllegalArgumentException If the argument is {@code null},
+   *                                  or {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE} is chosen
    *                                  while there are fewer or more that <i>one</i> sub-queues,
-   *                                  or {@link StartModel#COMPRESSED_TANDEM_2_QUEUE} is chosen
+   *                                  or {@link BlackSimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE} is chosen
    *                                  while there are fewer or more that <i>two</i> sub-queues,
    * 
    * @see BlackEncapsulatorSimQueue
@@ -412,17 +413,19 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   /** Reschedules after an arrival.
    * 
    * <p>
-   * In case of {@link StartModel#LOCAL}, checks the server-access credits and if passed (and after taking a credit),
+   * In case of {@link BlackSimQueueComposite.StartModel#LOCAL},
+   * checks the server-access credits and if passed (and after taking a credit),
    * lets the delegate job arrive at the queue returned by
    * {@link #selectFirstQueue}.
    * 
    * <p>
-   * In case of {@link StartModel#ENCAPSULATOR_QUEUE} and {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
+   * In case of {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE}
+   * and {@link BlackSimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE},
    * the procedure is the same, except for checking the server-access credits (and taking one);
    * the delegate job is always scheduled for arrival at the first queue.
    * 
    * <p>
-   * With any {@link StartModel}, should <code>null</code> be returned by {@link #selectFirstQueue},
+   * With any {@link BlackSimQueueComposite.StartModel}, should <code>null</code> be returned by {@link #selectFirstQueue},
    * then the real job departs through {@link #depart} with listener notification.
    * 
    * @see #getStartModel
@@ -526,18 +529,21 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * A real job has been dropped from the composite queue, see {@link #removeJobFromQueueUponDrop} for the potential reasons.
    * 
    * <p>
-   * In case of {@link StartModel#LOCAL}, there is nothing to do here since dropping a real job and its corresponding delegate job
+   * In case of {@link BlackSimQueueComposite.StartModel#LOCAL},
+   * there is nothing to do here since dropping a real job and its corresponding delegate job
    * does not affect the access to the sub-queues, which is only determined by our (local) server-access credits.
    * And these are not affected by drops.
    * 
    * <p>
-   * In case of {@link StartModel#ENCAPSULATOR_QUEUE}, we rely on (follow) the scheduling on the (single) sub-queue.
+   * In case of {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE},
+   * we rely on (follow) the scheduling on the (single) sub-queue.
    * Since the delegate job has been dropped now (for whatever reason) on the encapsulated queue,
    * we can simply wait for notifications from the encapsulated queue for visit events
    * through the various notification listeners and act upon them. In short, there is nothing to do here.
    * 
    * <p>
-   * In case of {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, we immediately realize that dropping a delegate job from the
+   * In case of {@link BlackSimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE},
+   * we immediately realize that dropping a delegate job from the
    * wait queue (the first queue) does not require any rescheduling: the delegate job was waiting at the first queue,
    * so it was not eligible for access to the server queue, and the mere fact of dropping it can never result in another
    * job at the waiting queue getting access to the server, or result in a state change at the server queue (the second queue).
@@ -547,7 +553,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * <p>
    * So, in short, there is really nothing to do here for good reasons.
    * 
-   * @see StartModel
+   * @see BlackSimQueueComposite.StartModel
    * @see #getStartModel
    * @see #isNoWaitArmed
    * @see #notifyNewNoWaitArmed
@@ -605,17 +611,17 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   /** Determines the {@code noWaitArmed} state of the composite queue.
    * 
    * <p>
-   * In case of {@link StartModel#LOCAL}, simply returns <code>true</code>.
+   * In case of {@link BlackSimQueueComposite.StartModel#LOCAL}, simply returns <code>true</code>.
    * 
    * <p>
-   * In case of {@link StartModel#ENCAPSULATOR_QUEUE},
+   * In case of {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE},
    *   copies the corresponding value on the sub-queue.
    * 
    * <p>
-   * In case of {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
+   * In case of {@link BlackSimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE},
    *   copies the corresponding value on the service-queue (i.e., the <i>second</i> sub-queue).
    * This result is only valid if the composite queue is in a stable state, i.e., a state in which
-   *   the {@link noWaitArmed} state on the server queue implies that the waiting queue is empty and
+   *   the {@code noWaitArmed} state on the server queue implies that the waiting queue is empty and
    *   has server-access credits.
    * Care should be taken in case this method is used internally.
    * 
@@ -702,12 +708,15 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** In case of {@link StartModel#LOCAL} or {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
+  /** In case of {@link BlackSimQueueComposite.StartModel#LOCAL}
+   *  or {@link BlackSimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE},
    *  does nothing and relies on {@link #rescheduleForNewServerAccessCredits};
-   *  in case of {@link StartModel#ENCAPSULATOR_QUEUE},
+   *  in case of {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE},
    *  copies the new value for the server-access credits into the sub-queue.
    * 
-   * @throws IllegalStateException If the start model is {@link StartModel#ENCAPSULATOR_QUEUE} and there is not a single sub-queue.
+   * @throws IllegalStateException If the start model is
+   *                               {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE}
+   *                               and there is not a single sub-queue.
    * 
    * @see #getStartModel
    * @see #getServerAccessCredits
@@ -735,14 +744,15 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   /** Reschedules for new server-access credits.
    * 
    * <p>
-   * In case of {@link StartModel#LOCAL}, schedules delegate jobs for arrival at their first queue until the
-   *  (new) server-access credits are exhausted.
+   * In case of {@link BlackSimQueueComposite.StartModel#LOCAL},
+   * schedules delegate jobs for arrival at their first queue until the
+   * (new) server-access credits are exhausted.
    * 
    * <p>
-   * In case of {@link StartModel#ENCAPSULATOR_QUEUE}, this method does nothing.
+   * In case of {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE}, this method does nothing.
    * 
    * <p>
-   * In case of {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
+   * In case of {@link BlackSimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE},
    * sets the server access credits on the wait queue to one if the serve queue is in {@code noWaitArmed} state.
    * 
    * @see #getStartModel
@@ -1075,7 +1085,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** In case of {@link StartModel#LOCAL} does nothing; in case of {@link StartModel#ENCAPSULATOR_QUEUE} fires a
+  /** In case of {@link BlackSimQueueComposite.StartModel#LOCAL} does nothing;
+   *  in case of {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE} fires a
    *  notification that we are out of server-access credits.
    * 
    * @see #getStartModel
@@ -1098,7 +1109,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     }
   }
 
-  /** In case of {@link StartModel#LOCAL} does nothing; in case of {@link StartModel#ENCAPSULATOR_QUEUE} fires a
+  /** In case of {@link BlackSimQueueComposite.StartModel#LOCAL} does nothing;
+   *  in case of {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE} fires a
    *  notification that we have regained server-access credits.
    * 
    * @see #getStartModel
@@ -1127,7 +1139,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** In case of {@link StartModel#LOCAL}, does nothing; in case of {@link StartModel#ENCAPSULATOR_QUEUE},
+  /** In case of {@link BlackSimQueueComposite.StartModel#LOCAL}, does nothing;
+   *  in case of {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE},
    *  readjusts the server access credits, and fires the start of the real job.
    * 
    * <p>

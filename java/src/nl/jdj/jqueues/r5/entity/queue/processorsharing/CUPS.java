@@ -509,7 +509,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
    *                               or the pre-update hook fails to perform the expected catch-up
    *                               (in both cases, taking into consideration the possibility of missed updates).
    * 
-   * @see #CatchUpEvent
+   * @see CatchUpEvent
    * @see #catchUp
    * @see #rescheduleAfterQueueEvent
    * 
