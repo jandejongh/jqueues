@@ -4,12 +4,14 @@ import java.util.Collections;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite.StartModel;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A black {@link AbstractEncapsulatorSimQueue} encapsulating a single {@link SimQueue}.
+/** A {@link BlackSimQueueComposite} encapsulating a single {@link SimQueue}.
  *
  * <p>
  * This composite queue mimics the {@link SimQueue} interface of the encapsulated queue.
@@ -28,6 +30,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <J>  The job type.
  * @param <Q>  The queue type for jobs.
  * 
+ * @see BlackSimQueueComposite
  * @see StartModel
  * @see StartModel#ENCAPSULATOR_QUEUE
  * @see #setStartModel

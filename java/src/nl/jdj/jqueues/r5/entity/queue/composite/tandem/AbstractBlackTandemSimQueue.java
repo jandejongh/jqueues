@@ -8,6 +8,7 @@ import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
+import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A partial implementation of a tandem (serial) queue.

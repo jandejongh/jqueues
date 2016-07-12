@@ -8,6 +8,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite.StartModel;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
@@ -25,15 +26,16 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * <p>
  * This queue has non-default semantics for the waiting and service area of the black composite queue.
- * For more details, refer to {@link BlackSimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE}.
+ * For more details, refer to {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
  * @param <Q>  The queue type for jobs.
  * 
- * @see BlackSimQueueComposite#StartModel
- * @see BlackSimQueueComposite#StartModel#COMPRESSED_TANDEM_2_QUEUE
+ * @see BlackSimQueueComposite
+ * @see StartModel
+ * @see StartModel#COMPRESSED_TANDEM_2_QUEUE
  * @see #setStartModel
  * 
  */
