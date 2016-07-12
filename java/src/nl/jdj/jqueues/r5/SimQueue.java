@@ -46,6 +46,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This flexibility, however, comes at the expense of the absence of server-structure methods
  * on the (bare) {@link SimQueue} interface.
  * 
+ * <p>
  * Also note that jobs in the service area do <i>not</i> have to be served all the time
  * (although many sub-interfaces/sub-classes impose this requirement).
  * 
@@ -289,18 +290,41 @@ extends SimEntity<J, Q>
    * <p>
    * If the job is not currently present at this {@link SimQueue}, {@code false} is returned.
    * 
+   * <p>
+   * If the job is present in the service area (has already started), and {@code interruptService == false},
+   * this method returns {@code false}.
+   * 
+   * <p>
+   * In all other case, the job is revoked from the queue and {@code true} is returned.
+   * 
    * @param time             The time at which the request is issued, i.c., the current time.
    * @param job              The job to be revoked from the queue.
    * @param interruptService Whether to allow interruption of the job's
    *                           service if already started.
    *                         If {@code false}, revocation will only succeed if the
-   *                           job has not received any service yet.
+   *                           job has not started yet.
    *
    * @return True if revocation succeeded (returns {@code false} if the job is not present).
    *
    */
   public boolean revoke (double time, J job, boolean interruptService);
 
+  /** Revocation of a job at a queue.
+   *
+   * <p>
+   * Unlike {@link #revoke(double, nl.jdj.jqueues.r5.SimJob, boolean)}, this request can never fail
+   * in the sense that upon return from this method, the job is no longer present in the queue.
+   * This method does nothing if the job is not present a priori at the queue.
+   * 
+   * @param time The time at which the request is issued, i.c., the current time.
+   * @param job  The job to be revoked from the queue.
+   *
+   */
+  public default void revoke (final double time, final J job)
+  {
+    revoke (time, job, true);
+  }
+  
   /** Sets the server-access credits.
    * 
    * @param time    The time at which to set the credits, i.c., the current time.
