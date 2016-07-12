@@ -995,18 +995,41 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Checks if the job is a known delegate job.
+  /** Notification of an arrival at a sub-queue.
+   * 
+   * <p>
+   * In case of {@link BlackSimQueueComposite.StartModel#LOCAL},
+   * checks to see if the real job is in the (local) service area.
+   * If not, adds it and invokes {@link #fireStart} for the real job at this queue.
    * 
    * <p>
    * This implementation does not allow the arrival of foreign delegate jobs.
    * 
    * @see #getRealJob
+   * @see #getJobsInServiceArea
+   * @see #jobsInServiceArea
+   * @see #fireStart
    * 
    */
   @Override
   public final void notifyArrival (final double t, final DJ job, final DQ queue)
   {
-    /* final J realJob = */ getRealJob (job, queue);
+    final J realJob = getRealJob (job, queue);
+    switch (getStartModel ())
+    {
+      case LOCAL:
+        if (! getJobsInServiceArea ().contains (realJob))
+        {
+          this.jobsInServiceArea.add (realJob);
+          fireStart (t, realJob, (Q) this);
+        }
+        break;
+      case ENCAPSULATOR_QUEUE:
+      case COMPRESSED_TANDEM_2_QUEUE:
+        break;
+      default:
+        throw new RuntimeException ();
+    }
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
