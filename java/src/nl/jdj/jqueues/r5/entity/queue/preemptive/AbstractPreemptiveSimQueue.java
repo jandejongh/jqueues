@@ -244,17 +244,13 @@ public abstract class AbstractPreemptiveSimQueue
     removeJobFromQueueUponExit (job, time);
   }
 
-  /** Invokes {@link #removeJobFromQueueUponExit} (default implementation),
-   * unless the job is in the service area and the {@code interruptService} flag is set to {@code false}.
+  /** Invokes {@link #removeJobFromQueueUponExit} (default implementation).
    * 
    */
   @Override
-  protected boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected void removeJobFromQueueUponRevokation (final J job, final double time)
   {
-    if (this.jobsInServiceArea.contains (job) && ! interruptService)
-      return false;
     removeJobFromQueueUponExit (job, time);
-    return true;
   }
 
   /** Invokes {@link #removeJobFromQueueUponExit} (default implementation).

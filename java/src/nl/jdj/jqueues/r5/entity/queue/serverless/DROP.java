@@ -139,11 +139,14 @@ extends AbstractServerlessSimQueue<J, Q>
 
   /** Throws {@link IllegalStateException}.
    * 
+   * <p>
+   * XXX This is not correctly stated. but somehow correct. This method should not be called??
+   * 
    * @throws IllegalStateException Always, as this {@link SimQueue} does not allow revocations.
    * 
    */
   @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
     throw new IllegalStateException ();
   }

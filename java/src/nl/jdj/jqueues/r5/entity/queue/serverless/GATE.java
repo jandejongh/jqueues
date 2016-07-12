@@ -219,12 +219,11 @@ implements SimQueueWithGate<J, Q>
    * 
    */
   @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
     if (job == null || ! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
     this.jobQueue.remove (job);
-    return true;
   }
 
   /** Does nothing.

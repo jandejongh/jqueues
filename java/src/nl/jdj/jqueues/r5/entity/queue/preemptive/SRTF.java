@@ -167,9 +167,9 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    * 
    */
   @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
-    return super.removeJobFromQueueUponRevokation (job, time, interruptService);
+    super.removeJobFromQueueUponRevokation (job, time);
   }
 
   /** Does nothing.
@@ -196,7 +196,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    * If a job starts with remaining service time strictly smaller than
    * the job currently being served, the latter is preempted in favor of the former.
    * 
-   * @see #hasJobsWaitingInWaitingArea
+   * @see #hasJobsInWaitingArea
    * @see #hasServerAcccessCredits
    * @see #jobsInServiceArea
    * @see #remainingServiceTime
@@ -213,7 +213,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
     while (hasServerAcccessCredits ()
-      && hasJobsWaitingInWaitingArea ())
+      && hasJobsInWaitingArea ())
     {
       takeServerAccessCredit (false);
       final J job = getFirstJobInWaitingArea ();

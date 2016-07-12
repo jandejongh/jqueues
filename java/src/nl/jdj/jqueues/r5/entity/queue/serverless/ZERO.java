@@ -151,7 +151,7 @@ extends AbstractServerlessSimQueue<J, Q>
    * 
    */
   @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
     throw new IllegalStateException ();
   }

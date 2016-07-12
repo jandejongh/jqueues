@@ -114,13 +114,13 @@ extends AbstractServerlessSimQueue<J, Q>
     /* EMPTY */
   }
 
-  /** Invokes {@link #removeJobFromQueueUponRevokation}, requesting <code>interruptService</code>.
+  /** Invokes {@link #removeJobFromQueueUponRevokation}.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
-    removeJobFromQueueUponRevokation (job, time, true);
+    removeJobFromQueueUponRevokation (job, time);
   }
 
   /** Does nothing.
@@ -134,18 +134,15 @@ extends AbstractServerlessSimQueue<J, Q>
 
   /** Removes the job, after passing sanity checks, from the job queue {@link #jobQueue}.
    * 
-   * @return True.
-   * 
    */
   @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
     if (job == null || ! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
     if (! this.jobsInServiceArea.isEmpty ())
       throw new IllegalStateException ();
     this.jobQueue.remove (job);
-    return true;
   }
 
   /** Does nothing.

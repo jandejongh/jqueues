@@ -174,9 +174,9 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    * 
    */
   @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
-    return super.removeJobFromQueueUponRevokation (job, time, interruptService);
+    super.removeJobFromQueueUponRevokation (job, time);
   }
 
   /** Does nothing.
@@ -197,7 +197,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   /** Schedules an eligible waiting job if possible, preempting the currently executing job if needed.
    * 
    * @see #hasServerAcccessCredits
-   * @see #hasJobsWaitingInWaitingArea
+   * @see #hasJobsInWaitingArea
    * @see #jobsBeingServed
    * @see #jobQueue
    * @see #takeServerAccessCredit
@@ -214,7 +214,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   protected final void rescheduleForNewServerAccessCredits (final double time)
   {
     if (hasServerAcccessCredits ()
-      && hasJobsWaitingInWaitingArea ())
+      && hasJobsInWaitingArea ())
     {
       // Scheduling section; make sure we do not issue notifications.
       // Get the latest arrival in the waiting area.

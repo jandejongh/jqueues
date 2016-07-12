@@ -157,13 +157,13 @@ extends AbstractServerlessSimQueue<J, Q>
     }
   }
 
-  /** Invokes {@link #removeJobFromQueueUponRevokation}, requesting <code>interruptService</code>.
+  /** Invokes {@link #removeJobFromQueueUponRevokation}.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
-    removeJobFromQueueUponRevokation (job, time, true);
+    removeJobFromQueueUponRevokation (job, time);
   }
 
   /** Does nothing.
@@ -177,13 +177,11 @@ extends AbstractServerlessSimQueue<J, Q>
 
   /** Cancels the departure of the job and removes it, after passing sanity checks, from the job queue {@link #jobQueue}.
    * 
-   * @return True.
-   * 
    * @see #cancelDepartureEvent
    * 
    */
   @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
     if (job == null || ! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
@@ -191,7 +189,6 @@ extends AbstractServerlessSimQueue<J, Q>
       throw new IllegalStateException ();
     cancelDepartureEvent (job);
     this.jobQueue.remove (job);
-    return true;
   }
 
   /** Does nothing.

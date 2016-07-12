@@ -136,13 +136,13 @@ public abstract class AbstractNonPreemptiveSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Invokes {@link #removeJobFromQueueUponRevokation}, requesting <code>interruptService</code>.
+  /** Invokes {@link #removeJobFromQueueUponRevokation}.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
-    removeJobFromQueueUponRevokation (job, time, true);
+    removeJobFromQueueUponRevokation (job, time);
   }
   
   /** Invokes {@link #reschedule} passing the time argument.
@@ -160,11 +160,9 @@ public abstract class AbstractNonPreemptiveSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** If possible, removes the job from the internal data structures, and cancels a pending departure event.
+  /** Removes the job from the internal data structures, and if needed, cancels a pending departure event.
    * 
-   * If the job is already in service, and the <code>interruptService</code> argument is set to <code>false</code>,
-   * this method returns <code>false</code>, by contract of {@link SimQueue}.
-   * Otherwise, if the job is in service, its departure event is canceled through {@link #cancelDepartureEvent},
+   * If the job is in service, its departure event is canceled through {@link #cancelDepartureEvent},
    * and the job is removed from {@link #jobsInServiceArea} and {@link #jobQueue}.
    * Subsequently, whether the job was in service or not, it is removed from {@link #jobQueue},
    * and <code>true</code> is returned.
@@ -175,22 +173,16 @@ public abstract class AbstractNonPreemptiveSimQueue
    * 
    */
   @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
     if (! this.jobQueue.contains (job))
       throw new IllegalStateException ();
     if (this.jobsInServiceArea.contains (job))
     {
-      if (interruptService)
-      {
-        this.jobsInServiceArea.remove (job);
-        cancelDepartureEvent (job);
-      }
-      else
-        return false;
+      this.jobsInServiceArea.remove (job);
+      cancelDepartureEvent (job);
     }
     this.jobQueue.remove (job);
-    return true;
   }
 
   /** Invokes {@link #reschedule} passing the time argument.
