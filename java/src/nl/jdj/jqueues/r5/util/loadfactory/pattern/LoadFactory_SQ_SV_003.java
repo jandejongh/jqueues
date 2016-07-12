@@ -12,6 +12,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r5.event.SimQueueJobRevocationEvent;
+import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
 
@@ -53,10 +54,11 @@ extends LoadFactory_SQ_SV_001<J, Q>
     final int numberOfJobs,
     final boolean reset,
     final double resetTime,
+    final Set<LoadFactoryHint> hints,
     final NavigableMap<Double, Set<SimEntityEvent>> queueExternalEvents)
   {
     final Set<J> jobs = super.generate (eventList, attachSimJobsToEventList,
-      queue, jobFactory, numberOfJobs, reset, resetTime, queueExternalEvents);
+      queue, jobFactory, numberOfJobs, reset, resetTime, hints, queueExternalEvents);
     final NavigableMap<Double, Set<SimEntityEvent>> realQueueExternalEvents =
       ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
     final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();

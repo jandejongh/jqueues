@@ -10,17 +10,11 @@ import java.util.TreeMap;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimJobFactory;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_B;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LJF;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF;
-import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
-import nl.jdj.jqueues.r5.entity.queue.processorsharing.CUPS;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
 import nl.jdj.jqueues.r5.util.loadfactory.AbstractLoadFactory_SQ_SV;
+import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
 
@@ -36,36 +30,43 @@ public class LoadFactory_SQ_SV_001<J extends SimJob, Q extends SimQueue>
 extends AbstractLoadFactory_SQ_SV<J, Q>
 {
 
+  /** A load-factory hint enforcing jitter on the service-time requirement of jobs (e.g., in order to avoid ambiguities).
+   * 
+   */
+  public static final LoadFactoryHint SERVICE_TIME_JITTER = new LoadFactoryHint ()
+  {
+    @Override
+    public final String toString ()
+    {
+      return "SERVICE_TIME_JITTER";
+    }
+  };
+  
   private final Random rngRequestedServiceTimeJitter = new Random ();
   
   /** Creates a suitable map for the requested service time for a job visit to a queue.
    * 
    * <p>
-   * For specific queue types, i.c.,
-   * {@link FCFS_B}, {@link NoBuffer_c}, {@link LCFS}, {@link SJF}, {@link LJF}, {@link P_LCFS}, {@link CUPS}
-   * a jitter from U[-0.01, +0.01] is added to the service time.
+   * Upon request, a jitter from U[-0.01, +0.01] is added to the service time.
+   * This is typically used to avoid ambiguities in the schedule.
    * 
    * @param queue The queue.
    * @param n     The job number.
+   * @param jitter Whether to apply jitter to the requested service time.
    * 
    * @return A map holding the service time (i.e., the job number) at the queue.
    * 
    * @see SimJobFactory#newInstance For the use of the map generated.
+   * @see LoadFactory_SQ_SV_001#SERVICE_TIME_JITTER
    * 
    */
-  protected Map<Q, Double> generateRequestedServiceTimeMap (final Q queue, final int n)
+  protected Map<Q, Double> generateRequestedServiceTimeMap (final Q queue, final int n, final boolean jitter)
   {
     final Map<Q, Double> requestedServiceTimeMap = new HashMap ();
     final double requestedServiceTimeJitter =
-      (((queue instanceof FCFS_B)
-        || (queue instanceof NoBuffer_c)
-        || (queue instanceof LCFS)
-        || (queue instanceof SJF)
-        || (queue instanceof LJF)
-        || (queue instanceof P_LCFS)
-        || (queue instanceof CUPS))
+      jitter
       ? 0.01 * (2.0 * this.rngRequestedServiceTimeJitter.nextDouble () - 1.0)
-      : 0.0);
+      : 0.0;
     requestedServiceTimeMap.put (queue, ((double) n) + requestedServiceTimeJitter);
     return requestedServiceTimeMap;
   }
@@ -76,7 +77,8 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
    * This method
    * <ul>
    * <li> generates the requested number of jobs, and number them starting with one;
-   * <li> set the requested service time for each job equal to its job number;
+   * <li> set the requested service time for each job equal to its job number (adding jitter if requested through
+   *      {@link LoadFactory_SQ_SV_001#SERVICE_TIME_JITTER});
    * <li> schedules a single arrival for each job at time equal to its job number.
    * </ul>
    * 
@@ -84,6 +86,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
    * Jobs are returned in a {@link LinkedHashSet}, preserving the creation order of the jobs.
    * 
    * @see SimEntityEventScheduler#schedule
+   * @see LoadFactory_SQ_SV_001#SERVICE_TIME_JITTER
    * 
    */
   @Override
@@ -95,6 +98,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
     final int numberOfJobs,
     final boolean reset,
     final double resetTime,
+    final Set<LoadFactoryHint> hints,
     final NavigableMap<Double, Set<SimEntityEvent>> queueExternalEvents)
   {
     if (eventList == null || queue == null || jobFactory == null)
@@ -106,9 +110,11 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
       ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
     final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
     final SimEventList jobEventList = (attachSimJobsToEventList ? eventList : null);
+    final boolean jitter = (hints != null && hints.contains (LoadFactory_SQ_SV_001.SERVICE_TIME_JITTER));
     for (int i = 1; i <= numberOfJobs; i++)
     {
-      final J job = jobFactory.newInstance (jobEventList, Integer.toString (i), generateRequestedServiceTimeMap (queue, i));
+      final J job = jobFactory.newInstance
+        (jobEventList, Integer.toString (i), generateRequestedServiceTimeMap (queue, i, jitter));
       final SimEntityEvent<J, Q> arrivalSchedule = new SimQueueJobArrivalEvent (job, queue, (double) i);
       if (! realQueueExternalEvents.containsKey ((double) i))
         realQueueExternalEvents.put ((double) i, new LinkedHashSet<> ());

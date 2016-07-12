@@ -31,6 +31,8 @@ extends LoadFactory<J, Q>
    * @param numberOfJobs             The number of jobs to generate, non-negative.
    * @param reset                    Whether or not to reset the event list.
    * @param resetTime                The time to which to reset the event list.
+   * @param hints                    An optional set of {@link LoadFactoryHint}s, may be {@code null}
+   *                                 and unknown hints are silently ignored.
    * @param queueEvents              An optional map for storing the generated {@link SimEntityEvent}s indexed by
    *                                 event time and for events at the same time, by order of occurrence.
    *                                 The map is <i>not</i> cleared; generated events in this method are assumed to
@@ -49,6 +51,7 @@ extends LoadFactory<J, Q>
     int numberOfJobs,
     boolean reset,
     double resetTime,
+    Set<LoadFactoryHint> hints,
     NavigableMap<Double, Set<SimEntityEvent>> queueEvents);
 
 }

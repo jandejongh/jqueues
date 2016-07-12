@@ -60,7 +60,7 @@ public class PQTest
       {
         final SimQueuePredictor<PQ> predictor = new SimQueuePredictor_PQ ();
         final PQ queue = new PQ (eventList, preemptionStrategy, Double.class, Double.POSITIVE_INFINITY);
-        DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, silent, deadSilent, 1.0e-12, null);
+        DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
         eventList.reset ();
       }
   }

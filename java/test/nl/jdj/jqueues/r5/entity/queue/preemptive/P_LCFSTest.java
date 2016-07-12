@@ -1,6 +1,10 @@
 package nl.jdj.jqueues.r5.entity.queue.preemptive;
 
+import java.util.Collections;
+import java.util.Set;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
+import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
+import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_001;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_P_LCFS;
@@ -53,6 +57,7 @@ public class P_LCFSTest
   {
     final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     final int numberOfJobs = 100;
+    final Set<LoadFactoryHint> jitterHint = Collections.singleton (LoadFactory_SQ_SV_001.SERVICE_TIME_JITTER);
     final boolean silent = true;
     final boolean deadSilent = true;
     for (final PreemptionStrategy preemptionStrategy : PreemptionStrategy.values ())
@@ -60,7 +65,7 @@ public class P_LCFSTest
       {
         final P_LCFS queue = new P_LCFS (eventList, preemptionStrategy);
         final SimQueuePredictor predictor = new SimQueuePredictor_P_LCFS ();
-        DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, silent, deadSilent, 1.0e-12, null);
+        DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
         eventList.reset ();
       }
   }

@@ -70,7 +70,7 @@ public class GATETest
     // Override the default StdOutSimQueueListener, and always switch it off in the test.
     if (! silent)
       queue.registerSimEntityListener (new TestListener<>  ());
-    DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, true, deadSilent, 1.0e-12, null);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, null, true, deadSilent, 1.0e-12, null);
   }
 
 }

@@ -12,6 +12,7 @@ import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJobQoSFactory;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.KnownLoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
@@ -31,6 +32,7 @@ public class DefaultSimQueueTests
     (final Q queue,
      final SimQueuePredictor<Q> predictor,
      final int numberOfJobs,
+     final Set<LoadFactoryHint> hints,
      final boolean silent,
      final boolean deadSilent,
      final double accuracy,
@@ -56,7 +58,7 @@ public class DefaultSimQueueTests
           final NavigableMap<Double, Set<SimEntityEvent>> queueEvents = new TreeMap<> ();
           final LoadFactory_SQ_SV loadFactory = klf.getLoadFactory ();
           final Set<SimJob> jobs = loadFactory.generate
-            (el, false, queue, jobFactory, numberOfJobs, true, 0.0, queueEvents);
+            (el, false, queue, jobFactory, numberOfJobs, true, 0.0, hints, queueEvents);
           final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictedJobQueueVisitLogs
             = predictor.predictVisitLogs_SQ_SV_U (queue, queueEvents);
           el.run ();

@@ -57,7 +57,7 @@ public class PSTest
     final int numberOfJobs = 50;
     final boolean silent = false;
     final boolean deadSilent = true;
-    DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, silent, deadSilent, 1.0e-6, null);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, null, silent, deadSilent, 1.0e-6, null);
   }
 
 }

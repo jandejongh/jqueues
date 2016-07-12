@@ -17,6 +17,7 @@ import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
 import nl.jdj.jqueues.r5.extensions.qos.SimJobQoS;
 import nl.jdj.jqueues.r5.util.loadfactory.AbstractLoadFactory_SQ_SV;
+import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
 
@@ -80,6 +81,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
     final int numberOfJobs,
     final boolean reset,
     final double resetTime,
+    final Set<LoadFactoryHint> hints,
     final NavigableMap<Double, Set<SimEntityEvent>> queueExternalEvents)
   {
     if (eventList == null || queue == null || jobFactory == null)
