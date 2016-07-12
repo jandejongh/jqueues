@@ -281,12 +281,12 @@ implements SimEntity<J, Q>
    * of this entity.
    * 
    * <p>
-   * This final implementation invokes the update hooks,
+   * This final implementation invokes the pre-update hooks,
    * notifies the entity listeners, and updates its internal time (in that order!).
    * 
    * @param time The time of the update (i.c., the current time).
    * 
-   * @see #registerUpdateHook
+   * @see #registerPreUpdateHook
    * @see SimEntityListener#notifyUpdate
    * @see #fireUpdate
    * 
@@ -297,20 +297,20 @@ implements SimEntity<J, Q>
       throw new IllegalStateException ();
     if (Double.isInfinite (time) || time > this.lastUpdateTime)
     {
-      for (final DoubleConsumer updateHook : this.updateHooks)
+      for (final DoubleConsumer updateHook : this.preUpdateHooks)
         updateHook.accept (time);
       fireUpdate (time);
       this.lastUpdateTime = time;
     }
   }
 
-  private final Set<DoubleConsumer> updateHooks = new LinkedHashSet<> ();
+  private final Set<DoubleConsumer> preUpdateHooks = new LinkedHashSet<> ();
   
   /** Registers an update hook (for sub-class use only).
    * 
    * <p>
-   * An update hook is a {@link DoubleConsumer} (typically, a method reference)
-   * that is invoked by {@link #update} before anything else (i.c., notifying listeners).
+   * A pre-update hook is a {@link DoubleConsumer} (typically, a method reference)
+   * that is invoked by {@link #update} <i>before</i> anything else (i.c., notifying listeners).
    * It allows sub-class implementations to update internal administration as part of the update,
    * and gives them access to the "old time", i.e.,, the time of the previous update,
    * through {@link #getLastUpdateTime} (before it is overwritten by this method {@link #update}).
@@ -321,18 +321,18 @@ implements SimEntity<J, Q>
    * see {@link #update}, which obviously has not been set yet on the object.
    * The "old" time is available through {@link #getLastUpdateTime}.
    * 
-   * @param updateHook The update hook, must be non-{@code null}.
+   * @param preUpdateHook The pre-update hook, must be non-{@code null}.
    * 
    * @throws IllegalArgumentException If the argument is {@code null}.
    * 
    * @see #update
    * 
    */
-  protected final void registerUpdateHook (final DoubleConsumer updateHook)
+  protected final void registerPreUpdateHook (final DoubleConsumer preUpdateHook)
   {
-    if (updateHook == null)
+    if (preUpdateHook == null)
       throw new IllegalArgumentException ();
-    this.updateHooks.add (updateHook);
+    this.preUpdateHooks.add (preUpdateHook);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
