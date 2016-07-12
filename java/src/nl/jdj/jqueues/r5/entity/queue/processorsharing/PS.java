@@ -32,18 +32,18 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   /** Creates a PS queue given an event list.
    *
    * <p>
-   * The constructor registers an update hook that sets the virtual time upon updates.
+   * The constructor registers a pre-update hook that sets the virtual time upon updates.
    * 
    * @param eventList The event list to use.
    *
-   * @see #registerUpdateHook
+   * @see #registerPreUpdateHook
    * @see #updateVirtualTime
    * 
    */
   public PS (final SimEventList eventList)
   {
     super (eventList);
-    registerUpdateHook (this::updateVirtualTime);
+    registerPreUpdateHook (this::updateVirtualTime);
   }
   
   /** Returns a new {@link PS} object on the same {@link SimEventList}.
@@ -57,6 +57,23 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   public PS<J, Q> getCopySimQueue ()
   {
     return new PS<> (getEventList ());
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NAME/toString
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns "PS".
+   * 
+   * @return "PS".
+   * 
+   */
+  @Override
+  public String toStringDefault ()
+  {
+    return "PS";
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -146,7 +163,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
    * @see #getNumberOfJobsInServiceArea
    * @see #getVirtualTime
    * @see #getLastUpdateTime
-   * @see #registerUpdateHook
+   * @see #registerPreUpdateHook
    * 
    */
   protected final void updateVirtualTime (final double newTime)
@@ -250,16 +267,14 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   /** Removes the jobs from the internal data structures.
    * 
    * <p>
-   * Returns <code>false</code> if the job is currently in service (in {@link #jobsInServiceArea})
-   * and <code>interruptService==true</code>.
-   * Otherwise, removes the job from {@link #jobQueue},
+   * Removes the job from {@link #jobQueue},
    * and if needed from {@link #jobsInServiceArea} and {@link #virtualDepartureTime}.
    * 
    * @see #revoke
    * 
    */
   @Override
-  protected final boolean removeJobFromQueueUponRevokation (final J job, final double time, final boolean interruptService)
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
     if (job == null)
       throw new IllegalArgumentException ();
@@ -267,15 +282,12 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
       throw new IllegalArgumentException ();
     if (this.jobsInServiceArea.contains (job))
     {
-      if (! interruptService)
-        return false;
       if (! this.virtualDepartureTime.containsKey (job))
-        throw new IllegalMonitorStateException ();
+        throw new IllegalStateException ();
       this.virtualDepartureTime.remove (job);
       this.jobsInServiceArea.remove (job);
     }
     this.jobQueue.remove (job);
-    return true;
   }
 
   /** Calls {@link #rescheduleAfterQueueEvent} for the revoked job.
@@ -316,8 +328,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls {@link #removeJobFromQueueUponRevokation} for the departed job
-   *  with <code>true</code> value for the <code>interruptService</code> argument.
+  /** Calls {@link #removeJobFromQueueUponRevokation} for the departed job.
    * 
    * @see #departureFromEventList
    * @see #removeJobFromQueueUponRevokation
@@ -326,7 +337,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    removeJobFromQueueUponRevokation (departingJob, time, true);
+    removeJobFromQueueUponRevokation (departingJob, time);
   }
 
   /** Calls {@link #rescheduleAfterQueueEvent} for the departed job.
@@ -476,7 +487,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
     }
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
-    while (hasServerAcccessCredits () && hasJobsWaitingInWaitingArea ())
+    while (hasServerAcccessCredits () && hasJobsInWaitingArea ())
     {
       takeServerAccessCredit (false);
       final J job = getFirstJobInWaitingArea ();
@@ -502,23 +513,6 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
         fireStart (time, j, (Q) this);
     if (creditsOld > 0 && getServerAccessCredits () == 0)
       fireIfOutOfServerAccessCredits (time);
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // NAME/toString
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns "PS".
-   * 
-   * @return "PS".
-   * 
-   */
-  @Override
-  public String toStringDefault ()
-  {
-    return "PS";
   }
 
 }
