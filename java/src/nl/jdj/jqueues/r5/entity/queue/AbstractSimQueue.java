@@ -117,7 +117,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see #getNumberOfJobsInWaitingArea
    * 
    */
-  protected final boolean hasJobsWaitingInWaitingArea ()
+  protected final boolean hasJobsInWaitingArea ()
   {
     return getNumberOfJobsInWaitingArea () > 0;
   }
@@ -138,9 +138,21 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     throw new IllegalStateException ();
   }
 
+  /** Returns whether or not this queue has at least one job in the service area.
+   * 
+   * @return True if there are jobs in the service area.
+   * 
+   * @see #getNumberOfJobsInServiceArea
+   * 
+   */
+  protected final boolean hasJobsInServiceArea ()
+  {
+    return ! this.jobsInServiceArea.isEmpty ();
+  }
+  
   /** Returns the first job in {@link #getJobs} that <i>is</i> in {@link #getJobsInServiceArea}.
    * 
-   * @return The first job n {@link #getJobs} that is in {@link #getJobsInServiceArea},
+   * @return The first job in {@link #getJobs} that is in {@link #getJobsInServiceArea},
              <code>null</code> if there are no jobs in the service area.
    * 
    */
@@ -495,16 +507,22 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   /** Revokes a job from this queue.
    * 
+   * <p>
    * The final implementation makes sanity checks (e.g., job present),
-   * and invokes {@link #update}.
-   * It then invokes the subclass {@link #removeJobFromQueueUponRevokation},
-   * and returns from this method with return value <code>false</code>
-   * if the subclass refuses the revocation (i.e., returns <code>false</code> from {@link #removeJobFromQueueUponRevokation}).
-   * Otherwise, it checks the absence of the job in {@link #jobQueue} and {@link #jobsInServiceArea}
+   * invokes {@link #update}.
+   * It then checks whether the revocation is to be refused
+   * which is the case when the job has already started and {@code interruptService == false}.
+   * If revocation is to be refused, this method simple returns {@code false}.
+   * 
+   * <p>
+   * Otherwise, this method invokes the subclass-specific {@link #removeJobFromQueueUponRevokation}.
+   * Upon return, it checks the absence of the job in {@link #jobQueue} and {@link #jobsInServiceArea}
    * (throwing an {@link IllegalStateException} if not).
    * It sets the visited queue on the job (with {@link SimJob#setQueue}) to <code>null</code>,
    * and notifies the drop to listeners and actions
    * ({@link #fireRevocation}.
+   * 
+   * <p>
    * Finally, it invokes the queue-discipline specific {@link #rescheduleAfterRevokation}.
    * 
    */
@@ -522,13 +540,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
         return false;
     }
     update (time);
-    // XXX We should really take care of interruptService == false on jobs in the service area ourselves here!!
-    // XXX And change the interface: with interruptService == true, revocations should never fail!!
-    // if ((! interruptService) && getJobsInServiceArea ().contains (job))
-    //   return false;
-    final boolean revoked = removeJobFromQueueUponRevokation (job, time, interruptService);
-    if (! revoked)
+    if ((! interruptService) && getJobsInServiceArea ().contains (job))
       return false;
+    removeJobFromQueueUponRevokation (job, time);
     if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
       throw new IllegalStateException ();    
     job.setQueue (null);
@@ -536,14 +550,25 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     rescheduleAfterRevokation (job, time);
     return true;
   }
+
+  /** Calls super method (and makes it final).
+   * 
+   * @param time The time at which the request is issued, i.c., the current time.
+   * @param job  The job to be revoked from the queue.
+   * 
+   */
+  @Override
+  public final void revoke (final double time, final J job)
+  {
+    super.revoke (time, job);
+  }
     
-  /** Removes a job from the internal queue(s) if it can be revoked.
+  /** Removes a job from the internal queue(s) since it is revoked.
    * 
    * <p>To be implemented by concrete queue types.
-   * Implementation may refuse the revocation, in which case they must return <code>false</code>.
    *
    * <p>
-   * Otherwise, implementations <i>must</i> (at least) remove the job from {@link #jobQueue} (this is actually checked).
+   * Implementations <i>must</i> (at least) remove the job from {@link #jobQueue} (this is actually checked).
    * They should also remove any job-specific events (like a departure event) from the event-list and remove the
    * job (if needed) from the {@link #jobsInServiceArea} set (this is also checked).
    * 
@@ -557,18 +582,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * @param job The job that is to be revoked.
    * @param time The current time (i.e., revocation time of the job).
-   * @param interruptService Whether to allow interruption of the job's
-   *                           service if already started.
-   *                         If false, revocation will only succeed if the
-   *                           job has not received any service yet.
-   * 
-   * @return True if revocation succeeded, and the job was indeed removed from {@link #jobQueue}.
    * 
    * @see #revoke
    * @see #rescheduleAfterRevokation
    * 
    */
-  protected abstract boolean removeJobFromQueueUponRevokation (J job, double time, boolean interruptService);
+  protected abstract void removeJobFromQueueUponRevokation (J job, double time);
   
   /** Reschedules if needed after a job has been revoked from this queue.
    * 
@@ -974,6 +993,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   /** Cancels a pending departure event for given job on the event list.
    * 
+   * <p>
    * After several rigorous sanity checks, this default implementation
    * removes the event from the event list and from {@link #eventsScheduled}.
    * Note that a unique {@link DefaultDepartureEvent} must be found in {@link #eventsScheduled} for the job supplied,
