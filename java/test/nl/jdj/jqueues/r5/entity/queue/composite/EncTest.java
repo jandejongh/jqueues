@@ -119,16 +119,6 @@ public class EncTest
     final SimQueuePredictor_Enc predictor_enc_fcfs = new SimQueuePredictor_Enc (predictor_fcfs);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (enc_fcfs, predictor_enc_fcfs, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
-//    // XXX Does not pass!
-//    // Enc[Enc[Enc[FCFS]]]
-//    final FCFS fcfs2 = new FCFS (eventList);
-//    final SimQueuePredictor predictor_fcfs2 = new SimQueuePredictor_FCFS ();
-//    final BlackEncapsulatorSimQueue enc_fcfs2 = new BlackEncapsulatorSimQueue (eventList, fcfs, null);
-//    final BlackEncapsulatorSimQueue enc_enc_fcfs2 = new BlackEncapsulatorSimQueue (eventList, enc_fcfs2, null);
-//    final BlackEncapsulatorSimQueue enc_enc_enc_fcfs2 = new BlackEncapsulatorSimQueue (eventList, enc_enc_fcfs2, null);
-//    final SimQueuePredictor_Enc predictor_enc_enc_enc_fcfs2 = new SimQueuePredictor_Enc (predictor_fcfs2);
-//    DefaultSimQueueTests.doSimQueueTests_SQ_SV
-//      (enc_enc_enc_fcfs2, predictor_enc_enc_enc_fcfs2, numberOfJobs, silent, deadSilent, 1.0e-12, null);
     // Enc[FCFS_B]
     final int[] bValues = { 0, 1, 2, 100 };
     for (final int B : bValues)
@@ -167,6 +157,26 @@ public class EncTest
     final SimQueuePredictor_Enc predictor_enc_cups = new SimQueuePredictor_Enc (predictor_cups);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (enc_cups, predictor_enc_cups, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-9, null);
+    // Enc[Enc[FCFS]]
+    final FCFS fcfs2 = new FCFS (eventList);
+    final SimQueuePredictor predictor_fcfs2 = new SimQueuePredictor_FCFS ();
+    final BlackEncapsulatorSimQueue enc_fcfs2 = new BlackEncapsulatorSimQueue (eventList, fcfs2, null);
+    final BlackEncapsulatorSimQueue enc_enc_fcfs2 = new BlackEncapsulatorSimQueue (eventList, enc_fcfs2, null);
+    final SimQueuePredictor_Enc predictor_enc_fcfs2 = new SimQueuePredictor_Enc (predictor_fcfs2);
+    final SimQueuePredictor_Enc predictor_enc_enc_fcfs2 = new SimQueuePredictor_Enc (predictor_enc_fcfs2);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (enc_enc_fcfs2, predictor_enc_enc_fcfs2, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+    // Enc[Enc[Enc[P_LCFS]]]
+    final P_LCFS p_lcfs2 = new P_LCFS (eventList, null);
+    final BlackEncapsulatorSimQueue enc_p_lcfs2 = new BlackEncapsulatorSimQueue (eventList, p_lcfs2, null);
+    final BlackEncapsulatorSimQueue enc_enc_p_lcfs2 = new BlackEncapsulatorSimQueue (eventList, enc_p_lcfs2, null);
+    final BlackEncapsulatorSimQueue enc_enc_enc_p_lcfs2 = new BlackEncapsulatorSimQueue (eventList, enc_enc_p_lcfs2, null);
+    final SimQueuePredictor predictor_p_lcfs2 = new SimQueuePredictor_P_LCFS ();
+    final SimQueuePredictor_Enc predictor_enc_p_lcfs2 = new SimQueuePredictor_Enc (predictor_p_lcfs2);
+    final SimQueuePredictor_Enc predictor_enc_enc_p_lcfs2 = new SimQueuePredictor_Enc (predictor_enc_p_lcfs2);
+    final SimQueuePredictor_Enc predictor_enc_enc_enc_p_lcfs2 = new SimQueuePredictor_Enc (predictor_enc_enc_p_lcfs2);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (enc_enc_enc_p_lcfs2, predictor_enc_enc_enc_p_lcfs2, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
   }
 
 }
