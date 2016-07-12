@@ -42,6 +42,24 @@ public interface SimQueuePredictor<Q extends SimQueue>
   (Q queue, Set<SimEntityEvent> queueEvents)
     throws SimQueuePredictionException;
  
+  /** Creates the unique prediction, if possible, of job-visits (at most one) to a given queue under a Random-Order Event List.
+   * 
+   * <p>
+   * A variant of {@link #predictVisitLogs_SQ_SV_ROEL_U(nl.jdj.jqueues.r5.SimQueue, java.util.Set)} using a map
+   * from event time onto the (unordered) set of events occurring at that time.
+   * 
+   * <p>
+   * The default implementation puts the events in the map in proper order into a {@code LinkedHashSet},
+   * and relies on {@link #predictVisitLogs_SQ_SV_ROEL_U(nl.jdj.jqueues.r5.SimQueue, java.util.Set)} for further processing.
+   * 
+   * @param queue          The queue, non-{@code null}.
+   * @param queueEventsMap The queue events as a map from event time onto the
+   *                       (unordered) set of events occurring at that time;
+   *                       events related to other queues are allowed and are to be ignored.
+   * 
+   * @return A single {@link JobQueueVisitLog} for every job that visits the given queue.
+   * 
+   */
   public default Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictVisitLogs_SQ_SV_U
   (final Q queue, final NavigableMap<Double, Set<SimEntityEvent>> queueEventsMap)
     throws SimQueuePredictionException
@@ -67,7 +85,7 @@ public interface SimQueuePredictor<Q extends SimQueue>
    * @param predicted The predicted {@link JobQueueVisitLog}s, indexed by job-arrival time; arrival at other queues
    *                  are (to be) ignored.
    * @param actual    The actual {@link JobQueueVisitLog}s, see above.
-   * @param accuracy  The accuracy (maximum  deviation of times in a {@link JobQueueVisitLog}, non-negative.
+   * @param accuracy  The accuracy (maximum  deviation of times in a {@link JobQueueVisitLog}), non-negative.
    * @param stream    An optional stream for mismatch reporting.
    * 
    * @return Whether the predicted and actual maps map within the given accuracy.
