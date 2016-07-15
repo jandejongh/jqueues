@@ -745,7 +745,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * 
    * <p>
    * In case of {@link BlackSimQueueComposite.StartModel#LOCAL},
-   * schedules delegate jobs for arrival at their first queue until the
+   * schedules any delegate jobs for arrival at their first queue until the
    * (new) server-access credits are exhausted.
    * 
    * <p>
@@ -757,6 +757,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * 
    * @see #getStartModel
    * @see #hasServerAcccessCredits
+   * @see #hasJobsInWaitingArea
+   * @see #getFirstJobInWaitingArea
    * @see #takeServerAccessCredit
    * @see #selectFirstQueue
    * @see SimQueue#arrive
@@ -772,28 +774,29 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     switch (getStartModel ())
     {
       case LOCAL:
-        while (hasServerAcccessCredits ())
+        while (hasServerAcccessCredits () && hasJobsInWaitingArea ())
         {
-          for (J realJob : this.jobQueue)
+          final J realJob = getFirstJobInWaitingArea ();
+          final DJ delegateJob = getDelegateJob (realJob);
+          if (delegateJob.getQueue () != null)
+            throw new IllegalStateException ();
+          takeServerAccessCredit (true);
+          final SimQueue<DJ, DQ> firstQueue = selectFirstQueue (time, realJob);
+          if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
+            throw new IllegalArgumentException ();
+          if (firstQueue != null)
+            // This will put the real job into the service area and fires a start notification through notifyArrival!
+            // It may also drop the delegate job immediately, in which case the real/delegate jobs are already gone upon return!
+            firstQueue.arrive (time, delegateJob);
+          else
           {
-            final DJ delegateJob = getDelegateJob (realJob);
-            if (delegateJob.getQueue () == null)
-            {
-              // XXX (Almost) Verbatim copy from rescheduleAfterArrival...
-              takeServerAccessCredit (true);
-              final SimQueue<DJ, DQ> firstQueue = selectFirstQueue (time, realJob);
-              if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
-                throw new IllegalArgumentException ();
-              if (firstQueue != null)
-                firstQueue.arrive (time, delegateJob);
-              else
-              {
-                // We do not get a queue to arrive at.
-                // So we depart; without having been executed!
-                removeJobsFromQueueLocal (realJob, delegateJob);
-                fireDeparture (time, realJob, (Q) this);
-              }
-            }
+            // We do not get a queue to arrive at.
+            // So we depart; without having been executed!
+            // However, technically, we did start, so we must send out a notification ourselves since we cannot
+            // rely on sub-queue notifications.
+            removeJobsFromQueueLocal (realJob, delegateJob);
+            fireStart (time, realJob, (Q) this);
+            fireDeparture (time, realJob, (Q) this);
           }
         }
         return;
