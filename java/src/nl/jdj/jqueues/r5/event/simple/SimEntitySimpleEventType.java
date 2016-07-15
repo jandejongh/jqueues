@@ -20,7 +20,7 @@ public interface SimEntitySimpleEventType
   /** A member of this interface.
    * 
    */
-  public final class Member
+  public class Member
   {
 
     /** Creates a member with given name.
