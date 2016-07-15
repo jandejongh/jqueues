@@ -1,8 +1,10 @@
 package nl.jdj.jqueues.r5.util.predictor;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
@@ -18,10 +20,12 @@ import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
+import nl.jdj.jqueues.r5.util.predictor.workload.DefaultWorkloadSchedule_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.workload.DefaultWorkloadSchedule_SQ_SV_ROEL_U;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleAmbiguityException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
+import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** Partial implementation of and utility methods for {@link SimQueuePredictor}.
@@ -56,7 +60,8 @@ implements SimQueuePredictor<Q>
    * <li>{@link #doQueueEvents_SQ_SV_ROEL_U} for the processing of the next queue events (like scheduled departures).
    * </ul>
    * 
-   * <p>Note that the implementation actually updates the {@link SimQueueState} object,
+   * <p>
+   * Note that the implementation actually updates the {@link SimQueueState} object,
    * but leaves the {@link WorkloadSchedule_SQ_SV_ROEL_U} object untouched.
    * 
    * @see WorkloadSchedule#getNextEventTimeBeyond
@@ -66,8 +71,8 @@ implements SimQueuePredictor<Q>
   public Map<SimJob, JobQueueVisitLog<SimJob, Q>>
   predictVisitLogs_SQ_SV_ROEL_U
   (final Q queue,
-   final Set<SimEntityEvent> queueEvents)
-   throws SimQueuePredictionException
+   final Set<SimEntityEvent> workloadEvents)
+  throws SimQueuePredictionException
   {
     if (queue == null)
       throw new IllegalArgumentException ();
@@ -77,7 +82,7 @@ implements SimQueuePredictor<Q>
       //
       // Check the set of events for SV and ROEL_U, and create a suitable workload schedule.
       //
-      final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule = createWorkloadSchedule_SQ_SV_ROEL_U (queue, queueEvents);
+      final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule = createWorkloadSchedule_SQ_SV_ROEL_U (queue, workloadEvents);
       //
       // Create a state object for the queue.
       //
@@ -165,6 +170,132 @@ implements SimQueuePredictor<Q>
     return visitLogs;
   }
 
+  /** A default implementation of {@link SimQueuePredictor#predictVisitLogs_SQ_SV_IOEL_U}.
+   * 
+   * <p>
+   * The implementation uses a {@link SimQueueState} and a {@link WorkloadSchedule_SQ_SV_ROEL_U} as representations for
+   * the queue state and the workload state, respectively, and relies on abstract (or default) methods for
+   * the behavior of the specific queue type:
+   * <ul>
+   * <li>{@link #createWorkloadSchedule_SQ_SV} for the creation of a, possibly queue-type specific,
+   *            {@link WorkloadSchedule_SQ_SV} from the workload events,
+   * <li>{@link #createQueueState} for the creation of a, possibly queue-type specific, {@link SimQueueState},
+   * <li>{@link #is_U_UnderWorkloadQueueEventClashes},
+   * <li>{@link #getNextQueueEventTimeBeyond} for determining the scheduled time and type(s) of the next queue-state event(s),
+   * <li>{@link #updateToTime} for progressing time on the queue state without processing events,
+   * <li>{@link #doWorkloadEvents_SQ_SV} for the processing of the next workload events (like scheduled arrivals),
+   * <li>{@link #doQueueEvents_SQ_SV_ROEL_U} for the processing of the next queue events (like scheduled departures).
+   * </ul>
+   * 
+   * <p>
+   * Note that the implementation actually updates the {@link SimQueueState} object,
+   * but leaves the {@link WorkloadSchedule_SQ_SV} object untouched.
+   * 
+   * @see WorkloadSchedule#getNextEventTimeBeyond
+   * 
+   */
+  @Override
+  public Map<SimJob, JobQueueVisitLog<SimJob, Q>>
+  predictVisitLogs_SQ_SV_IOEL_U
+  (final Q queue,
+   final NavigableMap<Double, Set<SimEntityEvent>> workloadEventsMap,
+   final NavigableMap<Double, Set<SimEntityEvent>> processedEventsMap)
+  throws SimQueuePredictionException
+  {
+    if (queue == null)
+      throw new IllegalArgumentException ();
+    final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet = new HashSet<> ();
+    try
+    {
+      //
+      // Check the set of events for SV and ROEL_U, and create a suitable workload schedule.
+      //
+      final WorkloadSchedule_SQ_SV workloadSchedule = createWorkloadSchedule_SQ_SV (queue, workloadEventsMap);
+      //
+      // Create a state object for the queue.
+      //
+      final SimQueueState<SimJob, Q> queueState = createQueueState (queue, true);
+      if (! Double.isNaN (queueState.getTime ()))
+        throw new RuntimeException ();
+      //
+      // Create sets to hold the (simple) event types from the workload and from the queue.
+      //
+      final Set<SimEntitySimpleEventType.Member> workloadEventTypes = new HashSet<> ();
+      final Set<SimEntitySimpleEventType.Member> queueEventTypes = new HashSet<> ();
+      //
+      // A boolean to indicate when we are done.
+      //
+      boolean finished = false;
+      //
+      // Main loop; proceed as long as "the workload has more load" or "the queue still has events".
+      //
+      while (! finished)
+      {
+        final double time = queueState.getTime ();
+        workloadEventTypes.clear ();
+        queueEventTypes.clear ();
+        final double nextWorkloadEventTime = workloadSchedule.getNextEventTimeBeyond (queue, time, workloadEventTypes);
+        final double nextQueueEventTime = getNextQueueEventTimeBeyond (queue, queueState, queueEventTypes);
+        final boolean hasWorkloadEvent = ! Double.isNaN (nextWorkloadEventTime);
+        final boolean hasQueueEvent = ! Double.isNaN (nextQueueEventTime);
+        if (hasWorkloadEvent)
+        {
+          if (workloadEventTypes.isEmpty ())
+            throw new RuntimeException ();
+        }
+        if (hasQueueEvent)
+        {
+          if (queueEventTypes.isEmpty ())
+            throw new RuntimeException ();
+          if (queueEventTypes.size () > 1)
+            throw new SimQueuePredictionAmbiguityException ();
+        }
+        final boolean doWorkloadEvent = hasWorkloadEvent && ((! hasQueueEvent) || nextWorkloadEventTime <= nextQueueEventTime);
+        final boolean doQueueEvent = hasQueueEvent && ((! hasWorkloadEvent) || nextQueueEventTime <= nextWorkloadEventTime);
+        final double nextEventTime = (doWorkloadEvent ? nextWorkloadEventTime : (doQueueEvent ? nextQueueEventTime : Double.NaN));
+        if (doWorkloadEvent || doQueueEvent)
+        {
+          updateToTime (queue, queueState, nextEventTime);
+          if (queueState.getTime () != nextEventTime)
+            throw new RuntimeException ();
+        }
+        if (doWorkloadEvent && doQueueEvent)
+        {
+          if (! is_U_UnderWorkloadQueueEventClashes
+                  (queue, queueState, workloadSchedule, queueEventTypes))
+            throw new SimQueuePredictionAmbiguityException ();
+        }
+        if (doQueueEvent)
+          doQueueEvents_SQ_SV_ROEL_U (queue, queueState, queueEventTypes, visitLogsSet);
+        if (doWorkloadEvent)
+          doWorkloadEvents_SQ_SV (queue, workloadSchedule, queueState, visitLogsSet);
+        if ((doWorkloadEvent || doQueueEvent) && queueState.getTime () != nextEventTime)
+          throw new RuntimeException ();
+        finished = ! (hasWorkloadEvent || hasQueueEvent);
+      }
+    }
+    catch (WorkloadScheduleAmbiguityException wsae)
+    {
+      throw new SimQueuePredictionAmbiguityException (wsae);
+    }
+    catch (WorkloadScheduleException wse)
+    {
+      throw new SimQueuePredictionInvalidInputException (wse);
+    }
+    final Map<SimJob, JobQueueVisitLog<SimJob, Q>> visitLogs = new HashMap<> ();
+    for (final JobQueueVisitLog<SimJob, Q> jqvl : visitLogsSet)
+    {
+      if (jqvl == null)
+        throw new RuntimeException ();
+      if (jqvl.queue != queue)
+        throw new RuntimeException ();
+      if (visitLogs.containsKey (jqvl.job))
+        throw new RuntimeException ();
+      visitLogs.put (jqvl.job, jqvl);
+    }
+    return visitLogs;
+  }
+  
   /** Creates and prepares a suitable {@link WorkloadSchedule_SQ_SV_ROEL_U} object for this predictor and given queue,
    *  for a given set of workload events.
    * 
@@ -185,13 +316,43 @@ implements SimQueuePredictor<Q>
    * @throws WorkloadScheduleException If the workload is invalid or ambiguous (for instance).
    * 
    */
-  protected
+  public
   WorkloadSchedule_SQ_SV_ROEL_U
   createWorkloadSchedule_SQ_SV_ROEL_U
   (final Q queue, final Set<SimEntityEvent> workloadEvents)
   throws WorkloadScheduleException
   {
     return new DefaultWorkloadSchedule_SQ_SV_ROEL_U (queue, workloadEvents);
+  }
+  
+  /** Creates and prepares a suitable {@link WorkloadSchedule_SQ_SV} object for this predictor and given queue,
+   *  for a given map of event times onto workload events.
+   * 
+   * <p>
+   * The initial time must be set to {@link Double#NaN}.
+   * 
+   * <p>
+   * Implementations must prepare the required maps from the {@link WorkloadSchedule_SQ_SV} at construction.
+   * 
+   * <p>
+   * The default implementation returns a new {@link DefaultWorkloadSchedule_SQ_SV}.
+   * 
+   * @param queue             The queue, non-{@code null}.
+   * @param workloadEventsMap The workload events, may be {@code null} or empty.
+   * 
+   * @return A new suitable {@link WorkloadSchedule_SQ_SV} object for this predictor and given queue.
+   * 
+   * @throws WorkloadScheduleException If the workload is invalid (for instance).
+   * 
+   */
+  protected
+  WorkloadSchedule_SQ_SV
+  createWorkloadSchedule_SQ_SV
+  (final Q queue,
+   final Map<Double, Set<SimEntityEvent>> workloadEventsMap)
+  throws WorkloadScheduleException
+  {
+    return new DefaultWorkloadSchedule_SQ_SV (queue, workloadEventsMap);
   }
   
   /** Creates a suitable {@link SimQueueState} object for this predictor and given queue.
@@ -209,7 +370,7 @@ implements SimQueuePredictor<Q>
    *                                       support non-ROEL event lists.
    * 
    */
-  protected SimQueueState<SimJob, Q> createQueueState (final Q queue, final boolean isROEL)
+  public SimQueueState<SimJob, Q> createQueueState (final Q queue, final boolean isROEL)
   {
     if (queue == null)
       throw new IllegalArgumentException ();
@@ -220,7 +381,11 @@ implements SimQueuePredictor<Q>
   
   /** Check unambiguity under a ROEL for workload and queue-state events occurring simultaneously.
    * 
-   * @param queue The queue, non-{@code null}.
+   * @param queue              The queue, non-{@code null}.
+   * @param queueState         The queue-state, non-{@code null}.
+   * @param workloadSchedule   The workload schedule, non-{@code null}.
+   * @param workloadEventTypes The types of the workload event(s).
+   * @param queueEventTypes    The types of the workload event(s).
    * 
    * @return True if this object gives unambiguous predictions under a ROEL for given simultaneous events.
    * 
@@ -267,6 +432,56 @@ implements SimQueuePredictor<Q>
     return true;
   }
   
+  /** Check unambiguity under a IOEL for workload and ROEL for queue-state events occurring simultaneously.
+   * 
+   * @param queue              The queue, non-{@code null}.
+   * @param queueState         The queue-state, non-{@code null}.
+   * @param workloadSchedule   The workload schedule, non-{@code null}.
+   * @param queueEventTypes    The types of the workload event(s).
+   * 
+   * @return True if this object gives unambiguous predictions under a IOEL for workload and ROEL for queue events.
+   * 
+   * @throws IllegalArgumentException If any of the input arguments is {@code null} or,
+   *                                  for the sets, empty or containing {@code null},
+   *                                  or if the time on the queue state is invalid.
+   * 
+   */
+  protected boolean is_U_UnderWorkloadQueueEventClashes
+  (final Q queue,
+   final SimQueueState<SimJob, Q> queueState,
+   final WorkloadSchedule_SQ_SV workloadSchedule,
+   final Set<SimEntitySimpleEventType.Member> queueEventTypes)
+  {
+    if (queue == null
+      || queueState == null
+      || Double.isNaN (queueState.getTime ())
+      || workloadSchedule == null
+      || queueEventTypes == null
+      || queueEventTypes.isEmpty ()
+      || queueEventTypes.contains (null))
+      throw new IllegalArgumentException ();
+    final double time = queueState.getTime ();
+    final Set<SimEntityEvent> events = workloadSchedule.getSimQueueTimeSimEntityEventMap ().get (queue).get (time);
+    try
+    {
+      for (final SimEntityEvent event : events)
+      {
+        final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule_SQ_SV_ROEL_U =
+          createWorkloadSchedule_SQ_SV_ROEL_U (queue, Collections.singleton (event));
+        final Set<SimEntitySimpleEventType.Member> workloadEventTypes = new HashSet<> ();
+        workloadSchedule_SQ_SV_ROEL_U.getNextEventTimeBeyond (queue, Double.NaN, workloadEventTypes);
+        if (! is_ROEL_U_UnderWorkloadQueueEventClashes
+                (queue, queueState, workloadSchedule_SQ_SV_ROEL_U, workloadEventTypes, queueEventTypes))
+          return false;
+      }
+      return true;
+    }
+    catch (WorkloadScheduleException wse)
+    {
+      throw new RuntimeException (wse);
+    }
+  }
+  
   /** Returns the time and types of the next event(s)
    *  scheduled strictly beyond the time at (the state object of) a specific queue.
    * 
@@ -287,10 +502,8 @@ implements SimQueuePredictor<Q>
    * @throws SimQueuePredictionException If the result cannot be computed, e.g., due to invalid input or schedule ambiguities.
    * 
    */
-  protected abstract double getNextQueueEventTimeBeyond
-  (Q queue,
-   SimQueueState<SimJob, Q> queueState,
-   Set<SimEntitySimpleEventType.Member> queueEventTypes)
+  public abstract double getNextQueueEventTimeBeyond
+  (Q queue, SimQueueState<SimJob, Q> queueState, Set<SimEntitySimpleEventType.Member> queueEventTypes)
    throws SimQueuePredictionException;
   
   /** Updates the queue state to a new time, without processing any events.
@@ -310,7 +523,7 @@ implements SimQueuePredictor<Q>
    * @see SimQueueState#setTime
    * 
    */
-  protected abstract void updateToTime (Q queue, SimQueueState queueState, double newTime);
+  public abstract void updateToTime (Q queue, SimQueueState queueState, double newTime);
   
   /** Process the next event(s) from given {@link WorkloadSchedule} at a queue with given state.
    * 
@@ -327,11 +540,11 @@ implements SimQueuePredictor<Q>
    * <p>
    * Implementations must <i>not</i> modify the workload schedule.
    * 
-   * @param queue                 The queue, non-{@code null}.
-   * @param workloadSchedule      The workload schedule, non-{@code null}.
-   * @param queueState            The queue-state, non-{@code null}.
-   * @param workloadEventTypes    The (pre-calculated) types of the next workload event(s).
-   * @param visitLogsSet          The visit logs, non-{@code null}.
+   * @param queue              The queue, non-{@code null}.
+   * @param workloadSchedule   The workload schedule, non-{@code null}.
+   * @param queueState         The queue-state, non-{@code null}.
+   * @param workloadEventTypes The (pre-calculated) types of the next workload event(s).
+   * @param visitLogsSet       The visit logs, non-{@code null}.
    * 
    * @throws IllegalArgumentException    If any of the mandatory input arguments is {@code null}.
    * @throws SimQueuePredictionException If the result cannot be computed, e.g., due to invalid input or schedule ambiguities.
@@ -342,13 +555,75 @@ implements SimQueuePredictor<Q>
    * @see SimQueueState#setTime
    * 
    */
-  protected abstract void doWorkloadEvents_SQ_SV_ROEL_U
+  public abstract void doWorkloadEvents_SQ_SV_ROEL_U
   (Q queue,
    WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    SimQueueState<SimJob, Q> queueState,
    Set<SimEntitySimpleEventType.Member> workloadEventTypes,
    Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
-   throws SimQueuePredictionException, WorkloadScheduleException;
+  throws SimQueuePredictionException, WorkloadScheduleException;
+  
+  /** Process the next event(s) from given {@link WorkloadSchedule} at a queue with given state under IOEL.
+   * 
+   * <p>
+   * The scheduled time and the types of the next events must be known beforehand,
+   * e.g., through {@link WorkloadSchedule#getNextEventTimeBeyond}.
+   * The scheduled time has already been set on the {@link SimQueueState} object,
+   * and the object has been updated upto that time.
+   * The time on the queue state must not be changed.
+   * 
+   * <p>
+   * Implementations must update the queue state and (if applicable) add suitable entries to the visit logs.
+   * 
+   * <p>
+   * The default implementation creates a workload schedule for each individual event
+   * through {@link #createWorkloadSchedule_SQ_SV_ROEL_U}
+   * and has it processed
+   * through {@link #doWorkloadEvents_SQ_SV_ROEL_U}.
+   * 
+   * <p>
+   * Implementations must <i>not</i> modify the workload schedule.
+   * 
+   * @param queue              The queue, non-{@code null}.
+   * @param workloadSchedule   The workload schedule, non-{@code null}.
+   * @param queueState         The queue-state, non-{@code null}.
+   * @param visitLogsSet       The visit logs, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException    If any of the mandatory input arguments is {@code null}.
+   * @throws SimQueuePredictionException If the result cannot be computed, e.g., due to invalid input or schedule ambiguities.
+   * @throws WorkloadScheduleException   If the workload is invalid (e.g., containing ambiguities).
+   * 
+   * @see WorkloadSchedule#getNextEventTimeBeyond
+   * @see #updateToTime
+   * @see SimQueueState#setTime
+   * 
+   */
+  protected void
+  doWorkloadEvents_SQ_SV
+  (final Q queue,
+   final WorkloadSchedule_SQ_SV workloadSchedule,
+   final SimQueueState queueState,
+   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
+  throws SimQueuePredictionException, WorkloadScheduleException
+  {
+    if ( queue == null
+      || workloadSchedule == null
+      || queueState == null
+      || visitLogsSet == null)
+      throw new IllegalArgumentException ();
+    final double time = queueState.getTime ();
+    if (Double.isNaN (time))
+      throw new IllegalStateException ();
+    final Set<SimEntityEvent> events = workloadSchedule.getSimQueueTimeSimEntityEventMap ().get (queue).get (time);
+    for (final SimEntityEvent event : events)
+    {
+      final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule_SQ_SV_ROEL_U =
+        createWorkloadSchedule_SQ_SV_ROEL_U (queue, Collections.singleton (event));
+      final Set<SimEntitySimpleEventType.Member> workloadEventTypes = new HashSet<> ();
+      workloadSchedule_SQ_SV_ROEL_U.getNextEventTimeBeyond (queue, Double.NaN, workloadEventTypes);
+      doWorkloadEvents_SQ_SV_ROEL_U (queue, workloadSchedule_SQ_SV_ROEL_U, queueState, workloadEventTypes, visitLogsSet);
+    }
+  }
   
   /** Process the next event(s) at a queue with given state.
    * 
@@ -362,10 +637,10 @@ implements SimQueuePredictor<Q>
    * <p>
    * Implementations must update the queue state and (if applicable) add suitable entries to the visit logs.
    * 
-   * @param queue              The queue, non-{@code null}.
-   * @param queueState         The queue-state, non-{@code null}
-   * @param queueEventTypes    The (pre-calculated) types of the next workload event(s).
-   * @param visitLogsSet       The visit logs, non-{@code null}.
+   * @param queue           The queue, non-{@code null}.
+   * @param queueState      The queue-state, non-{@code null}
+   * @param queueEventTypes The (pre-calculated) types of the next workload event(s).
+   * @param visitLogsSet    The visit logs, non-{@code null}.
    * 
    * @throws IllegalArgumentException    If any of the mandatory input arguments is {@code null}.
    * @throws SimQueuePredictionException If the result cannot be computed, e.g., due to invalid input or schedule ambiguities.
@@ -375,11 +650,11 @@ implements SimQueuePredictor<Q>
    * @see SimQueueState#setTime
    * 
    */
-  protected abstract void doQueueEvents_SQ_SV_ROEL_U
+  public abstract void doQueueEvents_SQ_SV_ROEL_U
   (Q queue,
    SimQueueState<SimJob, Q> queueState,
    Set<SimEntitySimpleEventType.Member> queueEventTypes,
    Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
-   throws SimQueuePredictionException;
+  throws SimQueuePredictionException;
   
 }

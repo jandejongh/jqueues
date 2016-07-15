@@ -2,7 +2,6 @@ package nl.jdj.jqueues.r5.util.predictor;
 
 import java.io.PrintStream;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
@@ -11,66 +10,126 @@ import java.util.TreeMap;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackTandemSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IC;
+import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
+import nl.jdj.jqueues.r5.entity.queue.processorsharing.CUPS;
+import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jsimulation.r5.DefaultSimEventList_IOEL;
+import nl.jdj.jsimulation.r5.DefaultSimEventList_ROEL;
+import nl.jdj.jsimulation.r5.SimEventList;
 
 /** An object capable of predicting the behavior of one or more {@link SimQueue}s under user-supplied workload and conditions.
  *
+ * <p>
+ * A {@link SimQueuePredictor} is a stateless object that is capable of predicting the behavior of a specific {@link SimQueue}
+ * class or (if applicable) of (some of) its subclasses;
+ * the (base) class of queues supported is present as generic type argument {@code Q}.
+ * Objects like this are extensively used in the test sub-system of {@code jqueues}.
+ * 
+ * <p>
+ * The most important feature of a {@link SimQueuePredictor} is the prediction of job visits to a given (stateless!)
+ * {@link SimQueue} under a given external workload (e.g., arrivals, revocations, setting server-access credits,
+ * or queue-specific external operations). The workload consists of a collection of {@link SimEntityEvent}s, and this collection
+ * may contain events scheduled at the same time. Depending on the method invoked on the predictor,
+ * such simultaneous events are to be interpreted as occurring in "random order"
+ * (as if processed by a ROEL {@link SimEventList} like {@link DefaultSimEventList_ROEL})
+ * or as occurring in the strict and deterministic order (somehow) imposed by the collection 
+ * (as if processed by a IOEL {@link SimEventList} like {@link DefaultSimEventList_IOEL}).
+ * 
+ * <p>
+ * In the first case,
+ * see {@link #predictVisitLogs_SQ_SV_ROEL_U},
+ * the workload schedule itself can easily lead to ambiguities that prevent the delivery of a prediction,
+ * for instance in the case of simultaneous arrivals (of jobs with non-zero required service time) at a {@link FCFS} queue.
+ * On the other hand, queues like {@link ZERO} appear to be robust against simultaneous arrivals under ROEL,
+ * and for queues like {@link IC}, simultaneous arrivals under ROEL are unambiguous <i>only</i> if sufficient
+ * server-access credits are available, hence, the ambiguity of simultaneous arrivals for this queue is state-dependent.
+ * However, for all {@link SimQueue}s, the simultaneous start of a queue-access vacation (again, state-dependent) and
+ * an arrival <i>always</i> leads to ambiguities.
+ * 
+ * <p>
+ * In the seconds case,
+ * see {@link #predictVisitLogs_SQ_SV_IOEL_U},
+ * workload events do not cause ambiguities among themselves, but they may still interfere with queue-internal
+ * events like departures, for instance the simultaneous occurrence of an arrival and a scheduled departure in a {@link P_LCFS}
+ * queue that is otherwise empty. Even worse, queues may exhibit internal ambiguities, for instance, the simultaneous
+ * occurrence of a "catch-up" and a departure (both "internal events") in a {@link CUPS} queue.
+ * Note that even with a ROEL {@link SimEventList}, certain {@link SimQueue} implementations
+ * may process "simultaneous events" in a specific sequence, and heavily rely on their sequential execution.
+ * For instance, the {@link BlackTandemSimQueue} lets (delegate) jobs arrive at their first sub-queue if
+ * server-access credits become available, yet it processes these arrivals in a specific order (the arrival order of the
+ * corresponding "real" jobs) and it effectuates these arrivals immediately, without using the underlying event list.
+ * 
+ * <p>
+ * In any case, implementations must provide a collection of visit logs, see {@link JobQueueVisitLog},
+ * or throw an exception upon determining an ambiguity, see {@link SimQueuePredictionAmbiguityException}.
+ * 
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
  */
 public interface SimQueuePredictor<Q extends SimQueue>
 {
 
-  /** Creates the unique prediction, if possible, of job-visits (at most one) to a given queue under a Random-Order Event List.
-   * 
-   * @param queue       The queue, non-{@code null}.
-   * @param queueEvents The queue events; events related to other queues are allowed and are to be ignored.
-   * 
-   * @return A single {@link JobQueueVisitLog} for every job that visits the given queue.
-   * 
-   * @throws IllegalArgumentException              If {@code queue == null} or the workload parameters are somehow illegal.
-   * @throws UnsupportedOperationException         If the queue type or the workload is (partially) unsupported.
-   * @throws SimQueuePredictionException           If a prediction is (e.g.) too complex to generate
-   *                                               ({@link SimQueuePredictionComplexityException}),
-   *                                               if invalid input has been supplied to the predictor
-   *                                               ({@link SimQueuePredictionInvalidInputException}),
-   *                                               or if a <i>unique</i> prediction cannot be generated
-   *                                               ({@link SimQueuePredictionAmbiguityException}).
-   * 
-   */
-  public Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictVisitLogs_SQ_SV_ROEL_U
-  (Q queue, Set<SimEntityEvent> queueEvents)
-    throws SimQueuePredictionException;
- 
-  /** Creates the unique prediction, if possible, of job-visits (at most one) to a given queue under a Random-Order Event List.
-   * 
-   * <p>
-   * A variant of {@link #predictVisitLogs_SQ_SV_ROEL_U(nl.jdj.jqueues.r5.SimQueue, java.util.Set)} using a map
-   * from event time onto the (unordered) set of events occurring at that time.
-   * 
-   * <p>
-   * The default implementation puts the events in the map in proper order into a {@code LinkedHashSet},
-   * and relies on {@link #predictVisitLogs_SQ_SV_ROEL_U(nl.jdj.jqueues.r5.SimQueue, java.util.Set)} for further processing.
+  /** Creates the unique prediction, if possible,
+   *  of job-visits (at most one) to a given queue under a Random-Order Event List.
    * 
    * @param queue          The queue, non-{@code null}.
-   * @param queueEventsMap The queue events as a map from event time onto the
-   *                       (unordered) set of events occurring at that time;
-   *                       events related to other queues are allowed and are to be ignored.
+   * @param workloadEvents The workload events; events related to other queues are allowed and are to be ignored.
    * 
-   * @return A single {@link JobQueueVisitLog} for every job that visits the given queue.
+   * @return A map from every job that visits the given queue onto its {@link JobQueueVisitLog} .
+   * 
+   * @throws IllegalArgumentException      If {@code queue == null} or the workload parameters are somehow illegal.
+   * @throws UnsupportedOperationException If the queue type or the workload is (partially) unsupported.
+   * @throws SimQueuePredictionException   If a prediction is (e.g.) too complex to generate
+   *                                       ({@link SimQueuePredictionComplexityException}),
+   *                                       if invalid input has been supplied to the predictor
+   *                                       ({@link SimQueuePredictionInvalidInputException}),
+   *                                       or if a <i>unique</i> prediction cannot be generated
+   *                                       ({@link SimQueuePredictionAmbiguityException}).
    * 
    */
-  public default Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictVisitLogs_SQ_SV_U
-  (final Q queue, final NavigableMap<Double, Set<SimEntityEvent>> queueEventsMap)
-    throws SimQueuePredictionException
-  {
-    if (queueEventsMap == null)
-      throw new IllegalArgumentException ();
-    final Set<SimEntityEvent> queueEvents = new LinkedHashSet<> ();
-    for (final Set<SimEntityEvent> queueEventsAtTime : queueEventsMap.values ())
-      queueEvents.addAll (queueEventsAtTime);
-    return predictVisitLogs_SQ_SV_ROEL_U (queue, queueEvents);
-  }
+  Map<SimJob, JobQueueVisitLog<SimJob, Q>>
+  predictVisitLogs_SQ_SV_ROEL_U
+  (Q queue, Set<SimEntityEvent> workloadEvents)
+  throws SimQueuePredictionException;
+ 
+  /** Creates the unique prediction, if possible,
+   *  of job-visits (at most one) to a given queue under an Insertion-Order Event List.
+   * 
+   * <p>
+   * Note that processed-events map parameter may be equal to the workload events map,
+   * in which case processed (internal) events are inserted in situ.
+   * If a different map is provided, it is cleared upon entry.
+   * 
+   * @param queue              The queue, non-{@code null}.
+   * @param workloadEventsMap  The workload events as a map from event time onto the
+   *                           (ordered!) set of events occurring at that time;
+   *                           events related to other queues are allowed and are to be ignored.
+   * @param processedEventsMap An optional map in which all events processed at the queue (including workload events)
+   *                           are stored unambiguously; the events in a value set are in processing ordered
+   *                           (you can use this to resolve ambiguities in the visit logs like equal departure times).
+   * 
+   * @return A map from every job that visits the given queue onto its {@link JobQueueVisitLog} .
+   * 
+   * @throws IllegalArgumentException      If {@code queue == null} or the workload parameters are somehow illegal.
+   * @throws UnsupportedOperationException If the queue type or the workload is (partially) unsupported.
+   * @throws SimQueuePredictionException   If a prediction is (e.g.) too complex to generate
+   *                                       ({@link SimQueuePredictionComplexityException}),
+   *                                       if invalid input has been supplied to the predictor
+   *                                       ({@link SimQueuePredictionInvalidInputException}),
+   *                                       or if a <i>unique</i> prediction cannot be generated
+   *                                       ({@link SimQueuePredictionAmbiguityException}).
+   * 
+   */
+  Map<SimJob, JobQueueVisitLog<SimJob, Q>>
+  predictVisitLogs_SQ_SV_IOEL_U
+  (Q queue,
+   NavigableMap<Double, Set<SimEntityEvent>> workloadEventsMap,
+   NavigableMap<Double, Set<SimEntityEvent>> processedEventsMap)
+  throws SimQueuePredictionException;
   
   /** Compares two maps of predicted and actual {@link JobQueueVisitLog}s for equality, within given accuracy.
    * 
