@@ -55,7 +55,7 @@ extends AbstractSimQueuePredictor<SimQueue>
   }
 
   @Override
-  protected double getNextQueueEventTimeBeyond
+  public double getNextQueueEventTimeBeyond
   (final SimQueue queue,
    final SimQueueState<SimJob, SimQueue> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
@@ -101,7 +101,7 @@ extends AbstractSimQueuePredictor<SimQueue>
   }
   
   @Override
-  protected void doWorkloadEvents_SQ_SV_ROEL_U
+  public void doWorkloadEvents_SQ_SV_ROEL_U
   (final SimQueue queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    final SimQueueState<SimJob, SimQueue> queueState,
@@ -153,7 +153,12 @@ extends AbstractSimQueuePredictor<SimQueue>
           queueState.doArrivals (time, arrivals, visitLogsSet);
           if (((! this.hasc) || queueState.getJobsInServiceArea ().size () < this.c)
             && queueState.getServerAccessCredits () >= 1)
+          {
             queueState.doStarts (time, arrivals);
+            final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (job);
+            if (remainingServiceTime == 0)
+              queueState.doExits (time, null, null, arrivals, null, visitLogsSet);
+          }
         }
       }
     }
@@ -216,7 +221,7 @@ extends AbstractSimQueuePredictor<SimQueue>
   }
 
   @Override
-  protected void doQueueEvents_SQ_SV_ROEL_U
+  public void doQueueEvents_SQ_SV_ROEL_U
   (final SimQueue queue,
    final SimQueueState<SimJob, SimQueue> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
@@ -263,7 +268,7 @@ extends AbstractSimQueuePredictor<SimQueue>
   }
   
   @Override
-  protected void updateToTime (final SimQueue queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final SimQueue queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
