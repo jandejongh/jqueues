@@ -23,10 +23,8 @@ extends AbstractSimQueuePredictor<DELAY>
 {
 
   @Override
-  protected double getNextQueueEventTimeBeyond
-  (final DELAY queue,
-   final SimQueueState<SimJob, DELAY> queueState,
-   final Set<SimEntitySimpleEventType.Member> queueEventTypes)
+  public double getNextQueueEventTimeBeyond
+  (final DELAY queue, final SimQueueState<SimJob, DELAY> queueState, final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
     if ( queue == null
       || queueState == null
@@ -43,7 +41,7 @@ extends AbstractSimQueuePredictor<DELAY>
   }
 
   @Override
-  protected void doWorkloadEvents_SQ_SV_ROEL_U
+  public void doWorkloadEvents_SQ_SV_ROEL_U
   (final DELAY queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    final SimQueueState<SimJob, DELAY> queueState,
@@ -111,7 +109,7 @@ extends AbstractSimQueuePredictor<DELAY>
   }
 
   @Override
-  protected void doQueueEvents_SQ_SV_ROEL_U
+  public void doQueueEvents_SQ_SV_ROEL_U
   (final DELAY queue,
    final SimQueueState<SimJob, DELAY> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
@@ -147,7 +145,7 @@ extends AbstractSimQueuePredictor<DELAY>
   }  
   
   @Override
-  protected void updateToTime (final DELAY queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final DELAY queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
