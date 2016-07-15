@@ -33,12 +33,12 @@ extends SimQueuePredictor_Preemptive<Q>
 {
 
   /** Registers a new {@link SimQueueQoSStateHandler} at the object created by super method.
-   * 
+   *
    * @return The object created by the super method with a new registered {@link SimQueueQoSStateHandler}.
    * 
    */
   @Override
-  protected SimQueueState<SimJob, Q> createQueueState (final Q queue, final boolean isROEL)
+  public SimQueueState<SimJob, Q> createQueueState (final Q queue, final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
     queueState.registerHandler (new SimQueueQoSStateHandler<> ());
@@ -122,7 +122,7 @@ extends SimQueuePredictor_Preemptive<Q>
   }
   
   @Override
-  protected double getNextQueueEventTimeBeyond
+  public double getNextQueueEventTimeBeyond
   (final Q queue,
    final SimQueueState<SimJob, Q> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
@@ -146,7 +146,7 @@ extends SimQueuePredictor_Preemptive<Q>
   }
 
   @Override
-  protected void doWorkloadEvents_SQ_SV_ROEL_U
+  public void doWorkloadEvents_SQ_SV_ROEL_U
   (final Q queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    final SimQueueState<SimJob, Q> queueState,
@@ -221,7 +221,7 @@ extends SimQueuePredictor_Preemptive<Q>
   }
 
   @Override
-  protected void doQueueEvents_SQ_SV_ROEL_U
+  public void doQueueEvents_SQ_SV_ROEL_U
   (final Q queue,
    final SimQueueState<SimJob, Q> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
@@ -259,7 +259,7 @@ extends SimQueuePredictor_Preemptive<Q>
   }  
   
   @Override
-  protected void updateToTime (final Q queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final Q queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
