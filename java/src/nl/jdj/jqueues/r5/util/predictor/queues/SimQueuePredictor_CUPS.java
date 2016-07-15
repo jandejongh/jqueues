@@ -35,12 +35,12 @@ extends AbstractSimQueuePredictor<CUPS>
 {
 
   /** Registers a new {@link SimQueueOSTStateHandler} at the object created by super method.
-   * 
+   *
    * @return The object created by the super method with a new registered {@link SimQueueOSTStateHandler}.
    * 
    */
   @Override
-  protected SimQueueState<SimJob, CUPS> createQueueState (final CUPS queue, final boolean isROEL)
+  public SimQueueState<SimJob, CUPS> createQueueState (final CUPS queue, final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
     queueState.registerHandler (new SimQueueOSTStateHandler ());
@@ -63,10 +63,8 @@ extends AbstractSimQueuePredictor<CUPS>
   }
 
   @Override
-  protected double getNextQueueEventTimeBeyond
-  (final CUPS queue,
-   final SimQueueState<SimJob, CUPS> queueState,
-   final Set<SimEntitySimpleEventType.Member> queueEventTypes)
+  public double getNextQueueEventTimeBeyond
+  (final CUPS queue, final SimQueueState<SimJob, CUPS> queueState, final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
     if ( queue == null
       || queueState == null
@@ -101,7 +99,7 @@ extends AbstractSimQueuePredictor<CUPS>
   }
 
   @Override
-  protected void doWorkloadEvents_SQ_SV_ROEL_U
+  public void doWorkloadEvents_SQ_SV_ROEL_U
   (final CUPS queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    final SimQueueState<SimJob, CUPS> queueState,
@@ -193,7 +191,7 @@ extends AbstractSimQueuePredictor<CUPS>
   }
 
   @Override
-  protected void doQueueEvents_SQ_SV_ROEL_U
+  public void doQueueEvents_SQ_SV_ROEL_U
   (final CUPS queue,
    final SimQueueState<SimJob, CUPS> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
@@ -238,7 +236,7 @@ extends AbstractSimQueuePredictor<CUPS>
   }
   
   @Override
-  protected void updateToTime (final CUPS queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final CUPS queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
