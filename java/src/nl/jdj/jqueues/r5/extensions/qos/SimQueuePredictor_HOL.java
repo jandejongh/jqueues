@@ -26,12 +26,12 @@ extends SimQueuePredictor_FCFS
 {
   
   /** Registers a new {@link SimQueueQoSStateHandler} at the object created by super method.
-   * 
+   *
    * @return The object created by the super method with a new registered {@link SimQueueQoSStateHandler}.
    * 
    */
   @Override
-  protected SimQueueState<SimJob, SimQueue> createQueueState (final SimQueue queue, final boolean isROEL)
+  public SimQueueState<SimJob, SimQueue> createQueueState (final SimQueue queue, final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
     queueState.registerHandler (new SimQueueQoSStateHandler<> ());
@@ -52,7 +52,7 @@ extends SimQueuePredictor_FCFS
   }
 
   @Override
-  protected void doWorkloadEvents_SQ_SV_ROEL_U
+  public void doWorkloadEvents_SQ_SV_ROEL_U
   (SimQueue queue,
     WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
     SimQueueState<SimJob, SimQueue> queueState,
@@ -74,7 +74,7 @@ extends SimQueuePredictor_FCFS
   }
 
   @Override
-  protected void doQueueEvents_SQ_SV_ROEL_U
+  public void doQueueEvents_SQ_SV_ROEL_U
   (final SimQueue queue,
     final SimQueueState<SimJob, SimQueue> queueState,
     final Set<SimEntitySimpleEventType.Member> queueEventTypes,
