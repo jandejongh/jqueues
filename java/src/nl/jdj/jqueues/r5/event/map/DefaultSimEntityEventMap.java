@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r5.event.map;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
@@ -14,16 +15,19 @@ import nl.jdj.jsimulation.r5.SimEvent;
 /** A default {@link SimEntityEventMap}.
  * 
  * <p>
- * A {@link DefaultSimEntityEventMap} takes a set of {@link SimEvent}s as input to its constructor,
+ * A {@link DefaultSimEntityEventMap} takes a set of {@link SimEvent}s as input to its (set-argument) constructor,
  * and constructs the maps as specified in {@link SimEntityEventMap}
  * from all {@link SimEntityEvent} it finds that have non-{@code null} job or queue (or both).
  * 
  * <p>
  * This implementation constructs an internal copy of the input set,
  * and, for what it's worth,
- * maintains the order of simultaneous {@link SimEntityEvent}s in the input
+ * maintains the order of simultaneous {@link SimEntityEvent}s in the input of the set-argument constructor
  * throughput all its sets and maps
  * by using {@link LinkedHashSet}s.
+ * 
+ * <p>
+ * A map-argument constructor allows for the construction of objects from an unambiguous event schedule.
  * 
  * <p>
  * All getters in this implementation provide direct access to the internal sets and maps,
@@ -45,7 +49,7 @@ implements SimEntityEventMap
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private /* final */ void addSimEntityEvent (final SimEntityEvent simEntityEvent)
+  private void addSimEntityEvent (final SimEntityEvent simEntityEvent)
   {
     if (simEntityEvent == null)
       throw new IllegalArgumentException ();
@@ -92,6 +96,36 @@ implements SimEntityEventMap
       for (final SimEvent event : events)
         if (event != null && (event instanceof SimEntityEvent))
           addSimEntityEvent ((SimEntityEvent) event);
+  }
+  
+  /** Creates a new {@link DefaultSimEntityEventMap}, filling out all the internal sets and maps from scanning an unambiguous
+   *  schedule of {@link SimEvent}s represented as a {@code Map}.
+   * 
+   * <p>
+   * The order of {@link SimEvent}s in the value sets must be deterministic and must represent the "processing order"
+   * for the simultaneous events in the set.
+   * 
+   * @param <E>    The event type.
+   * @param events The events to parse represented as a {@code Map} (parsing is actually done in this constructor).
+   * 
+   * @throws IllegalArgumentException If the time on an event does not match its corresponding key value.
+   * 
+   * @see SimEvent#getTime
+   * 
+   */
+  public <E extends SimEvent> DefaultSimEntityEventMap (final Map<Double, Set<E>> events)
+  {
+    if (events != null)
+      for (final Entry<Double, Set<E>> entry : events.entrySet ())
+        for (final SimEvent event : entry.getValue ())
+          if (event != null && (event instanceof SimEntityEvent))
+          {
+            if (entry.getKey () != event.getTime ())
+              throw new IllegalArgumentException ();
+             else
+              // We can safely use {@link #addSimEntityEvent} because it preserves insertion order for simulateneous events.
+               addSimEntityEvent ((SimEntityEvent) event);
+          }
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
