@@ -32,7 +32,7 @@ extends AbstractSimQueuePredictor<GATE>
    * 
    */
   @Override
-  protected
+  public
   WorkloadSchedule_SQ_SV_ROEL_U
   createWorkloadSchedule_SQ_SV_ROEL_U
   (final GATE queue, final Set<SimEntityEvent> workloadEvents)
@@ -47,7 +47,7 @@ extends AbstractSimQueuePredictor<GATE>
    * 
    */
   @Override
-  protected SimQueueState<SimJob, GATE> createQueueState (final GATE queue, final boolean isROEL)
+  public SimQueueState<SimJob, GATE> createQueueState (final GATE queue, final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
     queueState.registerHandler (new SimQueueWithGateStateHandler ());
@@ -55,10 +55,8 @@ extends AbstractSimQueuePredictor<GATE>
   }
 
   @Override
-  protected double getNextQueueEventTimeBeyond
-  (final GATE queue,
-   final SimQueueState<SimJob, GATE> queueState,
-   final Set<SimEntitySimpleEventType.Member> queueEventTypes)
+  public double getNextQueueEventTimeBeyond
+  (final GATE queue, final SimQueueState<SimJob, GATE> queueState, final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
     if ( queue == null
       || queueState == null
@@ -69,7 +67,7 @@ extends AbstractSimQueuePredictor<GATE>
   }
 
   @Override
-  protected void doWorkloadEvents_SQ_SV_ROEL_U
+  public void doWorkloadEvents_SQ_SV_ROEL_U
   (final GATE queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    final SimQueueState<SimJob, GATE> queueState,
@@ -169,7 +167,7 @@ extends AbstractSimQueuePredictor<GATE>
   }
 
   @Override
-  protected void doQueueEvents_SQ_SV_ROEL_U
+  public void doQueueEvents_SQ_SV_ROEL_U
   (final GATE queue,
    final SimQueueState<SimJob, GATE> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
@@ -187,7 +185,7 @@ extends AbstractSimQueuePredictor<GATE>
   }  
   
   @Override
-  protected void updateToTime (final GATE queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final GATE queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
