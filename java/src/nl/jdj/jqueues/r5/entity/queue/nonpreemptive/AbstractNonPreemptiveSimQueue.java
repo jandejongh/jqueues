@@ -263,11 +263,12 @@ public abstract class AbstractNonPreemptiveSimQueue
    * The service time of the job to start is requested through
    * {@link #getServiceTimeForJob}; throwing a {@link RuntimeException} if a negative service time is returned.
    * Subsequently, an appropriate departure event is scheduled through {@link #scheduleDepartureEvent} for the job.
+   * If, however, the requested service time is zero, the job is manually made to depart.
    * 
    * <p>
-   * After starting the jobs and scheduling departure events for each job,
+   * After starting the jobs and scheduling departure events for each job (or manually made to depart),
    * a separate notification part of the method takes care of notifying listeners
-   * through {@link #fireStart}, {@link #fireIfOutOfServerAccessCredits} and {@link #fireNewNoWaitArmed}.
+   * through {@link #fireStart}, {@link #fireDeparture}, {@link #fireIfOutOfServerAccessCredits} and {@link #fireNewNoWaitArmed}.
    * 
    * <p>
    * If server-access credits are absent, this method does nothing, relying on {@link #rescheduleForNewServerAccessCredits}
@@ -283,6 +284,7 @@ public abstract class AbstractNonPreemptiveSimQueue
    * @see #getServiceTimeForJob
    * @see #scheduleDepartureEvent
    * @see #fireStart
+   * @see #fireDeparture
    * @see #fireIfOutOfServerAccessCredits
    * @see #fireNewNoWaitArmed
    * 
@@ -296,6 +298,7 @@ public abstract class AbstractNonPreemptiveSimQueue
       return;
     final Set<J> startableJobs = getJobsInWaitingArea ();
     final Set<J> startedJobs = new LinkedHashSet<> ();
+    final Set<J> departedJobs = new LinkedHashSet<> ();
     while (hasServerAcccessCredits ()
       && (! startableJobs.isEmpty ())
       && hasServerAvailable ())
@@ -309,15 +312,22 @@ public abstract class AbstractNonPreemptiveSimQueue
       final double jobServiceTime = getServiceTimeForJob (job);
       if (jobServiceTime < 0)
         throw new RuntimeException ();
-      scheduleDepartureEvent (time + jobServiceTime, job);
+      if (jobServiceTime > 0)
+        scheduleDepartureEvent (time + jobServiceTime, job);
+      else
+      {
+        removeJobFromQueueUponDeparture (job, time);
+        job.setQueue (null);
+        departedJobs.add (job);
+      }
       // Defer notifications until we are in a valid state again.
       startedJobs.add (job);
     }
     // Notification section.
-    for (J j : startedJobs)
-      // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
-      if (this.jobsInServiceArea.contains (j))
-        fireStart (time, j, (Q) this);
+    for (final J j : startedJobs)
+      fireStart (time, j, (Q) this);
+    for (final J j : departedJobs)
+      fireDeparture (time, j, (Q) this);
     fireIfOutOfServerAccessCredits (time);
     fireNewNoWaitArmed (time, isNoWaitArmed ());
   }
