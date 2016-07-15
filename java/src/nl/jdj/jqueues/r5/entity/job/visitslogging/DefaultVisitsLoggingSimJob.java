@@ -173,7 +173,8 @@ extends DefaultSelfListeningSimJob<J, Q>
         || oldVisitLog.revoked
         || oldVisitLog.departed
         || oldVisitLog.queue != queue
-        || oldVisitLog.queue != getQueue ()
+        // Removed this check; a started job may no longer be present at the queue at the moment of notification!
+        // || oldVisitLog.queue != getQueue ()
         || oldVisitLog.job != this)
         throw new IllegalStateException ();
       final double arrivalTime = oldVisitLog.arrivalTime;
