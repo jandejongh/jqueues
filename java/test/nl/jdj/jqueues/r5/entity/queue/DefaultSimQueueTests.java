@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r5.entity.queue;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
@@ -53,14 +54,16 @@ public class DefaultSimQueueTests
         {
           if (! deadSilent)
             System.out.println ("===== Test: " + klf + ", pass " + pass + " =====");
-          //final SimJobFactory jobFactory = new DefaultVisitsLoggingSimJobFactory<> ();
           final SimJobFactory jobFactory = new DefaultVisitsLoggingSimJobQoSFactory<> ();
-          final NavigableMap<Double, Set<SimEntityEvent>> queueEvents = new TreeMap<> ();
+          final NavigableMap<Double, Set<SimEntityEvent>> queueEventsAsMap = new TreeMap<> ();
           final LoadFactory_SQ_SV loadFactory = klf.getLoadFactory ();
           final Set<SimJob> jobs = loadFactory.generate
-            (el, false, queue, jobFactory, numberOfJobs, true, 0.0, hints, queueEvents);
+            (el, false, queue, jobFactory, numberOfJobs, true, 0.0, hints, queueEventsAsMap);
+          final Set<SimEntityEvent> queueEventsAsSet = new HashSet<> ();
+          for (final Set<SimEntityEvent> queueEventsAtTime : queueEventsAsMap.values ())
+            queueEventsAsSet.addAll (queueEventsAtTime);
           final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictedJobQueueVisitLogs
-            = predictor.predictVisitLogs_SQ_SV_U (queue, queueEvents);
+            = predictor.predictVisitLogs_SQ_SV_ROEL_U (queue, queueEventsAsSet);
           el.run ();
           assert el.isEmpty ();
           final Map<SimJob, TreeMap<Double,TreeMap<Integer,JobQueueVisitLog<SimJob, Q>>>>
