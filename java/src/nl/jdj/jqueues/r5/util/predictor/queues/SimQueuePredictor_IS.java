@@ -20,7 +20,7 @@ extends SimQueuePredictor_FCFS
   final double serviceTime;
 
   @Override
-  protected SimQueueState<SimJob, SimQueue> createQueueState (SimQueue queue, boolean isROEL)
+  public SimQueueState<SimJob, SimQueue> createQueueState (SimQueue queue, boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
     if (this.overrideServiceTime)
@@ -40,7 +40,7 @@ extends SimQueuePredictor_FCFS
     this (false, Double.NaN);
   }
   
-  final ToDoubleBiFunction<SimQueue, SimJob> serviceTimeProvider =
+  private final ToDoubleBiFunction<SimQueue, SimJob> serviceTimeProvider =
     (final SimQueue queue, final SimJob job) -> SimQueuePredictor_IS.this.serviceTime;
   
 }
