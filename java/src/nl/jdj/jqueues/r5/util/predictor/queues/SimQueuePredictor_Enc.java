@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
@@ -107,5 +108,16 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
     }
     return visitLogs;
   }
+  
+  @Override
+  public Map<SimJob, JobQueueVisitLog<SimJob, BlackEncapsulatorSimQueue>>
+  predictVisitLogs_SQ_SV_IOEL_U
+  (final BlackEncapsulatorSimQueue queue,
+   final NavigableMap<Double, Set<SimEntityEvent>> workloadEventsMap,
+   final NavigableMap<Double, Set<SimEntityEvent>> processedEventsMap)
+  throws SimQueuePredictionException
+  {
+    throw new UnsupportedOperationException ();
+  }  
   
 }
