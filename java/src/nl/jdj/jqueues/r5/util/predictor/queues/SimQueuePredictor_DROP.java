@@ -23,7 +23,7 @@ extends AbstractSimQueuePredictor<DROP>
 {
 
   @Override
-  protected double getNextQueueEventTimeBeyond
+  public double getNextQueueEventTimeBeyond
   (final DROP queue,
    final SimQueueState<SimJob, DROP> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
@@ -37,13 +37,13 @@ extends AbstractSimQueuePredictor<DROP>
   }
 
   @Override
-  protected void doWorkloadEvents_SQ_SV_ROEL_U
+  public void doWorkloadEvents_SQ_SV_ROEL_U
   (final DROP queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    final SimQueueState<SimJob, DROP> queueState,
    final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
    final Set<JobQueueVisitLog<SimJob, DROP>> visitLogsSet)
-   throws SimQueuePredictionException, WorkloadScheduleException
+  throws SimQueuePredictionException, WorkloadScheduleException
   {
     if ( queue == null
       || workloadSchedule == null
@@ -90,12 +90,12 @@ extends AbstractSimQueuePredictor<DROP>
   }
 
   @Override
-  protected void doQueueEvents_SQ_SV_ROEL_U
+  public void doQueueEvents_SQ_SV_ROEL_U
   (final DROP queue,
    final SimQueueState<SimJob, DROP> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
    final Set<JobQueueVisitLog<SimJob, DROP>> visitLogsSet)
-   throws SimQueuePredictionException    
+  throws SimQueuePredictionException    
   {
     if ( queue == null
       || queueState == null
@@ -108,7 +108,7 @@ extends AbstractSimQueuePredictor<DROP>
   }  
   
   @Override
-  protected void updateToTime (final DROP queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final DROP queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
