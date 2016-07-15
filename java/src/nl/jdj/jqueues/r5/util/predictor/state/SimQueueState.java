@@ -368,7 +368,7 @@ public interface SimQueueState<J extends SimJob, Q extends SimQueue>
    * The start time cannot be in the past.
    * 
    * <p>
-   * This method updates the server-access credits, and throw an exception if there are not sufficient server-access credits
+   * This method updates the server-access credits, and throws an exception if there are not sufficient server-access credits
    * to start all jobs offered.
    * 
    * @param time     The start time.
