@@ -39,6 +39,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   /** Creates a new {@link DefaultWorkloadSchedule}, filling out all the internal sets and maps from scanning a set of
    *  {@link SimEntityEvent}s.
    * 
+   * @param <E>         The event type.
    * @param queues      The queues to consider; events related to other queues are ignored; if {@code null},
    *                    consider all queues found in the {@code queueEvents} set.
    * @param queueEvents The set of events to parse (parsing is actually done in this constructor).
@@ -46,7 +47,10 @@ implements WorkloadSchedule, WorkloadScheduleHandler
    * @throws WorkloadScheduleException If the workload is invalid or ambiguous (for instance).
    * 
    */
-  public DefaultWorkloadSchedule (final Set<? extends SimQueue> queues, final Set<? extends SimEntityEvent> queueEvents)
+  public <E extends SimEntityEvent>
+  DefaultWorkloadSchedule
+  (final Set<? extends SimQueue> queues,
+   final Set<E> queueEvents)
   throws WorkloadScheduleException
   {
     super (queueEvents);
@@ -69,17 +73,78 @@ implements WorkloadSchedule, WorkloadScheduleHandler
    * <p>
    * Implemented as {@code this (null, queueEvents)}.
    * 
+   * @param <E>         The event type.
    * @param queueEvents The set of events to parse (parsing is actually done in this constructor).
    * 
    * @throws WorkloadScheduleException If the workload is invalid or ambiguous (for instance).
    * 
    */
-  public DefaultWorkloadSchedule (final Set<SimEntityEvent> queueEvents)
+  public <E extends SimEntityEvent>
+  DefaultWorkloadSchedule
+  (final Set<E> queueEvents)
   throws WorkloadScheduleException
   {
     this (null, queueEvents);
   }
 
+  /** Creates a new {@link DefaultWorkloadSchedule}, filling out all the internal sets and maps from scanning a map of
+   *  {@link SimEntityEvent}s.
+   * 
+   * @param <E>         The event type.
+   * @param queues      The queues to consider; events related to other queues are ignored; if {@code null},
+   *                    consider all queues found in the {@code queueEvents} set.
+   * @param queueEvents The set of events (as a map) to parse (parsing is actually done in this constructor).
+   * 
+   * @throws WorkloadScheduleException If the workload is invalid or ambiguous (for instance).
+   * 
+   */
+  public <E extends SimEntityEvent>
+  DefaultWorkloadSchedule
+  (final Set<? extends SimQueue> queues,
+   final Map<Double, Set<E>> queueEvents)
+  throws WorkloadScheduleException
+  {
+    super (queueEvents);
+    if (queueEvents != null)
+      for (final Set<E> queueEvents_q : queueEvents.values ())
+        this.queueEvents.addAll (queueEvents_q);
+    this.queueEvents.remove (null);
+    if (queues != null)
+      this.queues.addAll (queues);
+    else
+      this.queues.addAll (getSimQueueTimeSimEntityEventMap ().keySet ());
+    registerHandler (this);    
+  }
+    
+  /** Creates a new {@link DefaultWorkloadSchedule}, filling out all the internal sets and maps from scanning a map of
+   *  {@link SimEntityEvent}s.
+   * 
+   * <p>
+   * With this constructor, all queues found in the {@code queueEvent}s are considered.
+   * 
+   * <p>
+   * Implemented as {@code this (null, queueEvents)}.
+   * 
+   * @param <E>         The event type.
+   * @param queueEvents The set of events (as a map) to parse (parsing is actually done in this constructor).
+   * 
+   * @throws WorkloadScheduleException If the workload is invalid or ambiguous (for instance).
+   * 
+   */
+  public <E extends SimEntityEvent>
+  DefaultWorkloadSchedule
+  (final Map<Double, Set<E>> queueEvents)
+  throws WorkloadScheduleException
+  {
+    this (null, queueEvents);
+  }
+      
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // WorkloadSchedule
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   @Override
   public double getNextEventTimeBeyond
   (final SimQueue queue,
