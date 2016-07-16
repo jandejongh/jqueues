@@ -41,7 +41,7 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
   }
   
   @Override
-  protected double getNextQueueEventTimeBeyond
+  public double getNextQueueEventTimeBeyond
   (final P_LCFS queue,
    final SimQueueState<SimJob, P_LCFS> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
@@ -65,7 +65,7 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
   }
 
   @Override
-  protected void doWorkloadEvents_SQ_SV_ROEL_U
+  public void doWorkloadEvents_SQ_SV_ROEL_U
   (final P_LCFS queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    final SimQueueState<SimJob, P_LCFS> queueState,
@@ -157,7 +157,7 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
   }
 
   @Override
-  protected void doQueueEvents_SQ_SV_ROEL_U
+  public void doQueueEvents_SQ_SV_ROEL_U
   (final P_LCFS queue,
    final SimQueueState<SimJob, P_LCFS> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
@@ -221,7 +221,7 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
   }  
   
   @Override
-  protected void updateToTime (final P_LCFS queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final P_LCFS queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
