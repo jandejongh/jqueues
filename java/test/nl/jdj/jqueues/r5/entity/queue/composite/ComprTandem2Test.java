@@ -24,10 +24,10 @@ import org.junit.Test;
  *
  *
  */
-public class CompositeTest
+public class ComprTandem2Test
 {
   
-  public CompositeTest ()
+  public ComprTandem2Test ()
   {
   }
   
@@ -81,6 +81,8 @@ public class CompositeTest
     return (n * (n+1)) / 2;
   }
   
+  private final boolean reported = false;
+  
   /**
    * Test of BlackCompressedTandem2SimQueue (FCFS+FCFS).
    * 
@@ -88,15 +90,16 @@ public class CompositeTest
   @Test
   public void testBlackCompressedTandem2SimQueue_FCFS_FCFS ()
   {
-    System.out.println ("==========================================");
-    System.out.println ("BlackCompressedTandem2SimQueue (FCFS+FCFS)");
-    System.out.println ("==========================================");
     final SimEventList<DefaultSimEvent> el = new DefaultSimEventList<> (DefaultSimEvent.class);
     final BlackCompressedTandem2SimQueue queue = new BlackCompressedTandem2SimQueue (el, new FCFS (el), new FCFS (el), null);
+    System.out.println ("==========================================");
+    System.out.println (queue);
+    System.out.println ("==========================================");
     for (int i = 0; i <= 1; i++)
     {
-      System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
+      if (this.reported)
+        System.out.println ("===== PASS " + i + " =====");
+      final List<TestJob1> jobs = scheduleJobArrivals (this.reported, 10, el, queue);
       el.run ();
       assert el.isEmpty ();
       assertEquals (56.0, el.getTime (), 0.0);
@@ -121,12 +124,12 @@ public class CompositeTest
   @Test
   public void testBlackCompressedTandem2SimQueue_LCFS_FCFS ()
   {
-    System.out.println ("==========================================");
-    System.out.println ("BlackCompressedTandem2SimQueue (LCFS+FCFS)");
-    System.out.println ("==========================================");
     final SimEventList<DefaultSimEvent> el = new DefaultSimEventList<> (DefaultSimEvent.class);
     final BlackCompressedTandem2SimQueue queue = new BlackCompressedTandem2SimQueue (el, new LCFS (el), new FCFS (el), null);
-    final List<TestJob1> jobs = scheduleJobArrivals (true, 10, el, queue);
+    System.out.println ("==========================================");
+    System.out.println (queue);
+    System.out.println ("==========================================");
+    final List<TestJob1> jobs = scheduleJobArrivals (this.reported, 10, el, queue);
     el.run ();
     assert el.isEmpty ();
     assertEquals (56.0, el.getTime (), 0.0);
