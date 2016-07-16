@@ -29,7 +29,7 @@ extends AbstractSimQueuePredictor<PS>
 {
 
   @Override
-  protected double getNextQueueEventTimeBeyond
+  public double getNextQueueEventTimeBeyond
   (final PS queue,
    final SimQueueState<SimJob, PS> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
@@ -53,7 +53,7 @@ extends AbstractSimQueuePredictor<PS>
   }
 
   @Override
-  protected void doWorkloadEvents_SQ_SV_ROEL_U
+  public void doWorkloadEvents_SQ_SV_ROEL_U
   (final PS queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    final SimQueueState<SimJob, PS> queueState,
@@ -137,7 +137,7 @@ extends AbstractSimQueuePredictor<PS>
   }
 
   @Override
-  protected void doQueueEvents_SQ_SV_ROEL_U
+  public void doQueueEvents_SQ_SV_ROEL_U
   (final PS queue,
    final SimQueueState<SimJob, PS> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
@@ -173,7 +173,7 @@ extends AbstractSimQueuePredictor<PS>
   }  
   
   @Override
-  protected void updateToTime (final PS queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final PS queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
