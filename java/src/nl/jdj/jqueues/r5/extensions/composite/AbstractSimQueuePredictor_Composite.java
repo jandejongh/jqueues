@@ -14,6 +14,7 @@ import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueComposite;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
+import nl.jdj.jqueues.r5.event.SimQueueJobRevocationEvent;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
@@ -241,12 +242,17 @@ extends AbstractSimQueuePredictor<Q>
           final Set<SimJob> revocations = new HashSet<> ();
           revocations.add (job);
           queueState.doExits (time, null, revocations, null, null, visitLogsSet);
-          int i = 0;
-          for (final SimQueue subQueue : (Set<SimQueue>) queue.getQueues ())
+          for (int i = 0; i < queue.getQueues ().size (); i++)
           {
             final DefaultSimQueueState subQueueState = queueStateHandler.getSubQueueState (i);
             if (subQueueState.getJobs ().contains (job))
-              subQueueState.doExits (time, null, revocations, null, null, null);
+            {
+              final SimQueue subQueue = new ArrayList<SimQueue> (queue.getQueues ()).get (i);
+              final SubQueueSimpleEvent subQueueEvent =
+                new SubQueueSimpleEvent (subQueue, SimEntitySimpleEventType.REVOCATION, null, job);
+              doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (subQueueEvent), visitLogsSet);
+              break;
+            }
           }
         }
       }
@@ -320,11 +326,15 @@ extends AbstractSimQueuePredictor<Q>
       {
         if (subQueueWorkloadEvent != null)
         {
-          if (subQueueWorkloadEvent != SimEntitySimpleEventType.ARRIVAL)
+          final SimEntityEvent subQueueEvent;
+          if (subQueueWorkloadEvent == SimEntitySimpleEventType.ARRIVAL)
+            subQueueEvent = new SimQueueJobArrivalEvent (job, subQueue, time);
+          else if (subQueueWorkloadEvent == SimEntitySimpleEventType.REVOCATION)
+            subQueueEvent = new SimQueueJobRevocationEvent (job, subQueue, time, true);
+          else
             throw new RuntimeException ();
-          final SimEntityEvent subQueueArrivalEvent = new SimQueueJobArrivalEvent (job, subQueue, time);
           final WorkloadSchedule_SQ_SV_ROEL_U subQueueWorkloadSchedule =
-            subQueuePredictor.createWorkloadSchedule_SQ_SV_ROEL_U (subQueue, Collections.singleton (subQueueArrivalEvent));
+            subQueuePredictor.createWorkloadSchedule_SQ_SV_ROEL_U (subQueue, Collections.singleton (subQueueEvent));
           subQueuePredictor.doWorkloadEvents_SQ_SV_ROEL_U
             (subQueue,
             subQueueWorkloadSchedule,
