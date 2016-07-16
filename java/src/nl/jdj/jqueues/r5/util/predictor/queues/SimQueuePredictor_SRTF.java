@@ -28,7 +28,7 @@ extends SimQueuePredictor_Preemptive<SRTF>
 {
 
   @Override
-  protected double getNextQueueEventTimeBeyond
+  public double getNextQueueEventTimeBeyond
   (final SRTF queue,
    final SimQueueState<SimJob, SRTF> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
@@ -51,7 +51,7 @@ extends SimQueuePredictor_Preemptive<SRTF>
   }
 
   @Override
-  protected void doWorkloadEvents_SQ_SV_ROEL_U
+  public void doWorkloadEvents_SQ_SV_ROEL_U
   (final SRTF queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    final SimQueueState<SimJob, SRTF> queueState,
@@ -150,7 +150,7 @@ extends SimQueuePredictor_Preemptive<SRTF>
   }
 
   @Override
-  protected void doQueueEvents_SQ_SV_ROEL_U
+  public void doQueueEvents_SQ_SV_ROEL_U
   (final SRTF queue,
    final SimQueueState<SimJob, SRTF> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
@@ -188,7 +188,7 @@ extends SimQueuePredictor_Preemptive<SRTF>
   }  
   
   @Override
-  protected void updateToTime (final SRTF queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final SRTF queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
