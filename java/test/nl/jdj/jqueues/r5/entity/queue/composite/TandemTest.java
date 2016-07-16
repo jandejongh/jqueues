@@ -76,7 +76,7 @@ public class TandemTest
     final int numberOfJobs = 50;
     final Set<LoadFactoryHint> jitterHint = Collections.singleton (LoadFactory_SQ_SV_001.SERVICE_TIME_JITTER);
     final boolean silent = true;
-    final boolean deadSilent = false;
+    final boolean deadSilent = true;
     // Tandem[ZERO]
     final ZERO zero = new ZERO (eventList);
     final SimQueuePredictor predictor_zero = new SimQueuePredictor_ZERO ();
