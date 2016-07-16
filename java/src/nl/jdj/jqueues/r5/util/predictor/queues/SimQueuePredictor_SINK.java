@@ -23,7 +23,7 @@ extends AbstractSimQueuePredictor<SINK>
 {
 
   @Override
-  protected double getNextQueueEventTimeBeyond
+  public double getNextQueueEventTimeBeyond
   (final SINK queue,
    final SimQueueState<SimJob, SINK> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
@@ -37,7 +37,7 @@ extends AbstractSimQueuePredictor<SINK>
   }
 
   @Override
-  protected void doWorkloadEvents_SQ_SV_ROEL_U
+  public void doWorkloadEvents_SQ_SV_ROEL_U
   (final SINK queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
    final SimQueueState<SimJob, SINK> queueState,
@@ -99,7 +99,7 @@ extends AbstractSimQueuePredictor<SINK>
   }
 
   @Override
-  protected void doQueueEvents_SQ_SV_ROEL_U
+  public void doQueueEvents_SQ_SV_ROEL_U
   (final SINK queue,
    final SimQueueState<SimJob, SINK> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
@@ -117,7 +117,7 @@ extends AbstractSimQueuePredictor<SINK>
   }  
   
   @Override
-  protected void updateToTime (final SINK queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final SINK queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
