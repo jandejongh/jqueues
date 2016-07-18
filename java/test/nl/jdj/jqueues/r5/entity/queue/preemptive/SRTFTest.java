@@ -9,7 +9,6 @@ import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
