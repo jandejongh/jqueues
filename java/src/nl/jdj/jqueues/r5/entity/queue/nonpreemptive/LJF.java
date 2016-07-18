@@ -8,11 +8,15 @@ import nl.jdj.jsimulation.r5.SimEventList;
  *
  * <p>
  * Longest-Job First.
+ * 
+ * <p>
+ * In case of ties, jobs are scheduled for service in order of arrival.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  * @see SimJob#getServiceTime
+ * @see SJF
  *
  */
 public class LJF<J extends SimJob, Q extends LJF> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>

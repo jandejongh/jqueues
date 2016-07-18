@@ -6,12 +6,17 @@ import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link SJF} queue serves jobs one at a time in order of ascending requested service times.
  *
+ * <p>
  * Shortest-Job First.
+ *
+ * <p>
+ * In case of ties, jobs are scheduled for service in order of arrival.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  * @see SimJob#getServiceTime
+ * @see LJF
  *
  */
 public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
