@@ -11,7 +11,10 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * <p>
  * In SRTF, the job present (and admitted to the server in view of server-access credits) with
  * the minimum remaining service time is in service until completion.
- * In case of a tie, the job in service is <i>not</i> preempted.
+ * In case of a tie between a job entering the service area and the job currently in service,
+ * the job in service is <i>not</i> preempted.
+ * In case of a tie between multiple jobs entering the service area simultaneously,
+ * the jobs are served in arrival order.
  * 
  * <p>
  * This implementation admits waiting jobs to the service area (server) as soon as server-access credits are available,
@@ -101,6 +104,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   
   /** Inserts the job in the job queue maintaining non-decreasing (required) service-time ordering.
    * 
+   * <p>
    * In case of ties, jobs are inserted in order of arrival.
    * 
    * @see #jobQueue
