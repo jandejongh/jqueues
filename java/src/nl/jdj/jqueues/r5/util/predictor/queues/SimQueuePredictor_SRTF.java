@@ -133,12 +133,13 @@ extends SimQueuePredictor_Preemptive<SRTF>
             remainingSac--;
         }
         queueState.doStarts (time, starters);
-        final Set<Double> rsTimes = new HashSet ();
-        for (SimJob starter : starters)
-          if (rsTimes.contains (rsTimeMap.get (starter)))
-            throw new SimQueuePredictionAmbiguityException ();
-          else
-            rsTimes.add (rsTimeMap.get (starter));
+        // We can remove the following test for ambiguity, since SRTF never interrupts the executing job in case of ties.
+        // final Set<Double> rsTimes = new HashSet ();
+        // for (SimJob starter : starters)
+        //   if (rsTimes.contains (rsTimeMap.get (starter)))
+        //     throw new SimQueuePredictionAmbiguityException ();
+        //   else
+        //     rsTimes.add (rsTimeMap.get (starter));
         if (executingJob != null && rsMap.firstEntry ().getValue ().get (0) != executingJob)
           preemptJob (queue, queueState, executingJob, visitLogsSet);
       }
