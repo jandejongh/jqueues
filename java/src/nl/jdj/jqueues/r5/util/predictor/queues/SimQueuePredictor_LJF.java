@@ -5,7 +5,6 @@ import java.util.TreeMap;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LJF;
-import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
@@ -23,11 +22,13 @@ extends SimQueuePredictor_FCFS
   throws SimQueuePredictionException
   {
     final NavigableMap<Double, SimJob> serviceTimeMap = new TreeMap<> ();
-    for (final SimJob job : queueState.getJobsInWaitingArea ())
+    for (final SimJob job : queueState.getJobsInWaitingAreaOrdered ())
     {
       final double serviceTime = ((DefaultSimQueueState) queueState).getServiceTime (queue, job);
       if (serviceTimeMap.containsKey (serviceTime))
-        throw new SimQueuePredictionAmbiguityException ();
+        // We already found a job with equal requested service time.
+        // Since LJF breaks ties through arrival-time ordering, we can skip this job.
+        continue;
       serviceTimeMap.put (serviceTime, job);
     }
     return serviceTimeMap.lastEntry ().getValue ();
