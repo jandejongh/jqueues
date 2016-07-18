@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
-import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_001;
+import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_0010;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_NoBuffer_c;
@@ -59,7 +59,7 @@ public class NoBuffer_cTest
     final boolean silent = true;
     final boolean deadSilent = true;
     final int numberOfJobs = 50;
-    final Set<LoadFactoryHint> jitterHint = Collections.singleton (LoadFactory_SQ_SV_001.SERVICE_TIME_JITTER);
+    final Set<LoadFactoryHint> jitterHint = Collections.singleton (LoadFactory_SQ_SV_0010.SERVICE_TIME_JITTER);
     final int[] cValues = { 0, 1, 2, 10, 100 };
     for (final int c : cValues)
     {

@@ -14,7 +14,7 @@ import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A concrete {@link LoadFactory_SQ_SV}, pattern 002.
+/** A concrete {@link LoadFactory_SQ_SV}, pattern 0011.
  *
  * @see #generate
  * 
@@ -22,8 +22,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public class LoadFactory_SQ_SV_002<J extends SimJob, Q extends SimQueue>
-extends LoadFactory_SQ_SV_001<J, Q>
+public class LoadFactory_SQ_SV_0011<J extends SimJob, Q extends SimQueue>
+extends LoadFactory_SQ_SV_0010<J, Q>
 {
 
   /** Generates the load.
@@ -31,7 +31,7 @@ extends LoadFactory_SQ_SV_001<J, Q>
    * <p>
    * This method
    * <ul>
-   * <li> generates the job load according to {@link LoadFactory_SQ_SV_001#generate};
+   * <li> generates the job load according to {@link LoadFactory_SQ_SV_0010#generate};
    * <li> adds queue-access vacations from 2.5 until 3.5, 5.5 until 6.5, etc.
    * </ul>
    * 

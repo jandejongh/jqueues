@@ -15,7 +15,7 @@ import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A concrete {@link LoadFactory_SQ_SV}, pattern 004.
+/** A concrete {@link LoadFactory_SQ_SV}, pattern 0013.
  *
  * @see #generate
  * 
@@ -23,8 +23,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public class LoadFactory_SQ_SV_004<J extends SimJob, Q extends SimQueue>
-extends LoadFactory_SQ_SV_001<J, Q>
+public class LoadFactory_SQ_SV_0013<J extends SimJob, Q extends SimQueue>
+extends LoadFactory_SQ_SV_0010<J, Q>
 {
 
   /** Generates the load.
@@ -32,7 +32,7 @@ extends LoadFactory_SQ_SV_001<J, Q>
    * <p>
    * This method
    * <ul>
-   * <li> generates the job load according to {@link LoadFactory_SQ_SV_001#generate};
+   * <li> generates the job load according to {@link LoadFactory_SQ_SV_0010#generate};
    * <li> adds setting server-access credits 6.75, 13.75, 20.75, etc.,
    *      with a jitter on the schedule time in U[-0.001, +0.001].
    * </ul>
@@ -43,7 +43,7 @@ extends LoadFactory_SQ_SV_001<J, Q>
    * the start times tend to synchronize to the
    * scheduled sac-settings.
    * Given the integral length of the interval between setting the server-access credits,
-   * and the integral service time in {@link LoadFactory_SQ_SV_001#generate},
+   * and the integral service time in {@link LoadFactory_SQ_SV_0010#generate},
    * this will lead to ambiguities between departures/starts and scheduled sac-settings.
    * 
    * <p>

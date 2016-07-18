@@ -1,7 +1,9 @@
 package nl.jdj.jqueues.r5.util.loadfactory.pattern;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Random;
@@ -13,12 +15,13 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
+import nl.jdj.jqueues.r5.extensions.qos.SimJobQoS;
 import nl.jdj.jqueues.r5.util.loadfactory.AbstractLoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A concrete {@link LoadFactory_SQ_SV}, pattern 001.
+/** A concrete {@link LoadFactory_SQ_SV}, pattern 0100.
  *
  * @see #generate
  * 
@@ -26,48 +29,27 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public class LoadFactory_SQ_SV_001<J extends SimJob, Q extends SimQueue>
+public class LoadFactory_SQ_SV_0100<J extends SimJob, Q extends SimQueue>
 extends AbstractLoadFactory_SQ_SV<J, Q>
 {
 
-  /** A load-factory hint enforcing jitter on the service-time requirement of jobs (e.g., in order to avoid ambiguities).
-   * 
-   */
-  public static final LoadFactoryHint SERVICE_TIME_JITTER = new LoadFactoryHint ()
-  {
-    @Override
-    public final String toString ()
-    {
-      return "SERVICE_TIME_JITTER";
-    }
-  };
-  
-  private final Random rngRequestedServiceTimeJitter = new Random ();
+  private final Random rngRequestedServiceTime = new Random ();
   
   /** Creates a suitable map for the requested service time for a job visit to a queue.
    * 
-   * <p>
-   * Upon request, a jitter from U[-0.01, +0.01] is added to the service time.
-   * This is typically used to avoid ambiguities in the schedule.
-   * 
    * @param queue The queue.
    * @param n     The job number.
-   * @param jitter Whether to apply jitter to the requested service time.
    * 
-   * @return A map holding the service time (i.e., the job number) at the queue.
+   * @return A map holding the service time (U[0.5, 9.5]) at the queue.
    * 
    * @see SimJobFactory#newInstance For the use of the map generated.
-   * @see LoadFactory_SQ_SV_001#SERVICE_TIME_JITTER
    * 
    */
-  protected Map<Q, Double> generateRequestedServiceTimeMap (final Q queue, final int n, final boolean jitter)
+  protected Map<Q, Double> generateRequestedServiceTimeMap (final Q queue, final int n)
   {
     final Map<Q, Double> requestedServiceTimeMap = new HashMap ();
-    final double requestedServiceTimeJitter =
-      jitter
-      ? 0.01 * (2.0 * this.rngRequestedServiceTimeJitter.nextDouble () - 1.0)
-      : 0.0;
-    requestedServiceTimeMap.put (queue, ((double) n) + requestedServiceTimeJitter);
+    final double requestedServiceTime = 0.5 + 9 * this.rngRequestedServiceTime.nextDouble ();
+    requestedServiceTimeMap.put (queue, requestedServiceTime);
     return requestedServiceTimeMap;
   }
   
@@ -77,8 +59,10 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
    * This method
    * <ul>
    * <li> generates the requested number of jobs, and number them starting with one;
-   * <li> set the requested service time for each job equal to its job number (adding jitter if requested through
-   *      {@link LoadFactory_SQ_SV_001#SERVICE_TIME_JITTER});
+   * <li> draws from U[0.5, 9.5] the requested service time for each job;
+   * <li> sets the QoS class to {@link Double} for each job;
+   * <li> sets the QoS value to one of ten preselected yet random double values
+   *      (however, including 0, {@link Double#NEGATIVE_INFINITY}, and {@link Double#POSITIVE_INFINITY}).
    * <li> schedules a single arrival for each job at time equal to its job number.
    * </ul>
    * 
@@ -86,7 +70,6 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
    * Jobs are returned in a {@link LinkedHashSet}, preserving the creation order of the jobs.
    * 
    * @see SimEntityEventScheduler#schedule
-   * @see LoadFactory_SQ_SV_001#SERVICE_TIME_JITTER
    * 
    */
   @Override
@@ -110,11 +93,20 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
       ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
     final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
     final SimEventList jobEventList = (attachSimJobsToEventList ? eventList : null);
-    final boolean jitter = (hints != null && hints.contains (LoadFactory_SQ_SV_001.SERVICE_TIME_JITTER));
+    final List<Double> qosList = new ArrayList<> ();
+    qosList.add (null);
+    final Random rngQoS = new Random ();
+    for (int i = 0; i < 7; i++)
+      qosList.add (2.0 * (- 0.5 * Double.MAX_VALUE + Double.MAX_VALUE * rngQoS.nextDouble ()));
+    qosList.add (0.0);
+    qosList.add (Double.NEGATIVE_INFINITY);
+    qosList.add (Double.POSITIVE_INFINITY);
+    final Random rngQoSSelect = new Random ();
     for (int i = 1; i <= numberOfJobs; i++)
     {
-      final J job = jobFactory.newInstance
-        (jobEventList, Integer.toString (i), generateRequestedServiceTimeMap (queue, i, jitter));
+      final J job = jobFactory.newInstance (jobEventList, Integer.toString (i), generateRequestedServiceTimeMap (queue, i));
+      ((SimJobQoS) job).setQoSClass (Double.class);
+      ((SimJobQoS) job).setQoS (qosList.get (rngQoSSelect.nextInt (qosList.size ())));
       final SimEntityEvent<J, Q> arrivalSchedule = new SimQueueJobArrivalEvent (job, queue, (double) i);
       if (! realQueueExternalEvents.containsKey ((double) i))
         realQueueExternalEvents.put ((double) i, new LinkedHashSet<> ());

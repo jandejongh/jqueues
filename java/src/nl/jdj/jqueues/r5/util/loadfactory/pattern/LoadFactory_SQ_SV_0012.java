@@ -16,7 +16,7 @@ import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A concrete {@link LoadFactory_SQ_SV}, pattern 003.
+/** A concrete {@link LoadFactory_SQ_SV}, pattern 0012.
  *
  * @see #generate
  * 
@@ -24,8 +24,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public class LoadFactory_SQ_SV_003<J extends SimJob, Q extends SimQueue>
-extends LoadFactory_SQ_SV_001<J, Q>
+public class LoadFactory_SQ_SV_0012<J extends SimJob, Q extends SimQueue>
+extends LoadFactory_SQ_SV_0010<J, Q>
 {
 
   /** Generates the load.
@@ -33,7 +33,7 @@ extends LoadFactory_SQ_SV_001<J, Q>
    * <p>
    * This method
    * <ul>
-   * <li> generates the job load according to {@link LoadFactory_SQ_SV_001#generate};
+   * <li> generates the job load according to {@link LoadFactory_SQ_SV_0010#generate};
    * <li> adds a revocation for every 5th job.
    * </ul>
    * 

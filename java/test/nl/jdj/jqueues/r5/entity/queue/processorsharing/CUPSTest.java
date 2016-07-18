@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
-import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_001;
+import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_0010;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_CUPS;
@@ -59,7 +59,7 @@ public class CUPSTest
     final CUPS queue = new CUPS (eventList);
     final SimQueuePredictor<CUPS> predictor = new SimQueuePredictor_CUPS ();
     final int numberOfJobs = 100;
-    final Set<LoadFactoryHint> jitterHint = Collections.singleton (LoadFactory_SQ_SV_001.SERVICE_TIME_JITTER);
+    final Set<LoadFactoryHint> jitterHint = Collections.singleton (LoadFactory_SQ_SV_0010.SERVICE_TIME_JITTER);
     final boolean silent = true;
     final boolean deadSilent = true;
     DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-6, null);

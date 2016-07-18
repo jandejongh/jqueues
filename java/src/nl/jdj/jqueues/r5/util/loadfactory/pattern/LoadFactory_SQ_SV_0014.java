@@ -16,7 +16,7 @@ import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A concrete {@link LoadFactory_SQ_SV}, pattern 005.
+/** A concrete {@link LoadFactory_SQ_SV}, pattern 0014.
  *
  * @see #generate
  * 
@@ -24,8 +24,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public class LoadFactory_SQ_SV_005<J extends SimJob, Q extends SimQueue>
-extends LoadFactory_SQ_SV_001<J, Q>
+public class LoadFactory_SQ_SV_0014<J extends SimJob, Q extends SimQueue>
+extends LoadFactory_SQ_SV_0010<J, Q>
 {
 
   /** Generates the load.
@@ -33,7 +33,7 @@ extends LoadFactory_SQ_SV_001<J, Q>
    * <p>
    * This method
    * <ul>
-   * <li> generates the job load according to {@link LoadFactory_SQ_SV_001#generate};
+   * <li> generates the job load according to {@link LoadFactory_SQ_SV_0010#generate};
    * <li> <i>only if</i> the queue is a {@link SimQueueWithGate},
    *         it adds setting the number of gate-passage credits on the queue at 11.19, 22.19, 33.19, etc.
    * </ul>
@@ -42,7 +42,7 @@ extends LoadFactory_SQ_SV_001<J, Q>
    * Note: this method generates {@link SimQueueGateEvent}s <i>only</i> for {@link SimQueueWithGate}s.
    * The check is done at runtime, and not reflected in the generic-type arguments of this class.
    * If the queue is not a {@link SimQueueWithGate}, instances of this class behave as if they
-   * were a {@link LoadFactory_SQ_SV_001}.
+   * were a {@link LoadFactory_SQ_SV_0010}.
    * 
    * <p>
    * The amount of gate-passage credits is drawn from {0, 1, 5, {@link Double#MAX_VALUE}} with equal probabilities.

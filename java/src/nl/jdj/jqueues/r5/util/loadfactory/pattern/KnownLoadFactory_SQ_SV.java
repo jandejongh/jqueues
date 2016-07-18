@@ -14,12 +14,15 @@ import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 public enum KnownLoadFactory_SQ_SV
 {
 
-  KLF_001 (new LoadFactory_SQ_SV_001 ()),
-  KLF_002 (new LoadFactory_SQ_SV_002 ()),
-  KLF_003 (new LoadFactory_SQ_SV_003 ()),
-  KLF_004 (new LoadFactory_SQ_SV_004 ()),
-  KLF_005 (new LoadFactory_SQ_SV_005 ()),
-  KLF_100 (new LoadFactory_SQ_SV_100 ()),
+  KLF_0001 (new LoadFactory_SQ_SV_0001 ()),
+  KLF_0002 (new LoadFactory_SQ_SV_0002 ()),
+  KLF_0005 (new LoadFactory_SQ_SV_0005 ()),
+  KLF_0010 (new LoadFactory_SQ_SV_0010 ()),
+  KLF_0011 (new LoadFactory_SQ_SV_0011 ()),
+  KLF_0012 (new LoadFactory_SQ_SV_0012 ()),
+  KLF_0013 (new LoadFactory_SQ_SV_0013 ()),
+  KLF_0014 (new LoadFactory_SQ_SV_0014 ()),
+  KLF_0100 (new LoadFactory_SQ_SV_0100 ()),
     ;
   
   /** Creates the entry in this enumeration.

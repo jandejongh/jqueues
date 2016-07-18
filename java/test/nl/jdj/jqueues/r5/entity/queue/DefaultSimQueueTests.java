@@ -74,6 +74,8 @@ public class DefaultSimQueueTests
             (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, accuracy, System.err);
           el.reset ();
         }
+      else if (! deadSilent)
+        System.out.println ("===== Omitting: " + klf + ".");
     return true;
   }
     
