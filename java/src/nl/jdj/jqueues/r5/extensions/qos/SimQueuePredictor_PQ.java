@@ -32,6 +32,14 @@ public class SimQueuePredictor_PQ<J extends SimJob, Q extends PQ, P extends Comp
 extends SimQueuePredictor_Preemptive<Q>
 {
 
+  @Override
+  public boolean isNoWaitArmed (final Q queue, final SimQueueState<SimJob, Q> queueState)
+  {
+    if (queue == null || queueState == null)
+      throw new IllegalArgumentException ();
+    return queueState.getJobs ().isEmpty ();
+  }
+
   /** Registers a new {@link SimQueueQoSStateHandler} at the object created by super method.
    *
    * @return The object created by the super method with a new registered {@link SimQueueQoSStateHandler}.
@@ -103,9 +111,9 @@ extends SimQueuePredictor_Preemptive<Q>
     final double time = queueState.getTime ();
     if (Double.isNaN (time))
       throw new IllegalStateException ();
-    final J jobToExecute = getJobToExecute (queue, queueState);
-    final J jobExecuting = getJobExecuting (queue, queueState);
-    if (jobExecuting != jobToExecute)
+    J jobToExecute = getJobToExecute (queue, queueState);
+    J jobExecuting = getJobExecuting (queue, queueState);
+    while (jobExecuting != jobToExecute)
     {
       if (jobExecuting != null)
         preemptJob (queue, queueState, jobExecuting, visitLogsSet);
@@ -115,9 +123,14 @@ extends SimQueuePredictor_Preemptive<Q>
         {
           final Set<SimJob> starters = new HashSet<> ();
           starters.add (jobToExecute);
-          queueState.doStarts (time, starters);        
+          queueState.doStarts (time, starters);
+          final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobToExecute);
+          if (remainingServiceTime == 0)
+            queueState.doExits (time, null, null, starters, null, visitLogsSet);
         }
       }
+      jobToExecute = getJobToExecute (queue, queueState);
+      jobExecuting = getJobExecuting (queue, queueState);  
     }
   }
   

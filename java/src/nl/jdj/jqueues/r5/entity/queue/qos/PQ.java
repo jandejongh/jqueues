@@ -82,15 +82,17 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns {@code true}.
+  /** Returns true if there are no jobs present in the system.
    * 
-   * @return {@code true}.
+   * @return True if there are no jobs present in the system.
+   * 
+   * @see #getNumberOfJobs
    * 
    */
   @Override
   public final boolean isNoWaitArmed ()
   {
-    return true;
+    return getNumberOfJobs () == 0;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -343,10 +345,11 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
   /** Reschedules through assessment of which job to serve.
    * 
    * <p>
-   * Confronts the job to serve as obtained through {@link #getExecutableJobWithHighestPriority}
+   * Repeatedly (until they match) confronts the job to serve as obtained through {@link #getExecutableJobWithHighestPriority}
    * with the job currently in service.
    * If there is a mismatch, it preempts the job in service, in favor of the job that is to be served,
    * starting (i.e., admitting it to the service area) the latter if needed.
+   * If the newly executing job requests zero service time, it departs immediately.
    * 
    * @param time The (current) time.
    * 
@@ -360,44 +363,66 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
    * @see #startServiceChunk
    * @see #fireStart
    * @see #fireIfOutOfServerAccessCredits
+   * @see #fireIfNewNoWaitArmed
    * 
    */
   protected final void reschedule (final double time)
   {
     if (this.jobsBeingServed.keySet ().size () > 1)
       throw new IllegalStateException ();
-    final J jobBeingServed = (this.jobsBeingServed.isEmpty () ? null : this.jobsBeingServed.keySet ().iterator ().next ());
-    final J jobToServe = getExecutableJobWithHighestPriority ();
-    if (jobBeingServed != null && jobToServe == null)
-      throw new IllegalStateException ();
-    boolean jobToServeStarted = false;
-    if (jobToServe != jobBeingServed)
+    final Set<J> startedJobs = new LinkedHashSet<> ();
+    final Set<J> departedJobs = new LinkedHashSet<> ();
+    J jobBeingServed = (this.jobsBeingServed.isEmpty () ? null : this.jobsBeingServed.keySet ().iterator ().next ());
+    J jobToServe = getExecutableJobWithHighestPriority (); // Considers server-access credits!
+    while (jobToServe != jobBeingServed)
     {
+      if (this.jobsBeingServed.keySet ().size () > 1)
+        throw new IllegalStateException ();
+      if (jobBeingServed != null && jobToServe == null)
+        throw new IllegalStateException ();
       if (jobBeingServed != null)
+      {
         // Note that preemptJob may already reschedule in case of DROP and DEPART preemption policies (for instance)!
         preemptJob (time, jobBeingServed);
+        jobBeingServed = null;
+        jobToServe = getExecutableJobWithHighestPriority (); // Considers server-access credits!
+        if (jobToServe == jobBeingServed)
+          break;
+      }
       if (jobToServe != null && ! this.jobsBeingServed.keySet ().contains (jobToServe))
       {
         if (! this.jobsInServiceArea.contains (jobToServe))
         {
           // Scheduling section; make sure we do not issue notifications.
           takeServerAccessCredit (false);
-          jobToServeStarted = true;
+          startedJobs.add (jobToServe);
           this.jobsInServiceArea.add (jobToServe);
           final double jobServiceTime = jobToServe.getServiceTime (this);
           if (jobServiceTime < 0)
             throw new RuntimeException ();
-          this.remainingServiceTime.put (jobToServe, jobServiceTime);
+          this.remainingServiceTime.put (jobToServe, jobServiceTime);          
+          if (jobServiceTime == 0.0)
+          {
+            removeJobFromQueueUponDeparture (jobToServe, time);
+            jobToServe.setQueue (null);
+            departedJobs.add (jobToServe);
+            jobToServe = null;
+          }
         }
-        startServiceChunk (time, jobToServe);
-      }
+        if (jobToServe != null)
+          startServiceChunk (time, jobToServe);
+      }      
+      jobBeingServed = (this.jobsBeingServed.isEmpty () ? null : this.jobsBeingServed.keySet ().iterator ().next ());
+      jobToServe = getExecutableJobWithHighestPriority (); // Considers server-access credits!
     }
     // Notification section.
-    if (jobToServeStarted)
-    {
-      fireStart (time, jobToServe, (Q) this);
+    for (J j : startedJobs)
+      fireStart (time, j, (Q) this);
+    if (! startedJobs.isEmpty ())
       fireIfOutOfServerAccessCredits (time);
-    }
+    for (final J j : departedJobs)
+      fireDeparture (time, j, (Q) this);
+    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
   
 }

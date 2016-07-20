@@ -1,8 +1,12 @@
 package nl.jdj.jqueues.r5.entity.queue.qos;
 
+import java.util.Collections;
+import java.util.Set;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
 import nl.jdj.jqueues.r5.entity.queue.preemptive.PreemptionStrategy;
 import nl.jdj.jqueues.r5.extensions.qos.SimQueuePredictor_PQ;
+import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
+import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_0010;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
@@ -53,6 +57,7 @@ public class PQTest
   {
     final SimEventList eventList = new DefaultSimEventList ();
     final int numberOfJobs = 100;
+    final Set<LoadFactoryHint> jitterHint = Collections.singleton (LoadFactory_SQ_SV_0010.SERVICE_TIME_JITTER);
     final boolean silent = true;
     final boolean deadSilent = true;
     for (final PreemptionStrategy preemptionStrategy : PreemptionStrategy.values ())
@@ -60,7 +65,7 @@ public class PQTest
       {
         final SimQueuePredictor<PQ> predictor = new SimQueuePredictor_PQ ();
         final PQ queue = new PQ (eventList, preemptionStrategy, Double.class, Double.POSITIVE_INFINITY);
-        DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+        DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
         eventList.reset ();
       }
   }
