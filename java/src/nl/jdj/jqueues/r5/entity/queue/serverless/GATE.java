@@ -138,7 +138,8 @@ implements SimQueueWithGate<J, Q>
       job.setQueue (null);
     for (final J job : jobsReleased)
       fireDeparture (time, job, (Q) this);
-    fireNewNoWaitArmed (time, isNoWaitArmed ());
+    if ((this.gatePassageCredits > 0) != (oldGatePassageCredits > 0))
+      fireNewNoWaitArmed (time, isNoWaitArmed ());
     fireNewGateStatus (time, oldGatePassageCredits);
   }
   
@@ -185,12 +186,14 @@ implements SimQueueWithGate<J, Q>
   {
     if (this.gatePassageCredits == 0)
       return;
+    final int oldGatePassageCredits = this.gatePassageCredits;
     if (this.gatePassageCredits < Integer.MAX_VALUE)
       this.gatePassageCredits--;
     this.jobQueue.remove (job);
     job.setQueue (null);
     fireDeparture (time, job, (Q) this);
-    fireNewNoWaitArmed (time, isNoWaitArmed ());
+    if ((this.gatePassageCredits > 0) != (oldGatePassageCredits > 0))
+      fireNewNoWaitArmed (time, isNoWaitArmed ());
   }
 
   /** Throws {@link IllegalStateException}.
