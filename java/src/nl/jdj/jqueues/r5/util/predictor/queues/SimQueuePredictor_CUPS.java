@@ -46,7 +46,15 @@ extends AbstractSimQueuePredictor<CUPS>
     queueState.registerHandler (new SimQueueOSTStateHandler ());
     return queueState;
   }
-  
+
+  @Override
+  public boolean isNoWaitArmed (final CUPS queue, final SimQueueState<SimJob, CUPS> queueState)
+  {
+    if (queue == null || queueState == null)
+      throw new IllegalArgumentException ();
+    return true;
+  }
+
   private Map<SimJob, Double> getFirstDeparter
   (final SimQueueState<SimJob, CUPS> queueState,
    final SimQueueOSTStateHandler queueStateHandler)
