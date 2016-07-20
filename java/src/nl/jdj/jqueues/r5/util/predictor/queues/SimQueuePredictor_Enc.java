@@ -19,12 +19,14 @@ import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
 import nl.jdj.jqueues.r5.event.SimQueueJobRevocationEvent;
 import nl.jdj.jqueues.r5.event.SimQueueServerAccessCreditsEvent;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.extensions.composite.SimQueueCompositeStateHandler;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.DefaultSimQueuePrediction_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionInvalidInputException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePrediction_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
+import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
@@ -47,6 +49,34 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
   }
 
   @Override
+  public SimQueueState<SimJob, BlackEncapsulatorSimQueue> createQueueState
+  (final BlackEncapsulatorSimQueue queue,
+   final boolean isROEL)
+  {
+    final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
+    final SimQueue encQueue = queue.getEncapsulatedQueue ();
+    final DefaultSimQueueState encQueueState = (DefaultSimQueueState) this.encQueuePredictor.createQueueState (encQueue, isROEL);
+    queueState.registerHandler (new SimQueueCompositeStateHandler (queue.getQueues (), Collections.singleton (encQueueState)));
+    return queueState;
+  }
+
+  @Override
+  public boolean isNoWaitArmed
+  (final BlackEncapsulatorSimQueue queue,
+   final SimQueueState<SimJob, BlackEncapsulatorSimQueue> queueState)
+  {
+    if (queue == null || queueState == null)
+      throw new IllegalArgumentException ();
+    final SimQueueCompositeStateHandler queueStateHandler =
+      (SimQueueCompositeStateHandler)
+        ((DefaultSimQueueState) queueState).getHandler ("SimQueueCompositeHandler");
+    if (queueState == null)
+      throw new IllegalArgumentException ();
+    ;
+    return this.encQueuePredictor.isNoWaitArmed (queue.getEncapsulatedQueue (), queueStateHandler.getSubQueueState (0));
+  }
+
+  @Override
   public SimQueuePrediction_SQ_SV
   predict_SQ_SV_ROEL_U
   (final BlackEncapsulatorSimQueue queue, final Set<SimEntityEvent> queueEvents)
@@ -55,7 +85,7 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
     if (queue == null || queue.getEncapsulatedQueue () == null)
       throw new IllegalArgumentException ();
     if (queueEvents == null)
-      return new DefaultSimQueuePrediction_SQ_SV (queue, Collections.EMPTY_MAP, Collections.EMPTY_LIST);
+      return new DefaultSimQueuePrediction_SQ_SV (queue, Collections.EMPTY_MAP, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     final SimQueue encQueue = queue.getEncapsulatedQueue ();
     final Set<SimEntityEvent> encQueueEvents = new LinkedHashSet<> ();
     for (SimEntityEvent e : queueEvents)
@@ -116,7 +146,8 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
           jvl.departed, jvl.departureTime));
     }
     final List<Map<Double, Boolean>> encQavLog = encPrediction.getQueueAccessVacationLog ();
-    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, encQavLog);
+    final List<Map<Double, Boolean>> encNwaLog = encPrediction.getNoWaitArmedLog ();
+    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, encQavLog, encNwaLog);
   }
   
   @Override

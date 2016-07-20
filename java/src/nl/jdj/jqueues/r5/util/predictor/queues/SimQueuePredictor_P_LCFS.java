@@ -26,6 +26,14 @@ public class SimQueuePredictor_P_LCFS
 extends SimQueuePredictor_Preemptive<P_LCFS>
 {
 
+  @Override
+  public boolean isNoWaitArmed (final P_LCFS queue, final SimQueueState<SimJob, P_LCFS> queueState)
+  {
+    if (queue == null || queueState == null)
+      throw new IllegalArgumentException ();
+    return true;
+  }
+
   protected SimJob getExecutingJob (final P_LCFS queue, final SimQueueState<SimJob, P_LCFS> queueState)
   {
     if (queue == null || queueState == null)

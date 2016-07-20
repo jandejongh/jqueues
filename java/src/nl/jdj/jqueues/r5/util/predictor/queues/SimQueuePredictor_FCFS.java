@@ -55,6 +55,18 @@ extends AbstractSimQueuePredictor<SimQueue>
   }
 
   @Override
+  public boolean isNoWaitArmed (final SimQueue queue, final SimQueueState<SimJob, SimQueue> queueState)
+  {
+    if (queue == null || queueState == null)
+      throw new IllegalArgumentException ();
+    if (this.hasc)
+      // return queueState.getJobsInServiceArea ().size () < this.c;
+      return queueState.getJobs ().size () < this.c;
+    else
+      return true;
+  }
+
+  @Override
   public double getNextQueueEventTimeBeyond
   (final SimQueue queue,
    final SimQueueState<SimJob, SimQueue> queueState,
