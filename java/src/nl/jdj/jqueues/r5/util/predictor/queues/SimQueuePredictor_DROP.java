@@ -23,6 +23,14 @@ extends AbstractSimQueuePredictor<DROP>
 {
 
   @Override
+  public boolean isNoWaitArmed (final DROP queue, final SimQueueState<SimJob, DROP> queueState)
+  {
+    if (queue == null || queueState == null)
+      throw new IllegalArgumentException ();
+    return true;
+  }
+
+  @Override
   public double getNextQueueEventTimeBeyond
   (final DROP queue,
    final SimQueueState<SimJob, DROP> queueState,
