@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
@@ -13,10 +14,12 @@ import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJobQoSFactory;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.listener.SimQueueAccessVacationLogger;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.KnownLoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
+import nl.jdj.jqueues.r5.util.predictor.SimQueuePrediction_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -48,12 +51,15 @@ public class DefaultSimQueueTests
     final SimEventList<SimEvent> el = queue.getEventList ();
     if ((! (silent || deadSilent)) && (queue instanceof AbstractSimQueue))
       ((AbstractSimQueue) queue).registerStdOutSimQueueListener ();
+    final SimQueueAccessVacationLogger qavLogger = new SimQueueAccessVacationLogger ();
+    queue.registerSimEntityListener (qavLogger);
     for (final KnownLoadFactory_SQ_SV klf : KnownLoadFactory_SQ_SV.values ())
       if (omit == null || ! omit.contains (klf))
         for (int pass = 1; pass <= NUMBER_OF_PASSES; pass++)
         {
           if (! deadSilent)
             System.out.println ("===== Test: " + klf + ", pass " + pass + " =====");
+          assert ! queue.isQueueAccessVacation ();
           final SimJobFactory jobFactory = new DefaultVisitsLoggingSimJobQoSFactory<> ();
           final NavigableMap<Double, Set<SimEntityEvent>> queueEventsAsMap = new TreeMap<> ();
           final LoadFactory_SQ_SV loadFactory = klf.getLoadFactory ();
@@ -62,8 +68,9 @@ public class DefaultSimQueueTests
           final Set<SimEntityEvent> queueEventsAsSet = new HashSet<> ();
           for (final Set<SimEntityEvent> queueEventsAtTime : queueEventsAsMap.values ())
             queueEventsAsSet.addAll (queueEventsAtTime);
-          final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictedJobQueueVisitLogs
-            = predictor.predictVisitLogs_SQ_SV_ROEL_U (queue, queueEventsAsSet);
+          final SimQueuePrediction_SQ_SV<Q> prediction = predictor.predict_SQ_SV_ROEL_U (queue, queueEventsAsSet);
+          final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictedJobQueueVisitLogs = prediction.getVisitLogs ();
+          final List<Map<Double, Boolean>> predictedQavLogs = prediction.getQueueAccessVacationLog ();
           el.run ();
           assert el.isEmpty ();
           final Map<SimJob, TreeMap<Double,TreeMap<Integer,JobQueueVisitLog<SimJob, Q>>>>
@@ -72,6 +79,19 @@ public class DefaultSimQueueTests
             actualJobQueueVisitLogs.put (j, ((DefaultVisitsLoggingSimJob) j).getVisitLogs ());
           assert predictor.matchVisitLogs_SQ_SV
             (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, accuracy, System.err);
+          final List<Map<Double, Boolean>> actualQavLogs = qavLogger.getQueueAccessVacationLog ();
+          //System.err.println ("Predicted QAV Logs: " + predictedQavLogs + ".");
+          //System.err.println ("Actual    QAV Logs: " + actualQavLogs + ".");
+          assert (predictedQavLogs.size () == actualQavLogs.size ());
+          for (int i = 0; i < predictedQavLogs.size (); i++)
+          {
+            assert predictedQavLogs.get (i).size () == 1;
+            assert actualQavLogs.get (i).size () == 1;
+            assert predictedQavLogs.get (i).keySet ().iterator ().next ().equals
+                     (actualQavLogs.get (i).keySet ().iterator ().next ());
+            assert predictedQavLogs.get (i).values ().iterator ().next ().equals
+                     (actualQavLogs.get (i).values ().iterator ().next ());
+          }
           el.reset ();
         }
       else if (! deadSilent)
