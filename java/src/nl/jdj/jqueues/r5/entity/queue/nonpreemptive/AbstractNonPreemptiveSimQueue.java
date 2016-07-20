@@ -100,23 +100,6 @@ public abstract class AbstractNonPreemptiveSimQueue
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // noWaitArmed
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Returns {@link #hasServerAvailable}.
-   * 
-   * @return {@link #hasServerAvailable}.
-   * 
-   */
-  @Override
-  public final boolean isNoWaitArmed ()
-  {
-    return hasServerAvailable ();
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
   // ARRIVAL
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -294,8 +277,6 @@ public abstract class AbstractNonPreemptiveSimQueue
   protected final void reschedule (final double time)
   {
     // Scheduling section; make sure we do not issue notifications.
-    if (! (hasServerAcccessCredits () && hasServerAvailable ()))
-      return;
     final Set<J> startableJobs = getJobsInWaitingArea ();
     final Set<J> startedJobs = new LinkedHashSet<> ();
     final Set<J> departedJobs = new LinkedHashSet<> ();
@@ -329,7 +310,7 @@ public abstract class AbstractNonPreemptiveSimQueue
     for (final J j : departedJobs)
       fireDeparture (time, j, (Q) this);
     fireIfOutOfServerAccessCredits (time);
-    fireNewNoWaitArmed (time, isNoWaitArmed ());
+    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
   
 }

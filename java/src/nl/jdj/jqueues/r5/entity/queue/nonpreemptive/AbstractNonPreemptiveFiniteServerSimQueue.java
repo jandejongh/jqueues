@@ -75,9 +75,29 @@ public abstract class AbstractNonPreemptiveFiniteServerSimQueue
    * 
    */
   @Override
-  public final boolean  hasServerAvailable ()
+  public final boolean hasServerAvailable ()
   {
     return getNumberOfJobsInServiceArea () < getNumberOfServers ();
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // noWaitArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Returns whether the number of jobs present is strictly smaller than the number of servers.
+   * 
+   * @return Whether the number of jobs present is strictly smaller than the number of servers.
+   * 
+   * @see #getNumberOfJobs
+   * @see #getNumberOfServers
+   * 
+   */
+  @Override
+  public final boolean isNoWaitArmed ()
+  {
+    return getNumberOfJobs () < getNumberOfServers ();
+  }
+  
 }
