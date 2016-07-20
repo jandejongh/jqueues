@@ -77,6 +77,7 @@ implements SimQueuePredictor<Q>
       throw new IllegalArgumentException ();
     final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet = new HashSet<> ();
     final List<Map<Double, Boolean>> qavLog = new ArrayList<> ();
+    final List<Map<Double, Boolean>> nwaLog = new ArrayList<> ();
     try
     {
       //
@@ -102,6 +103,10 @@ implements SimQueuePredictor<Q>
       // Maintain the current QAV state of the queue.
       //
       boolean isQav = false;
+      //
+      // Maintain the current NWA state of the queue.
+      //
+      boolean isNwa = isNoWaitArmed (queue, queueState);
       //
       // Main loop; proceed as long as "the workload has more load" or "the queue still has events".
       //
@@ -138,6 +143,8 @@ implements SimQueuePredictor<Q>
             throw new RuntimeException ();
           if (isQueueAccessVacation (queue, queueState) != isQav)
             throw new RuntimeException ();
+          if (isNoWaitArmed (queue, queueState) != isNwa)
+            throw new RuntimeException ();
         }
         if (doWorkloadEvent && doQueueEvent)
         {
@@ -155,6 +162,11 @@ implements SimQueuePredictor<Q>
         {
           isQav = ! isQav;
           qavLog.add (Collections.singletonMap (nextEventTime, isQav));
+        }
+        if (isNoWaitArmed (queue, queueState) != isNwa)
+        {
+          isNwa = ! isNwa;
+          nwaLog.add (Collections.singletonMap (nextEventTime, isNwa));
         }
         finished = ! (hasWorkloadEvent || hasQueueEvent);
       }
@@ -178,7 +190,7 @@ implements SimQueuePredictor<Q>
         throw new RuntimeException ();
       visitLogs.put (jqvl.job, jqvl);
     }
-    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog);
+    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog, nwaLog);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,6 +235,7 @@ implements SimQueuePredictor<Q>
       throw new IllegalArgumentException ();
     final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet = new HashSet<> ();
     final List<Map<Double, Boolean>> qavLog = new ArrayList<> ();
+    final List<Map<Double, Boolean>> nwaLog = new ArrayList<> ();
     try
     {
       //
@@ -248,6 +261,10 @@ implements SimQueuePredictor<Q>
       // Maintain the current QAV state of the queue.
       //
       boolean isQav = false;
+      //
+      // Maintain the current NWA state of the queue.
+      //
+      boolean isNwa = isNoWaitArmed (queue, queueState);
       //
       // Main loop; proceed as long as "the workload has more load" or "the queue still has events".
       //
@@ -282,6 +299,8 @@ implements SimQueuePredictor<Q>
             throw new RuntimeException ();
           if (isQueueAccessVacation (queue, queueState) != isQav)
             throw new RuntimeException ();
+          if (isNoWaitArmed (queue, queueState) != isNwa)
+            throw new RuntimeException ();
         }
         if (doWorkloadEvent && doQueueEvent)
         {
@@ -299,6 +318,11 @@ implements SimQueuePredictor<Q>
         {
           isQav = ! isQav;
           qavLog.add (Collections.singletonMap (nextEventTime, isQav));
+        }
+        if (isNoWaitArmed (queue, queueState) != isNwa)
+        {
+          isNwa = ! isNwa;
+          nwaLog.add (Collections.singletonMap (nextEventTime, isNwa));
         }
         finished = ! (hasWorkloadEvent || hasQueueEvent);
       }
@@ -322,7 +346,7 @@ implements SimQueuePredictor<Q>
         throw new RuntimeException ();
       visitLogs.put (jqvl.job, jqvl);
     }
-    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog);
+    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog, nwaLog);
   }
 
   /** Check unambiguity under a ROEL for workload and queue-state events occurring simultaneously.

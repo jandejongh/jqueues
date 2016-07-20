@@ -34,4 +34,16 @@ public interface SimQueueStatePredictor<Q extends SimQueue>
     return queueState.isQueueAccessVacation ();
   }
   
+  /** Checks whether a given state represents {@code NoWaitArmed} on given queue.
+   * 
+   * @param queue      The queue.
+   * @param queueState The queue state, non-{@code null}.
+   * 
+   * @return True if the state represents {@code NoWaitArmed} at given queue.
+   * 
+   * @throws IllegalArgumentException If any of the arguments is {@code null}.
+   * 
+   */
+  boolean isNoWaitArmed (Q queue, SimQueueState<SimJob, Q> queueState);
+  
 }
