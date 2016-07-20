@@ -41,7 +41,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * <p>
  * In the first case,
- * see {@link #predictVisitLogs_SQ_SV_ROEL_U},
+ * see {@link #predict_SQ_SV_ROEL_U},
  * the workload schedule itself can easily lead to ambiguities that prevent the delivery of a prediction,
  * for instance in the case of simultaneous arrivals (of jobs with non-zero required service time) at a {@link FCFS} queue.
  * On the other hand, queues like {@link ZERO} appear to be robust against simultaneous arrivals under ROEL,
@@ -52,7 +52,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * <p>
  * In the seconds case,
- * see {@link #predictVisitLogs_SQ_SV_IOEL_U},
+ * see {@link #predict_SQ_SV_IOEL_U},
  * workload events do not cause ambiguities among themselves, but they may still interfere with queue-internal
  * events like departures, for instance the simultaneous occurrence of an arrival and a scheduled departure in a {@link P_LCFS}
  * queue that is otherwise empty. Even worse, queues may exhibit internal ambiguities, for instance, the simultaneous
@@ -71,15 +71,23 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  */
 public interface SimQueuePredictor<Q extends SimQueue>
+extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // PREDICT (EVERYTHING)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Creates the unique prediction, if possible,
-   *  of job-visits (at most one) to a given queue under a Random-Order Event List.
+   *  resulting from subjecting a given queue to a given workload
+   *  under a Random-Order Event List.
    * 
    * @param queue          The queue, non-{@code null}.
    * @param workloadEvents The workload events; events related to other queues are allowed and are to be ignored.
    * 
-   * @return A map from every job that visits the given queue onto its {@link JobQueueVisitLog} .
+   * @return The prediction.
    * 
    * @throws IllegalArgumentException      If {@code queue == null} or the workload parameters are somehow illegal.
    * @throws UnsupportedOperationException If the queue type or the workload is (partially) unsupported.
@@ -91,13 +99,14 @@ public interface SimQueuePredictor<Q extends SimQueue>
    *                                       ({@link SimQueuePredictionAmbiguityException}).
    * 
    */
-  Map<SimJob, JobQueueVisitLog<SimJob, Q>>
-  predictVisitLogs_SQ_SV_ROEL_U
+  SimQueuePrediction_SQ_SV<Q>
+  predict_SQ_SV_ROEL_U
   (Q queue, Set<SimEntityEvent> workloadEvents)
   throws SimQueuePredictionException;
- 
+    
   /** Creates the unique prediction, if possible,
-   *  of job-visits (at most one) to a given queue under an Insertion-Order Event List.
+   *  resulting from subjecting a given queue to a given workload
+   *  under an Insertion-Order Event List.
    * 
    * <p>
    * Note that processed-events map parameter may be equal to the workload events map,
@@ -112,7 +121,7 @@ public interface SimQueuePredictor<Q extends SimQueue>
    *                           are stored unambiguously; the events in a value set are in processing ordered
    *                           (you can use this to resolve ambiguities in the visit logs like equal departure times).
    * 
-   * @return A map from every job that visits the given queue onto its {@link JobQueueVisitLog} .
+   * @return The prediction.
    * 
    * @throws IllegalArgumentException      If {@code queue == null} or the workload parameters are somehow illegal.
    * @throws UnsupportedOperationException If the queue type or the workload is (partially) unsupported.
@@ -124,8 +133,8 @@ public interface SimQueuePredictor<Q extends SimQueue>
    *                                       ({@link SimQueuePredictionAmbiguityException}).
    * 
    */
-  Map<SimJob, JobQueueVisitLog<SimJob, Q>>
-  predictVisitLogs_SQ_SV_IOEL_U
+  SimQueuePrediction_SQ_SV<Q>
+  predict_SQ_SV_IOEL_U
   (Q queue,
    NavigableMap<Double, Set<SimEntityEvent>> workloadEventsMap,
    NavigableMap<Double, Set<SimEntityEvent>> processedEventsMap)
