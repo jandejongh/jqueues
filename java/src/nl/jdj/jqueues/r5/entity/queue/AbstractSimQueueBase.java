@@ -39,6 +39,9 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
   
   /** Creates an abstract queue given an event list.
    *
+   * <p>
+   * Registers {@link #setInitNoWaitArmed} as a pre-event hook in order to find the initial {@code noWaitArmed} state.
+   * 
    * @param eventList The event list to use.
    *
    * @throws IllegalArgumentException If the event list is <code>null</code>.
@@ -49,6 +52,7 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
     super (eventList);
     if (eventList == null)
       throw new IllegalArgumentException ();
+    registerPreEventHook (this::setInitNoWaitArmed);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,6 +93,50 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // RESET ENTITY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+  /** Invokes super method, and clears the cache of the previous {@code NoWaitArmed} state.
+   * 
+   */
+  @Override
+  protected void resetEntitySubClass ()
+  {
+    super.resetEntitySubClass ();
+    this.previousNoWaitArmedSet = false;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NoWaitArmed CACHING
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private boolean previousNoWaitArmedSet = false;
+  
+  private boolean previousNoWaitArmed = false;
+  
+  /** Sets the initial state (after construction or after a reset) of {@code NoWaitArmed}.
+   * 
+   * <p>
+   * This method is called as a pre-event hook, and not meant to be called from user code (in sub-classes).
+   * It is left protected for {@code javadoc}.
+   * 
+   * @param newTime The new time.
+   * 
+   */
+  protected final void setInitNoWaitArmed (final double newTime)
+  {
+    if (! this.previousNoWaitArmedSet)
+    {
+      this.previousNoWaitArmedSet = true;
+      this.previousNoWaitArmed = isNoWaitArmed ();
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // EVENT NOTIFICATIONS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,9 +152,28 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
    */
   protected final void fireNewNoWaitArmed (final double time, final boolean noWaitArmed)
   {
+    this.previousNoWaitArmed = noWaitArmed;
     for (SimEntityListener<J, Q> l : getSimEntityListeners ())
       if (l instanceof SimQueueListener)
         ((SimQueueListener) l).notifyNewNoWaitArmed (time, (Q) this, noWaitArmed);
+  }
+
+  /** Only if necessary, notifies all queue listeners of a suspected change in the <code>noWaitArmed</code> property.
+   * 
+   * @param time        The current time.
+   * @param noWaitArmed The actual, possibly new, new value of the <code>noWaitArmed</code> property.
+   * 
+   * @see #fireNewNoWaitArmed
+   * @see SimQueue#isNoWaitArmed
+   * @see SimQueueListener#notifyNewNoWaitArmed
+   * 
+   */
+  protected final void fireIfNewNoWaitArmed (final double time, final boolean noWaitArmed)
+  {
+    if (! this.previousNoWaitArmedSet)
+      throw new IllegalStateException ();
+    if (noWaitArmed != this.previousNoWaitArmed)
+      fireNewNoWaitArmed (time, noWaitArmed);
   }
 
   /** Notifies all queue listeners of the start of a queue-access vacation.
