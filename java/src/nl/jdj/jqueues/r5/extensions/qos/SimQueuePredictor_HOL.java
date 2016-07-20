@@ -39,6 +39,14 @@ extends SimQueuePredictor_FCFS
   }
 
   @Override
+  public boolean isNoWaitArmed (final SimQueue queue, final SimQueueState<SimJob, SimQueue> queueState)
+  {
+    if (queue == null || queueState == null)
+      throw new IllegalArgumentException ();
+    return queueState.getJobs ().isEmpty ();
+  }
+  
+  @Override
   protected SimJob getJobToStart
   (final SimQueue queue,
    final SimQueueState<SimJob, SimQueue> queueState)

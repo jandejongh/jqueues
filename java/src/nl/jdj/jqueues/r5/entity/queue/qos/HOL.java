@@ -322,7 +322,8 @@ implements SimQueueQoS<J, Q, P>
   {
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
-    if (hasServerAcccessCredits ()
+    final Set<J> departedJobs = new LinkedHashSet<> ();
+    while (hasServerAcccessCredits ()
       && hasJobsInWaitingArea ()
       && getNumberOfJobsInServiceArea () < 1)
     {
@@ -334,18 +335,24 @@ implements SimQueueQoS<J, Q, P>
       final double jobServiceTime = job.getServiceTime (this);
       if (jobServiceTime < 0)
         throw new RuntimeException ();
-      scheduleDepartureEvent (time + jobServiceTime, job);
+      if (jobServiceTime > 0)
+        scheduleDepartureEvent (time + jobServiceTime, job);
+      else
+      {
+        removeJobFromQueueUponDeparture (job, time);
+        job.setQueue (null);
+        departedJobs.add (job);
+      }
       // Defer notifications until we are in a valid state again.
       startedJobs.add (job);
     }
     // Notification section.
     for (J j : startedJobs)
-      // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
-      if (this.jobsInServiceArea.contains (j))
-        fireStart (time, j, (Q) this);
+      fireStart (time, j, (Q) this);
+    for (final J j : departedJobs)
+      fireDeparture (time, j, (Q) this);
     fireIfOutOfServerAccessCredits (time);
-    if (departedJob != null || ! startedJobs.isEmpty ())
-      fireNewNoWaitArmed (time, isNoWaitArmed ());
+    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
 
 }
