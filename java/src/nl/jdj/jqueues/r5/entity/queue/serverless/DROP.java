@@ -69,9 +69,9 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns <code>false</code>.
+  /** Returns <code>true</code>.
    * 
-   * @return False.
+   * @return {@code true}.
    * 
    */
   @Override
