@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r5.util.predictor.queues;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
@@ -17,14 +18,22 @@ import nl.jdj.jqueues.r5.event.SimQueueAccessVacationEvent;
 import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
 import nl.jdj.jqueues.r5.event.SimQueueJobRevocationEvent;
 import nl.jdj.jqueues.r5.event.SimQueueServerAccessCreditsEvent;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
+import nl.jdj.jqueues.r5.util.predictor.DefaultSimQueuePrediction_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionInvalidInputException;
+import nl.jdj.jqueues.r5.util.predictor.SimQueuePrediction_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
+import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
+import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
+import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link BlackEncapsulatorSimQueue}.
  *
  */
 public class SimQueuePredictor_Enc
+extends AbstractSimQueuePredictor<BlackEncapsulatorSimQueue>
 implements SimQueuePredictor<BlackEncapsulatorSimQueue>
 {
   
@@ -38,15 +47,15 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
   }
 
   @Override
-  public Map<SimJob, JobQueueVisitLog<SimJob, BlackEncapsulatorSimQueue>>
-  predictVisitLogs_SQ_SV_ROEL_U
+  public SimQueuePrediction_SQ_SV
+  predict_SQ_SV_ROEL_U
   (final BlackEncapsulatorSimQueue queue, final Set<SimEntityEvent> queueEvents)
    throws SimQueuePredictionException
   {
     if (queue == null || queue.getEncapsulatedQueue () == null)
       throw new IllegalArgumentException ();
     if (queueEvents == null)
-      return Collections.EMPTY_MAP;
+      return new DefaultSimQueuePrediction_SQ_SV (queue, Collections.EMPTY_MAP, Collections.EMPTY_LIST);
     final SimQueue encQueue = queue.getEncapsulatedQueue ();
     final Set<SimEntityEvent> encQueueEvents = new LinkedHashSet<> ();
     for (SimEntityEvent e : queueEvents)
@@ -85,8 +94,8 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
           throw new SimQueuePredictionInvalidInputException ();
       }
     }
-    final Map<SimJob, JobQueueVisitLog<SimJob, SimQueue>> encVisitLogs =
-      this.encQueuePredictor.predictVisitLogs_SQ_SV_ROEL_U (encQueue, encQueueEvents);
+    final SimQueuePrediction_SQ_SV encPrediction = this.encQueuePredictor.predict_SQ_SV_ROEL_U (encQueue, encQueueEvents);
+    final Map<SimJob, JobQueueVisitLog<SimJob, SimQueue>> encVisitLogs = encPrediction.getVisitLogs ();
     final Map<SimJob, JobQueueVisitLog<SimJob, BlackEncapsulatorSimQueue>> visitLogs = new HashMap<> ();
     for (final Entry<SimJob, JobQueueVisitLog<SimJob, SimQueue>> entry : encVisitLogs.entrySet ())
     {
@@ -106,12 +115,13 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
           jvl.revoked, jvl.revocationTime,
           jvl.departed, jvl.departureTime));
     }
-    return visitLogs;
+    final List<Map<Double, Boolean>> encQavLog = encPrediction.getQueueAccessVacationLog ();
+    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, encQavLog);
   }
   
   @Override
-  public Map<SimJob, JobQueueVisitLog<SimJob, BlackEncapsulatorSimQueue>>
-  predictVisitLogs_SQ_SV_IOEL_U
+  public SimQueuePrediction_SQ_SV
+  predict_SQ_SV_IOEL_U
   (final BlackEncapsulatorSimQueue queue,
    final NavigableMap<Double, Set<SimEntityEvent>> workloadEventsMap,
    final NavigableMap<Double, Set<SimEntityEvent>> processedEventsMap)
@@ -119,5 +129,47 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
   {
     throw new UnsupportedOperationException ();
   }  
+
+  @Override
+  public double getNextQueueEventTimeBeyond
+  (final BlackEncapsulatorSimQueue queue,
+   final SimQueueState<SimJob, BlackEncapsulatorSimQueue> queueState,
+   final Set<SimEntitySimpleEventType.Member> queueEventTypes)
+  throws SimQueuePredictionException
+  {
+    throw new UnsupportedOperationException ();
+  }
+
+  @Override
+  public void updateToTime
+  (final BlackEncapsulatorSimQueue queue,
+   final SimQueueState queueState,
+   final double newTime)
+  {
+    throw new UnsupportedOperationException ();
+  }
+
+  @Override
+  public void doWorkloadEvents_SQ_SV_ROEL_U
+  (final BlackEncapsulatorSimQueue queue,
+   final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
+   final SimQueueState<SimJob, BlackEncapsulatorSimQueue> queueState,
+   final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
+   final Set<JobQueueVisitLog<SimJob, BlackEncapsulatorSimQueue>> visitLogsSet)
+  throws SimQueuePredictionException, WorkloadScheduleException
+  {
+    throw new UnsupportedOperationException ();
+  }
+
+  @Override
+  public void doQueueEvents_SQ_SV_ROEL_U
+  (final BlackEncapsulatorSimQueue queue,
+   final SimQueueState<SimJob, BlackEncapsulatorSimQueue> queueState,
+   final Set<SimEntitySimpleEventType.Member> queueEventTypes,
+   final Set<JobQueueVisitLog<SimJob, BlackEncapsulatorSimQueue>> visitLogsSet)
+  throws SimQueuePredictionException
+  {
+    throw new UnsupportedOperationException ();
+  }
   
 }
