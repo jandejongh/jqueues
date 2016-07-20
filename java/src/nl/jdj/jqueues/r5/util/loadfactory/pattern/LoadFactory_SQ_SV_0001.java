@@ -28,7 +28,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
   /** Generates the load.
    * 
    * <p>
-   * This method generates a no jobs or other external queue events (empty workload)
+   * This method generates no jobs or other external queue events (empty workload)
    * (ignoring the {@code numberOfJobs} argument).
    * 
    * @see SimEntityEventScheduler#schedule
