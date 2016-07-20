@@ -281,11 +281,13 @@ implements SimEntity<J, Q>
    * of this entity.
    * 
    * <p>
-   * This final implementation invokes the pre-update hooks,
+   * This final implementation invokes the pre-event hooks (always),
+   * and, if needed (i.e., we have a <i>true</i> update), invokes the pre-update hooks,
    * notifies the entity listeners, and updates its internal time (in that order!).
    * 
    * @param time The time of the update (i.c., the current time).
    * 
+   * @see #registerPreEventHook
    * @see #registerPreUpdateHook
    * @see SimEntityListener#notifyUpdate
    * @see #fireUpdate
@@ -295,10 +297,12 @@ implements SimEntity<J, Q>
   {
     if (time < this.lastUpdateTime)
       throw new IllegalStateException ();
+    for (final DoubleConsumer preEventHook : this.preEventHooks)
+      preEventHook.accept (time);
     if (Double.isInfinite (time) || time > this.lastUpdateTime)
     {
-      for (final DoubleConsumer updateHook : this.preUpdateHooks)
-        updateHook.accept (time);
+      for (final DoubleConsumer preUpdateHook : this.preUpdateHooks)
+        preUpdateHook.accept (time);
       fireUpdate (time);
       this.lastUpdateTime = time;
     }
@@ -306,11 +310,13 @@ implements SimEntity<J, Q>
 
   private final Set<DoubleConsumer> preUpdateHooks = new LinkedHashSet<> ();
   
-  /** Registers an update hook (for sub-class use only).
+  /** Registers a pre-update hook (for sub-class use only).
    * 
    * <p>
    * A pre-update hook is a {@link DoubleConsumer} (typically, a method reference)
-   * that is invoked by {@link #update} <i>before</i> anything else (i.c., notifying listeners).
+   * that is invoked by {@link #update} <i>before</i> anything else (i.c., notifying listeners)
+   * except pre-event notifications
+   * and <i>if indeed there is an update</i> (in view of the elapsed time since the last update).
    * It allows sub-class implementations to update internal administration as part of the update,
    * and gives them access to the "old time", i.e.,, the time of the previous update,
    * through {@link #getLastUpdateTime} (before it is overwritten by this method {@link #update}).
@@ -326,6 +332,7 @@ implements SimEntity<J, Q>
    * @throws IllegalArgumentException If the argument is {@code null}.
    * 
    * @see #update
+   * @see #registerPreEventHook
    * 
    */
   protected final void registerPreUpdateHook (final DoubleConsumer preUpdateHook)
@@ -333,6 +340,39 @@ implements SimEntity<J, Q>
     if (preUpdateHook == null)
       throw new IllegalArgumentException ();
     this.preUpdateHooks.add (preUpdateHook);
+  }
+  
+  private final Set<DoubleConsumer> preEventHooks = new LinkedHashSet<> ();
+  
+  /** Registers a pre-event hook (for sub-class use only).
+   * 
+   * <p>
+   * A pre-event hook is a {@link DoubleConsumer} (typically, a method reference)
+   * that is invoked by {@link #update} <i>before</i> anything else (i.c., notifying listeners),
+   * and <i>even if indeed there is no update</i> (in view of the elapsed time since the last update).
+   * It allows sub-class implementations to update internal administration as part of the update,
+   * and gives them access to the "old time", i.e.,, the time of the previous update,
+   * through {@link #getLastUpdateTime} (before it is overwritten by this method {@link #update}).
+   * The hook should <i>never</i> initiate state-change events or notify listeners.
+   * 
+   * <p>
+   * The argument passed to the {@link DoubleConsumer} is the <i>new</i> time,
+   * see {@link #update}, which obviously has not been set yet on the object.
+   * The "old" time is available through {@link #getLastUpdateTime}.
+   * 
+   * @param preEventHook The pre-event hook, must be non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the argument is {@code null}.
+   * 
+   * @see #update
+   * @see #registerPreUpdateHook
+   * 
+   */
+  protected final void registerPreEventHook (final DoubleConsumer preEventHook)
+  {
+    if (preEventHook == null)
+      throw new IllegalArgumentException ();
+    this.preEventHooks.add (preEventHook);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
