@@ -15,6 +15,7 @@ import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJobQoSF
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.listener.SimQueueAccessVacationLogger;
+import nl.jdj.jqueues.r5.listener.SimQueueNoWaitArmedLogger;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.KnownLoadFactory_SQ_SV;
@@ -53,6 +54,8 @@ public class DefaultSimQueueTests
       ((AbstractSimQueue) queue).registerStdOutSimQueueListener ();
     final SimQueueAccessVacationLogger qavLogger = new SimQueueAccessVacationLogger ();
     queue.registerSimEntityListener (qavLogger);
+    final SimQueueNoWaitArmedLogger nwaLogger = new SimQueueNoWaitArmedLogger ();
+    queue.registerSimEntityListener (nwaLogger);
     for (final KnownLoadFactory_SQ_SV klf : KnownLoadFactory_SQ_SV.values ())
       if (omit == null || ! omit.contains (klf))
         for (int pass = 1; pass <= NUMBER_OF_PASSES; pass++)
@@ -60,6 +63,7 @@ public class DefaultSimQueueTests
           if (! deadSilent)
             System.out.println ("===== Test: " + klf + ", pass " + pass + " =====");
           assert ! queue.isQueueAccessVacation ();
+          final boolean predictedInitNwa = predictor.isNoWaitArmed (queue, predictor.createQueueState (queue, true));
           final SimJobFactory jobFactory = new DefaultVisitsLoggingSimJobQoSFactory<> ();
           final NavigableMap<Double, Set<SimEntityEvent>> queueEventsAsMap = new TreeMap<> ();
           final LoadFactory_SQ_SV loadFactory = klf.getLoadFactory ();
@@ -71,6 +75,7 @@ public class DefaultSimQueueTests
           final SimQueuePrediction_SQ_SV<Q> prediction = predictor.predict_SQ_SV_ROEL_U (queue, queueEventsAsSet);
           final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictedJobQueueVisitLogs = prediction.getVisitLogs ();
           final List<Map<Double, Boolean>> predictedQavLogs = prediction.getQueueAccessVacationLog ();
+          final List<Map<Double, Boolean>> predictedNwaLogs = prediction.getNoWaitArmedLog ();
           el.run ();
           assert el.isEmpty ();
           final Map<SimJob, TreeMap<Double,TreeMap<Integer,JobQueueVisitLog<SimJob, Q>>>>
@@ -92,6 +97,22 @@ public class DefaultSimQueueTests
             assert predictedQavLogs.get (i).values ().iterator ().next ().equals
                      (actualQavLogs.get (i).values ().iterator ().next ());
           }
+          final List<Map<Double, Boolean>> actualNwaLogs = nwaLogger.getNoWaitArmedLog ();
+          // System.err.println ("Predicted NWA Logs: " + predictedNwaLogs + ".");
+          // System.err.println ("Actual    NWA Logs: " + actualNwaLogs + ".");
+          assert (predictedNwaLogs.size () == actualNwaLogs.size ());
+          if (predictedNwaLogs.isEmpty ())
+            assert predictedInitNwa == queue.isNoWaitArmed ();
+          else
+            for (int i = 0; i < predictedNwaLogs.size (); i++)
+            {
+              assert predictedNwaLogs.get (i).size () == 1;
+              assert actualNwaLogs.get (i).size () == 1;
+              assert predictedNwaLogs.get (i).keySet ().iterator ().next ().equals
+                       (actualNwaLogs.get (i).keySet ().iterator ().next ());
+              assert predictedNwaLogs.get (i).values ().iterator ().next ().equals
+                       (actualNwaLogs.get (i).values ().iterator ().next ());
+            }
           el.reset ();
         }
       else if (! deadSilent)
