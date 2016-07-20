@@ -413,7 +413,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       update (time);
     this.isQueueAccessVacation = start;
     if (notify)
-      fireStartQueueAccessVacation (time);
+    {
+      if (start)
+        fireStartQueueAccessVacation (time);
+      else
+        fireStopQueueAccessVacation (time);
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
