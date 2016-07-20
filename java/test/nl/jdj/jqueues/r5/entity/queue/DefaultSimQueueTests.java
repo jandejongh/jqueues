@@ -98,8 +98,14 @@ public class DefaultSimQueueTests
                      (actualQavLogs.get (i).values ().iterator ().next ());
           }
           final List<Map<Double, Boolean>> actualNwaLogs = nwaLogger.getNoWaitArmedLog ();
-          // System.err.println ("Predicted NWA Logs: " + predictedNwaLogs + ".");
-          // System.err.println ("Actual    NWA Logs: " + actualNwaLogs + ".");
+          //System.err.println ("Predicted NWA Logs: " + predictedNwaLogs + ".");
+          //System.err.println ("Actual    NWA Logs: " + actualNwaLogs + ".");
+          //if (predictedNwaLogs.size () != actualNwaLogs.size ())
+          //{
+            //System.err.println ("SIZE MISMATCH!");
+            //System.err.println ("Predicted NWA Logs: " + predictedNwaLogs + ".");
+            //System.err.println ("Actual    NWA Logs: " + actualNwaLogs + ".");
+          //}
           assert (predictedNwaLogs.size () == actualNwaLogs.size ());
           if (predictedNwaLogs.isEmpty ())
             assert predictedInitNwa == queue.isNoWaitArmed ();
