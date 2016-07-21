@@ -63,6 +63,10 @@ public abstract class AbstractNonPreemptiveSimQueue
   /** Returns the service time for a job at this queue.
    * 
    * <p>
+   * XXX
+   * This method should be moved upwards to AbstractSimQueue.
+   * 
+   * <p>
    * Implementations must always return a non-negative value.
    * Otherwise, a {@link RuntimeException} is thrown in {@link #reschedule}.
    * 
@@ -246,12 +250,15 @@ public abstract class AbstractNonPreemptiveSimQueue
    * The service time of the job to start is requested through
    * {@link #getServiceTimeForJob}; throwing a {@link RuntimeException} if a negative service time is returned.
    * Subsequently, an appropriate departure event is scheduled through {@link #scheduleDepartureEvent} for the job.
-   * If, however, the requested service time is zero, the job is manually made to depart.
+   * If, however, the requested service time is zero, the job is manually made to depart immediately.
    * 
    * <p>
    * After starting the jobs and scheduling departure events for each job (or manually made to depart),
    * a separate notification part of the method takes care of notifying listeners
-   * through {@link #fireStart}, {@link #fireDeparture}, {@link #fireIfOutOfServerAccessCredits} and {@link #fireNewNoWaitArmed}.
+   * through {@link #fireStart},
+   * {@link #fireDeparture},
+   * {@link #fireIfNewServerAccessCreditsAvailability}
+   * and {@link #fireIfNewNoWaitArmed}.
    * 
    * <p>
    * If server-access credits are absent, this method does nothing, relying on {@link #rescheduleForNewServerAccessCredits}
@@ -261,6 +268,8 @@ public abstract class AbstractNonPreemptiveSimQueue
    * If no servers are available, this method does nothing, relying on future departures (or jobs exiting otherwise)
    * to eventually take jobs into service.
    * 
+   * @see #getJobsInWaitingArea
+   * @see #hasServerAvailable
    * @see #hasServerAcccessCredits
    * @see #takeServerAccessCredit
    * @see #jobsInServiceArea
@@ -268,8 +277,8 @@ public abstract class AbstractNonPreemptiveSimQueue
    * @see #scheduleDepartureEvent
    * @see #fireStart
    * @see #fireDeparture
-   * @see #fireIfOutOfServerAccessCredits
-   * @see #fireNewNoWaitArmed
+   * @see #fireIfNewServerAccessCreditsAvailability
+   * @see #fireIfNewNoWaitArmed
    * 
    * @param time The time of rescheduling.
    * 
@@ -309,7 +318,7 @@ public abstract class AbstractNonPreemptiveSimQueue
       fireStart (time, j, (Q) this);
     for (final J j : departedJobs)
       fireDeparture (time, j, (Q) this);
-    fireIfOutOfServerAccessCredits (time);
+    fireIfNewServerAccessCreditsAvailability (time);
     fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
   
