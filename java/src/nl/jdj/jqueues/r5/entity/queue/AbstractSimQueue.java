@@ -352,6 +352,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
 
   /** Schedules a job arrival at this {@link AbstractSimQueue} on its {@link SimEventList}.
    * 
+   * <p>
    * Convenience method.
    * 
    * @param time The arrival time of the job, which must be in the future.
@@ -653,14 +654,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     {
       update (time);
       this.serverAccessCredits = credits;
-      if (oldCredits > 0 && credits == 0)
-        fireIfOutOfServerAccessCredits (time);
-      else if (oldCredits == 0 && credits > 0)
-      {
-        fireRegainedServerAccessCredits (time);
+      if (oldCredits == 0 && credits > 0)
         rescheduleForNewServerAccessCredits (time);
-      }
       setServerAccessCreditsSubClass ();
+      fireIfNewServerAccessCreditsAvailability (time);
     }
   }
   
@@ -704,6 +701,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     // Integer.MAX_VALUE is treated as infinity.
     if (this.serverAccessCredits < Integer.MAX_VALUE)
     {
+      // XXX Why are we calling update here? Supposed to have been called already!
       update (getEventList ().getTime ());      
       this.serverAccessCredits--;
       if (fireIfOut && this.serverAccessCredits == 0)
