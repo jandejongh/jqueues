@@ -8,9 +8,10 @@ import nl.jdj.jqueues.r5.entity.AbstractSimEntity;
 import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A partial implementation of a {@link SimQueue}, taking care of listener and event-list management.
+/** A partial implementation of a {@link SimQueue}, taking care of listeners, notifications, and event-list management.
  * 
- * <p>All concrete subclasses of {@link AbstractSimQueueBase} take
+ * <p>
+ * All concrete subclasses of {@link AbstractSimQueueBase} take
  * the {@link SimEventList} used for event scheduling and processing as one of their arguments upon construction.
  * It is up to the caller to properly start processing the event list.
  * 
@@ -18,6 +19,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This class (helped by its ancestor {@link AbstractSimEntity}))
  * takes care of storing the (final) event list, doing all listener management,
  * and firing all generic {@link SimQueue}-related events upon request from concrete subclasses.
+ * In addition, it supports caching of the last reported {@code noWaitArmed} state
+ * and of the availability of server-access credits.
  * 
  * <p>
  * For a more complete (though still partial) implementation, see {@link AbstractSimQueue}.
@@ -97,15 +100,32 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
-  /** Invokes super method, and clears the cache of the previous {@code NoWaitArmed} state.
+  /** Invokes super method, and clears the cache of the previous server-access-credits availability
+   *  and of the {@code NoWaitArmed} state.
    * 
    */
   @Override
   protected void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
+    this.previousSacAvailability = true; // Every SimQueue must have infinite sacs upon construction and after reset.
     this.previousNoWaitArmedSet = false;
   }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SAC AVAILABILITY CACHING
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The previous reported SAC availability.
+   * 
+   * <p>
+   * Set to {@code true} upon construction and upon reset, since by contract,
+   * the number of server-access credits is infinite then.
+   * 
+   */
+  private boolean previousSacAvailability = true; // Every SimQueue must have infinite sacs upon construction and after reset.
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -141,41 +161,6 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Notifies all queue listeners of a change in the <code>noWaitArmed</code> property.
-   * 
-   * @param time        The current time.
-   * @param noWaitArmed The new value of the <code>noWaitArmed</code> property.
-   * 
-   * @see SimQueue#isNoWaitArmed
-   * @see SimQueueListener#notifyNewNoWaitArmed
-   * 
-   */
-  protected final void fireNewNoWaitArmed (final double time, final boolean noWaitArmed)
-  {
-    this.previousNoWaitArmed = noWaitArmed;
-    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
-      if (l instanceof SimQueueListener)
-        ((SimQueueListener) l).notifyNewNoWaitArmed (time, (Q) this, noWaitArmed);
-  }
-
-  /** Only if necessary, notifies all queue listeners of a suspected change in the <code>noWaitArmed</code> property.
-   * 
-   * @param time        The current time.
-   * @param noWaitArmed The actual, possibly new, new value of the <code>noWaitArmed</code> property.
-   * 
-   * @see #fireNewNoWaitArmed
-   * @see SimQueue#isNoWaitArmed
-   * @see SimQueueListener#notifyNewNoWaitArmed
-   * 
-   */
-  protected final void fireIfNewNoWaitArmed (final double time, final boolean noWaitArmed)
-  {
-    if (! this.previousNoWaitArmedSet)
-      throw new IllegalStateException ();
-    if (noWaitArmed != this.previousNoWaitArmed)
-      fireNewNoWaitArmed (time, noWaitArmed);
-  }
-
   /** Notifies all queue listeners of the start of a queue-access vacation.
    * 
    * @param time The current time.
@@ -206,38 +191,147 @@ public abstract class AbstractSimQueueBase<J extends SimJob, Q extends AbstractS
         ((SimQueueListener) l).notifyStopQueueAccessVacation (time, this);
   }
   
-  /** Notifies all queue listeners if this queue has run out of server-access credits.
+  /** Notifies all queue listeners that this queue has run out of server-access credits.
    * 
-   * This method actually checks first to see if indeed {@link #getServerAccessCredits} returns zero.
+   * <p>
+   * The reported server-access-credits availability is cached internally in order to detect changes.
    * 
    * @param time The current time.
    * 
-   * @see #getServerAccessCredits
+   * @throws IllegalStateException If the queue still has server-access credits.
+   * 
+   * @see SimQueue#getServerAccessCredits
    * @see SimQueue#setServerAccessCredits
    * @see SimQueueListener#notifyOutOfServerAccessCredits
+   * @see #fireIfOutOfServerAccessCredits
+   * @see #fireIfNewServerAccessCreditsAvailability
+   * 
+   */
+  protected final void fireOutOfServerAccessCredits (final double time)
+  {
+    if (getServerAccessCredits () != 0)
+      throw new IllegalStateException ();
+    this.previousSacAvailability = false;
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueListener)
+        ((SimQueueListener) l).notifyOutOfServerAccessCredits (time, this);    
+  }
+  
+  /** Notifies all queue listeners <i>if</i> this queue has run out of server-access credits.
+   * 
+   * <p>
+   * This method actually checks first to see if indeed {@link #getServerAccessCredits} returns zero.
+   * 
+   * <p>
+   * If applicable, the reported server-access-credits availability is cached internally in order to detect changes.
+   * 
+   * @param time The current time.
+   * 
+   * @see SimQueue#getServerAccessCredits
+   * @see SimQueue#setServerAccessCredits
+   * @see #fireOutOfServerAccessCredits
+   * @see #fireIfNewServerAccessCreditsAvailability
    * 
    */
   protected final void fireIfOutOfServerAccessCredits (final double time)
   {
     if (getServerAccessCredits () == 0)
-      for (SimEntityListener<J, Q> l : getSimEntityListeners ())
-        if (l instanceof SimQueueListener)
-          ((SimQueueListener) l).notifyOutOfServerAccessCredits (time, this);    
+      fireOutOfServerAccessCredits (time);
   }
   
   /** Notifies all queue listeners that this queue has regained server-access credits.
    * 
+   * <p>
+   * The reported server-access-credits availability is cached internally in order to detect changes.
+   * 
    * @param time The current time.
    * 
+   * @throws IllegalStateException If the queue has <i>no</i> server-access credits <i>after all</i>.
+   * 
+   * @see SimQueue#getServerAccessCredits
    * @see SimQueue#setServerAccessCredits
    * @see SimQueueListener#notifyRegainedServerAccessCredits
+   * @see #fireIfNewServerAccessCreditsAvailability
    * 
    */
   protected final void fireRegainedServerAccessCredits (final double time)
   {
+    if (getServerAccessCredits () == 0)
+      throw new IllegalStateException ();
+    this.previousSacAvailability = true;
     for (SimEntityListener<J, Q> l : getSimEntityListeners ())
       if (l instanceof SimQueueListener)
         ((SimQueueListener) l).notifyRegainedServerAccessCredits (time, this);    
+  }
+
+  /** Assesses whether the availability of server-access credits has changed since the last notification (or since the last reset,
+   *  or since construction), and if so, notifies all queue listeners appropriately.
+   * 
+   * <p>
+   * The reported server-access-credits availability is cached internally in order to detect changes.
+   * 
+   * @param time The current time.
+   * 
+   * @see SimQueue#getServerAccessCredits
+   * @see SimQueue#setServerAccessCredits
+   * @see #fireOutOfServerAccessCredits
+   * @see #fireRegainedServerAccessCredits
+   * 
+   */
+  protected final void fireIfNewServerAccessCreditsAvailability (final double time)
+  {
+    final boolean sacAvailability = (getServerAccessCredits () > 0);
+    if (sacAvailability != this.previousSacAvailability)
+    {
+      if (sacAvailability)
+        fireRegainedServerAccessCredits (time);
+      else
+        fireOutOfServerAccessCredits (time);
+    }
+  }
+  
+  /** Notifies all queue listeners of a change in the <code>noWaitArmed</code> property.
+   * 
+   * <p>
+   * The reported {@code noWaitArmed} state is cached internally in order to detect changes.
+   * 
+   * @param time        The current time.
+   * @param noWaitArmed The new value of the <code>noWaitArmed</code> property.
+   * 
+   * @see SimQueue#isNoWaitArmed
+   * @see SimQueueListener#notifyNewNoWaitArmed
+   * 
+   */
+  protected final void fireNewNoWaitArmed (final double time, final boolean noWaitArmed)
+  {
+    this.previousNoWaitArmed = noWaitArmed;
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueListener)
+        ((SimQueueListener) l).notifyNewNoWaitArmed (time, (Q) this, noWaitArmed);
+  }
+
+  /** Only if necessary, notifies all queue listeners of a suspected change in the <code>noWaitArmed</code> property.
+   * 
+   * <p>
+   * This method does nothing if the {@code noWaitArmed} argument matches that of the previously reported state.
+   * 
+   * <p>
+   * If applicable, the reported {@code noWaitArmed} state is cached internally in order to detect changes.
+   * 
+   * @param time        The current time.
+   * @param noWaitArmed The actual, possibly new, new value of the <code>noWaitArmed</code> property.
+   * 
+   * @see #fireNewNoWaitArmed
+   * @see SimQueue#isNoWaitArmed
+   * @see SimQueueListener#notifyNewNoWaitArmed
+   * 
+   */
+  protected final void fireIfNewNoWaitArmed (final double time, final boolean noWaitArmed)
+  {
+    if (! this.previousNoWaitArmedSet)
+      throw new IllegalStateException ();
+    if (noWaitArmed != this.previousNoWaitArmed)
+      fireNewNoWaitArmed (time, noWaitArmed);
   }
 
 }
