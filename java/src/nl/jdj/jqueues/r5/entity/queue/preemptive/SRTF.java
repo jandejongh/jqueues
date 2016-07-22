@@ -83,17 +83,15 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns {@code true} if there are no jobs in the system.
+  /** Returns <code>true</code>.
    * 
-   * @return {@code true} if there are no jobs in the system.
-   * 
-   * @see #getNumberOfJobs
+   * @return True.
    * 
    */
   @Override
   public final boolean isNoWaitArmed ()
   {
-    return getNumberOfJobs () == 0;
+    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,6 +197,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    * and their remaining service time is taken from {@link SimJob#getServiceTime}.
    * If a job starts with remaining service time strictly smaller than
    * the job currently being served, the latter is preempted in favor of the former.
+   * Jobs taken into execution with zero requested service time will depart immediately.
    * 
    * @see #hasJobsInWaitingArea
    * @see #hasServerAcccessCredits
@@ -208,7 +207,9 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    * @see #preemptJob
    * @see #startServiceChunk
    * @see #fireStart
-   * @see #fireIfOutOfServerAccessCredits
+   * @see #fireDeparture
+   * @see #fireIfNewServerAccessCreditsAvailability
+   * @see #fireIfNewNoWaitArmed
    * 
    */
   @Override
@@ -216,6 +217,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   {
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
+    final Set<J> departedJobs = new LinkedHashSet<> ();
     while (hasServerAcccessCredits ()
       && hasJobsInWaitingArea ())
     {
@@ -229,6 +231,12 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
       if (jobServiceTime < 0)
         throw new RuntimeException ();
       this.remainingServiceTime.put (job, jobServiceTime);
+      if (jobServiceTime == 0.0)
+      {
+        removeJobFromQueueUponDeparture (job, time);
+        job.setQueue (null);
+        departedJobs.add (job);
+      }
     }
     if (! getJobsInServiceArea ().isEmpty ())
     {
@@ -259,10 +267,11 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
     }
     // Notification section.
     for (final J j : startedJobs)
-      // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
-      if (this.jobsInServiceArea.contains (j))
-        fireStart (time, j, (Q) this);
-    fireIfOutOfServerAccessCredits (time);
+      fireStart (time, j, (Q) this);
+    for (final J j : departedJobs)
+      fireDeparture (time, j, (Q) this);
+    fireIfNewServerAccessCreditsAvailability (time);
+    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
