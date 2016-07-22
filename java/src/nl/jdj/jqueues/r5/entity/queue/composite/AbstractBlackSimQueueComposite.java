@@ -1,7 +1,10 @@
 package nl.jdj.jqueues.r5.entity.queue.composite;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimEntity;
@@ -9,6 +12,7 @@ import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.single.encap.BlackEncapsulatorSimQueue;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A partial implementation of a {@link BlackSimQueueComposite}.
@@ -272,6 +276,61 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // POSTPONE SUB-QUEUE NOTIFICATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** If {@code true}, event-handlers (mostly from from sub-queues) do not fire notifications, but instead
+   *  store them in {@code postponedSubQueueNotifications}.
+   * 
+   */
+  private boolean postponeSubQueueNotifications = false;
+  
+  /** Postponed notifications.
+   * 
+   */
+  private final List<Map<SimEntitySimpleEventType.Member, J>> postponedSubQueueNotifications = new ArrayList<> ();
+  
+  /** Starts postponement of (sub-queue) notifications.
+   * 
+   */
+  private void startPostponeSubQueueNotifications ()
+  {
+    if (this.postponeSubQueueNotifications)
+      throw new IllegalStateException ();
+    this.postponeSubQueueNotifications = true;
+    this.postponedSubQueueNotifications.clear ();
+  }
+  
+  /** Fires postponed notifications.
+   * 
+   */
+  private void firePostponedSubQueueNotifications (final double time)
+  {
+    if (! this.postponeSubQueueNotifications)
+      throw new IllegalStateException ();
+    this.postponeSubQueueNotifications = false;
+    for (final Map<SimEntitySimpleEventType.Member, J> member : this.postponedSubQueueNotifications)
+    {
+      final Map.Entry<SimEntitySimpleEventType.Member, J> entry = member.entrySet ().iterator ().next ();
+      final SimEntitySimpleEventType.Member e_event = entry.getKey ();
+      final J e_job = entry.getValue ();
+      if (e_event == SimEntitySimpleEventType.DROP)
+        fireDrop (time, e_job, (Q) this);
+      else if (e_event == SimEntitySimpleEventType.START)
+        fireStart (time, e_job, (Q) this);
+      else if (e_event == SimEntitySimpleEventType.DEPARTURE)
+        fireDeparture (time, e_job, (Q) this);
+      else
+        throw new IllegalStateException ();
+    }
+    // XXX
+    // In a future version, we may want to store the result here!
+    this.postponedSubQueueNotifications.clear ();    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -294,7 +353,6 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * <p>
    * Calls super method,
    * clears the internal mapping between real and delegate {@link SimJob}s,
-   * clears the internal cache of the <code>noWaitArmed</code> state,
    * resets all sub-queues,
    * and, if needed, reassess their initial state for proper functioning of this {@link AbstractSimQueueComposite}.
    * 
@@ -311,10 +369,10 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   {
     this.delegateSimJobMap.clear ();
     this.realSimJobMap.clear ();
+    this.postponeSubQueueNotifications = false;
+    this.postponedSubQueueNotifications.clear ();
     for (final DQ q : getQueues ())
       q.resetEntity ();
-    this.previousNoWaitArmedSet = true;
-    this.previousNoWaitArmed = isNoWaitArmed ();
     switch (getStartModel ())
     {
       case LOCAL:
@@ -474,14 +532,17 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
         throw new IllegalArgumentException ();
       if (firstQueue != null)
       {
+        this.postponeSubQueueNotifications = true;
+        this.postponedSubQueueNotifications.clear ();
         firstQueue.arrive (time, delegateJob);
-        if (needsSac)
-          fireIfOutOfServerAccessCredits (time);
+        firePostponedSubQueueNotifications (time);
       }
       else
         // We do not get a queue to arrive at.
         // So we depart; without having been executed!
         depart (time, job, true);
+      fireIfNewServerAccessCreditsAvailability (time);
+      fireIfNewNoWaitArmed (time, isNoWaitArmed ());
     }
   }
 
@@ -658,50 +719,6 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     }
   }
 
-  /** Auxiliary variable to {@link #reassessNoWaitArmed}
-   *  indicating whether we have a previous value for the <code>noWaitArmed</code> state.
-   * 
-   * @see #isNoWaitArmed
-   * @see #reassessNoWaitArmed
-   * @see #previousNoWaitArmed
-   * 
-   */
-  private boolean previousNoWaitArmedSet = false;
-  
-  /** Auxiliary variable to {@link #reassessNoWaitArmed}
-   *  being the previous value for the <code>noWaitArmed</code> state.
-   * 
-   * @see #isNoWaitArmed
-   * @see #reassessNoWaitArmed
-   * @see #previousNoWaitArmedSet
-   * 
-   */
-  private boolean previousNoWaitArmed = false;
-  
-  /** Reassess the <code>noWaitArmed</code> state and fire a notification if it has changed.
-   * 
-   * This method internally caches the previous value of the <code>noWaitArmed</code> state.
-   * 
-   * @param time The current time.
-   * 
-   * @return The current <code>noWaitArmed</code> state.
-   * 
-   * @see #isNoWaitArmed
-   * @see #fireNewNoWaitArmed
-   * @see #notifyNewNoWaitArmed
-   * 
-   */
-  protected final boolean reassessNoWaitArmed (final double time)
-  {
-    final boolean noWaitArmed = isNoWaitArmed ();
-    if (this.previousNoWaitArmedSet && noWaitArmed == this.previousNoWaitArmed)
-      return noWaitArmed;
-    this.previousNoWaitArmedSet = true;
-    this.previousNoWaitArmed = noWaitArmed;
-    fireNewNoWaitArmed (time, noWaitArmed);
-    return noWaitArmed;
-  }
-  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // SERVER-ACCESS CREDITS
@@ -774,13 +791,14 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     switch (getStartModel ())
     {
       case LOCAL:
+        startPostponeSubQueueNotifications ();
         while (hasServerAcccessCredits () && hasJobsInWaitingArea ())
         {
           final J realJob = getFirstJobInWaitingArea ();
           final DJ delegateJob = getDelegateJob (realJob);
           if (delegateJob.getQueue () != null)
             throw new IllegalStateException ();
-          takeServerAccessCredit (true);
+          takeServerAccessCredit (false);
           final SimQueue<DJ, DQ> firstQueue = selectFirstQueue (time, realJob);
           if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
             throw new IllegalArgumentException ();
@@ -795,10 +813,13 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
             // However, technically, we did start, so we must send out a notification ourselves since we cannot
             // rely on sub-queue notifications.
             removeJobsFromQueueLocal (realJob, delegateJob);
-            fireStart (time, realJob, (Q) this);
-            fireDeparture (time, realJob, (Q) this);
+            this.postponedSubQueueNotifications.add (Collections.singletonMap (SimEntitySimpleEventType.START, realJob));
+            this.postponedSubQueueNotifications.add (Collections.singletonMap (SimEntitySimpleEventType.DEPARTURE, realJob));
           }
         }
+        firePostponedSubQueueNotifications (time);
+        fireIfNewServerAccessCreditsAvailability (time);
+        fireIfNewNoWaitArmed (time, isNoWaitArmed ());
         return;
       case ENCAPSULATOR_QUEUE:
         return;
@@ -1024,7 +1045,10 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
         if (! getJobsInServiceArea ().contains (realJob))
         {
           this.jobsInServiceArea.add (realJob);
-          fireStart (t, realJob, (Q) this);
+          if (this.postponeSubQueueNotifications)
+            this.postponedSubQueueNotifications.add (Collections.singletonMap (SimEntitySimpleEventType.START, realJob));
+          else
+            fireStart (t, realJob, (Q) this);
         }
         break;
       case ENCAPSULATOR_QUEUE:
@@ -1102,7 +1126,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       default:
         throw new RuntimeException ();
     }
-    reassessNoWaitArmed (time);
+    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1214,8 +1238,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
           fireStart (t, realJob, (Q) this);
           if (hasServerAcccessCredits () && isNoWaitArmed ())
             waitQueue.setServerAccessCredits (t, 1);
-          fireIfOutOfServerAccessCredits (t);
-          reassessNoWaitArmed (t);
+          fireIfNewServerAccessCreditsAvailability (t);
+          fireIfNewNoWaitArmed (t, isNoWaitArmed ());
         }
         return;
       default:
@@ -1255,6 +1279,13 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       if (! getQueues ().contains (dropDestinationQueue))
         throw new RuntimeException ();
       dropDestinationQueue.arrive (t, job);
+    }
+    else if (this.postponeSubQueueNotifications)
+    {
+      // XXX drop should really have a 'notify' argument.
+      removeJobFromQueueUponDrop (realJob, t);
+      realJob.setQueue (null);
+      this.postponedSubQueueNotifications.add (Collections.singletonMap (SimEntitySimpleEventType.DROP, realJob));
     }
     else
       drop (realJob, t);
@@ -1307,7 +1338,11 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     final J realJob = getRealJob (job, queue);
     final SimQueue<DJ, DQ> nextQueue = selectNextQueue (t, realJob, queue);
     if (nextQueue == null)
-      depart (t, realJob, true);
+    {
+      if (this.postponeSubQueueNotifications)
+        this.postponedSubQueueNotifications.add (Collections.singletonMap (SimEntitySimpleEventType.DEPARTURE, realJob));
+      depart (t, realJob, ! this.postponeSubQueueNotifications);
+    }
     else
       nextQueue.arrive (t, job);
   }
