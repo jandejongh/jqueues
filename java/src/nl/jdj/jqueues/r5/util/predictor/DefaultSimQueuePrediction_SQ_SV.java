@@ -27,6 +27,7 @@ implements SimQueuePrediction_SQ_SV<Q>
    * @param queue     The queue to which the prediction applies, non-{@code null}.
    * @param visitLogs The job-visit logs, non-{@code null}.
    * @param qavLog    The queue-access-vacation logs, non-{@code null}.
+   * @param sacLog    The server-access-credits availability logs, non-{@code null}.
    * @param nwaLog    The {@code NoWaitArmed} logs, non-{@code null}.
    * 
    * @throws IllegalArgumentException If any of the arguments is {@code null} or improperly structured.
@@ -36,6 +37,7 @@ implements SimQueuePrediction_SQ_SV<Q>
   (final Q queue,
    final Map<SimJob, JobQueueVisitLog<SimJob, Q>> visitLogs,
    final List<Map<Double, Boolean>> qavLog,
+   final List<Map<Double, Boolean>> sacLog,
    final List<Map<Double, Boolean>> nwaLog)
   {
     if (queue == null)
@@ -43,6 +45,8 @@ implements SimQueuePrediction_SQ_SV<Q>
     if (visitLogs == null)
       throw new IllegalArgumentException ();
     if (qavLog == null)
+      throw new IllegalArgumentException ();
+    if (sacLog == null)
       throw new IllegalArgumentException ();
     if (nwaLog == null)
       throw new IllegalArgumentException ();
@@ -60,12 +64,16 @@ implements SimQueuePrediction_SQ_SV<Q>
     for (final Map<Double, Boolean> entry : qavLog)
       if (entry == null || entry.size () != 1)
         throw new IllegalArgumentException ();
+    for (final Map<Double, Boolean> entry : sacLog)
+      if (entry == null || entry.size () != 1)
+        throw new IllegalArgumentException ();
     for (final Map<Double, Boolean> entry : nwaLog)
       if (entry == null || entry.size () != 1)
         throw new IllegalArgumentException ();
     this.queue = queue;
     this.visitLogs = visitLogs;
     this.qavLog = qavLog;
+    this.sacLog = sacLog;
     this.nwaLog = nwaLog;
   }
   
@@ -109,6 +117,20 @@ implements SimQueuePrediction_SQ_SV<Q>
   public final List<Map<Double, Boolean>> getQueueAccessVacationLog ()
   {
     return this.qavLog;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SAC LOG
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final List<Map<Double, Boolean>> sacLog;
+  
+  @Override
+  public final List<Map<Double, Boolean>> getServerAccessCreditsAvailabilityLog ()
+  {
+    return this.sacLog;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

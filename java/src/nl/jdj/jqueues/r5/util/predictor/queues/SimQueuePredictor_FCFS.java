@@ -205,25 +205,21 @@ extends AbstractSimQueuePredictor<SimQueue>
     }
     else if (eventType == SimQueueSimpleEventType.SERVER_ACCESS_CREDITS)
     {
-      final int oldSac = queueState.getServerAccessCredits ();
-      final int newSac = workloadSchedule.getServerAccessCreditsMap_SQ_SV_ROEL_U ().get (time);
-      queueState.setServerAccessCredits (time, newSac);
-      if (((! this.hasc) || queueState.getJobsInServiceArea ().size () < this.c)
-        && oldSac == 0
-        && newSac > 0)
+      int sac = workloadSchedule.getServerAccessCreditsMap_SQ_SV_ROEL_U ().get (time);
+      queueState.setServerAccessCredits (time, sac);
+      while (queueState.getJobsInWaitingArea ().size () > 0
+             && sac > 0
+             && ((! this.hasc) || queueState.getJobsInServiceArea ().size () < this.c))
       {
-        int remainingMaxStarters = newSac;
-        if (this.hasc)
-          remainingMaxStarters = Math.min (remainingMaxStarters, this.c - queueState.getJobsInServiceArea ().size ());
-        remainingMaxStarters = Math.min (remainingMaxStarters, queueState.getJobsInWaitingArea ().size ());
-        while (remainingMaxStarters > 0)
-        {
-          final Set<SimJob> starters = new LinkedHashSet<> ();
-          starters.add (getJobToStart (queue, queueState));
-          if (remainingMaxStarters != Integer.MAX_VALUE)
-            remainingMaxStarters--;
-          queueState.doStarts (time, starters);
-        }
+        final Set<SimJob> starters = new LinkedHashSet<> ();
+        final SimJob jobToStart = getJobToStart (queue, queueState);
+        starters.add (jobToStart);
+        queueState.doStarts (time, starters);
+        final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobToStart);
+        if (remainingServiceTime == 0.0)
+          queueState.doExits (time, null, null, starters, null, visitLogsSet);
+        if (sac < Integer.MAX_VALUE)
+          sac--;
       }
     }
     else

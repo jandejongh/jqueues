@@ -16,6 +16,7 @@ import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.listener.SimQueueAccessVacationLogger;
 import nl.jdj.jqueues.r5.listener.SimQueueNoWaitArmedLogger;
+import nl.jdj.jqueues.r5.listener.SimQueueServerAccessCreditsAvailabilityLogger;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.KnownLoadFactory_SQ_SV;
@@ -54,6 +55,8 @@ public class DefaultSimQueueTests
       ((AbstractSimQueue) queue).registerStdOutSimQueueListener ();
     final SimQueueAccessVacationLogger qavLogger = new SimQueueAccessVacationLogger ();
     queue.registerSimEntityListener (qavLogger);
+    final SimQueueServerAccessCreditsAvailabilityLogger sacLogger = new SimQueueServerAccessCreditsAvailabilityLogger ();
+    queue.registerSimEntityListener (sacLogger);
     final SimQueueNoWaitArmedLogger nwaLogger = new SimQueueNoWaitArmedLogger ();
     queue.registerSimEntityListener (nwaLogger);
     for (final KnownLoadFactory_SQ_SV klf : KnownLoadFactory_SQ_SV.values ())
@@ -75,6 +78,7 @@ public class DefaultSimQueueTests
           final SimQueuePrediction_SQ_SV<Q> prediction = predictor.predict_SQ_SV_ROEL_U (queue, queueEventsAsSet);
           final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictedJobQueueVisitLogs = prediction.getVisitLogs ();
           final List<Map<Double, Boolean>> predictedQavLogs = prediction.getQueueAccessVacationLog ();
+          final List<Map<Double, Boolean>> predictedSacLogs = prediction.getServerAccessCreditsAvailabilityLog ();
           final List<Map<Double, Boolean>> predictedNwaLogs = prediction.getNoWaitArmedLog ();
           el.run ();
           assert el.isEmpty ();
@@ -85,8 +89,8 @@ public class DefaultSimQueueTests
           assert predictor.matchVisitLogs_SQ_SV
             (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, accuracy, System.err);
           final List<Map<Double, Boolean>> actualQavLogs = qavLogger.getQueueAccessVacationLog ();
-          //System.err.println ("Predicted QAV Logs: " + predictedQavLogs + ".");
-          //System.err.println ("Actual    QAV Logs: " + actualQavLogs + ".");
+          // System.err.println ("Predicted QAV Logs: " + predictedQavLogs + ".");
+          // System.err.println ("Actual    QAV Logs: " + actualQavLogs + ".");
           assert (predictedQavLogs.size () == actualQavLogs.size ());
           for (int i = 0; i < predictedQavLogs.size (); i++)
           {
@@ -97,15 +101,34 @@ public class DefaultSimQueueTests
             assert predictedQavLogs.get (i).values ().iterator ().next ().equals
                      (actualQavLogs.get (i).values ().iterator ().next ());
           }
+          final List<Map<Double, Boolean>> actualSacLogs = sacLogger.getServerAccessCreditsAvailabilityLog ();
+          // System.err.println ("Predicted SAC Logs: " + predictedSacLogs + ".");
+          // System.err.println ("Actual    SAC Logs: " + actualSacLogs + ".");
+          // if (predictedSacLogs.size () != actualSacLogs.size ())
+          // {
+          //   System.err.println ("SIZE MISMATCH, test=" + klf + "!");
+          //   System.err.println ("Predicted SAC Logs: " + predictedSacLogs + ".");
+          //   System.err.println ("Actual    SAC Logs: " + actualSacLogs + ".");
+          // }
+          assert (predictedSacLogs.size () == actualSacLogs.size ());
+          for (int i = 0; i < predictedSacLogs.size (); i++)
+          {
+            assert predictedSacLogs.get (i).size () == 1;
+            assert actualSacLogs.get (i).size () == 1;
+            assert predictedSacLogs.get (i).keySet ().iterator ().next ().equals
+                     (actualSacLogs.get (i).keySet ().iterator ().next ());
+            assert predictedSacLogs.get (i).values ().iterator ().next ().equals
+                     (actualSacLogs.get (i).values ().iterator ().next ());
+          }
           final List<Map<Double, Boolean>> actualNwaLogs = nwaLogger.getNoWaitArmedLog ();
-          //System.err.println ("Predicted NWA Logs: " + predictedNwaLogs + ".");
-          //System.err.println ("Actual    NWA Logs: " + actualNwaLogs + ".");
-          //if (predictedNwaLogs.size () != actualNwaLogs.size ())
-          //{
-            //System.err.println ("SIZE MISMATCH!");
-            //System.err.println ("Predicted NWA Logs: " + predictedNwaLogs + ".");
-            //System.err.println ("Actual    NWA Logs: " + actualNwaLogs + ".");
-          //}
+          // System.err.println ("Predicted NWA Logs: " + predictedNwaLogs + ".");
+          // System.err.println ("Actual    NWA Logs: " + actualNwaLogs + ".");
+          // if (predictedNwaLogs.size () != actualNwaLogs.size ())
+          // {
+          //   System.err.println ("SIZE MISMATCH!");
+          //   System.err.println ("Predicted NWA Logs: " + predictedNwaLogs + ".");
+          //   System.err.println ("Actual    NWA Logs: " + actualNwaLogs + ".");
+          // }
           assert (predictedNwaLogs.size () == actualNwaLogs.size ());
           if (predictedNwaLogs.isEmpty ())
             assert predictedInitNwa == queue.isNoWaitArmed ();

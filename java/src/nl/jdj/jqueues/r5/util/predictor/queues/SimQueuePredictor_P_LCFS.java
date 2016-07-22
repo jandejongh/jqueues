@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r5.util.predictor.queues;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -140,21 +141,33 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
     else if (eventType == SimQueueSimpleEventType.SERVER_ACCESS_CREDITS)
     {
       final int oldSac = queueState.getServerAccessCredits ();
-      final int newSac = workloadSchedule.getServerAccessCreditsMap_SQ_SV_ROEL_U ().get (time);
+      int newSac = workloadSchedule.getServerAccessCreditsMap_SQ_SV_ROEL_U ().get (time);
       queueState.setServerAccessCredits (time, newSac);
       if (oldSac == 0 && newSac > 0 && ! queueState.getJobsInWaitingArea ().isEmpty ())
       {
-        // Only start the waiting job that arrived last.
-        final Set<SimJob> starters = new LinkedHashSet<> ();
         final List<SimJob> waiters = new ArrayList<> (queueState.getJobsInWaitingAreaOrdered ());
-        final SimJob youngestWaiter = waiters.get (waiters.size () - 1);
-        if (executingJob == null
-          || queueState.getArrivalTimesMap ().get (youngestWaiter) >= queueState.getArrivalTimesMap ().get (executingJob))
+        SimJob youngestWaiter = null;
+        while (newSac > 0 && ! waiters.isEmpty ())
         {
-          starters.add (youngestWaiter);
-          queueState.doStarts (time, starters);
-          if (executingJob != null)
-            preemptJob (queue, queueState, executingJob, visitLogsSet);
+          youngestWaiter = waiters.remove (waiters.size () - 1);
+          if (executingJob == null
+            || queueState.getArrivalTimesMap ().get (youngestWaiter) >= queueState.getArrivalTimesMap ().get (executingJob))
+          {
+            newSac--;
+            final Set<SimJob> starters = Collections.singleton (youngestWaiter);
+            queueState.doStarts (time, starters);
+            final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (youngestWaiter);
+            if (remainingServiceTime == 0.0)
+              queueState.doExits (time, null, null, starters, null, visitLogsSet);
+            else
+            {
+              if (executingJob != null)
+                preemptJob (queue, queueState, executingJob, visitLogsSet);
+              break;
+            }
+          }
+          else
+            break;
         }
       }
     }
@@ -219,7 +232,10 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
         {
           final Set<SimJob> starters = new LinkedHashSet<> ();
           starters.add (youngestWaiter);
-          queueState.doStarts (time, starters);  
+          queueState.doStarts (time, starters);
+          final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (youngestWaiter);
+          if (remainingServiceTime == 0.0)
+            doQueueEvents_SQ_SV_ROEL_U (queue, queueState, queueEventTypes, visitLogsSet);
         }
       }
     }

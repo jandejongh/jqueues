@@ -27,11 +27,31 @@ public interface SimQueueStatePredictor<Q extends SimQueue>
    * @throws IllegalArgumentException If any of the arguments is {@code null}.
    * 
    */
-  public default boolean isQueueAccessVacation (Q queue, SimQueueState<SimJob, Q> queueState)
+  public default boolean isQueueAccessVacation (final Q queue, final SimQueueState<SimJob, Q> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
     return queueState.isQueueAccessVacation ();
+  }
+  
+  /** Checks whether a given state represents a queue-state with server-access credits available.
+   * 
+   * <p>
+   * The default implementation returns {@code queueState.getServerAccessCredits () > 0}.
+   * 
+   * @param queue      The queue.
+   * @param queueState The queue state, non-{@code null}.
+   * 
+   * @return True if the state represents a queue-state with server-access credits available.
+   * 
+   * @throws IllegalArgumentException If any of the arguments is {@code null}.
+   * 
+   */
+  public default boolean hasServerAccessCredits (final Q queue, final SimQueueState<SimJob, Q> queueState)
+  {
+    if (queue == null || queueState == null)
+      throw new IllegalArgumentException ();
+    return queueState.getServerAccessCredits () > 0;
   }
   
   /** Checks whether a given state represents {@code NoWaitArmed} on given queue.

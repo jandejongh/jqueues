@@ -77,6 +77,7 @@ implements SimQueuePredictor<Q>
       throw new IllegalArgumentException ();
     final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet = new HashSet<> ();
     final List<Map<Double, Boolean>> qavLog = new ArrayList<> ();
+    final List<Map<Double, Boolean>> sacLog = new ArrayList<> ();
     final List<Map<Double, Boolean>> nwaLog = new ArrayList<> ();
     try
     {
@@ -103,6 +104,10 @@ implements SimQueuePredictor<Q>
       // Maintain the current QAV state of the queue.
       //
       boolean isQav = false;
+      //
+      // Maintain the current SAC-availability state of the queue.
+      //
+      boolean hasSac = hasServerAccessCredits (queue, queueState);
       //
       // Maintain the current NWA state of the queue.
       //
@@ -143,6 +148,8 @@ implements SimQueuePredictor<Q>
             throw new RuntimeException ();
           if (isQueueAccessVacation (queue, queueState) != isQav)
             throw new RuntimeException ();
+          if (hasServerAccessCredits (queue, queueState) != hasSac)
+            throw new RuntimeException ();
           if (isNoWaitArmed (queue, queueState) != isNwa)
             throw new RuntimeException ();
         }
@@ -162,6 +169,11 @@ implements SimQueuePredictor<Q>
         {
           isQav = ! isQav;
           qavLog.add (Collections.singletonMap (nextEventTime, isQav));
+        }
+        if (hasServerAccessCredits (queue, queueState) != hasSac)
+        {
+          hasSac = ! hasSac;
+          sacLog.add (Collections.singletonMap (nextEventTime, hasSac));
         }
         if (isNoWaitArmed (queue, queueState) != isNwa)
         {
@@ -190,7 +202,7 @@ implements SimQueuePredictor<Q>
         throw new RuntimeException ();
       visitLogs.put (jqvl.job, jqvl);
     }
-    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog, nwaLog);
+    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog, sacLog, nwaLog);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -235,6 +247,7 @@ implements SimQueuePredictor<Q>
       throw new IllegalArgumentException ();
     final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet = new HashSet<> ();
     final List<Map<Double, Boolean>> qavLog = new ArrayList<> ();
+    final List<Map<Double, Boolean>> sacLog = new ArrayList<> ();
     final List<Map<Double, Boolean>> nwaLog = new ArrayList<> ();
     try
     {
@@ -261,6 +274,10 @@ implements SimQueuePredictor<Q>
       // Maintain the current QAV state of the queue.
       //
       boolean isQav = false;
+      //
+      // Maintain the current SAC-availability state of the queue.
+      //
+      boolean hasSac = hasServerAccessCredits (queue, queueState);
       //
       // Maintain the current NWA state of the queue.
       //
@@ -299,6 +316,8 @@ implements SimQueuePredictor<Q>
             throw new RuntimeException ();
           if (isQueueAccessVacation (queue, queueState) != isQav)
             throw new RuntimeException ();
+          if (hasServerAccessCredits (queue, queueState) != hasSac)
+            throw new RuntimeException ();
           if (isNoWaitArmed (queue, queueState) != isNwa)
             throw new RuntimeException ();
         }
@@ -318,6 +337,11 @@ implements SimQueuePredictor<Q>
         {
           isQav = ! isQav;
           qavLog.add (Collections.singletonMap (nextEventTime, isQav));
+        }
+        if (hasServerAccessCredits (queue, queueState) != hasSac)
+        {
+          hasSac = ! hasSac;
+          sacLog.add (Collections.singletonMap (nextEventTime, hasSac));
         }
         if (isNoWaitArmed (queue, queueState) != isNwa)
         {
@@ -346,7 +370,7 @@ implements SimQueuePredictor<Q>
         throw new RuntimeException ();
       visitLogs.put (jqvl.job, jqvl);
     }
-    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog, nwaLog);
+    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog, sacLog, nwaLog);
   }
 
   /** Check unambiguity under a ROEL for workload and queue-state events occurring simultaneously.

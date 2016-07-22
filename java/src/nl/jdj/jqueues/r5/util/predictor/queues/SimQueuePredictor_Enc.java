@@ -61,6 +61,21 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
   }
 
   @Override
+  public boolean hasServerAccessCredits
+  (final BlackEncapsulatorSimQueue queue,
+   final SimQueueState<SimJob, BlackEncapsulatorSimQueue> queueState)
+  {
+    if (queue == null || queueState == null)
+      throw new IllegalArgumentException ();
+    final SimQueueCompositeStateHandler queueStateHandler =
+      (SimQueueCompositeStateHandler)
+        ((DefaultSimQueueState) queueState).getHandler ("SimQueueCompositeHandler");
+    if (queueState == null)
+      throw new IllegalArgumentException ();
+    return this.encQueuePredictor.hasServerAccessCredits (queue.getEncapsulatedQueue (), queueStateHandler.getSubQueueState (0));
+  }
+
+  @Override
   public boolean isNoWaitArmed
   (final BlackEncapsulatorSimQueue queue,
    final SimQueueState<SimJob, BlackEncapsulatorSimQueue> queueState)
@@ -72,7 +87,6 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
         ((DefaultSimQueueState) queueState).getHandler ("SimQueueCompositeHandler");
     if (queueState == null)
       throw new IllegalArgumentException ();
-    ;
     return this.encQueuePredictor.isNoWaitArmed (queue.getEncapsulatedQueue (), queueStateHandler.getSubQueueState (0));
   }
 
@@ -85,7 +99,8 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
     if (queue == null || queue.getEncapsulatedQueue () == null)
       throw new IllegalArgumentException ();
     if (queueEvents == null)
-      return new DefaultSimQueuePrediction_SQ_SV (queue, Collections.EMPTY_MAP, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+      return new DefaultSimQueuePrediction_SQ_SV
+                   (queue, Collections.EMPTY_MAP, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     final SimQueue encQueue = queue.getEncapsulatedQueue ();
     final Set<SimEntityEvent> encQueueEvents = new LinkedHashSet<> ();
     for (SimEntityEvent e : queueEvents)
@@ -146,8 +161,9 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
           jvl.departed, jvl.departureTime));
     }
     final List<Map<Double, Boolean>> encQavLog = encPrediction.getQueueAccessVacationLog ();
+    final List<Map<Double, Boolean>> encSacLog = encPrediction.getServerAccessCreditsAvailabilityLog ();
     final List<Map<Double, Boolean>> encNwaLog = encPrediction.getNoWaitArmedLog ();
-    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, encQavLog, encNwaLog);
+    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, encQavLog, encSacLog, encNwaLog);
   }
   
   @Override
