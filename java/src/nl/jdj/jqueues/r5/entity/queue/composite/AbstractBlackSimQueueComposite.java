@@ -1093,11 +1093,16 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Calls {@link #update} and {@link #reassessNoWaitArmed}.
+  /** In case of {@link BlackSimQueueComposite.StartModel#LOCAL}
+   *  and {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE} does nothing except checking with
+   *  {@link #fireIfNewNoWaitArmed};
+   *  in case of {@link BlackSimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE} with a notification from the
+   *  server queue, grants a single server-access credit to the wait queue if appropriate (and performs the same check).
    * 
-   * @see #update
-   * @see #reassessNoWaitArmed
-   * @see #isNoWaitArmed
+   * @see #getStartModel
+   * @see #setServerAccessCredits
+   * @see #hasServerAcccessCredits
+   * @see #fireIfNewNoWaitArmed
    * 
    * @throws IllegalArgumentException If the entity is {@code null} or not one of our sub-queues.
    * 
@@ -1135,7 +1140,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** In case of {@link BlackSimQueueComposite.StartModel#LOCAL} does nothing;
+  /** In case of {@link BlackSimQueueComposite.StartModel#LOCAL}
+   *  and {@link BlackSimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE} does nothing;
    *  in case of {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE} fires a
    *  notification that we are out of server-access credits.
    * 
