@@ -750,6 +750,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
    *     Waiting jobs are admitted to the server in order of arrival (which is only relevant in the presence of finite
    *     server-access credits). The server-access credits taken and the jobs started are <i>not</i> reported at this stage.
    *     The started jobs are inserted into {@link #jobsInServiceArea} and into the internal administration.
+   *     If the started job has zero requested service time, it departs immediately.
    * <li>Reschedules if needed (at least one job in the service area) the single departure event for the job
    *     in {@link #getJobsExecuting} with the smallest required service time through {@link #rescheduleDepartureEvent}.
    * <li>Reschedules if needed (at least two job in the service area with different obtained service times)
@@ -773,7 +774,9 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
    * @see #rescheduleDepartureEvent
    * @see #rescheduleCatchUpEvent
    * @see #fireStart
-   * @see #fireIfOutOfServerAccessCredits
+   * @see #fireDeparture
+   * @see #fireIfNewServerAccessCreditsAvailability
+   * @see #fireIfNewNoWaitArmed
    * 
    */
   protected final void rescheduleAfterQueueEvent (final double time, final J aJob, final J eJob, final boolean catchUp)
@@ -816,6 +819,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
     cancelCatchUpEvent (time);
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
+    final Set<J> departedJobs = new LinkedHashSet<> ();
     if (! catchUp)
     {
       while (hasServerAcccessCredits () && hasJobsInWaitingArea ())
@@ -831,6 +835,12 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
         this.jobsInServiceArea.add (job);
         // Defer notifications until we are in a valid state again.
         startedJobs.add (job);
+        if (jobServiceTime == 0.0)
+        {
+          removeJobFromQueueUponDeparture (job, time);
+          job.setQueue (null);
+          departedJobs.add (job);
+        }
       }
     }
     if (getNumberOfJobsInServiceArea () > 0)
@@ -841,12 +851,12 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
     }
     sanityInternalAdministration ();
     // Notification section.
-    for (J j : startedJobs)
-      // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
-      if (this.jobsInServiceArea.contains (j))
-        fireStart (time, j, (Q) this);
-    if (creditsOld > 0 && getServerAccessCredits () == 0)
-      fireIfOutOfServerAccessCredits (time);
+    for (final J j : startedJobs)
+      fireStart (time, j, (Q) this);
+    for (final J j : departedJobs)
+      fireDeparture (time, j, (Q) this);
+    fireIfNewServerAccessCreditsAvailability (time);
+    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
   
 }
