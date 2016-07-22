@@ -362,7 +362,8 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
    * @see #remainingServiceTime
    * @see #startServiceChunk
    * @see #fireStart
-   * @see #fireIfOutOfServerAccessCredits
+   * @see #fireDeparture
+   * @see #fireIfNewServerAccessCreditsAvailability
    * @see #fireIfNewNoWaitArmed
    * 
    */
@@ -419,7 +420,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
     for (J j : startedJobs)
       fireStart (time, j, (Q) this);
     if (! startedJobs.isEmpty ())
-      fireIfOutOfServerAccessCredits (time);
+      fireIfNewServerAccessCreditsAvailability (time);
     for (final J j : departedJobs)
       fireDeparture (time, j, (Q) this);
     fireIfNewNoWaitArmed (time, isNoWaitArmed ());
