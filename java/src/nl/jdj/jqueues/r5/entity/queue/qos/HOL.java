@@ -295,14 +295,20 @@ implements SimQueueQoS<J, Q, P>
    * {@link SimJob#getServiceTime}; throwing a {@link RuntimeException} if a negative service time is returned.
    * Subsequently, an appropriate departure event is scheduled through {@link #scheduleDepartureEvent},
    * but no start notifications are sent at this point.
+   * If, however, the job requests zero service time, it departs immediately,
+   * and the next job in the waiting area is considered.
    * 
    * <p>Subsequently, listeners are notified through {@link #fireStart} if a job started
-   * (and is still present as jobs may have left due to previous notifications).
+   * (and is still present as jobs may have left due to previous notifications), and, if applicable,
+   * {@link #fireDeparture}.
    * 
    * <p>
-   * Finally, if a job really left the queueing system (i.e., <code>departedJob != null</code>),
-   * or if we previously started a job,
-   * the (new) <code>noWaitArmed</code> is reassessed and fired.
+   * Finally, the server-access-credits availability and {@code noWaitArmed} state are reassessed,
+   * and changes are notified through
+   * {@link #fireIfNewServerAccessCreditsAvailability}
+   * and
+   * {@link #fireIfNewNoWaitArmed},
+   * respectively.
    * 
    * @see #jobQueue
    * @see #getNumberOfJobs
@@ -314,7 +320,10 @@ implements SimQueueQoS<J, Q, P>
    * @see SimJob#getServiceTime
    * @see #scheduleDepartureEvent
    * @see #fireStart
-   * @see #fireNewNoWaitArmed
+   * @see #fireDeparture
+   * @see #fireIfNewServerAccessCreditsAvailability
+   * @see #fireIfNewNoWaitArmed
+   * 
    * 
    */
   @Override
@@ -351,7 +360,7 @@ implements SimQueueQoS<J, Q, P>
       fireStart (time, j, (Q) this);
     for (final J j : departedJobs)
       fireDeparture (time, j, (Q) this);
-    fireIfOutOfServerAccessCredits (time);
+    fireIfNewServerAccessCreditsAvailability (time);
     fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
 
