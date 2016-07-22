@@ -429,6 +429,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
    *     server-access credits). The server-access credits taken and the jobs started are <i>not</i> reported at this stage.
    *     The started jobs are inserted into {@link #jobsInServiceArea}, their virtual times are calculated and they
    *     are inserted into the {@link #virtualDepartureTime} mapping.
+   *     If a started job has zero requested service time, it departs immediately.
    * <li>Reschedules if needed the single departure event for the job in service with the smallest
    *     virtual departure time through {@link #rescheduleDepartureEvent}.
    * <li>Reports started jobs (if applicable).
@@ -448,7 +449,9 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
    * @see #takeServerAccessCredit
    * @see #rescheduleDepartureEvent
    * @see #fireStart
-   * @see #fireIfOutOfServerAccessCredits
+   * @see #fireDeparture
+   * @see #fireIfNewServerAccessCreditsAvailability
+   * @see #fireIfNewNoWaitArmed
    * 
    */
   protected final void rescheduleAfterQueueEvent (final double time, final J aJob, final J eJob)
@@ -487,6 +490,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
     }
     // Scheduling section; make sure we do not issue notifications.
     final Set<J> startedJobs = new LinkedHashSet<> ();
+    final Set<J> departedJobs = new LinkedHashSet<> ();
     while (hasServerAcccessCredits () && hasJobsInWaitingArea ())
     {
       takeServerAccessCredit (false);
@@ -501,18 +505,24 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
       this.virtualDepartureTime.put (job, jobVirtualDepartureTime);
       // Defer notifications until we are in a valid state again.
       startedJobs.add (job);
+      if (jobServiceTime == 0.0)
+      {
+        removeJobFromQueueUponDeparture (job, time);
+        job.setQueue (null);
+        departedJobs.add (job);
+      }
     }
     if (getNumberOfJobsInServiceArea () > 0)
       rescheduleDepartureEvent (time,
         departureEventMustBePresent,
         departureEventMustBeAbsent);
     // Notification section.
-    for (J j : startedJobs)
-      // Be cautious here; previous invocation(s) of fireStart could have removed the job j already!
-      if (this.jobsInServiceArea.contains (j))
-        fireStart (time, j, (Q) this);
-    if (creditsOld > 0 && getServerAccessCredits () == 0)
-      fireIfOutOfServerAccessCredits (time);
+    for (final J j : startedJobs)
+      fireStart (time, j, (Q) this);
+    for (final J j : departedJobs)
+      fireDeparture (time, j, (Q) this);
+    fireIfNewServerAccessCreditsAvailability (time);
+    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
 
 }
