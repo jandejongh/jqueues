@@ -1,5 +1,7 @@
 package nl.jdj.jqueues.r5.entity.queue.preemptive;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -98,6 +100,9 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
 
   /** Starts the job if there are server-access credits, preempting the currently executing job if needed.
    * 
+   * <p>
+   * Jobs with zero requested service time upon start (and taking into execution) will depart immediately.
+   * 
    * @see #jobQueue
    * @see #jobsInServiceArea
    * @see #hasServerAcccessCredits
@@ -108,7 +113,9 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    * @see #preemptJob
    * @see #startServiceChunk
    * @see #fireStart
+   * @see #fireDeparture
    * @see #fireIfOutOfServerAccessCredits
+   * @see #fireIfNewNoWaitArmed
    * 
    */
   @Override
@@ -118,26 +125,42 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
       throw new IllegalStateException ();
     if (this.jobsInServiceArea.contains (job))
       throw new IllegalStateException ();
+    boolean hasStarted = false;
+    boolean hasDeparted = false;
     if (hasServerAcccessCredits ())
     {
       // Scheduling section; make sure we do not issue notifications.
+      hasStarted = true;
       takeServerAccessCredit (false);
       this.jobsInServiceArea.add (job);
       final double jobServiceTime = job.getServiceTime (this);
       if (jobServiceTime < 0)
         throw new RuntimeException ();
       this.remainingServiceTime.put (job, jobServiceTime);
-      if (! this.jobsBeingServed.isEmpty ())
+      if (jobServiceTime == 0.0)
       {
-        if (this.jobsBeingServed.size () > 1)
-          throw new IllegalStateException ();
-        preemptJob (time, this.jobsBeingServed.keySet ().iterator ().next ());
+        removeJobFromQueueUponDeparture (job, time);
+        job.setQueue (null);
+        hasDeparted = true;
       }
-      startServiceChunk (time, job);
-      // Notification section.
-      fireStart (time, job, (Q) this);
-      fireIfOutOfServerAccessCredits (time);
+      else
+      {
+        if (! this.jobsBeingServed.isEmpty ())
+        {
+          if (this.jobsBeingServed.size () > 1)
+            throw new IllegalStateException ();
+          preemptJob (time, this.jobsBeingServed.keySet ().iterator ().next ());
+        }
+        startServiceChunk (time, job);
+      }
     }
+    // Notification section.
+    if (hasStarted)
+      fireStart (time, job, (Q) this);
+    if (hasDeparted)
+      fireDeparture (time, job, (Q) this);
+    fireIfNewServerAccessCreditsAvailability (time);
+    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,6 +219,9 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   
   /** Schedules an eligible waiting job if possible, preempting the currently executing job if needed.
    * 
+   * <p>
+   * Jobs with zero requested service time upon start (and taking into execution) will depart immediately.
+   * 
    * @see #hasServerAcccessCredits
    * @see #hasJobsInWaitingArea
    * @see #jobsBeingServed
@@ -207,13 +233,17 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    * @see #preemptJob
    * @see #startServiceChunk
    * @see #fireStart
-   * @see #fireIfOutOfServerAccessCredits
+   * @see #fireDeparture
+   * @see #fireIfNewServerAccessCreditsAvailability
+   * @see #fireIfNewNoWaitArmed
    * 
    */
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
   {
-    if (hasServerAcccessCredits ()
+    final Set<J> startedJobs = new LinkedHashSet<> ();
+    final Set<J> departedJobs = new LinkedHashSet<> ();
+    while (hasServerAcccessCredits ()
       && hasJobsInWaitingArea ())
     {
       // Scheduling section; make sure we do not issue notifications.
@@ -234,20 +264,38 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
       // Check whether to start the youngest waiter, noting that this.jobQueue is ordered decreasing in arrival time.
       if (jobBeingServed == null || this.jobQueue.indexOf (youngestWaiter) < this.jobQueue.indexOf (jobBeingServed))
       {
-        takeServerAccessCredit (false);      
+        takeServerAccessCredit (false);
+        startedJobs.add (youngestWaiter);
         this.jobsInServiceArea.add (youngestWaiter);
         final double jobServiceTime = youngestWaiter.getServiceTime (this);
         if (jobServiceTime < 0)
           throw new RuntimeException ();
         this.remainingServiceTime.put (youngestWaiter, jobServiceTime);
-        if (jobBeingServed != null)
-          preemptJob (time, jobBeingServed);
-        startServiceChunk (time, youngestWaiter);
-        // Notification section.
-        fireStart (time, youngestWaiter, (Q) this);
-        fireIfOutOfServerAccessCredits (time);        
+        if (jobServiceTime == 0.0)
+        {
+          removeJobFromQueueUponDeparture (youngestWaiter, time);
+          youngestWaiter.setQueue (null);
+          departedJobs.add (youngestWaiter);
+          // continue;
+        }
+        else
+        {
+          if (jobBeingServed != null)
+            preemptJob (time, jobBeingServed);
+          startServiceChunk (time, youngestWaiter);
+          break;
+        }
       }
+      else
+        break;
     }
+    // Notification section.
+    for (final J j : startedJobs)
+      fireStart (time, j, (Q) this);
+    for (final J j : departedJobs)
+      fireDeparture (time, j, (Q) this);
+    fireIfNewServerAccessCreditsAvailability (time);
+    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -337,8 +385,9 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
         // It SHOULD start youngestWaiter.
         rescheduleForNewServerAccessCredits (time);
         // But check our a-priori assumption.
-        if (this.jobsBeingServed.size () != 1 || ! this.jobsBeingServed.containsKey (youngestWaiter))
-          throw new IllegalStateException ();
+        // NO: youngestWaiter may have zero requested service time, in which case it departs immediately!
+        // if (this.jobsBeingServed.size () != 1 || ! this.jobsBeingServed.containsKey (youngestWaiter))
+        //  throw new IllegalStateException ();
       }
       // If not, check whether to resume the youngestServed.
       else if (youngestServed != null)
