@@ -1,29 +1,12 @@
 package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** An abstract base class for non-preemptive queueing disciplines
- *  for {@link SimJob}s.
+/** An abstract base class for non-preemptive queueing disciplines.
  *
- * <p>
- * The class fully supports job revocations.
- * 
- * <p>
- * This abstract class relies heavily on the partial {@link SimQueue} implementation of {@link AbstractSimQueue}.
- * It implements (and often finalizes) those abstract methods of {@link AbstractSimQueue} that
- * do not depend on the service structure, apart from it being non-preemptive.
- * In particular, these methods do not depend on the number of servers in the queueing system.
- * 
- * <p>
- * Concrete implementations <i>must</i> implement {@link #insertJobInQueueUponArrival}, {@link #hasServerAvailable}
- * and {@link #getCopySimQueue}.
- * Optionally, they may override {@link #getServiceTimeForJob} and {@link #toStringDefault}.
- * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
@@ -198,6 +181,49 @@ public abstract class AbstractNonPreemptiveSimQueue
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Adds the job to the tail of the service area.
+   * 
+   * @see #jobsInServiceArea
+   * 
+   */
+  @Override
+  protected final void insertJobInQueueUponStart (final J job, final double time)
+  {
+    if (job == null || (! getJobs ().contains (job)) || getJobsInServiceArea ().contains (job))
+      throw new IllegalArgumentException ();
+    this.jobsInServiceArea.add (job);
+  }
+
+  /** Depending on the job's requested service time, makes it depart immediately, or schedules a suitable departure event.
+   * 
+   * <p>
+   * Performs sanity checks on the fly (job present; job not yet started; requested service time zero or positive).
+   * 
+   * @see #getServiceTimeForJob
+   * @see #scheduleDepartureEvent
+   * @see #depart
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterStart (final J job, final double time)
+  {
+    if (job == null || (! getJobs ().contains (job)) || (! getJobsInServiceArea ().contains (job)))
+      throw new IllegalArgumentException ();
+    final double jobServiceTime = getServiceTimeForJob (job);
+    if (jobServiceTime < 0)
+      throw new RuntimeException ();
+    if (jobServiceTime > 0)
+      scheduleDepartureEvent (time + jobServiceTime, job);
+    else
+      depart (time, job);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // DEPARTURE
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,83 +269,24 @@ public abstract class AbstractNonPreemptiveSimQueue
    * As long as there are service-access credits ({@link #hasServerAcccessCredits}),
    * start-able jobs (all waiting jobs)
    * and at least one server ({@link #hasServerAvailable}) available,
-   * a single job is selected and started (i.e., added to {@link #jobsInServiceArea}),
-   * taking a single server-access credit ({@link #takeServerAccessCredit} (without notifications).
+   * a single job is selected through {@link #getFirstJobInWaitingArea}
+   * and started through {@link #start}.
    * 
-   * <p>
-   * The service time of the job to start is requested through
-   * {@link #getServiceTimeForJob}; throwing a {@link RuntimeException} if a negative service time is returned.
-   * Subsequently, an appropriate departure event is scheduled through {@link #scheduleDepartureEvent} for the job.
-   * If, however, the requested service time is zero, the job is manually made to depart immediately.
-   * 
-   * <p>
-   * After starting the jobs and scheduling departure events for each job (or manually made to depart),
-   * a separate notification part of the method takes care of notifying listeners
-   * through {@link #fireStart},
-   * {@link #fireDeparture},
-   * {@link #fireIfNewServerAccessCreditsAvailability}
-   * and {@link #fireIfNewNoWaitArmed}.
-   * 
-   * <p>
-   * If server-access credits are absent, this method does nothing, relying on {@link #rescheduleForNewServerAccessCredits}
-   * to eventually take jobs into service.
-   * 
-   * <p>
-   * If no servers are available, this method does nothing, relying on future departures (or jobs exiting otherwise)
-   * to eventually take jobs into service.
-   * 
-   * @see #getJobsInWaitingArea
-   * @see #hasServerAvailable
    * @see #hasServerAcccessCredits
-   * @see #takeServerAccessCredit
-   * @see #jobsInServiceArea
-   * @see #getServiceTimeForJob
-   * @see #scheduleDepartureEvent
-   * @see #fireStart
-   * @see #fireDeparture
-   * @see #fireIfNewServerAccessCreditsAvailability
-   * @see #fireIfNewNoWaitArmed
+   * @see #getNumberOfJobsInWaitingArea
+   * @see #hasServerAvailable
+   * @see #start
+   * @see #getFirstJobInWaitingArea
    * 
    * @param time The time of rescheduling.
    * 
    */
   protected final void reschedule (final double time)
   {
-    // Scheduling section; make sure we do not issue notifications.
-    final Set<J> startableJobs = getJobsInWaitingArea ();
-    final Set<J> startedJobs = new LinkedHashSet<> ();
-    final Set<J> departedJobs = new LinkedHashSet<> ();
     while (hasServerAcccessCredits ()
-      && (! startableJobs.isEmpty ())
+      && getNumberOfJobsInWaitingArea () > 0
       && hasServerAvailable ())
-    {
-      takeServerAccessCredit (false);
-      final J job = startableJobs.iterator ().next ();
-      startableJobs.remove (job);
-      if (job == null)
-        throw new IllegalStateException ();
-      this.jobsInServiceArea.add (job);
-      final double jobServiceTime = getServiceTimeForJob (job);
-      if (jobServiceTime < 0)
-        throw new RuntimeException ();
-      if (jobServiceTime > 0)
-        scheduleDepartureEvent (time + jobServiceTime, job);
-      else
-      {
-        removeJobFromQueueUponDeparture (job, time);
-        job.setQueue (null);
-        departedJobs.add (job);
-      }
-      // Defer notifications until we are in a valid state again.
-      startedJobs.add (job);
-    }
-    // Notification section.
-    for (final J j : startedJobs)
-      fireStart (time, j, (Q) this);
-    for (final J j : departedJobs)
-      fireDeparture (time, j, (Q) this);
-    fireIfNewServerAccessCreditsAvailability (time);
-    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
+      start (time, getFirstJobInWaitingArea ());
   }
   
 }
