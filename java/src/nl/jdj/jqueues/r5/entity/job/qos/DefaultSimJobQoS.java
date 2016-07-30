@@ -1,9 +1,9 @@
 package nl.jdj.jqueues.r5.entity.job.qos;
 
 import java.util.Map;
-import nl.jdj.jqueues.r5.entity.job.*;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.extensions.qos.SimJobQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
