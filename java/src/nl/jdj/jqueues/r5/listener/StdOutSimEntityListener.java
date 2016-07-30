@@ -1,9 +1,12 @@
 package nl.jdj.jqueues.r5.listener;
 
+import java.util.List;
+import java.util.Map;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimEntityListener;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 
 /** A {@link SimEntityListener} logging events on <code>System.out</code>.
  *
@@ -40,10 +43,23 @@ implements SimEntityListener<J, Q>
   }
 
   @Override
-  public void notifyStateChanged (final double time, final SimEntity entity)
+  public void notifyStateChanged
+  (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member, J>> notifications)
   {
     System.out.print (getHeaderString () + " ");
-    System.out.println ("t=" + time + ", entity=" + entity + ": STATE CHANGED.");
+    System.out.print ("t=" + time + ", entity=" + entity + ": STATE CHANGED:");
+    if (notifications == null)
+      System.out.println (" === null ====");
+    else
+    {
+      System.out.println ("");
+      for (final Map<SimEntitySimpleEventType.Member, J> notification : notifications)
+        if (notification == null)
+          System.out.println ("  => null");
+        else
+          System.out.println ("  => " + notification.keySet ().iterator ().next ()
+                                      + " [" + notification.values ().iterator ().next () + "]");
+    }
   }
 
   @Override
@@ -72,6 +88,13 @@ implements SimEntityListener<J, Q>
   {
     System.out.print (getHeaderString () + " ");
     System.out.println ("t=" + time + ", queue=" + queue + ": REVOCATION of job " + job + ".");
+  }
+
+  @Override
+  public void notifyAutoRevocation (final double time, final J job, final Q queue)
+  {
+    System.out.print (getHeaderString () + " ");
+    System.out.println ("t=" + time + ", queue=" + queue + ": AUTO_REVOCATION of job " + job + ".");
   }
 
   @Override
