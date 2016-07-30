@@ -30,5 +30,33 @@ extends AbstractSimQueue<J, Q>
   {
     super (eventList);
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Throws {@link IllegalStateException}.
+   * 
+   * @throws IllegalStateException Always, as a call to this method is unexpected.
+   * 
+   */
+  @Override
+  protected final void insertJobInQueueUponStart (final J job, final double time)
+  {
+    throw new IllegalStateException ();
+  }
+
+  /** Throws {@link IllegalStateException}.
+   * 
+   * @throws IllegalStateException Always, as a call to this method is unexpected.
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterStart (final J job, final double time)
+  {
+    throw new IllegalStateException ();
+  }
   
 }
