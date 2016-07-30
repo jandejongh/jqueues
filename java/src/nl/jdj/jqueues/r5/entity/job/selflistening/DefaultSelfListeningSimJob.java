@@ -1,11 +1,13 @@
 package nl.jdj.jqueues.r5.entity.job.selflistening;
 
+import java.util.List;
 import java.util.Map;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimJobListener;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link DefaultSimJob} that listens to notifications from itself as a {@link SimJobListener} and providing overridable methods
@@ -28,8 +30,12 @@ implements SimJobListener<J, Q>
     
   /** Creates a new {@link DefaultSelfListeningSimJob}.
    * 
+   * @param eventList               The event list.
+   * @param name                    The name.
+   * @param requestedServiceTimeMap The requested service-time map.
+   * 
    * @see DefaultSimJob#DefaultSimJob(nl.jdj.jsimulation.r5.SimEventList, java.lang.String, java.util.Map)
-   *        For detailed explanation of the parameters.
+   *        For a more detailed explanation of the parameters.
    * 
    */
   public DefaultSelfListeningSimJob (final SimEventList eventList, final String name, final Map<Q, Double> requestedServiceTimeMap)
@@ -40,8 +46,12 @@ implements SimJobListener<J, Q>
 
   /** Creates a new {@link DefaultSelfListeningSimJob}.
    * 
+   * @param eventList            The event list.
+   * @param name                 The name.
+   * @param requestedServiceTime The requested service-time.
+   * 
    * @see DefaultSimJob#DefaultSimJob(nl.jdj.jsimulation.r5.SimEventList, java.lang.String, double)
-   *        For detailed explanation of the parameters.
+   *        For a more detailed explanation of the parameters.
    * 
    */
   public DefaultSelfListeningSimJob (final SimEventList eventList, final String name, final double requestedServiceTime)
@@ -78,7 +88,8 @@ implements SimJobListener<J, Q>
    * 
    */
   @Override
-  public void notifyStateChanged (final double time, final SimEntity entity)
+  public void notifyStateChanged
+  (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member, J>> notifications)
   {
     /* EMPTY */
   }
@@ -87,7 +98,7 @@ implements SimJobListener<J, Q>
    * 
    */
   @Override
-  public void notifyArrival (double time, J job, Q queue)
+  public void notifyArrival (final double time, final J job, final Q queue)
   {
     /* EMPTY */
   }
@@ -96,7 +107,7 @@ implements SimJobListener<J, Q>
    * 
    */
   @Override
-  public void notifyStart (double time, J job, Q queue)
+  public void notifyStart (final double time, final J job, final Q queue)
   {
     /* EMPTY */
   }
@@ -105,7 +116,7 @@ implements SimJobListener<J, Q>
    * 
    */
   @Override
-  public void notifyDrop (double time, J job, Q queue)
+  public void notifyDrop (final double time, final J job, final Q queue)
   {
     /* EMPTY */
   }
@@ -114,7 +125,7 @@ implements SimJobListener<J, Q>
    * 
    */
   @Override
-  public void notifyRevocation (double time, J job, Q queue)
+  public void notifyRevocation (final double time, final J job, final Q queue)
   {
     /* EMPTY */
   }
@@ -123,7 +134,16 @@ implements SimJobListener<J, Q>
    * 
    */
   @Override
-  public void notifyDeparture (double time, J job, Q queue)
+  public void notifyAutoRevocation (final double time, final J job, final Q queue)
+  {
+    /* EMPTY */
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public void notifyDeparture (final double time, final J job, final Q queue)
   {
     /* EMPTY */
   }
