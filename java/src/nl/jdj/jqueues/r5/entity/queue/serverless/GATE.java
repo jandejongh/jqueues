@@ -1,12 +1,15 @@
 package nl.jdj.jqueues.r5.entity.queue.serverless;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import nl.jdj.jqueues.r5.SimEntityListener;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGate;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGateListener;
+import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGateSimpleEventType;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link GATE} queue lets jobs depart without service conditionally ("gate is open") or lets them wait ("gate is closed").
@@ -50,6 +53,9 @@ implements SimQueueWithGate<J, Q>
   public GATE (final SimEventList eventList)
   {
     super (eventList);
+    registerNotificationType (SimQueueWithGateSimpleEventType.GATE_CLOSED, this::fireGateClosed);
+    registerNotificationType (SimQueueWithGateSimpleEventType.GATE_OPEN, this::fireGateOpen);
+    registerPreNotificationHook (this::gatePassageCreditsPreNotificationHook);
   }
   
   /** Returns a new {@link GATE} object on the same {@link SimEventList}.
@@ -111,36 +117,64 @@ implements SimQueueWithGate<J, Q>
   
   /** Updates the internal administration and releases (makes depart) waiting jobs if applicable.
    * 
+   * <p>
+   * This must be a top-level event, at the expense of a {@link IllegalStateException}.
+   * 
+   * @see #getGatePassageCredits
    * @see #update
    * @see #jobQueue
-   * @see SimJob#setQueue
-   * @see #fireDeparture
-   * @see #fireNewNoWaitArmed
-   * @see #fireNewGateStatus
+   * @see #depart
+   * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #fireAndLockPendingNotifications
    * 
    */
   @Override
   public final void setGatePassageCredits (final double time, final int gatePassageCredits)
   {
     update (time);
+    if (! clearAndUnlockPendingNotificationsIfLocked ())
+      throw new IllegalStateException ();
     if (gatePassageCredits < 0)
       throw new IllegalArgumentException ();
-    final int oldGatePassageCredits = this.gatePassageCredits;
-    final Set<J> jobsReleased = new LinkedHashSet<>  ();
     this.gatePassageCredits = gatePassageCredits;
     while (this.gatePassageCredits > 0 && ! this.jobQueue.isEmpty ())
     {
-      jobsReleased.add (jobQueue.remove (0));
+      depart (time, getFirstJobInWaitingArea ());
       if (this.gatePassageCredits < Integer.MAX_VALUE)
         this.gatePassageCredits--;
     }
-    for (final J job : jobsReleased)
-      job.setQueue (null);
-    for (final J job : jobsReleased)
-      fireDeparture (time, job, (Q) this);
-    if ((this.gatePassageCredits > 0) != (oldGatePassageCredits > 0))
-      fireNewNoWaitArmed (time, isNoWaitArmed ());
-    fireNewGateStatus (time, oldGatePassageCredits);
+    fireAndLockPendingNotifications ();
+  }
+  
+  // Every SimQueueWithGate must have infinite gpcs upon construction and after reset.
+  private boolean previousGatePassageCreditsAvailability = true;
+  
+  /** The pre-notification hook for gate-passage credits.
+   * 
+   * @see SimQueueWithGateSimpleEventType#GATE_CLOSED
+   * @see SimQueueWithGateSimpleEventType#GATE_OPEN
+   * 
+   */
+  private void gatePassageCreditsPreNotificationHook (final List<Map<SimEntitySimpleEventType.Member, J>> pendingNotifications)
+  {
+    if (pendingNotifications == null)
+      throw new IllegalArgumentException ();
+    for (final Map<SimEntitySimpleEventType.Member, J> entry : pendingNotifications)
+    {
+      final SimEntitySimpleEventType.Member notificationType = entry.keySet ().iterator ().next ();
+      if (notificationType == SimQueueWithGateSimpleEventType.GATE_CLOSED
+      ||  notificationType == SimQueueWithGateSimpleEventType.GATE_OPEN)
+        throw new IllegalArgumentException ();
+    }
+    final boolean gatePassageCreditsAvailability = getGatePassageCredits () > 0;
+    if (gatePassageCreditsAvailability != this.previousGatePassageCreditsAvailability )
+    {
+      if (gatePassageCreditsAvailability)
+        pendingNotifications.add (Collections.singletonMap (SimQueueWithGateSimpleEventType.GATE_OPEN, null));
+      else
+        pendingNotifications.add (Collections.singletonMap (SimQueueWithGateSimpleEventType.GATE_CLOSED, null));
+    }
+    this.previousGatePassageCreditsAvailability = gatePassageCreditsAvailability;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +191,8 @@ implements SimQueueWithGate<J, Q>
   {
     super.resetEntitySubClass ();
     this.gatePassageCredits = Integer.MAX_VALUE;
+    // Every SimQueueWithGate must have infinite gpcs upon construction and after reset.
+    this.previousGatePassageCreditsAvailability = true;
   }  
   
   /** Adds the job to the tail of the {@link #jobQueue}.
@@ -171,14 +207,10 @@ implements SimQueueWithGate<J, Q>
     this.jobQueue.add (job);
   }
 
-  /** Removes the job from the job queue if the gate is currently open, resets the job's queue
-   * and fires a notification of the departure.
+  /** Makes the job depart from the job queue if the gate is currently open
    * 
-   * <p>
-   * If needed, this method updates the gate-passage credits.
-   * 
-   * @see #arrive
-   * @see #jobQueue
+   * @see #getGatePassageCredits
+   * @see #depart
    * 
    */
   @Override
@@ -186,14 +218,9 @@ implements SimQueueWithGate<J, Q>
   {
     if (this.gatePassageCredits == 0)
       return;
-    final int oldGatePassageCredits = this.gatePassageCredits;
     if (this.gatePassageCredits < Integer.MAX_VALUE)
       this.gatePassageCredits--;
-    this.jobQueue.remove (job);
-    job.setQueue (null);
-    fireDeparture (time, job, (Q) this);
-    if ((this.gatePassageCredits > 0) != (oldGatePassageCredits > 0))
-      fireNewNoWaitArmed (time, isNoWaitArmed ());
+    depart (time, job);
   }
 
   /** Throws {@link IllegalStateException}.
@@ -238,26 +265,26 @@ implements SimQueueWithGate<J, Q>
     /* EMPTY */
   }
 
-  /** Throws {@link IllegalStateException}.
-   * 
-   * @throws IllegalStateException Always, as a call to this method is unexpected.
+  /** Removes the job from the {@link #jobQueue}.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    throw new IllegalStateException ();
+    if (! this.jobQueue.contains (departingJob))
+      throw new IllegalStateException ();
+    if (this.jobsInServiceArea.contains (departingJob))
+      throw new IllegalStateException ();
+    this.jobQueue.remove (departingJob);
   }
 
-  /** Throws {@link IllegalStateException}.
-   * 
-   * @throws IllegalStateException Always, as a call to this method is unexpected.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
-    throw new IllegalStateException ();
+    /* EMPTY */
   }
 
   /** Does nothing.
@@ -275,24 +302,30 @@ implements SimQueueWithGate<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Notifies all gate listeners of a gate status change, if needed.
-   *
-   * @param time                  The current time.
-   * @param oldGatePassageCredits The old number of gate-passage credits (last reported or implicit).
-   *
+  /** Notifies all relevant listeners that the gate is (re)open(ed).
+   * 
    * @see SimQueueWithGateListener#notifyNewGateStatus
    * 
    */
-  protected final void fireNewGateStatus (final double time, final int oldGatePassageCredits)
+  private void fireGateOpen (final SimJob job)
   {
-    if (oldGatePassageCredits > 0 && this.gatePassageCredits == 0)
-      for (SimEntityListener<J, Q> l : getSimEntityListeners ())
-        if (l instanceof SimQueueWithGateListener)
-          ((SimQueueWithGateListener) l).notifyNewGateStatus (time, (Q) this, false);
-    if (oldGatePassageCredits == 0 && this.gatePassageCredits > 0)
-      for (SimEntityListener<J, Q> l : getSimEntityListeners ())
-        if (l instanceof SimQueueWithGateListener)
-          ((SimQueueWithGateListener) l).notifyNewGateStatus (time, (Q) this, true);
+    final double time = getLastUpdateTime ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueWithGateListener)
+        ((SimQueueWithGateListener) l).notifyNewGateStatus (time, (Q) this, true);
+  }
+  
+  /** Notifies all relevant listeners that the gate is closed.
+   * 
+   * @see SimQueueWithGateListener#notifyNewGateStatus
+   * 
+   */
+  private void fireGateClosed (final SimJob job)
+  {
+    final double time = getLastUpdateTime ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueWithGateListener)
+        ((SimQueueWithGateListener) l).notifyNewGateStatus (time, (Q) this, false);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
