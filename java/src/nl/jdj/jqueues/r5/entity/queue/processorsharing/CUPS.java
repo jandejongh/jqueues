@@ -72,7 +72,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
     return new CUPS<> (getEventList ());
   }
   
-  /** The tolerance for rounding error in the obtained service time.
+  /** The tolerance for rounding errors in the obtained service time.
    * 
    */
   public final static double TOLERANCE_OST = 1.0E-9;
@@ -126,29 +126,6 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   protected final int getNumberOfJobsExecuting ()
   {
     return getJobsExecuting ().size ();
-  }
-  
-  /** Internally administers the start of a job.
-   * 
-   * <p>
-   * Does <i>not</i> affect super-class structures, does <i>not</i> schedule and does <i>not</i> notify.
-   * 
-   * @param job                    The job to start, non-{@code null}.
-   * @param jobRequiredServiceTime The required service time of the job, non-negative.
-   * 
-   * @throws IllegalArgumentException If the job is {@code null} or the required service time is strictly negative.
-   * 
-   */
-  protected final void startJobInternalAdministration (final J job, final double jobRequiredServiceTime)
-  {
-    if (jobRequiredServiceTime < 0)
-      throw new IllegalArgumentException ();
-    sanityInternalAdministration ();
-    this.requiredServiceTime.put (job, jobRequiredServiceTime);
-    final Set<J> jobs_zero_ost;
-    if (! this.obtainedServiceTimeMap.containsKey (0.0))
-      this.obtainedServiceTimeMap.put (0.0, new LinkedHashSet<> ());
-    this.obtainedServiceTimeMap.get (0.0).add (job);
   }
   
   /** Returns the minimum obtained service time (i.e., of all the jobs currently in execution).
@@ -371,18 +348,19 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
     this.jobQueue.add (job);
   }
 
-  /** Calls {@link #rescheduleAfterQueueEvent} for the arriving job.
+  /** Starts the arrived job if server-access credits are available.
    * 
-   * @see #arrive
-   * @see #rescheduleAfterQueueEvent
+   * @see #hasServerAcccessCredits
+   * @see #start
    * 
    */
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (job == null)
+    if (job == null || ! getJobsInWaitingArea ().contains (job))
       throw new IllegalArgumentException ();
-    rescheduleAfterQueueEvent (time, job, null, false);
+    if (hasServerAcccessCredits ())
+      start (time, job);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -446,10 +424,11 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
     this.jobsInServiceArea.remove (job);
   }
 
-  /** Calls {@link #rescheduleAfterQueueEvent} for the revoked job.
+  /** Calls {@link #rescheduleDepartureEvent} and {@link #rescheduleCatchUpEvent}.
    * 
    * @see #revoke
-   * @see #rescheduleAfterQueueEvent
+   * @see #rescheduleDepartureEvent
+   * @see #rescheduleCatchUpEvent
    * 
    */
   @Override
@@ -457,7 +436,8 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    rescheduleAfterQueueEvent (time, null, job, false);
+    rescheduleDepartureEvent ();
+    rescheduleCatchUpEvent ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -466,18 +446,83 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls {@link #rescheduleAfterQueueEvent} with <code>null</code> job and {@code false} catch-up arguments.
+  /** Starts jobs as long as there are server-access credits and jobs waiting.
    * 
-   * @see #setServerAccessCredits
-   * @see #rescheduleAfterQueueEvent
+   * @see #hasServerAcccessCredits
+   * @see #hasJobsInWaitingArea
+   * @see #start
+   * @see #getFirstJobInWaitingArea
    * 
    */
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
   {
-    rescheduleAfterQueueEvent (time, null, null, false);
+    while (hasServerAcccessCredits () && hasJobsInWaitingArea ())
+      start (time, getFirstJobInWaitingArea ());
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Inserts the job, after sanity checks, in the service area and administers its required and initial obtained service times.
+   * 
+   * @see SimJob#getServiceTime
+   * @see #requiredServiceTime
+   * @see #obtainedServiceTimeMap
+   * 
+   */
+  @Override
+  protected final void insertJobInQueueUponStart (final J job, final double time)
+  {
+    if (job == null
+    || (! getJobs ().contains (job))
+    || getJobsInServiceArea ().contains (job)
+    || this.requiredServiceTime.containsKey (job))
+      throw new IllegalArgumentException ();
+    sanityInternalAdministration ();
+    this.jobsInServiceArea.add (job);
+    final double jobRequiredServiceTime = job.getServiceTime (this);
+    if (jobRequiredServiceTime < 0)
+      throw new RuntimeException ();
+    this.requiredServiceTime.put (job, jobRequiredServiceTime);
+    if (! this.obtainedServiceTimeMap.containsKey (0.0))
+      this.obtainedServiceTimeMap.put (0.0, new LinkedHashSet<> ());
+    this.obtainedServiceTimeMap.get (0.0).add (job);
+  }
+
+  /** Reschedules due to the start of a job, making it depart immediately if its requested service time is zero,
+   *  or rescheduling through {@link #rescheduleDepartureEvent} and {@link #rescheduleCatchUpEvent} otherwise.
+   * 
+   * @see #requiredServiceTime
+   * @see #rescheduleDepartureEvent
+   * @see #rescheduleCatchUpEvent
+   * @see #depart
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterStart (final J job, final double time)
+  {
+    if (job == null
+    || (! getJobs ().contains (job))
+    || (! getJobsInServiceArea ().contains (job))
+    || ! this.requiredServiceTime.containsKey (job))
+      throw new IllegalArgumentException ();
+    final double jobServiceTime = this.requiredServiceTime.get (job);
+    if (jobServiceTime < 0)
+      throw new RuntimeException ();
+    if (jobServiceTime > 0)
+    {
+      rescheduleDepartureEvent ();
+      rescheduleCatchUpEvent ();
+    }
+    else
+      depart (time, job);
+    sanityInternalAdministration ();
+  }
+    
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // CATCH-UP
@@ -487,7 +532,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   private double lastCatchUpTime = Double.NaN;
   
   /** Calls {@link #update}
-   *  followed by {@link #rescheduleAfterQueueEvent} with arguments indicating a catch-up.
+   *  followed by {@link #rescheduleDepartureEvent} and {@link #rescheduleCatchUpEvent}.
    * 
    * <p>
    * Always invoked from (only) {@link CatchUpEvent}.
@@ -510,8 +555,8 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
    *                               (in both cases, taking into consideration the possibility of missed updates).
    * 
    * @see CatchUpEvent
-   * @see #catchUp
-   * @see #rescheduleAfterQueueEvent
+   * @see #rescheduleDepartureEvent
+   * @see #rescheduleCatchUpEvent
    * 
    */
   protected final void catchUp (final double time)
@@ -531,7 +576,8 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
       throw new IllegalStateException ("missed catch-up at t=" + time
         + ": old number of groups: " + oldObtainedServiceTimeMapSize
         + ", new obtained service-time map: " + this.obtainedServiceTimeMap + ".");
-    rescheduleAfterQueueEvent (time, null, null, true);
+    rescheduleDepartureEvent ();
+    rescheduleCatchUpEvent ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -542,7 +588,6 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   
   /** Calls {@link #removeJobFromQueueUponRevokation} for the departed job.
    * 
-   * @see #departureFromEventList
    * @see #removeJobFromQueueUponRevokation
    * 
    */
@@ -552,10 +597,11 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
     removeJobFromQueueUponRevokation (departingJob, time);
   }
 
-  /** Calls {@link #rescheduleAfterQueueEvent} for the departed job.
+  /** Calls {@link #rescheduleDepartureEvent} and {@link #rescheduleCatchUpEvent}.
    * 
-   * @see #departureFromEventList
-   * @see #rescheduleAfterQueueEvent
+   * @see #depart
+   * @see #rescheduleDepartureEvent
+   * @see #rescheduleCatchUpEvent
    * 
    */
   @Override
@@ -563,9 +609,10 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   {
     if (departedJob == null)
       throw new IllegalArgumentException ();
-    rescheduleAfterQueueEvent (time, null, departedJob, false);
+    rescheduleDepartureEvent ();
+    rescheduleCatchUpEvent ();
   }
-
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // RESCHEDULE DEPARTURE EVENT
@@ -574,32 +621,18 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   
   /** Reschedules the single departure event for this queue.
    * 
-   * @param time          The current time.
-   * @param mustBePresent For sanity checking; if <code>true</code>, a <i>single</i> departure event
-   *                        <i>must</i> currently be scheduled on the event list.
-   * @param mustBeAbsent  For sanity checking; if <code>true</code>, <i>no</i> departure event
-   *                        must currently be scheduled on the event list.
-   * 
-   * @throws IllegalArgumentException If <code>mustBePresent</code> and <code>mustBeAbsent</code> are both <code>true</code>.
-   * 
    * @see #getDepartureEvents
    * @see #cancelDepartureEvent
    * @see #jobsInServiceArea
    * @see #scheduleDepartureEvent
    * 
    */
-  protected final void rescheduleDepartureEvent (final double time, final boolean mustBePresent, final boolean mustBeAbsent)
+  protected final void rescheduleDepartureEvent ()
   {
-    if (mustBePresent && mustBeAbsent)
-      throw new IllegalArgumentException ();
     final Set<DefaultDepartureEvent<J, Q>> departureEvents = getDepartureEvents ();
     if (departureEvents == null)
       throw new RuntimeException ();
     if (departureEvents.size () > 1)
-      throw new IllegalStateException ();
-    if (mustBePresent && departureEvents.size () != 1)
-      throw new IllegalStateException ();
-    if (mustBeAbsent && ! departureEvents.isEmpty ())
       throw new IllegalStateException ();
     if (departureEvents.size () > 0)
       cancelDepartureEvent (departureEvents.iterator ().next ());
@@ -631,7 +664,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
       final int numberOfJobsExecuting = jobsExecuting.size ();
       final double ost = getMinimumObtainedServiceTime ();
       final double timeToDeparture = Math.max (rst_leaver - ost, 0.0) * numberOfJobsExecuting;
-      scheduleDepartureEvent (time + timeToDeparture, leaver);
+      scheduleDepartureEvent (getLastUpdateTime () + timeToDeparture, leaver);
     }
   }
   
@@ -683,15 +716,13 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
    * <p>
    * The implementation simply removes the single catch-up event from the event list and from {@link #eventsScheduled}.
    * 
-   * @param time The current time.
-   * 
    * @see CatchUpEvent
    * @see #catchUpEvent
    * @see #getEventList
    * @see #eventsScheduled
    * 
    */
-  protected final void cancelCatchUpEvent (final double time)
+  protected final void cancelCatchUpEvent ()
   {
     getEventList ().remove (this.catchUpEvent);
     this.eventsScheduled.remove (this.catchUpEvent);
@@ -699,164 +730,20 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   
   /** Reschedules a catch-up event.
    * 
-   * @param time          The current time.
-   * @param mustBePresent For sanity checking; if <code>true</code>, a <i>single</i> catch-up event
-   *                        <i>must</i> currently be scheduled on the event list.
-   * @param mustBeAbsent  For sanity checking; if <code>true</code>, <i>no</i> catch-up event
-   *                        must currently be scheduled on the event list.
-   * 
-   * @throws IllegalArgumentException If <code>mustBePresent</code> and <code>mustBeAbsent</code> are both <code>true</code>.
-   * 
+   * @see #cancelCatchUpEvent
    * @see #getTimeToCatchUp
    * @see CatchUpEvent
    * @see #catchUpEvent
    * 
    */
-  protected final void rescheduleCatchUpEvent (final double time, final boolean mustBePresent, final boolean mustBeAbsent)
+  protected final void rescheduleCatchUpEvent ()
   {
-    if (mustBePresent && mustBeAbsent)
-      throw new IllegalArgumentException ();
-    final boolean isPresent = this.eventsScheduled.contains (this.catchUpEvent);
-    if (mustBePresent && ! isPresent)
-      throw new IllegalStateException ();
-    if (mustBeAbsent && isPresent)
-      throw new IllegalStateException ();
-    if (isPresent)
-      getEventList ().remove (this.catchUpEvent);
-    getEventList ().schedule (time + getTimeToCatchUp (), this.catchUpEvent);
-    this.eventsScheduled.add (this.catchUpEvent);
+    cancelCatchUpEvent ();
+    if (this.obtainedServiceTimeMap.size () >= 2)
+    {
+      getEventList ().schedule (getLastUpdateTime () + getTimeToCatchUp (), this.catchUpEvent);
+      this.eventsScheduled.add (this.catchUpEvent);
+    }
   }
     
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // RESCHEDULE AFTER QUEUE EVENT (CENTRAL RESCHEDULING METHOD)
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Reschedules after a (major) queue event (arrival, catch-up, departure, revocation or new server-access credits).
-   * 
-   * <p>
-   * Core rescheduling method for {@link CUPS}.
-   * 
-   * <p>
-   * This method
-   * <ul>
-   * <li>Removes any pending departure event for an exiting job (if any).
-   *     This is not necessary for departing jobs, but <i>it is</i> for revoked jobs, and this method cannot tell the difference
-   *     between the two.
-   * <li>Removes any pending catch-up event.
-   * <li>Unless we are invoked as a result of a catch-up,
-   *     admits jobs for service based upon the number of jobs waiting and the remaining number of server access credits.
-   *     Waiting jobs are admitted to the server in order of arrival (which is only relevant in the presence of finite
-   *     server-access credits). The server-access credits taken and the jobs started are <i>not</i> reported at this stage.
-   *     The started jobs are inserted into {@link #jobsInServiceArea} and into the internal administration.
-   *     If the started job has zero requested service time, it departs immediately.
-   * <li>Reschedules if needed (at least one job in the service area) the single departure event for the job
-   *     in {@link #getJobsExecuting} with the smallest required service time through {@link #rescheduleDepartureEvent}.
-   * <li>Reschedules if needed (at least two job in the service area with different obtained service times)
-   *     the single catch-up event through {@link #rescheduleCatchUpEvent}.
-   * <li>Reports started jobs (if applicable).
-   * <li>Reports if out of server-access credits.
-   * </ul>
-   * 
-   * @param time    The current time (of the event).
-   * @param aJob    The job that arrived, <code>null</code> if the event was not an arrival.
-   * @param eJob    The job that exited (departed or successfully revoked),
-   *                <code>null</code> if the event was not the exit of a job.
-   * @param catchUp Whether rescheduling due to a catch-up.
-   * 
-   * @see #jobQueue
-   * @see #jobsInServiceArea
-   * @see #cancelDepartureEvent
-   * @see #cancelCatchUpEvent
-   * @see #hasServerAcccessCredits
-   * @see #takeServerAccessCredit
-   * @see #rescheduleDepartureEvent
-   * @see #rescheduleCatchUpEvent
-   * @see #fireStart
-   * @see #fireDeparture
-   * @see #fireIfNewServerAccessCreditsAvailability
-   * @see #fireIfNewNoWaitArmed
-   * 
-   */
-  protected final void rescheduleAfterQueueEvent (final double time, final J aJob, final J eJob, final boolean catchUp)
-  {
-    if (  (aJob != null && eJob != null)
-       || (aJob != null && catchUp)
-       || (eJob != null && catchUp))
-      throw new IllegalArgumentException ();
-    boolean departureEventMustBePresent = ! this.jobsInServiceArea.isEmpty ();
-    boolean departureEventMustBeAbsent = ! departureEventMustBePresent;
-    final int creditsOld = getServerAccessCredits ();
-    if (aJob != null)
-    {
-      if (! this.jobQueue.contains (aJob))
-        throw new IllegalStateException ();
-      if (this.jobsInServiceArea.contains (aJob))
-        throw new IllegalStateException ();
-    }
-    else if (eJob != null)
-    {
-      if (this.jobQueue.contains (eJob))
-        throw new IllegalStateException ();
-      if (this.jobsInServiceArea.contains (eJob))
-        throw new IllegalStateException ();
-      final Set<DefaultDepartureEvent<J, Q>> departureEvents = getDepartureEvents ();
-      if (departureEvents == null)
-        throw new RuntimeException ();
-      if (departureEvents.size () > 1)
-        throw new IllegalStateException ();
-      if (departureEvents.size () == 1 && departureEvents.iterator ().next ().getObject () == eJob)
-        cancelDepartureEvent (eJob);
-      departureEventMustBePresent = (departureEvents.size () > 0);
-      departureEventMustBeAbsent = ! departureEventMustBePresent;
-    }
-    else if (catchUp)
-    {
-      departureEventMustBePresent = true;
-      departureEventMustBeAbsent = false;
-    }
-    cancelCatchUpEvent (time);
-    // Scheduling section; make sure we do not issue notifications.
-    final Set<J> startedJobs = new LinkedHashSet<> ();
-    final Set<J> departedJobs = new LinkedHashSet<> ();
-    if (! catchUp)
-    {
-      while (hasServerAcccessCredits () && hasJobsInWaitingArea ())
-      {
-        takeServerAccessCredit (false);
-        final J job = getFirstJobInWaitingArea ();
-        if (job == null)
-          throw new IllegalStateException ();
-        final double jobServiceTime = job.getServiceTime (this);
-        if (jobServiceTime < 0)
-          throw new RuntimeException ();
-        startJobInternalAdministration (job, jobServiceTime);
-        this.jobsInServiceArea.add (job);
-        // Defer notifications until we are in a valid state again.
-        startedJobs.add (job);
-        if (jobServiceTime == 0.0)
-        {
-          removeJobFromQueueUponDeparture (job, time);
-          job.setQueue (null);
-          departedJobs.add (job);
-        }
-      }
-    }
-    if (getNumberOfJobsInServiceArea () > 0)
-    {
-      rescheduleDepartureEvent (time, departureEventMustBePresent, departureEventMustBeAbsent);
-      if (this.obtainedServiceTimeMap.size () >= 2)
-        rescheduleCatchUpEvent (time, false, true);
-    }
-    sanityInternalAdministration ();
-    // Notification section.
-    for (final J j : startedJobs)
-      fireStart (time, j, (Q) this);
-    for (final J j : departedJobs)
-      fireDeparture (time, j, (Q) this);
-    fireIfNewServerAccessCreditsAvailability (time);
-    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
-  }
-  
 }
