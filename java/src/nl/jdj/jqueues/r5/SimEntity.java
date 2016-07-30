@@ -27,9 +27,12 @@ import nl.jdj.jsimulation.r5.SimEventListResetListener;
  * <ul>
  * <li>holding the underlying event list ({@link SimEventList}), which may be <code>null</code> on non-{@link SimQueue}s,
  * <li>registering as a {@link SimEventListResetListener} to a non-<code>null</code> {@link SimEventList},
+ * <li>naming,
  * <li>maintaining listeners ({@link SimEntityListener}),
  * <li>propagating reset events on the {@link SimEventList} to {@link SimEntityListener}s through {@link #resetEntity},
- * <li>naming.
+ * <li>supporting (deferred) actions to take immediately after notifying listeners
+ *     (supported because, as by contract of {@link SimEntity} and {@link SimEntityListener},
+ *     listeners are not allowed to initiate queue operations).
  * </ul>
  * 
  * @param <J> The type of {@link SimJob}s supported.
@@ -136,7 +139,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // MAIN OPERATIONS
+  // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -145,6 +148,9 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * <p>
    * This method is used in order to restart a simulation.
    * By contract, a {@link SimEntity} must reset if its underlying {@link SimEventList} resets.
+   * However, a {@link SimEntity} can also be reset independently from the event list.
+   * In the latter case, it takes its current time from the event list, if available,
+   * or to {@link Double#NEGATIVE_INFINITY} otherwise.
    * 
    * <p>
    * Implementations must ensure that only a single {@link SimEntityListener#notifyResetEntity} is invoked <i>after</i>
@@ -154,5 +160,33 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * 
    */
   public void resetEntity ();
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ACTION (AFTER NOTIFICATIONS)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** An action for use in {@link #doAfterNotifications}.
+   * 
+   */
+  @FunctionalInterface
+  interface Action
+  {
+    /** Performs the action.
+     * 
+     */
+    void execute ();
+  }
+  
+  /** Registers an {@link Action} to be taken once this entity has finished issuing notifications,
+   *  or takes the action immediately if this entity is not notifying listeners.
+   * 
+   * @param action The action to take, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the action is {@code null}.
+   * 
+   */
+  void doAfterNotifications (Action action);
   
 }

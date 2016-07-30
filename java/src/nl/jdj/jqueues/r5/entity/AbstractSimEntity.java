@@ -1,16 +1,22 @@
 package nl.jdj.jqueues.r5.entity;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.DoubleConsumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimEntityListener;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueueBase;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** An implementation of the common part of a {@link SimJob} and a {@link SimQueue}.
@@ -20,12 +26,14 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * with special treatment for {@link SimQueue} and {@link SimJob} main operations,
  * in the sense that a {@link SimQueue} will automatically notify listeners on {@link SimJob}s about the main operations
  * (arrival, start, drop, revocation, departure).
+ * To that extent, this class implements a registration mechanism for event notifications
+ * (as subclasses may introduce new event types, and listener extensions).
  * 
  * <p>
  * For a more complete (though still partial) implementations of jobs, see {@link AbstractSimJob}.
+ * 
  * <p>
- * For more complete (though still partial) implementations of queues,
- * see {@link AbstractSimQueueBase} and {@link AbstractSimQueue}.
+ * For more complete (though still partial) implementations of queues, see {@link AbstractSimQueue}.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -40,6 +48,14 @@ implements SimEntity<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // LOGGER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private static final Logger LOGGER = Logger.getLogger (AbstractSimEntity.class.getName ());
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // CONSTRUCTORS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +63,7 @@ implements SimEntity<J, Q>
   /** Creates a new {@link SimEntity} with given event list and name.
    * 
    * @param eventList The event list to use, may be {@code null}.
-   * @param name The name of the entity, may be <code>null</code>.
+   * @param name      The name of the entity, may be <code>null</code>.
    * 
    * @see #getEventList
    * @see #setName
@@ -59,6 +75,13 @@ implements SimEntity<J, Q>
   {
     this.eventList = eventList;
     setName (name);
+    registerNotificationType (SimEntitySimpleEventType.RESET, this::fireReset);
+    registerNotificationType (SimEntitySimpleEventType.ARRIVAL, this::fireArrival);
+    registerNotificationType (SimEntitySimpleEventType.START, this::fireStart);
+    registerNotificationType (SimEntitySimpleEventType.DROP, this::fireDrop);
+    registerNotificationType (SimEntitySimpleEventType.REVOCATION, this::fireRevocation);
+    registerNotificationType (SimEntitySimpleEventType.AUTO_REVOCATION, this::fireAutoRevocation);
+    registerNotificationType (SimEntitySimpleEventType.DEPARTURE, this::fireDeparture);
     if (this.eventList != null)
       this.eventList.addListener (this);
     if ((this instanceof SimQueue) && (this instanceof SimJob))
@@ -71,6 +94,8 @@ implements SimEntity<J, Q>
    * 
    * @see #getEventList
    * @see #setName
+   * 
+   * @throws IllegalArgumentException If this object is both a {@link SimQueue} <i>and</i> a {@link SimJob}.
    * 
    */
   public AbstractSimEntity (final SimEventList eventList)
@@ -192,9 +217,12 @@ implements SimEntity<J, Q>
    * Implementation of {@link SimEntity#resetEntity} in subclasses <i>without</i> notifying listeners.
    * 
    * <p>
-   * As it is essential to issue a <i>single</i> {@link SimEntityListener#notifyResetEntity} <i>after</i> the state has
-   * been set to its initial setting, the implementation of {@link SimEntity#resetEntity} has been made final
+   * As it is essential to issue a <i>single</i> {@link SimEntityListener#notifyStateChanged} and a single
+   * {@link SimEntityListener#notifyResetEntity} <i>after</i> the state has
+   * been set to its initial setting.
+   * The implementation of {@link SimEntity#resetEntity} has been made final
    * in order to ensure this.
+   * This current method is intended to be used by subclasses to perform the reset.
    * 
    * @see SimEntity#resetEntity
    * 
@@ -204,7 +232,9 @@ implements SimEntity<J, Q>
     /* EMPTY */
   }
   
-  /** Copies the last-update time from the event list and invokes {@link #resetEntitySubClass} and {@link #fireResetEntity}.
+  /** Copies the last-update time from the event list (if available),
+   *  invokes {@link #resetEntitySubClass} and fires the event to listeners (as a state-change event and through a
+   *  separate reset indication).
    * 
    * <p>
    * If the reset is the result of an event-list reset, this takes the new "start time" from the event list,
@@ -212,22 +242,32 @@ implements SimEntity<J, Q>
    * In the (more unlikely) case of an autonomous reset of the entity, copying the last update time from the
    * event list (before notifying listeners) assures that statistics-gathering listeners restart their jobs from
    * the current time.
+   * If no event list is available, the last update time is set to {@link Double#NEGATIVE_INFINITY}.
    * 
    * <p>
    * This method is <code>final</code>; use {@link #resetEntitySubClass} to override/augment behavior.
    * 
    * @see #getLastUpdateTime
    * @see #resetEntitySubClass
-   * @see #notifyEventListReset
+   * @see SimEntityListener#notifyStateChanged
+   * @see SimEntityListener#notifyResetEntity
    * 
    */
   @Override
   public final void resetEntity ()
   {
-    // this.lastUpdateTime = Double.NEGATIVE_INFINITY;
-    this.lastUpdateTime = getEventList ().getTime ();
+    if (getEventList () != null)
+      this.lastUpdateTime = getEventList ().getTime ();
+    else
+      this.lastUpdateTime = Double.NEGATIVE_INFINITY;
+    this.pendingNotifications.clear ();
+    this.pendingNotificationsLocked = true;
+    this.firingPendingNotifications = false;
+    this.postNotificationActions.clear ();
     resetEntitySubClass ();
-    fireResetEntity (this);
+    clearAndUnlockPendingNotifications ();
+    addPendingNotification (SimEntitySimpleEventType.RESET, null);
+    fireAndLockPendingNotifications ();
   }
   
   /** Calls {@link #resetEntity}.
@@ -255,8 +295,10 @@ implements SimEntity<J, Q>
 
   /** Gets the time of the last update of this entity.
    * 
-   * <p>Upon construction, the last-update time is set to minus infinity, mimicking the behavior of {@link SimEventList}.
-   * Upon an explicit reset of this entity, the last-update time is copied from the event list.
+   * <p>
+   * Upon construction, the last-update time is set to minus infinity, mimicking the behavior of {@link SimEventList}.
+   * Upon an explicit reset of this entity, the last-update time is copied from the event list, if available
+   * (or reset to {@link Double#NEGATIVE_INFINITY} otherwise).
    * In all other cases, the time returned corresponds to the time argument of the last update of the entity,
    * see {@link SimEntityListener#notifyUpdate} for more details.
    * 
@@ -356,6 +398,9 @@ implements SimEntity<J, Q>
    * The hook should <i>never</i> initiate state-change events or notify listeners.
    * 
    * <p>
+   * Pre-event hooks are <i>not</i> invoked upon a reset.
+   * 
+   * <p>
    * The argument passed to the {@link DoubleConsumer} is the <i>new</i> time,
    * see {@link #update}, which obviously has not been set yet on the object.
    * The "old" time is available through {@link #getLastUpdateTime}.
@@ -377,42 +422,21 @@ implements SimEntity<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE CHANGED
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-  /** Internal notification that the entity's state has changed, requiring notifications.
-   * 
-   * @param time The time of the state change (i.c., the current time).
-   * 
-   * @see SimEntityListener#notifyStateChanged
-   * @see #fireStateChanged
-   * 
-   */
-  protected final void stateChanged (final double time)
-  {
-    if (time < this.lastUpdateTime)
-      throw new IllegalStateException ();
-    fireStateChanged (time);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
   // EVENT NOTIFICATIONS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Notifies all listeners of a reset.
+  /** Notifies all listeners of a reset of this {@link SimEntity}.
    *
-   * @param entity The {@link SimEntity} that received the reset.
+   * @param job Unused.
    *
    * @see SimEntityListener#notifyResetEntity
    * 
    */
-  protected final void fireResetEntity (final SimEntity<J, Q> entity)
+  private void fireReset (final SimJob job)
   {
     for (SimEntityListener<J, Q> l : this.simEntityListeners)
-      l.notifyResetEntity (entity);
+      l.notifyResetEntity (this);
   }
   
   /** Notifies all listeners upon an immediate upcoming update at this entity.
@@ -422,23 +446,10 @@ implements SimEntity<J, Q>
    * @see SimEntityListener#notifyUpdate
    * 
    */
-  protected final void fireUpdate (final double time)
+  private void fireUpdate (final double time)
   {
     for (SimEntityListener<J, Q> l : getSimEntityListeners ())
       l.notifyUpdate (time, this);
-  }
-  
-  /** Notifies all listeners upon an immediate upcoming update at this entity.
-   *
-   * @param time The current time, which has not been set yet on this entity.
-   *
-   * @see SimEntityListener#notifyStateChanged
-   * 
-   */
-  protected final void fireStateChanged (final double time)
-  {
-    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
-      l.notifyStateChanged (time, this);
   }
   
   /** Notifies all listeners of a job arrival at a queue.
@@ -446,18 +457,22 @@ implements SimEntity<J, Q>
    * <p>
    * A {@link SimQueue} will automatically propagate notifications to the listeners on the {@link SimJob} as well.
    * 
-   * @param time  The current time.
-   * @param job   The job.
-   * @param queue The queue.
+   * @param job The job.
    * 
    * @see SimEntityListener#notifyArrival
    * 
    */
-  protected final void fireArrival (final double time, final J job, final Q queue)
+  private void fireArrival (final J job)
   {
+    final double time = getLastUpdateTime ();
+    final Q queue;
+    if (this instanceof SimQueue)
+      queue = (Q) this;
+    else
+      queue = (Q) job.getQueue ();
     for (SimEntityListener<J, Q> l : getSimEntityListeners ())
       l.notifyArrival (time, job, queue);
-    if ((this instanceof SimQueue) && (queue == this) && (job != null))
+    if ((this instanceof SimQueue) && (job != null))
       for (SimEntityListener<J, Q> l : ((SimJob<J, Q>) job).getSimEntityListeners ())
         l.notifyArrival (time, job, queue);
   }
@@ -467,18 +482,22 @@ implements SimEntity<J, Q>
    * <p>
    * A {@link SimQueue} will automatically propagate notifications to the listeners on the {@link SimJob} as well.
    * 
-   * @param time  The current time.
-   * @param job   The job.
-   * @param queue The queue.
+   * @param job The job.
    * 
    * @see SimEntityListener#notifyStart
    * 
    */
-  protected final void fireStart (final double time, final J job, final Q queue)
+  private void fireStart (final J job)
   {
-    for (SimEntityListener<J, Q> l : this.simEntityListeners)
+    final double time = getLastUpdateTime ();
+    final Q queue;
+    if (this instanceof SimQueue)
+      queue = (Q) this;
+    else
+      queue = (Q) job.getQueue ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
       l.notifyStart (time, job, queue);
-    if ((this instanceof SimQueue) && (queue == this) && (job != null))
+    if ((this instanceof SimQueue) && (job != null))
       for (SimEntityListener<J, Q> l : ((SimJob<J, Q>) job).getSimEntityListeners ())
         l.notifyStart (time, job, queue);
   }
@@ -488,18 +507,22 @@ implements SimEntity<J, Q>
    * <p>
    * A {@link SimQueue} will automatically propagate notifications to the listeners on the {@link SimJob} as well.
    * 
-   * @param time  The current time.
-   * @param job   The job.
-   * @param queue The queue.
+   * @param job The job.
    *
    * @see SimEntityListener#notifyDrop
    * 
    */
-  protected final void fireDrop (final double time, final J job, final Q queue)
+  private void fireDrop (final J job)
   {
-    for (SimEntityListener<J, Q> l : this.simEntityListeners)
+    final double time = getLastUpdateTime ();
+    final Q queue;
+    if (this instanceof SimQueue)
+      queue = (Q) this;
+    else
+      queue = (Q) job.getQueue ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
       l.notifyDrop (time, job, queue);
-    if ((this instanceof SimQueue) && (queue == this) && (job != null))
+    if ((this instanceof SimQueue) && (job != null))
       for (SimEntityListener<J, Q> l : ((SimJob<J, Q>) job).getSimEntityListeners ())
         l.notifyDrop (time, job, queue);
   }
@@ -509,20 +532,49 @@ implements SimEntity<J, Q>
    * <p>
    * A {@link SimQueue} will automatically propagate notifications to the listeners on the {@link SimJob} as well.
    * 
-   * @param time  The current time.
-   * @param job   The job.
-   * @param queue The queue.
+   * @param job The job.
    *
    * @see SimEntityListener#notifyRevocation
    * 
    */
-  protected final void fireRevocation (final double time, final J job, final Q queue)
+  private void fireRevocation (final J job)
   {
-    for (SimEntityListener<J, Q> l : this.simEntityListeners)
+    final double time = getLastUpdateTime ();
+    final Q queue;
+    if (this instanceof SimQueue)
+      queue = (Q) this;
+    else
+      queue = (Q) job.getQueue ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
       l.notifyRevocation (time, job, queue);
-    if ((this instanceof SimQueue) && (queue == this) && (job != null))
+    if ((this instanceof SimQueue) && (job != null))
       for (SimEntityListener<J, Q> l : ((SimJob<J, Q>) job).getSimEntityListeners ())
         l.notifyRevocation (time, job, queue);
+  }
+  
+  /** Notifies all listeners of a job auto-revocation at a queue.
+   *
+   * <p>
+   * A {@link SimQueue} will automatically propagate notifications to the listeners on the {@link SimJob} as well.
+   * 
+   * @param job The job.
+   *
+   * @see SimEntityListener#notifyAutoRevocation
+   * 
+   */
+  private void fireAutoRevocation (final J job)
+  {
+    final double time = getLastUpdateTime ();
+    final Q queue;
+    if (this instanceof SimQueue)
+      queue = (Q) this;
+    else
+      queue = (Q) job.getQueue ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      l.notifyAutoRevocation (time, job, queue);
+    if ((this instanceof SimQueue) && (job != null))
+      for (SimEntityListener<J, Q> l : ((SimJob<J, Q>) job).getSimEntityListeners ())
+        l.notifyAutoRevocation (time, job, queue);
   }
   
   /** Notifies all listeners of a job departure at a queue.
@@ -537,13 +589,362 @@ implements SimEntity<J, Q>
    * @see SimEntityListener#notifyDeparture
    * 
    */
-  protected final void fireDeparture (final double time, final J job, final Q queue)
+  private void fireDeparture (final J job)
   {
-    for (SimEntityListener<J, Q> l : this.simEntityListeners)
+    final double time = getLastUpdateTime ();
+    final Q queue;
+    if (this instanceof SimQueue)
+      queue = (Q) this;
+    else
+      queue = (Q) job.getQueue ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
       l.notifyDeparture (time, job, queue);
-    if ((this instanceof SimQueue) && (queue == this) && (job != null))
+    if ((this instanceof SimQueue) && (job != null))
       for (SimEntityListener<J, Q> l : ((SimJob<J, Q>) job).getSimEntityListeners ())
         l.notifyDeparture (time, job, queue);
   }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NOTIFICATION MAP
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** A function interface for a notification handler.
+   * 
+   * @param <J> The type of job supported.
+   * 
+   */
+  @FunctionalInterface
+  public interface Notifier<J extends SimJob>
+  {
+    
+    /** Fires the notification to all relevant listeners.
+     * 
+     * @param job The job, may be {@code null} for non-visit-related notifications (e.g., queue-access vacations).
+     * 
+     */
+    void fire (J job);
+    
+  }
+  
+  /** The mapping between a notification type (reset, arrival, departures, etc.) and a {@link Notifier} for it.
+   * 
+   */
+  private final Map<SimEntitySimpleEventType.Member, Notifier<J>> notificationMap = new LinkedHashMap<> ();
+  
+  /** Registers a mapping between a notification type (reset, arrival, departures, etc.) and a {@link Notifier} for it.
+   * 
+   * @param notificationType The notification type; non-{@code null} and not yet registered.
+   * @param notifier         The {@link Notifier} for it, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If any of the arguments is {@code null}, or a notifier is already registered for given type.
+   * 
+   */
+  protected final void registerNotificationType
+  (final SimEntitySimpleEventType.Member notificationType, final Notifier<J> notifier)
+  {
+    if (notificationType == null || notifier == null)
+      throw new IllegalArgumentException ();
+    if (this.notificationMap.containsKey (notificationType))
+      throw new IllegalArgumentException ();
+    this.notificationMap.put (notificationType, notifier);
+  }
+ 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // PRE-NOTIFICATION HOOKS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** A functional interface for a hook to be called before notifications are sent (i.e., before a state change is advertised).
+   * 
+   * <p>
+   * A pre-notification hook allows sub-classes to modify the pending notifications (for whatever reason),
+   * but it is typically used to automatically detect state-changes that are not explicitly dealt with otherwise.
+   * 
+   * @param <J> The type of job supported.
+   * 
+   */
+  @FunctionalInterface
+  public interface PreNotificationHook<J extends SimJob>
+  {
+
+    /** Invokes the hook.
+     * 
+     * @param pendingNotifications The pending notifications (may be changed).
+     * 
+     */
+    void hook (List<Map<SimEntitySimpleEventType.Member, J>> pendingNotifications);
+
+  }
+  
+  /** The registered pre-notification hooks.
+   * 
+   */
+  private final Set<PreNotificationHook<J>> preNotificationHooks = new LinkedHashSet<> ();
+
+  /** Registers a pre-notification hook.
+   * 
+   * @param preNotificationHook The hook, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the hook is {@code null} or already registered.
+   * 
+   */  
+  protected final void registerPreNotificationHook (final PreNotificationHook<J> preNotificationHook)
+  {
+    if (preNotificationHook == null || this.preNotificationHooks.contains (preNotificationHook))
+      throw new IllegalArgumentException ();
+    this.preNotificationHooks.add (preNotificationHook);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // POST-NOTIFICATION ACTIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The actions to take immediately after firing pending notifications has ended.
+   * 
+   */
+  private final List<Action> postNotificationActions = new ArrayList<> ();
+  
+  /** Adds a (one-time) action to take immediately after firing pending notifications has ended.
+   * 
+   * <p>
+   * If this entity is not firing notifications, the action is invoked immediately.
+   * 
+   * @param action The action to take, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the action is {@code null}.
+   * 
+   * @see #fireAndLockPendingNotifications
+   * 
+   */
+  @Override
+  public final void doAfterNotifications (final Action action)
+  {
+    if (action == null)
+      throw new IllegalArgumentException ();
+    if (! this.firingPendingNotifications)
+      action.execute ();
+    else
+      this.postNotificationActions.add (action);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // PENDING NOTIFICATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The pending notifications for this entity, mapped onto the associated job (if applicable).
+   * 
+   */
+  private final List<Map<SimEntitySimpleEventType.Member, J>> pendingNotifications = new ArrayList<> ();
+  
+  /** The time corresponding to the pending notifications (which all share the same time).
+   * 
+   */
+  private double pendingNotificationsTime = Double.NEGATIVE_INFINITY;
+  
+  /** Whether the pending notifications are locked (no longer mutable).
+   * 
+   * <p>
+   * Pending notifications are locked the moment they are being fired to listeners,
+   * and remain locked until a top-level entity event unlocks it.
+   * 
+   */
+  private boolean pendingNotificationsLocked = true;
+  
+  /** Whether this entity is firing notifications.
+   * 
+   * <p>
+   * A flag used to prevent modifications to the pending notifications from within listeners.
+   * 
+   * @see SimEntity#doAfterNotifications
+   * 
+   */
+  private boolean firingPendingNotifications = false;
+  
+  /** Adds a notification to the pending notifications.
+   * 
+   * @param notification The notification, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the notification is {@code null}, if the map is of illegal size (other than unity),
+   *                                  or has a {@code null} key, if the notification is already present or has time different
+   *                                  from the pending-notifications time,
+   *                                  if this entity is locked for pending notifications mutations,
+   *                                  or is currently firing notifications.
+   * 
+   */
+  protected final void addPendingNotification (final Map<SimEntitySimpleEventType.Member, J> notification)
+  {
+    if (notification == null
+    ||  notification.size () != 1
+    ||  notification.containsKey (null)
+    || this.pendingNotifications.contains (notification)
+    || ((! this.pendingNotifications.isEmpty ()) && getLastUpdateTime () != this.pendingNotificationsTime)
+    || this.pendingNotificationsLocked
+    || this.firingPendingNotifications)
+      throw new IllegalArgumentException ();
+    if (this.pendingNotifications.isEmpty ())
+      this.pendingNotificationsTime = getLastUpdateTime ();
+    if (containsPendingNotification (notification))
+      LOGGER.log (Level.WARNING, "Attempt to re-enter notification {0}@{1}!", new Object[]{notification, this});
+    else
+      this.pendingNotifications.add (notification);
+  }
+  
+  /** Adds a notification to the pending notifications.
+   * 
+   * <p>
+   * Convenience method to {@link #addPendingNotification(java.util.Map)} creating a singleton map from the arguments on the fly.
+   * 
+   * @param notificationType The notification type, non-{@code null}.
+   * @param job              The associated job, if applicable; may be {@code null} for non-visit related notifications.
+   * 
+   * @throws IllegalArgumentException If the notification type is {@code null} or if
+   *                                  {@link #addPendingNotification(java.util.Map)} encounters an error in the arguments.
+   * 
+   */
+  protected final void addPendingNotification (final SimEntitySimpleEventType.Member notificationType, final J job)
+  {
+    if (notificationType == null)
+      throw new IllegalArgumentException ();
+    addPendingNotification (Collections.singletonMap (notificationType, job));
+  }
+  
+  /** Checks if a notification is already registered in the pending notifications.
+   * 
+   * @param notification The notification.
+   * 
+   * @return True if the notification is already pending.
+   * 
+   * @throws IllegalArgumentException If there is an error in the arguments.
+   * 
+   */
+  private boolean containsPendingNotification (final Map<SimEntitySimpleEventType.Member, J> notification)
+  {
+    if (notification == null
+    ||  notification.size () != 1
+    ||  notification.containsKey (null))
+      throw new IllegalArgumentException ();
+    final SimEntitySimpleEventType.Member eventType = notification.keySet ().iterator ().next ();
+    final J job = notification.values ().iterator ().next ();
+    for (final Map<SimEntitySimpleEventType.Member, J> member : this.pendingNotifications)
+      if (member.keySet ().iterator ().next () == eventType
+      &&  member.values ().iterator ().next () == job)
+        return true;
+    return false;
+  }
+  
+  /** Clears the pending notifications and unlocks them.
+   * 
+   * @throws IllegalStateException If this entity is currently firing notifications.
+   * 
+   * @see #firingPendingNotifications
+   * 
+   */
+  private void clearAndUnlockPendingNotifications ()
+  {
+    if (this.firingPendingNotifications)
+      throw new IllegalStateException ();
+    this.pendingNotifications.clear ();
+    this.pendingNotificationsLocked = false;
+  }
+  
+  /** Clears the pending notifications and unlocks them if needed (i.e., if currently locked).
+   * 
+   * <p>
+   * This method does nothing if the pending notifications are already locked.
+   * 
+   * @return True if the entity was locked beforehand.
+   * 
+   * @throws IllegalStateException If this entity is currently firing notifications.
+   * 
+   * @see #firingPendingNotifications
+   * 
+   */
+  protected final boolean clearAndUnlockPendingNotificationsIfLocked ()
+  {
+    if (this.firingPendingNotifications)
+      throw new IllegalStateException ();
+    final boolean isLocked = this.pendingNotificationsLocked;
+    if (isLocked)
+      clearAndUnlockPendingNotifications ();
+    return isLocked;
+  }
+  
+  /** Fires and locks the pending notifications to listeners.
+   * 
+   * <p>
+   * Fires, if present, pre-notification hooks and post-notification actions.
+   * The post-notification actions are cleared.
+   * 
+   * @throws IllegalStateException If the time of pending notifications is not equal to {@link #getLastUpdateTime},
+   *                               if this entity is currently firing notifications (already).
+   * 
+   * @see #registerPreNotificationHook
+   * @see #doAfterNotifications
+   * 
+   */
+  protected final void fireAndLockPendingNotifications ()
+  {
+    if ((! this.pendingNotifications.isEmpty ()) && this.pendingNotificationsTime != getLastUpdateTime ())
+      throw new IllegalStateException ();
+    if (this.firingPendingNotifications)
+      throw new IllegalStateException ();
+    this.pendingNotificationsLocked = true;
+    this.firingPendingNotifications = true;
+    final boolean isResetNotification = (this.pendingNotifications.size () == 1
+                                        && this.pendingNotifications.get (0).containsKey (SimEntitySimpleEventType.RESET));
+    if (! isResetNotification)
+      for (final PreNotificationHook preNotificationHook : this.preNotificationHooks)
+        preNotificationHook.hook (this.pendingNotifications);
+    final double time = getLastUpdateTime ();
+    for (SimEntityListener l : this.simEntityListeners)
+      l.notifyStateChanged (time, this, this.pendingNotifications);
+    for (final Map<SimEntitySimpleEventType.Member, J> notification : this.pendingNotifications)
+    {
+      final SimEntitySimpleEventType.Member notificationType = notification.keySet ().iterator ().next ();
+      final J job = notification.values ().iterator ().next ();
+      if (! this.notificationMap.containsKey (notificationType))
+        LOGGER.log (Level.WARNING, "Unknown notification type {0}.", notificationType);
+      else
+        this.notificationMap.get (notificationType).fire (job);
+    }
+    if (this instanceof SimQueue)
+    {
+      final Map<J, List<Map<SimEntitySimpleEventType.Member, J>>> jobNotifications = new LinkedHashMap<> ();
+      for (final Map<SimEntitySimpleEventType.Member, J> notification : this.pendingNotifications)
+      {
+        final J job = notification.values ().iterator ().next ();
+        if (job != null && (job instanceof AbstractSimEntity))
+        {
+          if (! jobNotifications.containsKey (job))
+            jobNotifications.put (job, new ArrayList<> ());
+          jobNotifications.get (job).add (notification);
+        }
+      }
+      for (final Map.Entry<J, List<Map<SimEntitySimpleEventType.Member, J>>> entry : jobNotifications.entrySet ())
+      {
+        final J job = entry.getKey ();
+        final List<Map<SimEntitySimpleEventType.Member, J>> notifications = entry.getValue ();
+        final Set<SimEntityListener> listeners = job.getSimEntityListeners ();
+        for (final SimEntityListener l : listeners)
+          l.notifyStateChanged (time, job, notifications);
+      }
+    }
+    this.firingPendingNotifications = false;
+    while (! this.postNotificationActions.isEmpty ())
+      this.postNotificationActions.remove (0).execute ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
 }
