@@ -1,9 +1,12 @@
 package nl.jdj.jqueues.r5.util.stat;
 
+import java.util.List;
+import java.util.Map;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.SimQueueListener;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 
 /** An abstract base class for automatically gathering statistics on a {@link SimQueue}.
  *
@@ -350,7 +353,8 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void notifyStateChanged (final double time, final SimEntity entity)
+  public void notifyStateChanged
+  (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member, J>> notifications)
   {
   }
 
@@ -383,6 +387,14 @@ implements SimQueueListener<J, Q>
    */
   @Override
   public void notifyRevocation (final double time, final J job, final Q queue)
+  {
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public void notifyAutoRevocation (final double time, final J job, final Q queue)
   {
   }
 
