@@ -1,8 +1,11 @@
 package nl.jdj.jqueues.r5.entity.queue;
 
+import java.util.List;
+import java.util.Map;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJobListener;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.misc.example.DefaultExampleSimJob;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -106,7 +109,8 @@ implements SimJobListener<J, Q>
   }
 
   @Override
-  public void notifyStateChanged (final double time, final SimEntity entity)
+  public void notifyStateChanged
+  (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member,J>> notifications)
   {
   }
 
@@ -192,6 +196,12 @@ implements SimJobListener<J, Q>
       TestJob1.this.revoked= true;
       TestJob1.this.revocationTime = time;
     }
+  }
+
+  @Override
+  public void notifyAutoRevocation (final double time, final J job, final Q queue)
+  {
+    notifyRevocation (time, job, queue);
   }
 
   @Override
