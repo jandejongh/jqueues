@@ -1,5 +1,6 @@
 package nl.jdj.jqueues.r5.entity.job.visitslogging;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -8,6 +9,7 @@ import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.job.selflistening.DefaultSelfListeningSimJob;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link DefaultSimJob} that logs its {@link SimQueue} visits with {@link JobQueueVisitLog}s.
@@ -73,6 +75,10 @@ extends DefaultSelfListeningSimJob<J, Q>
     
   /** Creates a new {@link DefaultVisitsLoggingSimJob}.
    * 
+   * @param eventList               The event list.
+   * @param name                    The name.
+   * @param requestedServiceTimeMap The requested service-time map.
+   * 
    * @see DefaultSimJob#DefaultSimJob(nl.jdj.jsimulation.r5.SimEventList, java.lang.String, java.util.Map)
    *        For detailed explanation on the parameters.
    * 
@@ -83,6 +89,10 @@ extends DefaultSelfListeningSimJob<J, Q>
   }
 
   /** Creates a new {@link DefaultVisitsLoggingSimJob}.
+   * 
+   * @param eventList            The event list.
+   * @param name                 The name.
+   * @param requestedServiceTime The requested service-time.
    * 
    * @see DefaultSimJob#DefaultSimJob(nl.jdj.jsimulation.r5.SimEventList, java.lang.String, double)
    *        For detailed explanation on the parameters.
@@ -121,7 +131,8 @@ extends DefaultSelfListeningSimJob<J, Q>
    * 
    */
   @Override
-  public final void notifyStateChanged (final double time, final SimEntity entity)
+  public final void notifyStateChanged
+  (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member, J>> notifications)
   {
     /* EMPTY */
   }
