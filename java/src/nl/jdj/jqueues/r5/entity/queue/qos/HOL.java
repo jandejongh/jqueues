@@ -73,7 +73,7 @@ implements SimQueueQoS<J, Q, P>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: RESET ENTITY
+  // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -88,7 +88,7 @@ implements SimQueueQoS<J, Q, P>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: NoWaitArmed
+  // NoWaitArmed
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -107,7 +107,7 @@ implements SimQueueQoS<J, Q, P>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: ARRIVAL
+  // ARRIVAL
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -130,9 +130,11 @@ implements SimQueueQoS<J, Q, P>
     this.jobsQoSMap.get (qos).add (job);
   }
 
-  /** Invokes {@link #rescheduleAfterDeparture} passing <code>null</code> as job argument.
+  /** Starts the arrived job if server-access credits are available and if there are no jobs in the service area.
    * 
-   * @see #rescheduleAfterDeparture
+   * @see #hasServerAcccessCredits
+   * @see #getNumberOfJobsInServiceArea
+   * @see #start
    * 
    */
   @Override
@@ -142,12 +144,14 @@ implements SimQueueQoS<J, Q, P>
       throw new IllegalStateException ();
     if (this.jobsInServiceArea.contains (job))
       throw new IllegalStateException ();
-    rescheduleAfterDeparture (null, time);
+    if (hasServerAcccessCredits ()
+    &&  getNumberOfJobsInServiceArea () == 0)
+      start (time, job);
   }
     
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: DROP
+  // DROP
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -175,7 +179,7 @@ implements SimQueueQoS<J, Q, P>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: REVOCATION
+  // REVOCATION
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -216,9 +220,13 @@ implements SimQueueQoS<J, Q, P>
       this.jobsQoSMap.remove (qos);
   }
 
-  /** Invokes {@link #rescheduleAfterDeparture} passing revoked job as argument.
+  /** Starts the next job in the waiting area if server-access credits are available and if there are no jobs in the service area.
    * 
-   * @see #rescheduleAfterDeparture
+   * @see #hasServerAcccessCredits
+   * @see #hasJobsInWaitingArea
+   * @see #getNumberOfJobsInServiceArea
+   * @see #start
+   * @see #getNextJobToServeInWaitingArea
    * 
    */
   @Override
@@ -226,34 +234,86 @@ implements SimQueueQoS<J, Q, P>
   {
     if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
       throw new IllegalStateException ();
-    rescheduleAfterDeparture (job, time);
+    if (hasServerAcccessCredits ()
+    &&  hasJobsInWaitingArea ()
+    &&  getNumberOfJobsInServiceArea () == 0)
+      start (time, getNextJobToServeInWaitingArea ());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: SERVER ACCCESS CREDITS
+  // SERVER ACCCESS CREDITS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Invokes {@link #rescheduleAfterDeparture} passing <code>null</code> as job argument.
+  /** Starts the next job in the waiting area if there are no jobs in the service area.
    * 
-   * @see #rescheduleAfterDeparture
+   * @see #hasJobsInWaitingArea
+   * @see #getNumberOfJobsInServiceArea
+   * @see #start
    * 
    */
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
   {
-    rescheduleAfterDeparture (null, time);
+    if (hasJobsInWaitingArea ()
+    &&  getNumberOfJobsInServiceArea () == 0)
+      start (time, getNextJobToServeInWaitingArea ());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: DEPARTURE
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Adds the job to the tail of the service area.
+   * 
+   * @see #jobsInServiceArea
+   * 
+   */
+  @Override
+  protected final void insertJobInQueueUponStart (final J job, final double time)
+  {
+    if (job == null
+    || (! getJobs ().contains (job))
+    || getJobsInServiceArea ().contains (job))
+      throw new IllegalArgumentException ();
+    this.jobsInServiceArea.add (job);
+  }
+
+  /** Reschedules due to the start of a job, making it depart immediately if its requested service time is zero,
+   *  or rescheduling the (single) departure event of this queue otherwise.
+   * 
+   * @see SimJob#getServiceTime
+   * @see #rescheduleDepartureEvent
+   * @see #depart
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterStart (final J job, final double time)
+  {
+    if (job == null
+    || (! getJobs ().contains (job))
+    || (! getJobsInServiceArea ().contains (job)))
+      throw new IllegalArgumentException ();
+    final double jobServiceTime = job.getServiceTime (this);
+    if (jobServiceTime < 0)
+      throw new RuntimeException ();
+    if (jobServiceTime > 0)
+      rescheduleDepartureEvent ();
+    else
+      depart (time, job);
+  }
+    
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DEPARTURE
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Checks the presence of the departing job in {@link #jobQueue}, {@link #jobsInServiceArea}, and {@link #jobsQoSMap},
-   * and removes the job from those collections.
+   *  and removes the job from those collections.
    * 
    * @throws IllegalStateException If the <code>departingJob</code> is not in one of the lists.
    * 
@@ -280,88 +340,67 @@ implements SimQueueQoS<J, Q, P>
     if (this.jobsQoSMap.get (qos).isEmpty ())
       this.jobsQoSMap.remove (qos);
   }
-    
-  /** Takes a job into service if the server is idle and server-access credits available.
+
+  /** Starts the next job in the waiting area (if available) if server-access credits are available.
    * 
-   * <p>
-   * In the current implementation, this method serves as the central point for rescheduling,
-   * including after arrivals, revocations and new server-access credits.
+   * @throws IllegalStateException If there are jobs in the service area (i.e., being served).
    * 
-   * <p>
-   * If there are server-access credits, at least one jobs waiting, and the server is available,
-   * one credit is taken, and the first waiting job in {@link #jobQueue} is selected for service
-   * by using {@link #getNextJobToServeInWaitingArea}.
-   * The job's service time is requested through
-   * {@link SimJob#getServiceTime}; throwing a {@link RuntimeException} if a negative service time is returned.
-   * Subsequently, an appropriate departure event is scheduled through {@link #scheduleDepartureEvent},
-   * but no start notifications are sent at this point.
-   * If, however, the job requests zero service time, it departs immediately,
-   * and the next job in the waiting area is considered.
-   * 
-   * <p>Subsequently, listeners are notified through {@link #fireStart} if a job started
-   * (and is still present as jobs may have left due to previous notifications), and, if applicable,
-   * {@link #fireDeparture}.
-   * 
-   * <p>
-   * Finally, the server-access-credits availability and {@code noWaitArmed} state are reassessed,
-   * and changes are notified through
-   * {@link #fireIfNewServerAccessCreditsAvailability}
-   * and
-   * {@link #fireIfNewNoWaitArmed},
-   * respectively.
-   * 
-   * @see #jobQueue
-   * @see #getNumberOfJobs
-   * @see #jobsInServiceArea
    * @see #getNumberOfJobsInServiceArea
-   * @see #getNextJobToServeInWaitingArea
    * @see #hasServerAcccessCredits
-   * @see #takeServerAccessCredit
-   * @see SimJob#getServiceTime
-   * @see #scheduleDepartureEvent
-   * @see #fireStart
-   * @see #fireDeparture
-   * @see #fireIfNewServerAccessCreditsAvailability
-   * @see #fireIfNewNoWaitArmed
-   * 
+   * @see #hasJobsInWaitingArea
+   * @see #start
+   * @see #getNextJobToServeInWaitingArea
    * 
    */
   @Override
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
-    // Scheduling section; make sure we do not issue notifications.
-    final Set<J> startedJobs = new LinkedHashSet<> ();
-    final Set<J> departedJobs = new LinkedHashSet<> ();
-    while (hasServerAcccessCredits ()
-      && hasJobsInWaitingArea ()
-      && getNumberOfJobsInServiceArea () < 1)
+    if (getNumberOfJobsInServiceArea () > 0)
+      throw new IllegalStateException ();
+    if (hasServerAcccessCredits ()
+    &&  hasJobsInWaitingArea ())
+      start (time, getNextJobToServeInWaitingArea ());
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESCHEDULE DEPARTURE EVENT
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Reschedules the single departure event for this queue, departing a job immediately if its required service time is zero.
+   * 
+   * @see #getDepartureEvents
+   * @see #cancelDepartureEvent
+   * @see #jobsInServiceArea
+   * @see #getFirstJobInServiceArea
+   * @see #scheduleDepartureEvent
+   * @see #depart
+   * @see #getLastUpdateTime
+   * 
+   */
+  protected final void rescheduleDepartureEvent ()
+  {
+    final Set<DefaultDepartureEvent<J, Q>> departureEvents = getDepartureEvents ();
+    if (departureEvents == null)
+      throw new RuntimeException ();
+    if (departureEvents.size () > 1)
+      throw new IllegalStateException ();
+    if (departureEvents.size () > 0)
+      cancelDepartureEvent (departureEvents.iterator ().next ());
+    if (getNumberOfJobsInServiceArea () > 1)
+      throw new IllegalStateException ();
+    if (getNumberOfJobsInServiceArea () == 1)
     {
-      takeServerAccessCredit (false);
-      final J job = getNextJobToServeInWaitingArea ();
-      if (job == null)
-        throw new IllegalStateException ();
-      this.jobsInServiceArea.add (job);
+      final J job = getFirstJobInServiceArea ();
       final double jobServiceTime = job.getServiceTime (this);
       if (jobServiceTime < 0)
         throw new RuntimeException ();
       if (jobServiceTime > 0)
-        scheduleDepartureEvent (time + jobServiceTime, job);
+        scheduleDepartureEvent (getLastUpdateTime () + jobServiceTime, job);
       else
-      {
-        removeJobFromQueueUponDeparture (job, time);
-        job.setQueue (null);
-        departedJobs.add (job);
-      }
-      // Defer notifications until we are in a valid state again.
-      startedJobs.add (job);
+        depart (getLastUpdateTime (), job);
     }
-    // Notification section.
-    for (J j : startedJobs)
-      fireStart (time, j, (Q) this);
-    for (final J j : departedJobs)
-      fireDeparture (time, j, (Q) this);
-    fireIfNewServerAccessCreditsAvailability (time);
-    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
-
+  
 }
