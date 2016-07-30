@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.util.List;
 import java.util.Set;
 import javax.swing.JComponent;
 import nl.jdj.jqueues.r5.SimEntity;
@@ -249,10 +250,11 @@ implements SimQueueListener
   }
 
   @Override
-  public void notifyStateChanged (final double t, final SimEntity entity)
+  public void notifyStateChanged (double time, SimEntity entity, List notifications)
   {
-    notifyQueueChanged (t, (SimQueue) entity);    
+    notifyQueueChanged (time, (SimQueue) entity);    
   }
+
   
   @Override
   public void notifyArrival (final double t, final SimJob job, final SimQueue queue)
@@ -279,6 +281,12 @@ implements SimQueueListener
   {
     setRevocationInfo (t, job, queue);
     notifyQueueChanged (t, queue);
+  }
+
+  @Override
+  public void notifyAutoRevocation (final double t, final SimJob job, final SimQueue queue)
+  {
+    notifyRevocation (t, job, queue);
   }
 
   @Override
