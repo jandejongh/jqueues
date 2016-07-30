@@ -1,5 +1,7 @@
 package nl.jdj.jqueues.r5.event.simple;
 
+import nl.jdj.jqueues.r5.SimEntity;
+import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
 import nl.jdj.jqueues.r5.event.SimQueueJobDepartureEvent;
@@ -35,8 +37,7 @@ public interface SimEntitySimpleEventType
 
     private final String name;
 
-    /**
-     * Gets the (fixed) name of the event type.
+    /** Gets the (fixed) name of the event type.
      *
      * @return The (fixed) name of the event type.
      *
@@ -46,7 +47,23 @@ public interface SimEntitySimpleEventType
       return this.name;
     }
 
+    @Override
+    public String toString ()
+    {
+      if (this.name != null)
+        return this.name;
+      else
+        return super.toString ();
+    }
+    
   }
+  
+  /** An entity reset.
+   * 
+   * @see SimEntity#resetEntity
+   * 
+   */
+  public static Member RESET = new Member ("RESET");
   
   /** A job arrival.
    * 
@@ -68,6 +85,13 @@ public interface SimEntitySimpleEventType
    * 
    */
   public static Member REVOCATION = new Member ("REVOCATION");
+  
+  /** A job auto-revocation event.
+   * 
+   * @see SimQueue.AutoRevocationPolicy
+   * 
+   */
+  public static Member AUTO_REVOCATION = new Member ("AUTO_REVOCATION");
   
   /** A job start.
    * 
