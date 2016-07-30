@@ -1,9 +1,12 @@
 package nl.jdj.jqueues.r5.listener;
 
+import java.util.List;
+import java.util.Map;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimEntityListener;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 
 /** A {@link SimEntityListener} having empty implementations for all required methods to meet the interface.
  * 
@@ -37,7 +40,8 @@ implements SimEntityListener<J, Q>
    * 
    */
   @Override
-  public void notifyStateChanged (final double time, final SimEntity entity)
+  public void notifyStateChanged
+  (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member, J>> notifications)
   {
   }
 
@@ -70,6 +74,14 @@ implements SimEntityListener<J, Q>
    */
   @Override
   public void notifyRevocation (final double time, final J job, final Q queue)
+  {
+  }
+
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public void notifyAutoRevocation (final double time, final J job, final Q queue)
   {
   }
 
