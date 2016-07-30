@@ -109,18 +109,15 @@ extends AbstractServerlessSimQueue<J, Q>
     this.jobQueue.add (job);
   }
 
-  /** Removes the job from the job queue, resets the job's queue and fires a notification of the departure.
+  /** Makes the job depart.
    * 
-   * @see #arrive
-   * @see #jobQueue
+   * @see #depart
    * 
    */
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    this.jobQueue.remove (job);
-    job.setQueue (null);
-    fireDeparture (time, job, (Q) this);
+    depart (time, job);
   }
 
   /** Throws {@link IllegalStateException}.
@@ -167,26 +164,26 @@ extends AbstractServerlessSimQueue<J, Q>
     throw new IllegalStateException ();
   }
 
-  /** Throws {@link IllegalStateException}.
-   * 
-   * @throws IllegalStateException Always, as a call to this method is unexpected.
+  /** Removes the job from the {@link #jobQueue}.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    throw new IllegalStateException ();
+    if (! this.jobQueue.contains (departingJob))
+      throw new IllegalStateException ();
+    if (this.jobsInServiceArea.contains (departingJob))
+      throw new IllegalStateException ();
+    this.jobQueue.remove (departingJob);
   }
 
-  /** Throws {@link IllegalStateException}.
-   * 
-   * @throws IllegalStateException Always, as a call to this method is unexpected.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
-    throw new IllegalStateException ();
+    /* EMPTY */
   }
 
   /** Does nothing.
