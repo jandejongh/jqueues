@@ -7,8 +7,8 @@ import nl.jdj.jqueues.r5.entity.queue.TestJob1;
 import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
-import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -91,7 +91,12 @@ public class ComprTandem2Test
   public void testBlackCompressedTandem2SimQueue_FCFS_FCFS ()
   {
     final SimEventList<DefaultSimEvent> el = new DefaultSimEventList<> (DefaultSimEvent.class);
-    final BlackCompressedTandem2SimQueue queue = new BlackCompressedTandem2SimQueue (el, new FCFS (el), new FCFS (el), null);
+    final FCFS fcfs1 = new FCFS (el);
+    final FCFS fcfs2 = new FCFS (el);
+    final BlackCompressedTandem2SimQueue queue = new BlackCompressedTandem2SimQueue (el, fcfs1, fcfs2, null);
+    //fcfs1.registerStdOutSimQueueListener();
+    //fcfs2.registerStdOutSimQueueListener();
+    queue.registerStdOutSimQueueListener();
     System.out.println ("==========================================");
     System.out.println (queue);
     System.out.println ("==========================================");
@@ -125,7 +130,12 @@ public class ComprTandem2Test
   public void testBlackCompressedTandem2SimQueue_LCFS_FCFS ()
   {
     final SimEventList<DefaultSimEvent> el = new DefaultSimEventList<> (DefaultSimEvent.class);
-    final BlackCompressedTandem2SimQueue queue = new BlackCompressedTandem2SimQueue (el, new LCFS (el), new FCFS (el), null);
+    final LCFS lcfs = new LCFS (el);
+    final FCFS fcfs = new FCFS (el);
+    final BlackCompressedTandem2SimQueue queue = new BlackCompressedTandem2SimQueue (el, lcfs, fcfs, null);
+    //lcfs.registerStdOutSimQueueListener();
+    //fcfs.registerStdOutSimQueueListener();
+    queue.registerStdOutSimQueueListener();
     System.out.println ("==========================================");
     System.out.println (queue);
     System.out.println ("==========================================");
