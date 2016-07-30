@@ -3,7 +3,6 @@ package nl.jdj.jqueues.r5;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueueBase;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 
@@ -55,7 +54,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * <ul>
  * <li>a <i>departure</i> (the visit ends normally),
  * <li>a <i>drop</i> (the queue cannot complete the visit, e.g., because of limited buffer space or vacation),
- * <li>a <i>revocation</i> (the job is removed upon external request).
+ * <li>a <i>revocation</i> (the job is removed upon external request, or because a user-specified state condition is met,
+ *                                                                    so-called <i>auto-revocation</i>).
  * </ul>
  * If a visit ends, the job is said to <i>exit</i> (<i>depart from</i>; <i>be dropped at</i>; <i>be revoked at</i>) the queue.
  * Each way to exit the queue can be from the waiting area or from the service area
@@ -83,6 +83,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * Each {@link SimQueue} (and {@link SimJob} for that matter) must notify all state changes,
  * see {@link SimEntityListener} and its sub-interfaces.
  * 
+ * <p>
+ * A partial implementation of {@link SimQueue} is available in {@link AbstractSimQueue}.
+ * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
@@ -90,7 +93,6 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see SimEntity
  * @see SimJob
  * @see SimQueueListener
- * @see AbstractSimQueueBase
  * @see AbstractSimQueue
  * 
  */
@@ -121,6 +123,45 @@ extends SimEntity<J, Q>
    * 
    */
   public SimQueue<J, Q> getCopySimQueue () throws UnsupportedOperationException;
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // AutoRevocationPolicy
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The auto-revocation policy.
+   * 
+   */
+  public enum AutoRevocationPolicy
+  {
+    /** No auto-revocation (this is the mandatory default on each {@link SimQueue}.
+     * 
+     */
+    NONE,
+    /** Job auto-revocation upon start.
+     * 
+     */
+    UPON_START
+  }
+  
+  /** Gets the auto-revocation policy of this queue.
+   * 
+   * @return The auto-revocation policy of this queue.
+   * 
+   */
+  AutoRevocationPolicy getAutoRevocationPolicy ();
+  
+  /** Sets the auto-revocation policy of this queue.
+   * 
+   * The auto-revocation policy on a queue should be set only once and before the queue's use.
+   * 
+   * @param autoRevocationPolicy The new auto-revocation policy, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the policy is {@code null}.
+   * 
+   */
+  void setAutoRevocationPolicy (final AutoRevocationPolicy autoRevocationPolicy);
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
