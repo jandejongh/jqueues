@@ -1,5 +1,8 @@
 package nl.jdj.jqueues.r5;
 
+import java.util.List;
+import java.util.Map;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.util.stat.AbstractSimQueueStat;
 
 /** A listener to one or multiple {@link SimEntity}s.
@@ -46,6 +49,10 @@ public interface SimEntityListener<J extends SimJob, Q extends SimQueue>
    * should they choose to maintain that
    * (and, moreover, the entity enters a default state anyway).
    * 
+   * <p>
+   * Listeners should never directly or indirectly cause state changes on the reporting entity.
+   * See {@link SimEntity#doAfterNotifications} for a workaround.
+   * 
    * @param time   The time of the update.
    * @param entity The entity that is about to be updated.
    * 
@@ -62,13 +69,14 @@ public interface SimEntityListener<J extends SimJob, Q extends SimQueue>
    * this method allows a listener to capture <i>all</i> state changes,
    * regardless of the type of change.
    * 
-   * @param time   The current time (the time of the state change).
-   * @param entity The entity at which the state changed.
+   * @param time          The current time (the time of the state change).
+   * @param entity        The entity at which the state changed.
+   * @param notifications The notifications of state-changes the combination of which led to the new state.
    * 
    * @see #notifyUpdate For more details on when to issue update and state-change notifications.
    * 
    */
-  public void notifyStateChanged (double time, SimEntity entity);
+  public void notifyStateChanged (double time, SimEntity entity, List<Map<SimEntitySimpleEventType.Member, J>> notifications);
     
   /** Notification of the arrival of a job at a queue.
    * 
@@ -113,6 +121,17 @@ public interface SimEntityListener<J extends SimJob, Q extends SimQueue>
    * 
    */
   public void notifyRevocation (double time, J job, Q queue);
+  
+  /** Notification of the auto-revocation of a job at a queue.
+   * 
+   * @param time  The (current) time.
+   * @param job   The job.
+   * @param queue The queue.
+   * 
+   * @see SimQueue#getAutoRevocationPolicy
+   * 
+   */
+  public void notifyAutoRevocation (double time, J job, Q queue);
   
   /** Notification of the departure of a job at a queue.
    * 
