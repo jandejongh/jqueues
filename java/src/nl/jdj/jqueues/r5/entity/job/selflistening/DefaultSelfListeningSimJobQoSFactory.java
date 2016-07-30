@@ -1,8 +1,8 @@
 package nl.jdj.jqueues.r5.entity.job.selflistening;
 
-import nl.jdj.jqueues.r5.entity.job.qos.*;
 import java.util.Map;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.qos.SimJobQoSFactory;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A factory for {@link DefaultSelfListeningSimJobQoS}s.
