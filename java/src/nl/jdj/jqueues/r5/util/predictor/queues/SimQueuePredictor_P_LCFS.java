@@ -43,9 +43,14 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
       return null;
     else
     {
-      final Set<SimJob> lastStartedJobs = queueState.getJobsInServiceAreaMap ().lastEntry ().getValue ();
-      final List<SimJob> lastStartedJobsAsList = new ArrayList<> (lastStartedJobs);
-      return lastStartedJobsAsList.get (lastStartedJobsAsList.size () - 1);
+      final List<SimJob> jobs = new ArrayList<> (queueState.getJobs ());
+      for (int i = jobs.size () - 1; i >= 0; i--)
+      {
+        final SimJob job = jobs.get (i);
+        if (queueState.getJobsInServiceArea ().contains (job))
+          return job;
+      }
+      throw new IllegalStateException ();
     }
   }
   
@@ -96,7 +101,6 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
     final SimEntitySimpleEventType.Member eventType = (workloadEventTypes.isEmpty ()
       ? null
       : workloadEventTypes.iterator ().next ());
-    final SimJob executingJob = getExecutingJob (queue, queueState);
     if (eventType == null)
     {
       /* NOTHING (LEFT) TO DO */
@@ -115,6 +119,7 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
       queueState.doArrivals (time, arrivals, visitLogsSet);
       if ((! queueState.isQueueAccessVacation ()) && queueState.getServerAccessCredits () >= 1)
       {
+        final SimJob executingJob = getExecutingJob (queue, queueState);
         queueState.doStarts (time, arrivals);
         if (executingJob != null)
           preemptJob (queue, queueState, executingJob, visitLogsSet);
@@ -150,24 +155,19 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
         while (newSac > 0 && ! waiters.isEmpty ())
         {
           youngestWaiter = waiters.remove (waiters.size () - 1);
+          newSac--;
+          final Set<SimJob> starters = Collections.singleton (youngestWaiter);
+          final SimJob executingJob = getExecutingJob (queue, queueState);
+          queueState.doStarts (time, starters);
           if (executingJob == null
             || queueState.getArrivalTimesMap ().get (youngestWaiter) >= queueState.getArrivalTimesMap ().get (executingJob))
           {
-            newSac--;
-            final Set<SimJob> starters = Collections.singleton (youngestWaiter);
-            queueState.doStarts (time, starters);
             final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (youngestWaiter);
             if (remainingServiceTime == 0.0)
               queueState.doExits (time, null, null, starters, null, visitLogsSet);
-            else
-            {
-              if (executingJob != null)
-                preemptJob (queue, queueState, executingJob, visitLogsSet);
-              break;
-            }
+            else if (executingJob != null)
+              preemptJob (queue, queueState, executingJob, visitLogsSet);
           }
-          else
-            break;
         }
       }
     }
