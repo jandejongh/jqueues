@@ -133,14 +133,11 @@ extends AbstractServerlessSimQueue<J, Q>
   }
 
   /** If needed, schedules a departure event for the arrived job respecting the fixed wait time of this queue;
-   * otherwise (zero wait time), removes the job from the job queue, set its queue to <code>null</code> and notifies
-   * listeners of the departure.
+   *  otherwise (zero wait time), makes the job depart immediately.
    * 
    * @see #getWaitTime
    * @see #scheduleDepartureEvent
-   * @see #jobQueue
-   * @see SimJob#setQueue
-   * @see #fireDeparture
+   * @see #depart
    * 
    */
   @Override
@@ -150,11 +147,7 @@ extends AbstractServerlessSimQueue<J, Q>
     if (waitTime > 0)
       scheduleDepartureEvent (time + waitTime, job);
     else
-    {
-      this.jobQueue.remove (job);
-      job.setQueue (null);
-      fireDeparture (time, job, (Q) this);
-    }
+      depart (time, job);
   }
 
   /** Invokes {@link #removeJobFromQueueUponRevokation}.
