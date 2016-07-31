@@ -78,7 +78,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // noWaitArmed
+  // NoWaitArmed
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -97,7 +97,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // MAIN OPERATIONS
+  // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -112,7 +112,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: ARRIVAL
+  // ARRIVAL
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -137,7 +137,10 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
     this.jobsQoSMap.get (qos).add (job);
   }
 
-  /** Performs sanity checks and invokes {@link #reschedule}.
+  /** Starts the arrived job immediately if it is the executable job (respecting server-access credits) with highest priority.
+   * 
+   * @see #getExecutableJobWithHighestPriority
+   * @see #start
    * 
    */
   @Override
@@ -149,12 +152,13 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
       throw new IllegalStateException ();
     if (! this.jobsQoSMap.get (getAndCheckJobQoS (job)).contains (job))
       throw new IllegalStateException ();
-    reschedule (time);
+    if (getExecutableJobWithHighestPriority () == job)
+      start (time, job);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: DROP
+  // DROP
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -178,7 +182,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: REVOCATION
+  // REVOCATION
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -202,7 +206,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: SERVER ACCCESS CREDITS
+  // SERVER ACCCESS CREDITS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -212,12 +216,64 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
   {
-    reschedule (time);
+    reschedule ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: DEPARTURE
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Adds the job to the service area and updates {@link #remainingServiceTime}.
+   * 
+   * @see #jobsInServiceArea
+   * @see #remainingServiceTime
+   * 
+   */
+  @Override
+  protected final void insertJobInQueueUponStart (final J job, final double time)
+  {
+    if (job == null
+    || (! getJobs ().contains (job))
+    || getJobsInServiceArea ().contains (job)
+    || this.remainingServiceTime.containsKey (job))
+      throw new IllegalArgumentException ();
+    this.jobsInServiceArea.add (job);
+    final double jobServiceTime = job.getServiceTime (this);
+    if (jobServiceTime < 0)
+      throw new RuntimeException ();
+    this.remainingServiceTime.put (job, jobServiceTime);
+  }
+
+  /** Assesses the remaining service time of the job, invokes {@link #reschedule} if it it strictly positive,
+   *  and makes the job depart immediately if the remaining service time is zero.
+   * 
+   * @see #remainingServiceTime
+   * @see #reschedule
+   * @see #depart
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterStart (final J job, final double time)
+  {
+    if (job == null
+    || (! getJobs ().contains (job))
+    || (! getJobsInServiceArea ().contains (job))
+    || (! this.remainingServiceTime.containsKey (job)))
+      throw new IllegalArgumentException ();
+    final double jobServiceTime = this.remainingServiceTime.get (job);
+    if (jobServiceTime < 0)
+      throw new RuntimeException ();
+    if (jobServiceTime > 0)
+      reschedule ();
+    else
+      depart (time, job);
+  }
+    
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DEPARTURE
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -245,12 +301,12 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
       throw new IllegalStateException ();
     if (this.jobsBeingServed.keySet ().contains (departedJob))
       throw new IllegalStateException ();
-    reschedule (time);
+    reschedule ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: EXIT
+  // EXIT
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -302,7 +358,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: RESCHEDULE
+  // RESCHEDULE
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -345,85 +401,48 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
   /** Reschedules through assessment of which job to serve.
    * 
    * <p>
-   * Repeatedly (until they match) confronts the job to serve as obtained through {@link #getExecutableJobWithHighestPriority}
-   * with the job currently in service.
-   * If there is a mismatch, it preempts the job in service, in favor of the job that is to be served,
-   * starting (i.e., admitting it to the service area) the latter if needed.
-   * If the newly executing job requests zero service time, it departs immediately.
-   * 
-   * @param time The (current) time.
+   * Repeatedly (until they match) confronts
+   * the job to serve as obtained through {@link #getExecutableJobWithHighestPriority}
+   * with the job currently in service (the only job in {@link #jobsBeingServed}).
+   * If there is a mismatch, and if there is a job currently being served,
+   * it preempts the latter job through {@link #preemptJob}, and recurs.
+   * Otherwise, if there is a mismatch but no job is currently being served,
+   * it starts {@link #getExecutableJobWithHighestPriority}
+   * either by {@link #start} if the job is not already in {@link #jobsInServiceArea},
+   * or by {@link #startServiceChunk} otherwise.
    * 
    * @see #jobsBeingServed
    * @see #getExecutableJobWithHighestPriority
    * @see #preemptJob
    * @see #jobsInServiceArea
-   * @see #takeServerAccessCredit
-   * @see SimJob#getServiceTime
-   * @see #remainingServiceTime
+   * @see #start
    * @see #startServiceChunk
-   * @see #fireStart
-   * @see #fireDeparture
-   * @see #fireIfNewServerAccessCreditsAvailability
-   * @see #fireIfNewNoWaitArmed
    * 
    */
-  protected final void reschedule (final double time)
+  protected final void reschedule ()
   {
     if (this.jobsBeingServed.keySet ().size () > 1)
       throw new IllegalStateException ();
-    final Set<J> startedJobs = new LinkedHashSet<> ();
-    final Set<J> departedJobs = new LinkedHashSet<> ();
-    J jobBeingServed = (this.jobsBeingServed.isEmpty () ? null : this.jobsBeingServed.keySet ().iterator ().next ());
-    J jobToServe = getExecutableJobWithHighestPriority (); // Considers server-access credits!
-    while (jobToServe != jobBeingServed)
+    final J jobBeingServed = (this.jobsBeingServed.isEmpty () ? null : this.jobsBeingServed.keySet ().iterator ().next ());
+    final J jobToServe = getExecutableJobWithHighestPriority (); // Considers server-access credits!
+    if (jobBeingServed != null && jobToServe == null)
+      throw new IllegalStateException ();
+    if (jobBeingServed != jobToServe)
     {
-      if (this.jobsBeingServed.keySet ().size () > 1)
-        throw new IllegalStateException ();
-      if (jobBeingServed != null && jobToServe == null)
-        throw new IllegalStateException ();
       if (jobBeingServed != null)
       {
         // Note that preemptJob may already reschedule in case of DROP and DEPART preemption policies (for instance)!
-        preemptJob (time, jobBeingServed);
-        jobBeingServed = null;
-        jobToServe = getExecutableJobWithHighestPriority (); // Considers server-access credits!
-        if (jobToServe == jobBeingServed)
-          break;
+        preemptJob (getLastUpdateTime (), jobBeingServed);
+        reschedule ();
       }
-      if (jobToServe != null && ! this.jobsBeingServed.keySet ().contains (jobToServe))
+      else
       {
         if (! this.jobsInServiceArea.contains (jobToServe))
-        {
-          // Scheduling section; make sure we do not issue notifications.
-          takeServerAccessCredit (false);
-          startedJobs.add (jobToServe);
-          this.jobsInServiceArea.add (jobToServe);
-          final double jobServiceTime = jobToServe.getServiceTime (this);
-          if (jobServiceTime < 0)
-            throw new RuntimeException ();
-          this.remainingServiceTime.put (jobToServe, jobServiceTime);          
-          if (jobServiceTime == 0.0)
-          {
-            removeJobFromQueueUponDeparture (jobToServe, time);
-            jobToServe.setQueue (null);
-            departedJobs.add (jobToServe);
-            jobToServe = null;
-          }
-        }
-        if (jobToServe != null)
-          startServiceChunk (time, jobToServe);
-      }      
-      jobBeingServed = (this.jobsBeingServed.isEmpty () ? null : this.jobsBeingServed.keySet ().iterator ().next ());
-      jobToServe = getExecutableJobWithHighestPriority (); // Considers server-access credits!
+          start (getLastUpdateTime (), jobToServe);
+        else
+          startServiceChunk (getLastUpdateTime (), jobToServe);
+      }
     }
-    // Notification section.
-    for (J j : startedJobs)
-      fireStart (time, j, (Q) this);
-    if (! startedJobs.isEmpty ())
-      fireIfNewServerAccessCreditsAvailability (time);
-    for (final J j : departedJobs)
-      fireDeparture (time, j, (Q) this);
-    fireIfNewNoWaitArmed (time, isNoWaitArmed ());
   }
   
 }
