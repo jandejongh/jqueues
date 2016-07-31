@@ -263,7 +263,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   /** Updates the internal administration (i.c., obtained service times) for executing jobs in the service area.
    * 
    * <p>
-   * This method is called as an update hook, and not meant to be called from user code (in sub-classes).
+   * This method is called as an pre-update hook, and not meant to be called from user code (in sub-classes).
    * It is left protected for {@code javadoc}.
    * 
    * <p>
