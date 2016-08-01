@@ -24,7 +24,7 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a SINK queue given an event list.
+  /** Creates a {@link SINK} queue given an event list.
    *
    * @param eventList The event list to use.
    *

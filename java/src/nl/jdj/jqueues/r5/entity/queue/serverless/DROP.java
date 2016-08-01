@@ -23,7 +23,7 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a DROP queue given an event list.
+  /** Creates a {@link DROP} queue given an event list.
    *
    * @param eventList The event list to use.
    *

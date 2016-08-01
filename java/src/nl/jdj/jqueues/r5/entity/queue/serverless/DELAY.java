@@ -25,7 +25,7 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a DELAY queue given an event list and (fixed) wait time.
+  /** Creates a {@link DELAY} queue given an event list and (fixed) wait time.
    *
    * @param eventList The event list to use.
    * @param waitTime  The (fixed) wait time for all jobs.

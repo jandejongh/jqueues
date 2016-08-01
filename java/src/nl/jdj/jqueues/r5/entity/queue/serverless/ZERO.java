@@ -25,7 +25,7 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a ZERO queue given an event list.
+  /** Creates a {@link ZERO} queue given an event list.
    *
    * @param eventList The event list to use.
    *

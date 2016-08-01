@@ -45,7 +45,7 @@ implements SimQueueWithGate<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a GATE queue given an event list.
+  /** Creates a {@link GATE} queue given an event list.
    *
    * @param eventList The event list to use.
    *
