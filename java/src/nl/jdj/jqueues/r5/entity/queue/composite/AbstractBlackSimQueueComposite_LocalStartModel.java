@@ -1,191 +1,70 @@
-package nl.jdj.jqueues.r5.entity.queue.composite.single.encap;
+package nl.jdj.jqueues.r5.entity.queue.composite;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
-import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
-import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite.StartModel;
-import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
-import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A {@link BlackSimQueueComposite} encapsulating a single {@link SimQueue}.
+/** A partial implementation of a {@link BlackSimQueueComposite} restricted to {@link StartModel#LOCAL}.
  *
  * <p>
- * This composite queue mimics the {@link SimQueue} interface of the encapsulated queue.
- * 
- * <p>The main purpose of this apparently rather futile {@link SimQueue}
- * is to test the maturity of the {@link SimQueue} interface and its notifications:
- * Can we reconstruct a {@link SimQueue} interface by acting on and monitoring another {@link SimQueue}?.
- * It is, however, also useful to extract a bare {@link SimQueue} interface at the {@code Java} level
- * from a much more complicated queue implementation.
+ * Implementations (well, most of them) only have to route a job (actually, its delegate job) through the
+ * internal network of {@link SimQueue}s,
+ * see {@link #selectFirstQueue} and {@link #selectNextQueue}.
  * 
  * <p>
- * This queue has non-default semantics for the waiting and service area of the black composite queue.
- * For more details, refer to {@link StartModel#ENCAPSULATOR_QUEUE}.
+ * This allows for many types of queueing networks, including "feedback"-type networks.
+ * 
+ * <p>
+ * For details about the semantics of the waiting and service areas of a black composite queue,
+ * see {@link BlackSimQueueComposite.StartModel}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
  * @param <Q>  The queue type for jobs.
  * 
- * @see BlackSimQueueComposite
- * @see StartModel
- * @see StartModel#ENCAPSULATOR_QUEUE
- * @see #setStartModel
- * 
  */
-public class BlackEncapsulatorSimQueue
-  <DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackEncapsulatorSimQueue>
-  extends AbstractBlackSimQueueComposite<DJ, DQ, J, Q>
+public abstract class AbstractBlackSimQueueComposite_LocalStartModel
+<DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends AbstractBlackSimQueueComposite_LocalStartModel>
+extends AbstractBlackSimQueueComposite<DJ, DQ, J, Q>
+implements BlackSimQueueComposite<DJ, DQ, J, Q>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR(S) / CLONING / FACTORY
+  // CONSTRUCTOR(S)
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a black encapsulator queue given an event list and a queue.
-   *
-   * <p>
-   * The constructor sets the {@link StartModel} to {@link StartModel#ENCAPSULATOR_QUEUE}.
+  /** Creates an abstract black network of queues.
    * 
-   * @param eventList             The event list to use.
-   * @param queue                 The encapsulated queue.
+   * @param eventList             The event list to be shared between this queue and the inner queues.
+   * @param queues                A set holding the "inner" queues.
+   * @param simQueueSelector      The object for routing jobs through the network of embedded queues;
+   *                                if {@code null}, no sub-queues will be visited.
    * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
-   *
-   * @throws IllegalArgumentException If the event list or the queue is <code>null</code>.
+   * 
+   * 
+   * @throws IllegalArgumentException If the event list is {@code null},
+   *                                    or the <code>queue</code> argument is <code>null</code> or has <code>null</code> members.
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
-   * @see StartModel
-   * @see StartModel#ENCAPSULATOR_QUEUE
-   * @see #setStartModel
    * 
    */
-  public BlackEncapsulatorSimQueue
+  protected AbstractBlackSimQueueComposite_LocalStartModel
   (final SimEventList eventList,
-   final DQ queue,
-   final DelegateSimJobFactory delegateSimJobFactory)
+    final Set<DQ> queues,
+    final SimQueueSelector simQueueSelector,
+    final DelegateSimJobFactory delegateSimJobFactory)
   {
-    super (eventList,
-      Collections.singleton (queue),
-      new SimQueueSelector<J, DQ> ()
-      {
-        @Override
-        public DQ selectFirstQueue (final double time, final J job)
-        {
-          return queue;
-        }
-        @Override
-        public DQ selectNextQueue (final double time, final J job, final DQ previousQueue)
-        {
-          if (previousQueue != queue)
-            throw new IllegalArgumentException ();
-          return null;
-        }
-      },
-      delegateSimJobFactory);
-    setStartModel (StartModel.ENCAPSULATOR_QUEUE);
-  }
-  
-  /** Returns a new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
-   *  queue and the same delegate-job factory.
-   * 
-   * @return A new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
-   *         queue and the same delegate-job factory.
-   * 
-   * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
-   * 
-   * @see #getEventList
-   * @see #getEncapsulatedQueue
-   * @see #getDelegateSimJobFactory
-   * 
-   */
-  @Override
-  public BlackEncapsulatorSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
-  {
-    final SimQueue<DJ, DQ> encapsulatedQueueCopy = getEncapsulatedQueue ().getCopySimQueue ();
-    return new BlackEncapsulatorSimQueue (getEventList (), encapsulatedQueueCopy, getDelegateSimJobFactory ());
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // ENCAPSULATED QUEUE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns the encapsulated queue.
-   * 
-   * @return The encapsulated queue, non-{@code null}.
-   * 
-   */
-  public final SimQueue<DJ, DQ> getEncapsulatedQueue ()
-  {
-    return getQueues ().iterator ().next ();
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // NAME
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns "Enc[encapsulated queue]".
-   * 
-   * @return "Enc[encapsulated queue]".
-   * 
-   */
-  @Override
-  public String toStringDefault ()
-  {
-    return "Enc[" + getQueues ().iterator ().next () + "]";
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // QoS / QoS CLASS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final Object getQoS ()
-  {
-    return super.getQoS ();
-  }
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  public final Class getQoSClass ()
-  {
-    return super.getQoSClass ();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // RESET
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  protected final void resetEntitySubClass ()
-  {
-    super.resetEntitySubClass ();
+    super (eventList, queues, simQueueSelector, delegateSimJobFactory);
+    setStartModel (StartModel.LOCAL);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,17 +73,16 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Returns the {@code noWaitArmed} state of the encapsulated queue.
+  /** Returns {@code true}.
    * 
-   * @return The {@code noWaitArmed} state of the encapsulated queue.
+   * @return {@code true}, the {@code noWaitArmed} state of the composite queue.
    * 
-   * @see StartModel#ENCAPSULATOR_QUEUE
    * 
    */
   @Override
   public final boolean isNoWaitArmed ()
   {
-    return getEncapsulatedQueue ().isNoWaitArmed ();
+    return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,24 +102,17 @@ public class BlackEncapsulatorSimQueue
     addRealJobLocal (job);
   }
 
-  /** Lets the delegate job arrive at the encapsulated queue, after sanity checks.
+  /** Starts the arrived job if server-access credits are available.
    * 
-   * @see #jobQueue
-   * @see #jobsInServiceArea
-   * @see #getEncapsulatedQueue
-   * @see SimQueue#arrive
-   * @see #getDelegateJob
+   * @see #hasServerAcccessCredits
+   * @see #start
    * 
    */
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (job == null)
-      throw new IllegalArgumentException ();
-    if ((! this.jobQueue.contains (job)) || this.jobsInServiceArea.contains (job))
-      throw new IllegalArgumentException ();
-    final DJ delegateJob = getDelegateJob (job);
-    getEncapsulatedQueue ().arrive (time, delegateJob);
+    if (hasServerAcccessCredits ())
+      start (time, job);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -253,11 +124,12 @@ public class BlackEncapsulatorSimQueue
   /** Drops the given (real) job.
    * 
    * <p>
-   * In the {@link BlackEncapsulatorSimQueue}, a (real) job can only be dropped because of one of the following reasons:
+   * In the {@link AbstractBlackSimQueueComposite_LocalStartModel},
+   * a (real) job can only be dropped because of one of the following reasons:
    * <ul>
    * <li>
-   * A delegate job is dropped on the encapsulated queue, see {@link #notifyDrop},
-   * so we must drop the corresponding real job.
+   * A delegate job is dropped on one of the sub-queues, see {@link #notifyDrop},
+   * and the semantics of the composite queue require the real job to be dropped as well (this is not a requirement).
    * The notification callback relies on {@link #drop} to perform the drop.
    * The delegate job has already left the sub-queue system when we are called.
    * <li>
@@ -286,9 +158,9 @@ public class BlackEncapsulatorSimQueue
    * 
    * <p>
    * A real job has been dropped from the composite queue, see {@link #removeJobFromQueueUponDrop} for the potential reasons.
-   * We realize that dropping a delegate job from the encapsulated queue does not require any rescheduling.
-   * Dropping (or revoking) a (delegate) job from the encapsulated queue can certainly affect its {@link #isNoWaitArmed} state,
-   * but this is reported to and handled by {@link #notifyNewNoWaitArmed}.
+   * There is nothing to do here since dropping a real job and its corresponding delegate job
+   * does not affect the access to the sub-queues, which is only determined by our (local) server-access credits.
+   * And these are not affected by drops.
    * 
    */
   @Override
@@ -306,9 +178,8 @@ public class BlackEncapsulatorSimQueue
   /** Removes a job if revocation is successful.
    * 
    * <p>
-   * In a {@link BlackEncapsulatorSimQueue}, revocations on real jobs can only be the result of external requests,
-   * in other words, through {@link #revoke}, not because of events on delegate jobs
-   * (unlike <i>auto</i>-revocations).
+   * In an {@link AbstractSimQueueComposite}, revocations on real jobs can only be the result of external requests,
+   * in other words, through {@link #revoke}, not because of events on delegate jobs.
    * 
    * <p>
    * All we have to do is invoke {@link #removeJobFromQueueUponExit}.
@@ -341,31 +212,28 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Sets the server-access credits on the encapsulated queue.
-   * 
-   * @see #getEncapsulatedQueue
-   * @see SimQueue#setServerAccessCredits
-   * @see #getLastUpdateTime
-   * @see #getServerAccessCredits
+  /** Calls super method (in order to make implementation final).
    * 
    */
   @Override
   protected final void setServerAccessCreditsSubClass ()
   {
-    getEncapsulatedQueue ().setServerAccessCredits (getLastUpdateTime (), getServerAccessCredits ());
+    super.setServerAccessCreditsSubClass ();
   }
   
-  /** Empty, nothing to do.
+  /** Starts jobs as long as there are server-access credits and jobs waiting.
    * 
-   * We set the server-access credits directly on the encapsulated queue through {@link #setServerAccessCreditsSubClass},
-   * so there is nothing to do here.
-   * 
-   * @see #setServerAccessCreditsSubClass
+   * @see #hasServerAcccessCredits
+   * @see #hasJobsInWaitingArea
+   * @see #start
+   * @see #getFirstJobInWaitingArea
    * 
    */
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
   {
+    while (hasServerAcccessCredits () && hasJobsInWaitingArea ())
+      start (time, getFirstJobInWaitingArea ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -384,14 +252,15 @@ public class BlackEncapsulatorSimQueue
       throw new IllegalArgumentException ();
     if ((! this.jobQueue.contains (job)) || this.jobsInServiceArea.contains (job))
       throw new IllegalArgumentException ();
+    getDelegateJob (job); // Sanity on existance of delegate job.
     this.jobsInServiceArea.add (job);
   }
 
-  /** Nothing to do apart from sanity check.
+  /** Lets the delegate job arrive at its first queue, or make it depart immediately if no such queue is provided.
    * 
-   * @see #jobQueue
-   * @see #jobsInServiceArea
-   * @see #getDelegateJob
+   * @see #selectFirstQueue
+   * @see #arrive
+   * @see #depart
    * 
    */
   @Override
@@ -401,7 +270,16 @@ public class BlackEncapsulatorSimQueue
       throw new IllegalArgumentException ();
     if ((! this.jobQueue.contains (job)) || (! this.jobsInServiceArea.contains (job)))
       throw new IllegalArgumentException ();
-    getDelegateJob (job); // Sanity on existance of delegate job.
+    final DJ delegateJob = getDelegateJob (job);
+    final SimQueue<DJ, DQ> firstQueue = selectFirstQueue (time, job);
+    if (firstQueue != null && ! getQueues ().contains ((DQ) firstQueue))
+      throw new IllegalArgumentException ();
+    if (firstQueue != null)
+      firstQueue.arrive (time, delegateJob);
+    else
+      // We do not get a queue to arrive at.
+      // So we depart; without having been executed!
+      depart (time, job);
   }
     
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -413,12 +291,12 @@ public class BlackEncapsulatorSimQueue
   /** Departure of the given (real) job.
    * 
    * <p>
-   * In the {@link BlackEncapsulatorSimQueue},
+   * In the {@link AbstractBlackSimQueueComposite_LocalStartModel},
    * a (real) job can only depart because of one of the following reasons:
    * <ul>
    * <li>
-   * A delegate job departs on the encapsulated, see {@link #notifyDeparture},
-   * and the real job must depart as well.
+   * A delegate job departs on one of the sub-queues, see {@link #notifyDeparture},
+   * and the semantics of the composite queue require the real job to depart as well (this is not a requirement).
    * The notification callback relies on {@link #depart} to perform the departure.
    * The delegate job has already left the sub-queue system when we are called.
    * <li>
@@ -511,7 +389,7 @@ public class BlackEncapsulatorSimQueue
   /** Does nothing; assumes will have been reset or will soon be reset as well.
    * 
    * <p>
-   * The reset of a sub-queue can only be the result of this queue being resetting itself
+   * The reset of a sub-queue can only be the result of this queue being reset itself
    * (and as a result, resetting its sub-queues),
    * or because the event-list is being reset,
    * in which case we will be reset ourselves soon, or have reset ourselves and our sub-queues already.
@@ -608,16 +486,17 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Invokes {@link #triggerPotentialNewNoWaitArmed} to make sure that the state-change is notified to listeners
-   *  in case it is an autonomous event on the encapsulated queue.
+  /** Does nothing.
    * 
-   * @see #triggerPotentialNewNoWaitArmed
+   * <p>
+   * With {@link StartModel#LOCAL}, this composite queue has its own notion of {@code noWaitArmed},
+   * which is independent of that state on any of its sub-queues;
+   * nor does a {@code noWaitArmed} state change on a sub-queue require an action from the composite queue.
    * 
    */
   @Override
   public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
   {
-    triggerPotentialNewNoWaitArmed (time);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -626,8 +505,12 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Does nothing, since server-access credits on the encapsulated queue are under our full control,
-   *  and cannot change other than due to an (monitored) event at this {@link BlackEncapsulatorSimQueue}.
+  /** Does nothing.
+   * 
+   * <p>
+   * With {@link StartModel#LOCAL}, this composite queue has its own server-access credits,
+   * and the (un)availability of server-access credits on any of the sub-queues has no effect
+   * on this composite queue's state; nor does it require an action from the composite queue.
    * 
    */
   @Override
@@ -635,8 +518,12 @@ public class BlackEncapsulatorSimQueue
   {
   }
 
-  /** Does nothing, since server-access credits on the encapsulated queue are under our full control,
-   *  and cannot change other than due to an (monitored) event at this {@link BlackEncapsulatorSimQueue}.
+  /** Does nothing.
+   * 
+   * <p>
+   * With {@link StartModel#LOCAL}, this composite queue has its own server-access credits,
+   * and the (un)availability of server-access credits on any of the sub-queues has no effect
+   * on this composite queue's state; nor does it require an action from the composite queue.
    * 
    */
   @Override
@@ -650,20 +537,15 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Starts the corresponding real job
-   *  (which amounts only to local administration update and listener notification).
+  /** Nothing to do apart from sanity check.
    * 
    * @see #getRealJob
-   * @see #start
    * 
    */
   @Override
   public final void notifyStart (final double time, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job, queue);
-    if (this.jobsInServiceArea.contains (realJob))
-      throw new IllegalStateException ();
-    start (time, realJob);
+    getRealJob (job, queue); // Sanity on existance of real job.
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -725,16 +607,19 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Invokes {@link #autoRevoke} on the real job at this queue, allowing auto-revocations on the encapsulated queue.
+  /** Nothing to do apart from sanity check.
+   * 
+   * <p>
+   * The {@link AbstractBlackSimQueueComposite_LocalStartModel} allows the use of auto-revocation
+   * on its sub-queues.
    * 
    * @see #getRealJob
-   * @see #autoRevoke
    * 
    */
   @Override
   public final void notifyAutoRevocation (final double time, final DJ job, final DQ queue)
   {
-    autoRevoke (time, getRealJob (job, queue));
+    getRealJob (job, queue); // Sanity on existance of real job.
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -743,17 +628,32 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Departs the real job
+  /** Notification of the departure of a delegate job.
    * 
-   * @see #getRealJob
+   * <p>
+   * Finds the next queue to visit by the delegate job.
+   * If found, schedules the arrival of the delegate job at the next queue
+   * through {@link #doAfterNotifications}.
+   * Otherwise, invokes {@link #depart} on the real job.
+   * 
+   * @see #selectNextQueue
+   * @see SimQueue#arrive
    * @see #depart
+   * @see SimQueue#doAfterNotifications
    * 
    */
   @Override
   public final void notifyDeparture (final double time, final DJ job, final DQ queue)
   {
     final J realJob = getRealJob (job, queue);
-    depart (time, realJob);
+    final SimQueue<DJ, DQ> nextQueue = selectNextQueue (time, realJob, queue);
+    if (nextQueue == null)
+      depart (time, realJob);
+    else
+      nextQueue.doAfterNotifications (() ->
+      {
+        nextQueue.arrive (time, job);
+      });
   }
 
 }
