@@ -158,54 +158,6 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // DROP
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  protected final void removeJobFromQueueUponDrop (final J job, final double time)
-  {
-    super.removeJobFromQueueUponDrop (job, time);
-  }
-
-  /** Invokes {@link #rescheduleAfterDeparture}.
-   * 
-   */
-  @Override
-  protected final void rescheduleAfterDrop (final J job, final double time)
-  {
-    rescheduleAfterDeparture (job, time);
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // REVOCATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
-  {
-    super.removeJobFromQueueUponRevokation (job, time);
-  }
-
-  /** Invokes {@link #rescheduleAfterDeparture}.
-   * 
-   */
-  @Override
-  protected final void rescheduleAfterRevokation (final J job, final double time)
-  {
-    rescheduleAfterDeparture (job, time);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
   // SERVER ACCCESS CREDITS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -268,42 +220,11 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
     if (jobServiceTime > 0)
       reschedule ();
     else
+      // XXX We immediately depart if service time is zero.
+      // This is ambiguous: aren't we supposed to preempt (and thus, possibly, DROP/DEPART) the job in execution?
       depart (time, job);
   }
-    
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // DEPARTURE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
-  {
-    super.removeJobFromQueueUponDeparture (departingJob, time);
-  }
 
-  /** Performs sanity checks and invokes {@link #reschedule}.
-   * 
-   */
-  @Override
-  protected final void rescheduleAfterDeparture (final J departedJob, final double time)
-  {
-    if (this.jobQueue.contains (departedJob))
-      throw new IllegalStateException ();
-    if (this.jobsInServiceArea.contains (departedJob))
-      throw new IllegalStateException ();
-    final P qos = getAndCheckJobQoS (departedJob);
-    if (this.jobsQoSMap.containsKey (qos) && this.jobsQoSMap.get (qos).contains (departedJob))
-      throw new IllegalStateException ();
-    if (this.jobsBeingServed.keySet ().contains (departedJob))
-      throw new IllegalStateException ();
-    reschedule ();
-  }
-  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // EXIT
@@ -354,6 +275,15 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
     if (this.jobsQoSMap.get (qos).isEmpty ())
       this.jobsQoSMap.remove (qos);
     this.jobQueue.remove (exitingJob);
+  }
+  
+  /** Invokes {@link #reschedule}.
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterExit (final double time)
+  {
+    reschedule ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
