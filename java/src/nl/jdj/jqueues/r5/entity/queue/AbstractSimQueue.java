@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -334,20 +335,25 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param pendingNotifications The pending notifications.
    * 
    */
-  private void noWaitArmedPreNotificationHook (final List<Map<SimEntitySimpleEventType.Member, J>> pendingNotifications)
+  protected final void noWaitArmedPreNotificationHook (final List<Map<SimEntitySimpleEventType.Member, J>> pendingNotifications)
   {
     if (pendingNotifications == null)
       throw new IllegalArgumentException ();
     if (! this.previousNoWaitArmedSet)
       throw new IllegalStateException ();
-    for (final Map<SimEntitySimpleEventType.Member, J> entry : pendingNotifications)
-    {
-      final SimEntitySimpleEventType.Member notificationType = entry.keySet ().iterator ().next ();
-      if (notificationType == SimQueueSimpleEventType.NWA_FALSE
-      ||  notificationType == SimQueueSimpleEventType.NWA_TRUE)
-        throw new IllegalArgumentException ();
-    }
     final boolean noWaitArmed = isNoWaitArmed ();
+    final Iterator<Map<SimEntitySimpleEventType.Member, J>> i_pendingNotifications = pendingNotifications.iterator ();
+    while (i_pendingNotifications.hasNext ())
+    {
+      final SimEntitySimpleEventType.Member notificationType = i_pendingNotifications.next ().keySet ().iterator ().next ();
+      if (notificationType == SimQueueSimpleEventType.NWA_FALSE || notificationType == SimQueueSimpleEventType.NWA_TRUE)
+      {
+        if ((notificationType == SimQueueSimpleEventType.NWA_TRUE) != noWaitArmed)
+          throw new IllegalArgumentException ();
+        else
+          i_pendingNotifications.remove ();
+      }
+    }
     if (noWaitArmed != this.previousNoWaitArmed)
     {
       if (noWaitArmed)
@@ -356,6 +362,60 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
         pendingNotifications.add (Collections.singletonMap (SimQueueSimpleEventType.NWA_FALSE, null));          
     }
     this.previousNoWaitArmed = noWaitArmed;
+  }
+  
+  /** Triggers a potential, autonomous (top-level) change in the {@link #isNoWaitArmed} status (for sub-class use).
+   * 
+   * <p>
+   * In most cases, a change in the {@link #isNoWaitArmed} state will be the result of operations in this {@link SimQueue},
+   * and will be noted and reported automatically
+   * through the use of the pre-notification hook {@link #noWaitArmedPreNotificationHook}.
+   * 
+   * <p>
+   * It is, however, perfectly legal that the {@link #isNoWaitArmed} state of a {@link SimQueue}
+   * changes independently from external or other monitored internal events.
+   * Concrete subclasses must therefore invoke this method upon suspected autonomous changes in the {@link #isNoWaitArmed} state,
+   * in order to make sure that they are properly notified to listeners.
+   * 
+   * <p>
+   * The implementation checks if the current {@link #isNoWaitArmed} state is different from the cached value
+   * as maintained by {@link #noWaitArmedPreNotificationHook}.
+   * If so, and if it is a top-level event, as assessed with {@link #clearAndUnlockPendingNotificationsIfLocked},
+   * it invokes {@link #update}, adds and fires a proper notification, i.c.,
+   * {@link SimQueueSimpleEventType#NWA_TRUE} or
+   * {@link SimQueueSimpleEventType#NWA_FALSE},
+   * and fires a notification through {@link #fireAndLockPendingNotifications}.
+   * 
+   * <p>
+   * In all other cases, this method does nothing,
+   * relying on the pre-notification hook {@link #noWaitArmedPreNotificationHook}.
+   * 
+   * @param time The current time.
+   * 
+   * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #isNoWaitArmed
+   * @see #update
+   * @see #addPendingNotification
+   * @see SimQueueSimpleEventType#NWA_TRUE
+   * @see SimQueueSimpleEventType#NWA_FALSE
+   * @see #fireAndLockPendingNotifications
+   * 
+   */
+  protected final void triggerPotentialNewNoWaitArmed (final double time)
+  {
+    final boolean noWaitArmed = isNoWaitArmed ();
+    if ((! this.previousNoWaitArmedSet) || noWaitArmed != this.previousNoWaitArmed)
+    {
+      final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
+      if (isTopLevel)
+      {
+        update (time);
+        this.previousNoWaitArmedSet = true;
+        this.previousNoWaitArmed = noWaitArmed;
+        addPendingNotification (noWaitArmed ? SimQueueSimpleEventType.NWA_TRUE : SimQueueSimpleEventType.NWA_FALSE, null);
+        fireAndLockPendingNotifications ();
+      }
+    }
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
