@@ -24,7 +24,11 @@ extends WorkloadSchedule_SQ_SV
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /**
+  /** Returns the queue-access vacation settings in time for the queue.
+   * 
+   * @return The queue-access vacation settings in time for the queue, indexed by time.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
    * 
    * @see #isSingleQueue
    * @see #isSingleVisit
@@ -49,7 +53,11 @@ extends WorkloadSchedule_SQ_SV
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /**
+  /** Gets the job arrivals indexed by time at the queue.
+   * 
+   * @return The job arrivals in time for the queue, indexed by time.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
    * 
    * @see #isSingleQueue
    * @see #isSingleVisit
@@ -74,7 +82,12 @@ extends WorkloadSchedule_SQ_SV
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /**
+  /** Gets the job revocations indexed by time at the queue.
+   * 
+   * @return The job revocations in time for the queue, indexed by time.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
+   * 
    * 
    * @see #isSingleQueue
    * @see #isSingleVisit
@@ -93,7 +106,12 @@ extends WorkloadSchedule_SQ_SV
     return Collections.unmodifiableMap (revocationTimesMap_SQ_SV_ROEL_U);
   }
   
-  /**
+  /** Gets the job revocations indexed by time at the queue.
+   * 
+   * @return The job revocations in time for the queue, indexed by time.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
+   * 
    * 
    * @see #isSingleQueue
    * @see #isSingleVisit
@@ -118,7 +136,11 @@ extends WorkloadSchedule_SQ_SV
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /**
+  /** Returns the server-access-credits settings in time for the queue.
+   * 
+   * @return The server-access-credits settings in time for the queue, indexed by time.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
    * 
    * @see #isSingleQueue
    * @see #isSingleVisit

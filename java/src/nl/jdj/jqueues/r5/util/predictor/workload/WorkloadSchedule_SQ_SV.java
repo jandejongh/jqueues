@@ -25,7 +25,12 @@ extends WorkloadSchedule_SQ
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /**
+  /** Gets the arrival time for each job visiting the queue.
+   * 
+   * @return The arrival time for each job visiting the queue in arrival order and subsequently ordered
+   *         according to appearance in the source event list upon construction.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
    * 
    * @see #isSingleQueue
    * @see #isSingleVisit

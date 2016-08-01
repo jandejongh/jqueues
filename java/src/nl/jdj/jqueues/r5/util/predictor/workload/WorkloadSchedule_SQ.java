@@ -48,7 +48,12 @@ extends WorkloadSchedule
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /**
+  /** Returns the queue-access vacation settings in time for the queue.
+   * 
+   * @return The queue-access vacation settings in time for the queue, indexed by time and subsequently ordered
+   *         according to appearance in the source event list upon construction.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
    * 
    * @see #getQueueAccessVacationMap(SimQueue)
    * @see #getQueue
@@ -66,7 +71,12 @@ extends WorkloadSchedule
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /**
+  /** Gets the arrival times indexed by job at the queue.
+   * 
+   * @return The job arrival times indexed by job and subsequently ordered
+   *         according to appearance in the source event list upon construction.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
    * 
    * @see #getArrivalTimesMap(SimQueue) 
    * @see #getQueue
@@ -78,7 +88,12 @@ extends WorkloadSchedule
     return getArrivalTimesMap (getQueue ());
   }
   
-  /**
+  /** Gets the job arrivals indexed by time at the queue.
+   * 
+   * @return The job arrivals in time for the queue, indexed by time and subsequently ordered
+   *         according to appearance in the source event list upon construction.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
    * 
    * @see #getJobArrivalsMap(SimQueue)
    * @see #getQueue
@@ -96,7 +111,12 @@ extends WorkloadSchedule
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /**
+  /** Gets the revocation times indexed by job at the queue.
+   * 
+   * @return The job revocation times indexed by job and subsequently ordered
+   *         according to appearance in the source event list upon construction.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
    * 
    * @see #getRevocationTimesMap(SimQueue)
    * @see #getQueue
@@ -108,7 +128,12 @@ extends WorkloadSchedule
     return getRevocationTimesMap (getQueue ());
   }
   
-  /**
+  /** Gets the job revocations indexed by time at the queue.
+   * 
+   * @return The job revocations in time for the queue, indexed by time and subsequently ordered
+   *         according to appearance in the source event list upon construction.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
    * 
    * @see #getJobRevocationsMap(SimQueue)
    * @see #getQueue
@@ -126,7 +151,12 @@ extends WorkloadSchedule
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /**
+  /** Returns the server-access-credits settings in time for the queue.
+   * 
+   * @return The server-access-credits settings in time for the queue, indexed by time and subsequently ordered
+   *         according to appearance in the source event list upon construction.
+   * 
+   * @throws WorkloadScheduleInvalidException If the workload schedule is somehow invalid.
    * 
    * @see #getServerAccessCreditsMap(SimQueue)
    * @see #getQueue
