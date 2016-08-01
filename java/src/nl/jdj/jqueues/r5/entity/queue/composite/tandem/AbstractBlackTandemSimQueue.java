@@ -4,7 +4,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite_LocalStartModel;
 import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
@@ -37,7 +37,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  */
 public abstract class AbstractBlackTandemSimQueue
   <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends AbstractBlackTandemSimQueue>
-  extends AbstractBlackSimQueueComposite<DJ, DQ, J, Q>
+  extends AbstractBlackSimQueueComposite_LocalStartModel<DJ, DQ, J, Q>
   implements BlackSimQueueComposite<DJ, DQ, J, Q>
 {
 
