@@ -463,7 +463,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
     return DefaultWorkloadSchedule.EVENT_MAP;
   }
 
-  /**
+  /** Returns {@code true}.
    * 
    * @return True.
    * 
