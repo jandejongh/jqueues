@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.composite;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.composite.single.encap.BlackEncapsulatorSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.single.enc.BlackEncapsulatorSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DELAY;
 
 /** A network of {@link SimQueue}s embedded in a single queue hiding its internal structural details.
