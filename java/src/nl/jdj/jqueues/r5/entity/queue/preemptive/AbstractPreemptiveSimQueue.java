@@ -28,19 +28,25 @@ public abstract class AbstractPreemptiveSimQueue
   
   /** Creates a preemptive queue given an event list and preemption strategy.
    *
-   * @param eventList The event list to use.
+   * <p>
+   * The constructor registers a pre-update hook that updates the remaining service time.
+   * 
+   * @param eventList          The event list to use.
    * @param preemptionStrategy The preemption strategy, if {@code null}, the default is used (preemptive-resume).
    * 
    * @throws IllegalArgumentException If the event list is <code>null</code>.
    *
+   * @see #updateRemainingServiceTime
+   * 
    */
   protected AbstractPreemptiveSimQueue (final SimEventList eventList, final PreemptionStrategy preemptionStrategy)
   {
     super (eventList);
     if (preemptionStrategy == null)
-      this.preemptionStrategy =AbstractPreemptiveSimQueue.DEFAULT_PREEMPTION_STRATEGY;
+      this.preemptionStrategy = AbstractPreemptiveSimQueue.DEFAULT_PREEMPTION_STRATEGY;
     else
       this.preemptionStrategy = preemptionStrategy;
+    registerPreUpdateHook (this::updateRemainingServiceTime);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,6 +62,12 @@ public abstract class AbstractPreemptiveSimQueue
    */
   public static final PreemptionStrategy DEFAULT_PREEMPTION_STRATEGY = PreemptionStrategy.RESUME;
   
+  /** The preemption strategy.
+   * 
+   * <p>
+   * The preemption strategy is non-{@code null} and fixed upon construction; if cannot be modified.
+   * 
+   */
   private final PreemptionStrategy preemptionStrategy;
   
   /** Gets the preemption strategy.
@@ -70,6 +82,17 @@ public abstract class AbstractPreemptiveSimQueue
   {
     return this.preemptionStrategy;
   }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // TOLERANCE IN REMAINING SERVICE TIME
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The tolerance for rounding errors in the remaining service time.
+   * 
+   */
+  public final static double TOLERANCE_RST = 1.0E-9;
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -90,6 +113,42 @@ public abstract class AbstractPreemptiveSimQueue
   protected final HashMapWithPreImageAndOrderedValueSet<J, Double> remainingServiceTime
     = new HashMapWithPreImageAndOrderedValueSet<> ();
 
+  /** Updates the remaining service time of executing jobs in the service area.
+   * 
+   * <p>
+   * This method is called as an pre-update hook, and not meant to be called from user code (in sub-classes).
+   * It is left protected for {@code javadoc}.
+   * 
+   * @param newTime The new time.
+   * 
+   * @see #jobsBeingServed
+   * @see #remainingServiceTime
+   * @see AbstractPreemptiveSimQueue#TOLERANCE_RST
+   * @see #registerPreUpdateHook
+   * 
+   */
+  protected final void updateRemainingServiceTime (final double newTime)
+  {
+    for (final Map.Entry<J, Double> entry : this.jobsBeingServed.entrySet ())
+    {
+      final J job = entry.getKey ();
+      final double dT = newTime - entry.getValue ();
+      if (dT < 0)
+        throw new IllegalStateException ();
+      else if (dT > 0)
+      {
+        if (this.remainingServiceTime.get (job) < 0
+        ||  this.remainingServiceTime.get (job) < dT - AbstractPreemptiveSimQueue.TOLERANCE_RST)
+          throw new IllegalStateException ();
+        else if (this.remainingServiceTime.get (job) < dT)
+          this.remainingServiceTime.put (job, 0.0);
+        else
+          this.remainingServiceTime.put (job, this.remainingServiceTime.get (job) - dT);
+        entry.setValue (newTime);
+      }
+    }
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // JOBS BEING SERVED
@@ -118,7 +177,7 @@ public abstract class AbstractPreemptiveSimQueue
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // MAIN OPERATIONS
+  // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -136,12 +195,14 @@ public abstract class AbstractPreemptiveSimQueue
     this.jobsBeingServed.clear ();
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // PREEMPTION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   /** Preempts a job in {@link #jobsBeingServed}, taking actions depending on the preemption
-   * strategy of this queue.
-   * 
-   * <p>
-   * XXX This method issues listener notifications for drops and departures,
-   * whereas in most cases these should be deferred.
+   *  strategy of this queue.
    * 
    * @param time The (current) time.
    * @param job  The job to preempt.
@@ -153,9 +214,9 @@ public abstract class AbstractPreemptiveSimQueue
    * @see #jobsBeingServed
    * @see #remainingServiceTime
    * @see #getPreemptionStrategy
-   * @see SimJob#getServiceTime
-   * @see #cancelDepartureEvent
    * @see #drop
+   * @see #cancelDepartureEvent
+   * @see SimJob#getServiceTime
    * @see #depart
    * 
    */
@@ -165,55 +226,42 @@ public abstract class AbstractPreemptiveSimQueue
       throw new IllegalArgumentException ();
     if (! this.remainingServiceTime.containsKey (job))
       throw new IllegalStateException ();
-    boolean mustDrop = false;
-    boolean mustDepart = false;
-    double newRemainingServiceTime = 0.0;
     switch (getPreemptionStrategy ())
     {
       case DROP:
-        mustDrop = true;
+        drop (job, time);
         break;
       case RESUME:
-        newRemainingServiceTime = this.remainingServiceTime.get (job) - (time - this.jobsBeingServed.get (job));
+        this.jobsBeingServed.remove (job);
+        cancelDepartureEvent (job);
         break;
       case RESTART:
-        newRemainingServiceTime = job.getServiceTime (this);
+        this.jobsBeingServed.remove (job);
+        cancelDepartureEvent (job);
+        this.remainingServiceTime.put (job, job.getServiceTime (this));
         break;
       case REDRAW:
         throw new UnsupportedOperationException ("PreemptionStrategy.REDRAW is not supported.");
       case DEPART:
-        mustDepart = true;
+        depart (time, job);      
         break;
       case CUSTOM:
         throw new UnsupportedOperationException ("PreemptionStrategy.CUSTOM is not supported yet.");        
       default:
         throw new RuntimeException ();
     }
-    if (mustDrop)
-    {
-      // Manually remove the job here, as if it was not being served.
-      this.jobsBeingServed.remove (job);
-      if (! getDepartureEvents (job).isEmpty ())
-        cancelDepartureEvent (job);
-      drop (job, time);
-    }
-    else if (mustDepart)
-    {
-      // Manually remove the job here, as if it was not being served.
-      this.jobsBeingServed.remove (job);
-      if (! getDepartureEvents (job).isEmpty ())
-        cancelDepartureEvent (job);
-      depart (time, job, true);
-    }
-    else
-    {
-      this.remainingServiceTime.put (job, newRemainingServiceTime);
-      this.jobsBeingServed.remove (job);
-      cancelDepartureEvent (job);
-    }
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START SERVICE CHUNK
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   /** Starts execution of a job in {@link #getJobsInServiceArea}, until it departs or until it is preempted.
+   * 
+   * <p>
+   * The job to execute departs immediately if its remaining service time is zero.
    * 
    * @param time The (current) time.
    * @param job  The job to start executing.
@@ -222,7 +270,9 @@ public abstract class AbstractPreemptiveSimQueue
    * 
    * @see #jobsBeingServed
    * @see #remainingServiceTime
+   * @see AbstractPreemptiveSimQueue#TOLERANCE_RST
    * @see #scheduleDepartureEvent
+   * @see #depart
    * 
    */
   protected final void startServiceChunk (final double time, final J job)
@@ -232,54 +282,136 @@ public abstract class AbstractPreemptiveSimQueue
     if (! this.remainingServiceTime.containsKey (job))
       throw new IllegalStateException ();
     this.jobsBeingServed.put (job, time);
-    scheduleDepartureEvent (time + this.remainingServiceTime.get (job), job);
+    final double rs_job = this.remainingServiceTime.get (job);
+    if (rs_job > 0 + AbstractPreemptiveSimQueue.TOLERANCE_RST)
+      scheduleDepartureEvent (time + rs_job, job);
+    else
+      depart (time, job);
   }
 
-  /** Invokes {@link #removeJobFromQueueUponExit} (default implementation).
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DROP
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Invokes {@link #removeJobFromQueueUponExit} (final implementation).
    * 
    */
   @Override
-  protected void removeJobFromQueueUponDrop (final J job, final double time)
+  protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
     removeJobFromQueueUponExit (job, time);
   }
 
-  /** Invokes {@link #removeJobFromQueueUponExit} (default implementation).
+  /** Invokes {@link #rescheduleAfterExit} (final implementation).
    * 
    */
   @Override
-  protected void removeJobFromQueueUponRevokation (final J job, final double time)
+  protected final void rescheduleAfterDrop (final J job, final double time)
+  {
+    rescheduleAfterExit (time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // REVOCATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Invokes {@link #removeJobFromQueueUponExit} (final implementation).
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
     removeJobFromQueueUponExit (job, time);
   }
 
-  /** Invokes {@link #removeJobFromQueueUponExit} (default implementation).
+  /** Invokes {@link #rescheduleAfterExit} (final implementation).
    * 
    */
   @Override
-  protected void removeJobFromQueueUponDeparture (final J departingJob, final double time)
+  protected final void rescheduleAfterRevokation (final J job, final double time)
+  {
+    rescheduleAfterExit (time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DEPARTURE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Invokes {@link #removeJobFromQueueUponExit} (final implementation).
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
     removeJobFromQueueUponExit (departingJob, time);
   }
   
-  /** Takes appropriate actions upon a job leaving the queue (to be implemented by concrete subclasses).
+  /** Invokes {@link #rescheduleAfterExit} (final implementation).
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterDeparture (final J departedJob, final double time)
+  {
+    rescheduleAfterExit (time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // EXIT
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Removes a job from the internal administration upon its exit from this queue (to be implemented by concrete subclasses).
    * 
    * <p>
    * The job may have been dropped, successfully revoked, or it may just depart.
    * 
    * <p>
-   * This is the default central entry point for
+   * This is the central entry point for
    * {@link #removeJobFromQueueUponDrop},
    * {@link #removeJobFromQueueUponRevokation},
    * {@link #removeJobFromQueueUponDeparture}.
-   * Implementations must take into account the cancellation of departure events.
+   * Implementations must take into account the cancellation of departure (and other) events.
    * 
    * @param exitingJob The job leaving.
    * @param time       The (current) time.
    * 
+   * @see #removeJobFromQueueUponDrop
+   * @see #removeJobFromQueueUponRevokation
+   * @see #removeJobFromQueueUponDeparture
+   * @see #rescheduleAfterExit
    * @see #getDepartureEvents
    * 
    */
   protected abstract void removeJobFromQueueUponExit (J exitingJob, double time);
+ 
+  /** Reschedules after a job has left this queue (to be implemented by concrete subclasses).
+   * 
+   * <p>
+   * The job may have been dropped, successfully been revoked, or departed.
+   * 
+   * <p>
+   * This is the central entry point for
+   * {@link #rescheduleAfterDrop},
+   * {@link #rescheduleAfterRevokation},
+   * {@link #rescheduleAfterDeparture}.
+   * Implementations must typically check whether to start a new service chunk {@link #startServiceChunk}.
+   * 
+   * @param time The (current) time.
+   * 
+   * @see #rescheduleAfterDrop
+   * @see #rescheduleAfterRevokation
+   * @see #rescheduleAfterDeparture
+   * @see #removeJobFromQueueUponExit
+   * @see #startServiceChunk
+   * 
+   */
+  protected abstract void rescheduleAfterExit (double time);
   
 }

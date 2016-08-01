@@ -22,7 +22,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   
   /** Creates a single-server preemptive LCFS queue given an event list and preemption strategy.
    *
-   * @param eventList The event list to use.
+   * @param eventList          The event list to use.
    * @param preemptionStrategy The preemption strategy, if {@code null}, the default is used (preemptive-resume).
    *
    * @throws IllegalArgumentException If the event list is <code>null</code>.
@@ -132,54 +132,6 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // DROP
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  protected final void removeJobFromQueueUponDrop (final J job, final double time)
-  {
-    super.removeJobFromQueueUponDrop (job, time);
-  }
-
-  /** Invokes {@link #reschedule}.
-   * 
-   */
-  @Override
-  protected final void rescheduleAfterDrop (final J job, final double time)
-  {
-    reschedule ();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // REVOKATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  protected final void removeJobFromQueueUponRevokation (final J job, final double time)
-  {
-    super.removeJobFromQueueUponRevokation (job, time);
-  }
-
-  /** Invokes {@link #reschedule}.
-   * 
-   */
-  @Override
-  protected final void rescheduleAfterRevokation (final J job, final double time)
-  {
-    reschedule ();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
   // SERVER-ACCESS CREDITS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -227,7 +179,14 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
     this.remainingServiceTime.put (job, jobServiceTime);
   }
 
-  /** Invokes {@link #reschedule}.
+  /** Schedules the started job for immediate execution if it is the only job in the service area
+   *  or if its arrival time is strictly smaller than the arrival time of a job in execution,
+   *  the latter of which is then preempted.
+   * 
+   * @see #jobsBeingServed
+   * @see #getFirstJobInServiceArea
+   * @see #preemptJob
+   * @see #startServiceChunk
    * 
    */
   @Override
@@ -238,33 +197,26 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
     || (! getJobsInServiceArea ().contains (job))
     || ! this.remainingServiceTime.containsKey (job))
       throw new IllegalArgumentException ();
-    reschedule ();
+    if (this.jobsBeingServed.containsKey (job))
+      throw new IllegalStateException ();
+    if (this.jobsBeingServed.size () > 1)
+      throw new IllegalStateException ();
+    if (getFirstJobInServiceArea () == job)
+    {
+      // The job is eligible for immediate execution, hence we must preempt the job currently being executed.
+      final J jobBeingServed = (this.jobsBeingServed.isEmpty () ? null : this.jobsBeingServed.keySet ().iterator ().next ());
+      if (jobBeingServed != null)
+        preemptJob (time, jobBeingServed);
+      // The preemption could have scheduled 'job' already, so make sure we check!
+      if (this.jobsBeingServed.isEmpty ())
+        startServiceChunk (time, job);
+      else if (this.jobsBeingServed.size () > 1)
+        throw new IllegalStateException ();
+      else if (this.jobsBeingServed.keySet ().iterator ().next () != job)
+        throw new IllegalStateException ();
+    }
   }
     
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // DEPARTURE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
-  {
-    super.removeJobFromQueueUponDeparture (departingJob, time);
-  }
-
-  /** Invokes {@link #reschedule}.
-   * 
-   */
-  @Override
-  protected final void rescheduleAfterDeparture (final J departedJob, final double time)
-  {
-    reschedule ();
-  }
-  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // EXIT (DEPARTURE / DROP / REVOKATION)
@@ -307,57 +259,21 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
     this.jobQueue.remove (exitingJob);
   }
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // RESCHEDULE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Reschedules through assessment of which job to serve.
-   * 
-   * <p>
-   * Repeatedly (until they match) confronts
-   * the job to serve as obtained through {@link #getFirstJobInServiceArea}
-   * with the job currently in service (the only job in {@link #jobsBeingServed}).
-   * If there is a mismatch, and if there is a job currently being served,
-   * it preempts the latter job through {@link #preemptJob}, and recurs.
-   * Otherwise, if there is a mismatch but no job is currently being served,
-   * it starts {@link #getFirstJobInServiceArea}
-   * by {@link #startServiceChunk}.
-   * 
-   * <p>
-   * Note that this method does not take into account the potential start of jobs.
-   * This is done separately in {@link #rescheduleAfterArrival} and {@link #rescheduleForNewServerAccessCredits}.
+  /** If there are jobs in the service area but none in execution,
+   *  starts a service-chunk for the job in the service area
+   *  that arrived last at the queue.
    * 
    * @see #jobsBeingServed
+   * @see #jobsInServiceArea
    * @see #getFirstJobInServiceArea
-   * @see #preemptJob
    * @see #startServiceChunk
    * 
    */
-  protected final void reschedule ()
+  @Override
+  protected final void rescheduleAfterExit (final double time)
   {
-    // Get the job currently being served; if any.
-    final J jobBeingServed;
-    if (! this.jobsBeingServed.isEmpty ())
-    {
-      if (this.jobsBeingServed.size () > 1)
-        throw new IllegalStateException ();
-      jobBeingServed = this.jobsBeingServed.keySet ().iterator ().next ();
-    }
-    else
-      jobBeingServed = null;
-    final J youngestServed = getFirstJobInServiceArea ();
-    if (jobBeingServed != youngestServed)
-    {
-      if (jobBeingServed != null)
-      {
-        preemptJob (getLastUpdateTime (), jobBeingServed);
-        reschedule ();
-      }
-      else if (youngestServed != null)
-        startServiceChunk (getLastUpdateTime (), youngestServed);    
-    }
+    if (this.jobsBeingServed.isEmpty () && ! this.jobsInServiceArea.isEmpty ())
+      startServiceChunk (time, getFirstJobInServiceArea ());
   }
   
 }
