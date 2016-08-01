@@ -81,7 +81,7 @@ public enum KnownSimQueue
   
   // composite
   ENCAPSULATOR   ("Encapsulator", true,
-                  nl.jdj.jqueues.r5.entity.queue.composite.single.encap.BlackEncapsulatorSimQueue.class,
+                  nl.jdj.jqueues.r5.entity.queue.composite.single.enc.BlackEncapsulatorSimQueue.class,
                   GeneratorProfile.SE_Q_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
