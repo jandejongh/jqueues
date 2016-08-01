@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.composite;
 import java.util.Collections;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.queue.composite.single.encap.BlackEncapsulatorSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.single.enc.BlackEncapsulatorSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_B;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
