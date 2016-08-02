@@ -44,7 +44,7 @@ extends AbstractSimQueuePredictor<Q>
     this.subQueuePredictors = subQueuePredictors;
   }
 
-  private <T> Set<T> asSet (final T t)
+  protected <T> Set<T> asSet (final T t)
   {
     if (t == null)
       throw new IllegalArgumentException ();
@@ -92,7 +92,7 @@ extends AbstractSimQueuePredictor<Q>
     queueState.setTime (newTime);
   }
 
-  private static class SubQueueSimpleEvent
+  protected static class SubQueueSimpleEvent
   extends SimEntitySimpleEventType.Member
   {
 
