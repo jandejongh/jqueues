@@ -1111,22 +1111,21 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * throwing a {@link IllegalStateException} if not credits are available.
    * 
    * <p>
-   * Subsequently, it invokes the subclass-specific {@link #insertJobInQueueUponStart},
-   * and checks the presence of the job in {@link #jobsInServiceArea}.
+   * If the auto-revocation policy is {@link AutoRevocationPolicy#UPON_START},
+   * it adds a {@link SimEntitySimpleEventType#START} pending notification,
+   * yet immediately revokes the job through {@link #autoRevoke}.
+   * Note that in this case, {@link #insertJobInQueueUponStart}
+   * and {@link #rescheduleAfterStart} are not used at all! 
    * 
    * <p>
-   * It then adds a {@link SimEntitySimpleEventType#START} pending notification.
+   * Otherwise, it invokes the subclass-specific {@link #insertJobInQueueUponStart},
+   * checks the (mandatory) presence of the job in {@link #jobsInServiceArea},
+   * adds a {@link SimEntitySimpleEventType#START} pending notification
+   * and invokes the subclass-specific {@link #rescheduleAfterStart}.
    * 
    * <p>
-   * It invokes the subclass-specific {@link #rescheduleAfterStart}.
-   * 
-   * <p>
-   * If the auto-revocation policy is {@link AutoRevocationPolicy#UPON_START} and the
-   * job is still present in the service area,
-   * it revokes the job through {@link #autoRevoke}.
-   * 
-   * <p>
-   * Finally, it notifies listeners of the pending notifications if required (i.e., if we are a top-level event).
+   * Finally, for both cases,
+   * it then notifies listeners of the pending notifications if required (i.e., if we are a top-level event).
    * 
    * @param job  The job that is to be started.
    * @param time The current time (i.e., start time of the job).
@@ -1156,16 +1155,21 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     update (time);
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
     takeServerAccessCredit ();
-    insertJobInQueueUponStart (job, time);
-    if (! this.jobQueue.contains (job))
-      throw new RuntimeException ();
-    if (! this.jobsInServiceArea.contains (job))
-      throw new RuntimeException ();
-    addPendingNotification (SimEntitySimpleEventType.START, job);
-    rescheduleAfterStart (job, time);
-    if (this.autoRevocationPolicy == AutoRevocationPolicy.UPON_START
-    &&  this.jobsInServiceArea.contains (job))
+    if (this.autoRevocationPolicy == AutoRevocationPolicy.UPON_START)
+    {
+      addPendingNotification (SimEntitySimpleEventType.START, job);
       autoRevoke (time, job);
+    }
+    else
+    {
+      insertJobInQueueUponStart (job, time);
+      if (! this.jobQueue.contains (job))
+        throw new RuntimeException ();
+      if (! this.jobsInServiceArea.contains (job))
+        throw new RuntimeException ();
+      addPendingNotification (SimEntitySimpleEventType.START, job);
+      rescheduleAfterStart (job, time);
+    }
     if (isTopLevel)
       fireAndLockPendingNotifications ();    
   }
@@ -1176,13 +1180,17 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * To be implemented by concrete queue types.
    * 
    * <p>
-   * Implementation must (at least) add the job to {@link #jobsInServiceArea}, even if the job is to depart or be dropped
+   * Implementations must (at least) add the job to {@link #jobsInServiceArea}, even if the job is to depart or be dropped
    * immediately.
    * 
    * <p>
    * More generally, implementations must <i>not</i> reschedule,
    * but instead wait for the imminent invocation of
    * {@link #rescheduleAfterStart} for that.
+   * 
+   * <p>
+   * Implementations should not care about server-access credits or auto-revocation;
+   * this is taken care of by {@link #start}.
    * 
    * @param job  The job that starts.
    * @param time The current time (i.e., start time of the job).
@@ -1203,6 +1211,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * Upon return, the job may have left {@link #jobQueue} already (in which case it <i>must</i> not be present in
    * {@link #jobsInServiceArea} either), but the caller then assumes that all appropriate notifications
    * are added (to the pending notifications) in this method.
+   * 
+   * <p>
+   * Implementations should not care about server-access credits or auto-revocation;
+   * this is taken care of by {@link #start}.
    * 
    * @param job  The job that started (and is present in {@link #jobQueue} and {@link #jobsInServiceArea}).
    * @param time The current time (i.e., the start time of the job).
