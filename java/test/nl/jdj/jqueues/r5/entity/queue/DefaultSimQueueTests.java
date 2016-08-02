@@ -121,27 +121,8 @@ public class DefaultSimQueueTests
                      (actualSacLogs.get (i).values ().iterator ().next ());
           }
           final List<Map<Double, Boolean>> actualNwaLogs = nwaLogger.getNoWaitArmedLog ();
-          // System.err.println ("Predicted NWA Logs: " + predictedNwaLogs + ".");
-          // System.err.println ("Actual    NWA Logs: " + actualNwaLogs + ".");
-          // if (predictedNwaLogs.size () != actualNwaLogs.size ())
-          // {
-          //   System.err.println ("SIZE MISMATCH!");
-          //   System.err.println ("Predicted NWA Logs: " + predictedNwaLogs + ".");
-          //   System.err.println ("Actual    NWA Logs: " + actualNwaLogs + ".");
-          // }
-          assert (predictedNwaLogs.size () == actualNwaLogs.size ());
-          if (predictedNwaLogs.isEmpty ())
-            assert predictedInitNwa == queue.isNoWaitArmed ();
-          else
-            for (int i = 0; i < predictedNwaLogs.size (); i++)
-            {
-              assert predictedNwaLogs.get (i).size () == 1;
-              assert actualNwaLogs.get (i).size () == 1;
-              assert predictedNwaLogs.get (i).keySet ().iterator ().next ().equals
-                       (actualNwaLogs.get (i).keySet ().iterator ().next ());
-              assert predictedNwaLogs.get (i).values ().iterator ().next ().equals
-                       (actualNwaLogs.get (i).values ().iterator ().next ());
-            }
+          // XXX SHOULD DO THE SAME FOR QAV and SAC!!
+          assert SimQueueNoWaitArmedLogger.matchNoWaitArmedLogs (predictedNwaLogs, actualNwaLogs);
           el.reset ();
         }
       else if (! deadSilent)
