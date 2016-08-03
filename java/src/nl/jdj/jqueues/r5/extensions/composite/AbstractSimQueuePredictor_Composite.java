@@ -104,11 +104,14 @@ extends AbstractSimQueuePredictor<Q>
     
     public final SimJob job;
     
+    public final Object argument;
+    
     public SubQueueSimpleEvent
       (final SimQueue subQueue,
        final SimEntitySimpleEventType.Member subQueueWorkloadEvent,
        final SimEntitySimpleEventType.Member subQueueQueueEvent,
-       final SimJob job)
+       final SimJob job,
+       final Object argument)
     {
       super ("SUBQUEUE");
       if (subQueue == null
@@ -119,6 +122,7 @@ extends AbstractSimQueuePredictor<Q>
       this.subQueueWorkloadEvent = subQueueWorkloadEvent;
       this.subQueueQueueEvent = subQueueQueueEvent;
       this.job = job;
+      this.argument = argument;
     }
     
   }
@@ -157,7 +161,7 @@ extends AbstractSimQueuePredictor<Q>
     if (subQueuesMinNextEventTime.size () > 1)
       throw new SimQueuePredictionAmbiguityException ();
     else if (subQueuesMinNextEventTime.size () == 1)
-      queueEventTypes.add (new SubQueueSimpleEvent (subQueuesMinNextEventTime.iterator ().next (), null, nextEvent, null));
+      queueEventTypes.add (new SubQueueSimpleEvent (subQueuesMinNextEventTime.iterator ().next (), null, nextEvent, null, null));
     return minNextEventTime;
   }
 
@@ -176,7 +180,8 @@ extends AbstractSimQueuePredictor<Q>
       if (! (job instanceof DefaultSimJob))
         throw new UnsupportedOperationException ();
       ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (headQueue, job.getServiceTime (queue));
-      final SubQueueSimpleEvent headQueueEvent = new SubQueueSimpleEvent (headQueue, SimEntitySimpleEventType.ARRIVAL, null, job);
+      final SubQueueSimpleEvent headQueueEvent =
+        new SubQueueSimpleEvent (headQueue, SimEntitySimpleEventType.ARRIVAL, null, job, null);
       doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (headQueueEvent), visitLogsSet);
     }
   }
@@ -249,7 +254,7 @@ extends AbstractSimQueuePredictor<Q>
             {
               final SimQueue subQueue = new ArrayList<SimQueue> (queue.getQueues ()).get (i);
               final SubQueueSimpleEvent subQueueEvent =
-                new SubQueueSimpleEvent (subQueue, SimEntitySimpleEventType.REVOCATION, null, job);
+                new SubQueueSimpleEvent (subQueue, SimEntitySimpleEventType.REVOCATION, null, job, null);
               doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (subQueueEvent), visitLogsSet);
               break;
             }
@@ -364,7 +369,7 @@ extends AbstractSimQueuePredictor<Q>
             final int nextSubQueueIndex = subQueueIndex + 1;
             final SimQueue nextSubQueue = subQueues.get (nextSubQueueIndex);
             final SubQueueSimpleEvent nextSubQueueEvent = new SubQueueSimpleEvent
-              (nextSubQueue, SimEntitySimpleEventType.ARRIVAL, null, jvl.job);
+              (nextSubQueue, SimEntitySimpleEventType.ARRIVAL, null, jvl.job, null);
             if (! (jvl.job instanceof DefaultSimJob))
               throw new UnsupportedOperationException ();
             ((DefaultSimJob) jvl.job).setRequestedServiceTimeMappingForQueue (nextSubQueue, jvl.job.getServiceTime (queue));
