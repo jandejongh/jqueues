@@ -252,7 +252,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       throw new IllegalArgumentException ();
     if ((! this.jobQueue.contains (job)) || this.jobsInServiceArea.contains (job))
       throw new IllegalArgumentException ();
-    getDelegateJob (job); // Sanity on existance of delegate job.
+    getDelegateJob (job); // Sanity on existence of delegate job.
     this.jobsInServiceArea.add (job);
   }
 
@@ -449,7 +449,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   @Override
   public final void notifyArrival (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, queue); // Sanity on existance of real job.
+    getRealJob (job, queue); // Sanity on existence of real job.
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -545,7 +545,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   @Override
   public final void notifyStart (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, queue); // Sanity on existance of real job.
+    getRealJob (job, queue); // Sanity on existence of real job.
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -598,7 +598,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   @Override
   public final void notifyRevocation (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, queue); // Sanity on existance of real job.
+    getRealJob (job, queue); // Sanity on existence of real job.
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -619,7 +619,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   @Override
   public final void notifyAutoRevocation (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, queue); // Sanity on existance of real job.
+    getRealJob (job, queue); // Sanity on existence of real job.
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
