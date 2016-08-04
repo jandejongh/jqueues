@@ -401,7 +401,7 @@ public class BlackEncapsulatorSimQueue
       throw new IllegalArgumentException ();
     if ((! this.jobQueue.contains (job)) || (! this.jobsInServiceArea.contains (job)))
       throw new IllegalArgumentException ();
-    getDelegateJob (job); // Sanity on existance of delegate job.
+    getDelegateJob (job); // Sanity on existence of delegate job.
   }
     
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -571,7 +571,7 @@ public class BlackEncapsulatorSimQueue
   @Override
   public final void notifyArrival (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, queue); // Sanity on existance of real job.
+    getRealJob (job, queue); // Sanity on existence of real job.
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -716,7 +716,7 @@ public class BlackEncapsulatorSimQueue
   @Override
   public final void notifyRevocation (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, queue); // Sanity on existance of real job.
+    getRealJob (job, queue); // Sanity on existence of real job.
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
