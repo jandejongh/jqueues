@@ -67,4 +67,53 @@ extends DefaultSimQueueListener
     this.sacLog.add (Collections.singletonMap (time, false));
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // MATCH ServerAccessCredits AVAILABILITY LOGS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Compares two server-access-credits availability logs (predicted and actual), and reports inequalities to {@link System#err}.
+   * 
+   * @param predictedSacLogs The predicted server-access-credits availability logs.
+   * @param actualSacLogs    The actual server-access-credits availability logs.
+   * 
+   * @return {@code true} if the two logs match.
+   * 
+   * @throws IllegalArgumentException If an argument is {@code null} or improperly structured.
+   * 
+   */
+  public static boolean matchServerAccessCreditsAvailabilityLogs
+  (final List<Map<Double, Boolean>> predictedSacLogs, final List<Map<Double, Boolean>> actualSacLogs)
+  {
+    if (predictedSacLogs == null || actualSacLogs == null)
+      throw new IllegalArgumentException ();
+    boolean retVal = true;
+    if (predictedSacLogs.size () != actualSacLogs.size ())
+      retVal = false;
+    else
+      for (int i = 0; i < predictedSacLogs.size (); i++)
+      {
+        if (predictedSacLogs.get (i).size () != 1 || actualSacLogs.get (i).size () != 1)
+          throw new IllegalArgumentException ();
+        if (! predictedSacLogs.get (i).keySet ().iterator ().next ().equals (actualSacLogs.get (i).keySet ().iterator ().next ()))
+        {
+          retVal = false;
+          break;
+        }
+        if (! predictedSacLogs.get (i).values ().iterator ().next ().equals (actualSacLogs.get (i).values ().iterator ().next ()))
+        {
+          retVal = false;
+          break;
+        }
+      }
+    if (! retVal)
+    {
+      System.err.println ("Server-Access Credits Availability Logs mismatch!");
+      System.err.println ("  Predicted: " + predictedSacLogs + ".");
+      System.err.println ("  Actual   : " + actualSacLogs + ".");
+    }
+    return retVal;
+  }
+  
 }
