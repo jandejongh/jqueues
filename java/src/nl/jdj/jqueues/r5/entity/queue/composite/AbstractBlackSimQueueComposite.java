@@ -217,21 +217,70 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     return delegateJob;
   }
 
-  /** Returns the real job for given delegate job.
+  /** Returns the real job for given delegate job, and asserts its presence on the given (sub-)queue, or on no (sub-)queue at all.
    * 
-   * Performs various sanity checks on the arguments and the internal administration consistency.
+   * <p>
+   * By using this method, you assume that the delegate job is present on the given sub-{@code queue},
+   * or, if passing a {@code null} argument for the {@code queue},
+   * on no sub-queue at all.
+   * This method will rigorously check your assumption and happily throw an {@link IllegalStateException}
+   * if your assumption proves wrong.
+   * Clearly, this method is primarily intended for internal consistency checking.
+   * 
+   * <p>
+   * Performs various additional sanity checks on the arguments and the internal administration consistency.
    * 
    * @param delegateJob The delegate job.
-   * @param queue       The queue at which the delegate job currently resides.
+   * @param queue       The queue at which the delegate job currently resides,
+   *                    {@code null} if it is supposed to reside on <i>none</i> of the )sub-)queues..
    * 
    * @return The real job.
    * 
-   * @throws IllegalStateException If sanity checks fail.
+   * @throws IllegalStateException If sanity checks fail, including the case where a corresponding real job could not be found,
+   *                               or where assumption on the delegate-job whereabout proves to be wrong.
+   * 
+   * @see #getRealJob(nl.jdj.jqueues.r5.SimJob)
    * 
    */
   protected final J getRealJob (final DJ delegateJob, final DQ queue)
   {
-    if (delegateJob == null || queue == null || ! getQueues ().contains (queue))
+    if (delegateJob == null || (queue != null && ! getQueues ().contains (queue)))
+      throw new IllegalStateException ();
+    final J realJob = this.realSimJobMap.get (delegateJob);
+    if (realJob == null)
+      throw new IllegalStateException ();
+    if (this.delegateSimJobMap.get (realJob) != delegateJob)
+      throw new IllegalStateException ();
+    if (! this.jobQueue.contains (realJob))
+      throw new IllegalStateException ();
+    if (queue == null)
+    {
+      for (final DQ subQueue : getQueues ())
+        if (subQueue.getJobs ().contains (delegateJob))
+          throw new IllegalStateException ();
+    }
+    else if (! queue.getJobs ().contains (delegateJob))
+      throw new IllegalStateException ();
+    return realJob;
+  }
+  
+  /** Returns the real job for given delegate job.
+   * 
+   * <p>
+   * Performs various sanity checks on the arguments and the internal administration consistency.
+   * 
+   * @param delegateJob The delegate job.
+   * 
+   * @return The real job.
+   * 
+   * @throws IllegalStateException If sanity checks fail, including the case where a corresponding real job could not be found.
+   * 
+   * @see #getRealJob(nl.jdj.jqueues.r5.SimJob, nl.jdj.jqueues.r5.SimQueue)
+   * 
+   */
+  protected final J getRealJob (final DJ delegateJob)
+  {
+    if (delegateJob == null)
       throw new IllegalStateException ();
     final J realJob = this.realSimJobMap.get (delegateJob);
     if (realJob == null)
