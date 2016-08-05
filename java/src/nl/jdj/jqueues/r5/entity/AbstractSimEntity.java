@@ -85,7 +85,7 @@ implements SimEntity<J, Q>
     if (this.eventList != null)
       this.eventList.addListener (this);
     if ((this instanceof SimQueue) && (this instanceof SimJob))
-      throw new IllegalArgumentException ();
+      throw new IllegalArgumentException ("Trying to instantiate a SimEntity that is both a SimJob and a SimQueue!");
   }
     
   /** Creates a new {@link SimEntity} with given event list and <code>null</code> (initial) name.
@@ -338,7 +338,10 @@ implements SimEntity<J, Q>
   protected final void update (final double time)
   {
     if (time < this.lastUpdateTime)
-      throw new IllegalStateException ();
+    {
+      LOGGER.log (Level.SEVERE, "Update in the past on {0}: {1} < {2}!", new Object[]{this, time, this.lastUpdateTime});
+      throw new IllegalStateException ("update in the past: " + time + " < " + this.lastUpdateTime + "!");
+    }
     for (final DoubleConsumer preEventHook : this.preEventHooks)
       preEventHook.accept (time);
     if (Double.isInfinite (time) || time > this.lastUpdateTime)
