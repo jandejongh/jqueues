@@ -28,11 +28,42 @@ implements SimEntityListener<J, Q>
     return this.getClass ().getSimpleName ();
   }
   
+  private boolean onlyUpdatesAndStateChanges = false;
+
+  /** Returns whether this object only reports updates and state changes.
+   * 
+   * @return Whether this object only reports updates and state changes.
+   * 
+   * @see #notifyUpdate
+   * @see #notifyStateChanged
+   * 
+   */
+  public final boolean isOnlyUpdatesAndStateChanges ()
+  {
+    return this.onlyUpdatesAndStateChanges;
+  }
+ 
+  /** Sets whether this object only reports updates and state changes.
+   * 
+   * @param onlyUpdatesAndStateChanges Whether this object only reports updates and state changes.
+   * 
+   * @see #notifyUpdate
+   * @see #notifyStateChanged
+   * 
+   */
+  public final void setOnlyUpdatesAndStateChanges (final boolean onlyUpdatesAndStateChanges)
+  {
+    this.onlyUpdatesAndStateChanges = onlyUpdatesAndStateChanges;
+  }
+  
   @Override
   public void notifyResetEntity (final SimEntity entity)
   {
-    System.out.print (getHeaderString () + " ");
-    System.out.println ("entity=" + entity + ": RESET.");
+    if (! isOnlyUpdatesAndStateChanges ())
+    {
+      System.out.print (getHeaderString () + " ");
+      System.out.println ("entity=" + entity + ": RESET.");
+    }
   }
 
   @Override
@@ -65,43 +96,61 @@ implements SimEntityListener<J, Q>
   @Override
   public void notifyArrival (final double time, final J job, final Q queue)
   {
-    System.out.print (getHeaderString () + " ");
-    System.out.println ("t=" + time + ", queue=" + queue + ": ARRIVAL of job " + job + ".");
+    if (! isOnlyUpdatesAndStateChanges ())
+    {
+      System.out.print (getHeaderString () + " ");
+      System.out.println ("t=" + time + ", queue=" + queue + ": ARRIVAL of job " + job + ".");
+    }
   }
 
   @Override
   public void notifyStart (double time, final J job, final Q queue)
   {
-    System.out.print (getHeaderString () + " ");
-    System.out.println ("t=" + time + ", queue=" + queue + ": START of job " + job + ".");
+    if (! isOnlyUpdatesAndStateChanges ())
+    {
+      System.out.print (getHeaderString () + " ");
+      System.out.println ("t=" + time + ", queue=" + queue + ": START of job " + job + ".");
+    }
   }
 
   @Override
   public void notifyDrop (final double time, final J job, final Q queue)
   {
-    System.out.print (getHeaderString () + " ");
-    System.out.println ("t=" + time + ", queue=" + queue + ": DROP of job " + job + ".");
+    if (! isOnlyUpdatesAndStateChanges ())
+    {
+      System.out.print (getHeaderString () + " ");
+      System.out.println ("t=" + time + ", queue=" + queue + ": DROP of job " + job + ".");
+    }
   }
 
   @Override
   public void notifyRevocation (final double time, final J job, final Q queue)
   {
-    System.out.print (getHeaderString () + " ");
-    System.out.println ("t=" + time + ", queue=" + queue + ": REVOCATION of job " + job + ".");
+    if (! isOnlyUpdatesAndStateChanges ())
+    {
+      System.out.print (getHeaderString () + " ");
+      System.out.println ("t=" + time + ", queue=" + queue + ": REVOCATION of job " + job + ".");
+    }
   }
 
   @Override
   public void notifyAutoRevocation (final double time, final J job, final Q queue)
   {
-    System.out.print (getHeaderString () + " ");
-    System.out.println ("t=" + time + ", queue=" + queue + ": AUTO_REVOCATION of job " + job + ".");
+    if (! isOnlyUpdatesAndStateChanges ())
+    {
+      System.out.print (getHeaderString () + " ");
+      System.out.println ("t=" + time + ", queue=" + queue + ": AUTO_REVOCATION of job " + job + ".");
+    }
   }
 
   @Override
   public void notifyDeparture (final double time, final J job, final Q queue)
   {
-    System.out.print (getHeaderString () + " ");
-    System.out.println ("t=" + time + ", queue=" + queue + ": DEPARTURE of job " + job + ".");
+    if (! isOnlyUpdatesAndStateChanges ())
+    {
+      System.out.print (getHeaderString () + " ");
+      System.out.println ("t=" + time + ", queue=" + queue + ": DEPARTURE of job " + job + ".");
+    }
   }
 
 }
