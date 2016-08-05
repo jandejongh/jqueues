@@ -13,10 +13,12 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJobQoSFactory;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueComposite;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.listener.SimQueueAccessVacationLogger;
 import nl.jdj.jqueues.r5.listener.SimQueueNoWaitArmedLogger;
 import nl.jdj.jqueues.r5.listener.SimQueueServerAccessCreditsAvailabilityLogger;
+import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.KnownLoadFactory_SQ_SV;
@@ -51,8 +53,15 @@ public class DefaultSimQueueTests
     System.out.println (queue);
     System.out.println ("================================================================================");
     final SimEventList<SimEvent> el = queue.getEventList ();
-    if ((! (silent || deadSilent)) && (queue instanceof AbstractSimQueue))
-      ((AbstractSimQueue) queue).registerStdOutSimQueueListener ();
+    if (! (silent || deadSilent))
+    {
+      final StdOutSimQueueListener listener = new StdOutSimQueueListener ();
+      listener.setOnlyUpdatesAndStateChanges (true);
+      queue.registerSimEntityListener (listener);
+      if (queue instanceof SimQueueComposite)
+        for (final SimQueue subQueue : (Set<SimQueue>) ((SimQueueComposite) queue).getQueues ())
+          subQueue.registerSimEntityListener (listener);
+    }
     final SimQueueAccessVacationLogger qavLogger = new SimQueueAccessVacationLogger ();
     queue.registerSimEntityListener (qavLogger);
     final SimQueueServerAccessCreditsAvailabilityLogger sacLogger = new SimQueueServerAccessCreditsAvailabilityLogger ();
