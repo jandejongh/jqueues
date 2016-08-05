@@ -68,7 +68,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * @return The underlying event list of this {@link SimEntity}.
    * 
    */
-  public SimEventList getEventList ();
+  SimEventList getEventList ();
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -83,7 +83,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * @see #unregisterSimEntityListener
    * 
    */
-  public void registerSimEntityListener (SimEntityListener<J, Q> listener);
+  void registerSimEntityListener (SimEntityListener<J, Q> listener);
   
   /** Unregisters a listener to events related to this entity.
    * 
@@ -92,7 +92,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * @see #registerSimEntityListener
    * 
    */
-  public void unregisterSimEntityListener (SimEntityListener<J, Q> listener);
+  void unregisterSimEntityListener (SimEntityListener<J, Q> listener);
 
   /** Gets the listeners to this entity.
    * 
@@ -102,7 +102,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * @return The listeners to this entity.
    * 
    */
-  public Set<SimEntityListener<J, Q>> getSimEntityListeners ();
+  Set<SimEntityListener<J, Q>> getSimEntityListeners ();
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -126,7 +126,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * @see #setName
    * 
    */
-  public String toStringDefault ();
+  String toStringDefault ();
   
   /** Sets the name of this {@link SimEntity}, to be returned by subsequent calls to <code>Object.toString ()</code>.
    * 
@@ -136,7 +136,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * @see #toStringDefault
    * 
    */
-  public void setName (String name);
+  void setName (String name);
  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -160,7 +160,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * @see SimEventListResetListener#notifyEventListReset
    * 
    */
-  public void resetEntity ();
+  void resetEntity ();
   
   /** Gets the time of the last update of this entity.
    * 
@@ -194,7 +194,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
     /** Performs the action.
      * 
      */
-    void execute ();
+    public void execute ();
   }
   
   /** Registers an {@link Action} to be taken once this entity has finished issuing notifications,
