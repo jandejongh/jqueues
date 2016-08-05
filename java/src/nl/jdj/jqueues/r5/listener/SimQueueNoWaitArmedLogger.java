@@ -69,6 +69,7 @@ extends DefaultSimQueueListener
    * 
    * @param predictedNwaLogs The predicted {@code NoWaitArmed} logs.
    * @param actualNwaLogs    The actual {@code NoWaitArmed} logs.
+   * @param accuracy         The allowed deviation in key values (times-of-change).
    * 
    * @return {@code true} if the two logs match.
    * 
@@ -76,7 +77,7 @@ extends DefaultSimQueueListener
    * 
    */
   public static boolean matchNoWaitArmedLogs
-  (final List<Map<Double, Boolean>> predictedNwaLogs, final List<Map<Double, Boolean>> actualNwaLogs)
+  (final List<Map<Double, Boolean>> predictedNwaLogs, final List<Map<Double, Boolean>> actualNwaLogs, final double accuracy)
   {
     if (predictedNwaLogs == null || actualNwaLogs == null)
       throw new IllegalArgumentException ();
@@ -88,7 +89,9 @@ extends DefaultSimQueueListener
       {
         if (predictedNwaLogs.get (i).size () != 1 || actualNwaLogs.get (i).size () != 1)
           throw new IllegalArgumentException ();
-        if (! predictedNwaLogs.get (i).keySet ().iterator ().next ().equals (actualNwaLogs.get (i).keySet ().iterator ().next ()))
+        if (Math.abs (predictedNwaLogs.get (i).keySet ().iterator ().next ()
+                    - actualNwaLogs.get (i).keySet ().iterator ().next ())
+                    > accuracy)
         {
           retVal = false;
           break;

@@ -77,6 +77,7 @@ extends DefaultSimQueueListener
    * 
    * @param predictedSacLogs The predicted server-access-credits availability logs.
    * @param actualSacLogs    The actual server-access-credits availability logs.
+   * @param accuracy         The allowed deviation in key values (times-of-change).
    * 
    * @return {@code true} if the two logs match.
    * 
@@ -84,7 +85,7 @@ extends DefaultSimQueueListener
    * 
    */
   public static boolean matchServerAccessCreditsAvailabilityLogs
-  (final List<Map<Double, Boolean>> predictedSacLogs, final List<Map<Double, Boolean>> actualSacLogs)
+  (final List<Map<Double, Boolean>> predictedSacLogs, final List<Map<Double, Boolean>> actualSacLogs, final double accuracy)
   {
     if (predictedSacLogs == null || actualSacLogs == null)
       throw new IllegalArgumentException ();
@@ -96,7 +97,9 @@ extends DefaultSimQueueListener
       {
         if (predictedSacLogs.get (i).size () != 1 || actualSacLogs.get (i).size () != 1)
           throw new IllegalArgumentException ();
-        if (! predictedSacLogs.get (i).keySet ().iterator ().next ().equals (actualSacLogs.get (i).keySet ().iterator ().next ()))
+        if (Math.abs (predictedSacLogs.get (i).keySet ().iterator ().next ()
+                    - actualSacLogs.get (i).keySet ().iterator ().next ())
+                    > accuracy)
         {
           retVal = false;
           break;

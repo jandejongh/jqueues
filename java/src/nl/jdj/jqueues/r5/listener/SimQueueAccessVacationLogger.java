@@ -67,4 +67,56 @@ extends DefaultSimQueueListener
     this.qavLog.add (Collections.singletonMap (time, false));
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // MATCH QueueAccessVacation AVAILABILITY LOGS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Compares two queue-access-vacation logs (predicted and actual), and reports inequalities to {@link System#err}.
+   * 
+   * @param predictedQavLogs The predicted queue-access-vacation logs.
+   * @param actualQavLogs    The actual queue-access-vacation logs.
+   * @param accuracy         The allowed deviation in key values (times-of-change).
+   * 
+   * @return {@code true} if the two logs match.
+   * 
+   * @throws IllegalArgumentException If an argument is {@code null} or improperly structured.
+   * 
+   */
+  public static boolean matchQueueAccessVacationLogs
+  (final List<Map<Double, Boolean>> predictedQavLogs, final List<Map<Double, Boolean>> actualQavLogs, final double accuracy)
+  {
+    if (predictedQavLogs == null || actualQavLogs == null)
+      throw new IllegalArgumentException ();
+    boolean retVal = true;
+    if (predictedQavLogs.size () != actualQavLogs.size ())
+      retVal = false;
+    else
+      for (int i = 0; i < predictedQavLogs.size (); i++)
+      {
+        if (predictedQavLogs.get (i).size () != 1 || actualQavLogs.get (i).size () != 1)
+          throw new IllegalArgumentException ();
+        if (Math.abs (predictedQavLogs.get (i).keySet ().iterator ().next ()
+                    - actualQavLogs.get (i).keySet ().iterator ().next ())
+                    > accuracy)
+        {
+          retVal = false;
+          break;
+        }
+        if (! predictedQavLogs.get (i).values ().iterator ().next ().equals (actualQavLogs.get (i).values ().iterator ().next ()))
+        {
+          retVal = false;
+          break;
+        }
+      }
+    if (! retVal)
+    {
+      System.err.println ("Queue-Access Vacation Logs mismatch!");
+      System.err.println ("  Predicted: " + predictedQavLogs + ".");
+      System.err.println ("  Actual   : " + actualQavLogs + ".");
+    }
+    return retVal;
+  }
+  
 }

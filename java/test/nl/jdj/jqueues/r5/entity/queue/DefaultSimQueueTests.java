@@ -89,25 +89,15 @@ public class DefaultSimQueueTests
           assert predictor.matchVisitLogs_SQ_SV
             (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, accuracy, System.err);
           final List<Map<Double, Boolean>> actualQavLogs = qavLogger.getQueueAccessVacationLog ();
-          // System.err.println ("Predicted QAV Logs: " + predictedQavLogs + ".");
-          // System.err.println ("Actual    QAV Logs: " + actualQavLogs + ".");
-          assert (predictedQavLogs.size () == actualQavLogs.size ());
-          for (int i = 0; i < predictedQavLogs.size (); i++)
-          {
-            assert predictedQavLogs.get (i).size () == 1;
-            assert actualQavLogs.get (i).size () == 1;
-            assert predictedQavLogs.get (i).keySet ().iterator ().next ().equals
-                     (actualQavLogs.get (i).keySet ().iterator ().next ());
-            assert predictedQavLogs.get (i).values ().iterator ().next ().equals
-                     (actualQavLogs.get (i).values ().iterator ().next ());
-          }
           final List<Map<Double, Boolean>> actualSacLogs = sacLogger.getServerAccessCreditsAvailabilityLog ();
           final List<Map<Double, Boolean>> actualNwaLogs = nwaLogger.getNoWaitArmedLog ();
           // XXX SHOULD DO THE SAME FOR QAV!!
+          assert SimQueueAccessVacationLogger.matchQueueAccessVacationLogs
+                   (predictedQavLogs, actualQavLogs, accuracy);
           assert SimQueueServerAccessCreditsAvailabilityLogger.matchServerAccessCreditsAvailabilityLogs
-                   (predictedSacLogs, actualSacLogs);
+                   (predictedSacLogs, actualSacLogs, accuracy);
           assert SimQueueNoWaitArmedLogger.matchNoWaitArmedLogs
-                   (predictedNwaLogs, actualNwaLogs);
+                   (predictedNwaLogs, actualNwaLogs, accuracy);
           el.reset ();
         }
       else if (! deadSilent)
