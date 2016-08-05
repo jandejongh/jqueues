@@ -197,42 +197,6 @@ extends DefaultSimQueueListener<J, Q>
   
   private boolean processing = false;
   
-  /** Gets the last update time (i.e., the reset time) from the entity
-   *  (in order to ensure that time is non-decreasing in between resets).
-   * 
-   * @param entity The entity that was reset.
-   * 
-   * @throws IllegalStateException If notifications are currently being processed.
-   * 
-   */
-  @Override
-  public final void notifyResetEntity (final SimEntity entity)
-  {
-    if (this.processing)
-      throw new IllegalStateException ();
-    this.lastUpdateTime = ((SimQueue) entity).getEventList ().getTime ();
-  }
-  
-  private double lastUpdateTime;
-  
-  /** Gets the last update time from the entity
-   *  (in order to ensure that time is non-decreasing in between resets).
-   * 
-   * @param time   The time of the update (on the queue).
-   * @param entity The entity (queue) that issues the update.
-   * 
-   * @throws IllegalStateException If notifications are currently being processed and the update time is <i>not</i> equal to
-   *                               the current time (i.e., last update time) on this object.
-   * 
-   */
-  @Override
-  public final void notifyUpdate (final double time, final SimEntity entity)
-  {
-    if (this.processing && time != this.lastUpdateTime)
-      throw new IllegalStateException ();
-    this.lastUpdateTime = time;
-  }
-
   /** Stores the atomic notification from the issuing {@link SimQueue}, and triggers the processor.
    * 
    * @param time          The time of the notification.
@@ -240,10 +204,7 @@ extends DefaultSimQueueListener<J, Q>
    * @param notifications The (atomic) notification.
    * 
    * @throws IllegalArgumentException If the entity is not one of the monitored {@link SimQueue}s,
-   *                                  the notifications are {@code null}, empty or illegally structured,
-   *                                  or if notifications are currently being processed
-   *                                  and the notification time is <i>not</i> equal to the current time
-   *                                  (i.e., last update time) on this object.
+   *                                  or if the notifications are {@code null}, empty or illegally structured.
    * 
    * @see SimEntity#doAfterNotifications
    * @see #afterNotificationsTrigger
@@ -261,8 +222,6 @@ extends DefaultSimQueueListener<J, Q>
       || notifications == null
       || notifications.isEmpty ())
       throw new IllegalArgumentException ();
-    if (this.processing && time != this.lastUpdateTime)
-      throw new IllegalStateException ();
     for (final Map<SimEntitySimpleEventType.Member, J> notification : notifications)
       if (notification == null || notification.size () != 1 || notification.containsKey (null))
         throw new IllegalArgumentException ();
