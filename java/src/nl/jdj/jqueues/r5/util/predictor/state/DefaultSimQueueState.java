@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
@@ -13,6 +14,7 @@ import java.util.function.ToDoubleBiFunction;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 
 /** A default implementation of {@link SimQueueState}.
  *
@@ -385,6 +387,15 @@ implements SimQueueState<J, Q>
       this.remainingServiceMap.get (rsJob).add (job);
       this.jobRemainingServiceTimeMap.put (job, rsJob);
     }
+    for (final Entry<PostStartHook<J>, Object> postStartHook : this.postStartHooks.entrySet ())
+      try
+      {
+        postStartHook.getKey ().hook (time, starters, postStartHook.getValue ());      
+      }
+      catch (SimQueuePredictionException sqpe)
+      {
+        throw new RuntimeException (sqpe);
+      }
   }
 
   @Override
@@ -475,4 +486,57 @@ implements SimQueueState<J, Q>
     }
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // POST-START HOOKS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** A functional interface for a hook to be called right before exiting {@link #doStarts}.
+   * 
+   * @param <J> The type of job supported.
+   * 
+   * @see SimQueue.AutoRevocationPolicy#UPON_START
+   * 
+   */
+  @FunctionalInterface
+  public interface PostStartHook<J extends SimJob>
+  {
+
+    /** Invokes the hook.
+     * 
+     * @param time     The start time of the job(s).
+     * @param starters The set of jobs that just started.
+     * @param userData The (optional) user data passed upon registration.
+     * 
+     * @throws SimQueuePredictionException If the hook encounters an exception related to prediction.
+     * 
+     */
+    void hook (double time, Set<J> starters, Object userData)
+      throws SimQueuePredictionException;
+
+  }
+  
+  /** The registered post-start hooks.
+   * 
+   */
+  private final Map<PostStartHook<J>, Object> postStartHooks = new LinkedHashMap<> ();
+
+  /** Registers a post-start hook.
+   * 
+   * @param postStartHook The hook, non-{@code null}.
+   * @param userData      Optional user-data associated with the hook.
+   * 
+   * @throws IllegalArgumentException If the hook is {@code null} or already registered.
+   * 
+   * @see SimQueue.AutoRevocationPolicy#UPON_START
+   * 
+   */  
+  public final void registerPostStartHook (final PostStartHook<J> postStartHook, final Object userData)
+  {
+    if (postStartHook == null || this.postStartHooks.keySet ().contains (postStartHook))
+      throw new IllegalArgumentException ();
+    this.postStartHooks.put (postStartHook, userData);
+  }
+
 }
