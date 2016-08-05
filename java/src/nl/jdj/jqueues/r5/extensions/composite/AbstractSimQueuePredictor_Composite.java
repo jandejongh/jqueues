@@ -179,10 +179,14 @@ extends AbstractSimQueuePredictor<Q>
     {
       if (! (job instanceof DefaultSimJob))
         throw new UnsupportedOperationException ();
-      ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (headQueue, job.getServiceTime (queue));
-      final SubQueueSimpleEvent headQueueEvent =
-        new SubQueueSimpleEvent (headQueue, SimEntitySimpleEventType.ARRIVAL, null, job, null);
-      doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (headQueueEvent), visitLogsSet);
+      // Check whether job did not already leave!
+      if (queueState.getJobs ().contains (job))
+      {
+        ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (headQueue, job.getServiceTime (queue));
+        final SubQueueSimpleEvent headQueueEvent =
+          new SubQueueSimpleEvent (headQueue, SimEntitySimpleEventType.ARRIVAL, null, job, null);
+        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (headQueueEvent), visitLogsSet);
+      }
     }
   }
   

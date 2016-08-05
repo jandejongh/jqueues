@@ -167,9 +167,13 @@ extends AbstractSimQueuePredictor<SimQueue>
             && queueState.getServerAccessCredits () >= 1)
           {
             queueState.doStarts (time, arrivals);
-            final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (job);
-            if (remainingServiceTime == 0)
-              queueState.doExits (time, null, null, arrivals, null, visitLogsSet);
+            // Check whether job did not already leave!
+            if (queueState.getJobs ().contains (job))
+            {
+              final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (job);
+              if (remainingServiceTime == 0)
+                queueState.doExits (time, null, null, arrivals, null, visitLogsSet);
+            }
           }
         }
       }
@@ -215,11 +219,15 @@ extends AbstractSimQueuePredictor<SimQueue>
         final SimJob jobToStart = getJobToStart (queue, queueState);
         starters.add (jobToStart);
         queueState.doStarts (time, starters);
-        final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobToStart);
-        if (remainingServiceTime == 0.0)
-          queueState.doExits (time, null, null, starters, null, visitLogsSet);
         if (sac < Integer.MAX_VALUE)
           sac--;
+        // Check whether job did not already leave!
+        if (queueState.getJobs ().contains (jobToStart))
+        {
+          final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobToStart);
+          if (remainingServiceTime == 0.0)
+            queueState.doExits (time, null, null, starters, null, visitLogsSet);
+        }
       }
     }
     else

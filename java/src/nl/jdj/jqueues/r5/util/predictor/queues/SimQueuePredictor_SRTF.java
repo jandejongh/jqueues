@@ -102,8 +102,13 @@ extends SimQueuePredictor_Preemptive<SRTF>
       if ((! queueState.isQueueAccessVacation ()) && queueState.getServerAccessCredits () >= 1)
       {
         queueState.doStarts (time, arrivals);
-        if (executingJob != null && rsMap.firstEntry ().getValue ().get (0) != executingJob)
-          preemptJob (queue, queueState, executingJob, visitLogsSet);
+        // XXX Below: we may want to reconsider this, and preempt the executing job EVEN IF job is auto-revoked upon start!
+        // Check whether job did not already leave!
+        if (queueState.getJobs ().contains (job))
+        {
+          if (executingJob != null && rsMap.firstEntry ().getValue ().get (0) != executingJob)
+            preemptJob (queue, queueState, executingJob, visitLogsSet);
+        }
       }
     }
     else if (eventType == SimEntitySimpleEventType.REVOCATION)
@@ -148,6 +153,9 @@ extends SimQueuePredictor_Preemptive<SRTF>
         //     throw new SimQueuePredictionAmbiguityException ();
         //   else
         //     rsTimes.add (rsTimeMap.get (starter));
+        // XXX Below: we may want to reconsider this, and preempt the executing job EVEN IF job is auto-revoked upon start!
+        // Note that now we are only considering preemption due to jobs REMAINING in the service area...
+        // Check whether job did not already leave!
         if (executingJob != null && rsMap.firstEntry ().getValue ().get (0) != executingJob)
           preemptJob (queue, queueState, executingJob, visitLogsSet);
       }

@@ -128,11 +128,15 @@ extends AbstractSimQueuePredictor<PS>
         final SimJob jobToStart = queueState.getJobsInWaitingAreaOrdered ().iterator ().next ();
         starters.add (jobToStart);
         queueState.doStarts (time, starters);
-        final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobToStart);
-        if (remainingServiceTime == 0.0)
-          queueState.doExits (time, null, null, starters, null, visitLogsSet);
         if (sac < Integer.MAX_VALUE)
           sac--;
+        // Check whether job did not already leave!
+        if (queueState.getJobs ().contains (jobToStart))
+        {
+          final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobToStart);
+          if (remainingServiceTime == 0.0)
+            queueState.doExits (time, null, null, starters, null, visitLogsSet);
+        }
       }
     }
     else

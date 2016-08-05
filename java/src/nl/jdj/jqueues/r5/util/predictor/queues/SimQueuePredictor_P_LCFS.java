@@ -14,6 +14,7 @@ import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
+import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionComplexityException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
@@ -121,6 +122,8 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
       {
         final SimJob executingJob = getExecutingJob (queue, queueState);
         queueState.doStarts (time, arrivals);
+        // Preempt the job currently in execution, even if the arrived job is revoked upon start,
+        // i.e., already gone by now...
         if (executingJob != null)
           preemptJob (queue, queueState, executingJob, visitLogsSet);
       }
@@ -155,19 +158,29 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
         while (newSac > 0 && ! waiters.isEmpty ())
         {
           youngestWaiter = waiters.remove (waiters.size () - 1);
-          newSac--;
+          if (newSac < Integer.MAX_VALUE)
+            newSac--;
           final Set<SimJob> starters = Collections.singleton (youngestWaiter);
           final SimJob executingJob = getExecutingJob (queue, queueState);
           queueState.doStarts (time, starters);
-          if (executingJob == null
-            || queueState.getArrivalTimesMap ().get (youngestWaiter) >= queueState.getArrivalTimesMap ().get (executingJob))
+        // Check whether job did not already leave!
+          if (queueState.getJobs ().contains (youngestWaiter))
           {
-            final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (youngestWaiter);
-            if (remainingServiceTime == 0.0)
-              queueState.doExits (time, null, null, starters, null, visitLogsSet);
-            else if (executingJob != null)
-              preemptJob (queue, queueState, executingJob, visitLogsSet);
+            if (executingJob == null
+              || queueState.getArrivalTimesMap ().get (youngestWaiter) >= queueState.getArrivalTimesMap ().get (executingJob))
+            {
+              final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (youngestWaiter);
+              if (remainingServiceTime == 0.0)
+                queueState.doExits (time, null, null, starters, null, visitLogsSet);
+              // Preempt the executingJob anyway!
+              if (executingJob != null)
+                preemptJob (queue, queueState, executingJob, visitLogsSet);
+            }
           }
+          else if (! queueState.getJobs ().isEmpty ())
+            // We assume jobs are auto-revoked upon start.
+            // Hence there should not be any job present in the service area...
+            throw new SimQueuePredictionComplexityException ();
         }
       }
     }
@@ -233,9 +246,13 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
           final Set<SimJob> starters = new LinkedHashSet<> ();
           starters.add (youngestWaiter);
           queueState.doStarts (time, starters);
-          final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (youngestWaiter);
-          if (remainingServiceTime == 0.0)
-            doQueueEvents_SQ_SV_ROEL_U (queue, queueState, queueEventTypes, visitLogsSet);
+          // Check whether job did not already leave!
+          if (queueState.getJobs ().contains (youngestWaiter))
+          {
+            final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (youngestWaiter);
+            if (remainingServiceTime == 0.0)
+              doQueueEvents_SQ_SV_ROEL_U (queue, queueState, queueEventTypes, visitLogsSet);
+          }
         }
       }
     }

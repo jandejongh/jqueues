@@ -150,7 +150,9 @@ extends AbstractSimQueuePredictor<CUPS>
       if ((! queueState.isQueueAccessVacation ()) && queueState.getServerAccessCredits () >= 1)
       {
         queueState.doStarts (time, arrivals);
-        queueStateHandler.addStartingJob (job);
+        // Check whether job did not already leave!
+        if (queueState.getJobs ().contains (job))
+          queueStateHandler.addStartingJob (job);
       }
     }
     else if (eventType == SimEntitySimpleEventType.REVOCATION)
@@ -189,7 +191,13 @@ extends AbstractSimQueuePredictor<CUPS>
             remainingSac--;
         }
         queueState.doStarts (time, starters);
-        queueStateHandler.addStartingJobs (starters);
+        // Check whether job did not already leave!
+        final Iterator<SimJob> i_starters = starters.iterator ();
+        while (i_starters.hasNext ())
+          if (! queueState.getJobs ().contains (i_starters.next ()))
+            i_starters.remove ();
+        if (! starters.isEmpty ())
+          queueStateHandler.addStartingJobs (starters);
       }
     }
     else
