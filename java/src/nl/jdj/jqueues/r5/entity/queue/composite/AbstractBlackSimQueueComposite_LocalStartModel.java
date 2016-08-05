@@ -443,13 +443,13 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
 
   /** Nothing to do apart from sanity check.
    * 
-   * @see #getRealJob
+   * @see #getRealJob(nl.jdj.jqueues.r5.SimJob)
    * 
    */
   @Override
   public final void notifyArrival (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, queue); // Sanity on existence of real job.
+    getRealJob (job); // Sanity on existence of real job.
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -539,13 +539,13 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
 
   /** Nothing to do apart from sanity check.
    * 
-   * @see #getRealJob
+   * @see #getRealJob(nl.jdj.jqueues.r5.SimJob)
    * 
    */
   @Override
   public final void notifyStart (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, queue); // Sanity on existence of real job.
+    getRealJob (job); // Sanity on existence of real job.
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -560,6 +560,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * Starts the dropped job on a valid non-<code>null</code> result from {@link #getDropDestinationQueue};
    * otherwise it gets the real job, sets its queue to <code>null</code> and drops it as well.
    * 
+   * @see #getRealJob(nl.jdj.jqueues.r5.SimJob, nl.jdj.jqueues.r5.SimQueue)
    * @see #getDropDestinationQueue
    * @see SimQueue#doAfterNotifications
    * @see #arrive
@@ -569,7 +570,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   @Override
   public final void notifyDrop (final double time, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job, queue);
+    final J realJob = getRealJob (job, null);
     final DQ dropDestinationQueue = getDropDestinationQueue ();
     if (dropDestinationQueue != null)
     {
@@ -592,13 +593,13 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
 
   /** Nothing to do apart from sanity check.
    * 
-   * @see #getRealJob
+   * @see #getRealJob(nl.jdj.jqueues.r5.SimJob, nl.jdj.jqueues.r5.SimQueue)
    * 
    */
   @Override
   public final void notifyRevocation (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, queue); // Sanity on existence of real job.
+    getRealJob (job, null); // Sanity on existence of real job.
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -636,6 +637,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * through {@link #doAfterNotifications}.
    * Otherwise, invokes {@link #depart} on the real job.
    * 
+   * @see #getRealJob(nl.jdj.jqueues.r5.SimJob, nl.jdj.jqueues.r5.SimQueue)
    * @see #selectNextQueue
    * @see SimQueue#arrive
    * @see #depart
@@ -645,7 +647,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   @Override
   public final void notifyDeparture (final double time, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job, queue);
+    final J realJob = getRealJob (job, null);
     final SimQueue<DJ, DQ> nextQueue = selectNextQueue (time, realJob, queue);
     if (nextQueue == null)
       depart (time, realJob);
