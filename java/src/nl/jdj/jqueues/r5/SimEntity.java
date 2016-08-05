@@ -173,7 +173,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * 
    * @return The time of the last update of this entity.
    * 
-   * @see #update
+   * @see AbstractSimEntity#update
    * @see SimEntityListener#notifyUpdate
    * 
    */

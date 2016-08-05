@@ -315,6 +315,9 @@ implements SimEntity<J, Q>
    * 
    * @param time The time of the update (i.c., the current time).
    * 
+   * @throws IllegalStateException If time is in the past.
+   * 
+   * @see #getLastUpdateTime
    * @see #registerPreEventHook
    * @see #registerPreUpdateHook
    * @see SimEntityListener#notifyUpdate
