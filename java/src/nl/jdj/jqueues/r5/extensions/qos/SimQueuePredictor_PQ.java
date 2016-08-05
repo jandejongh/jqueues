@@ -124,9 +124,13 @@ extends SimQueuePredictor_Preemptive<Q>
           final Set<SimJob> starters = new HashSet<> ();
           starters.add (jobToExecute);
           queueState.doStarts (time, starters);
-          final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobToExecute);
-          if (remainingServiceTime == 0)
-            queueState.doExits (time, null, null, starters, null, visitLogsSet);
+          // Check whether job did not already leave!
+          if (queueState.getJobs ().contains (jobToExecute))
+          {
+            final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobToExecute);
+            if (remainingServiceTime == 0)
+              queueState.doExits (time, null, null, starters, null, visitLogsSet);
+          }
         }
       }
       jobToExecute = getJobToExecute (queue, queueState);
