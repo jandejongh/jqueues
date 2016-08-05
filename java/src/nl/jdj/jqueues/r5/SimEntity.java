@@ -30,6 +30,7 @@ import nl.jdj.jsimulation.r5.SimEventListResetListener;
  * <li>naming,
  * <li>maintaining listeners ({@link SimEntityListener}),
  * <li>propagating reset events on the {@link SimEventList} to {@link SimEntityListener}s through {@link #resetEntity},
+ * <li>maintaining the time of the last update with {@link #getLastUpdateTime},
  * <li>supporting (deferred) actions to take immediately after notifying listeners
  *     (supported because, as by contract of {@link SimEntity} and {@link SimEntityListener},
  *     listeners are not allowed to initiate queue operations).
@@ -160,6 +161,23 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * 
    */
   public void resetEntity ();
+  
+  /** Gets the time of the last update of this entity.
+   * 
+   * <p>
+   * Upon construction, the last-update time must be set to minus infinity, mimicking the behavior of {@link SimEventList}.
+   * Upon an explicit reset of this entity, the last-update time is to be copied from the event list, if available
+   * (or reset to {@link Double#NEGATIVE_INFINITY} otherwise).
+   * In all other cases, the time returned corresponds to the time argument of the last update of the entity,
+   * see {@link SimEntityListener#notifyUpdate} for more details.
+   * 
+   * @return The time of the last update of this entity.
+   * 
+   * @see #update
+   * @see SimEntityListener#notifyUpdate
+   * 
+   */
+  double getLastUpdateTime ();
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //

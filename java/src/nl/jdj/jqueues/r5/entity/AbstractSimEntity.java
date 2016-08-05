@@ -293,21 +293,7 @@ implements SimEntity<J, Q>
    */
   private double lastUpdateTime = Double.NEGATIVE_INFINITY;
 
-  /** Gets the time of the last update of this entity.
-   * 
-   * <p>
-   * Upon construction, the last-update time is set to minus infinity, mimicking the behavior of {@link SimEventList}.
-   * Upon an explicit reset of this entity, the last-update time is copied from the event list, if available
-   * (or reset to {@link Double#NEGATIVE_INFINITY} otherwise).
-   * In all other cases, the time returned corresponds to the time argument of the last update of the entity,
-   * see {@link SimEntityListener#notifyUpdate} for more details.
-   * 
-   * @return The time of the last update of this entity.
-   * 
-   * @see #update
-   * @see SimEntityListener#notifyUpdate
-   * 
-   */
+  @Override
   public final double getLastUpdateTime ()
   {
     return this.lastUpdateTime;
