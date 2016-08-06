@@ -348,7 +348,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * <p>
    * Calls super method,
    * clears the internal mapping between real and delegate {@link SimJob}s
-   * and resets all sub-queues.
+   * and resets all sub-queues in the order in which they appear in {@link #getQueues}.
+   * (Note: some sub-classes rely on this order!)
    * 
    */
   @Override
