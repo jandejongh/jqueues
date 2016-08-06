@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimEntity;
+import nl.jdj.jqueues.r5.SimEntityListener;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
@@ -16,6 +17,8 @@ import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r5.listener.MultiSimQueueNotificationProcessor;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Compressed tandem (serial) queue with two queues, one used for waiting and one used for serving.
@@ -77,7 +80,15 @@ public class BlackCompressedTandem2SimQueue
    *
    * <p>
    * The constructor sets the {@link StartModel} to {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
-   * and the auto-revocation policy on the wait queue to {@link AutoRevocationPolicy#UPON_START}.
+   * and inhibits future automatic resets of the wait and serve queue from the event list,
+   * since this object will take care of that (and depends on the absence of "independent" resets
+   * of the sub-queues).
+   * The constructor then sets the auto-revocation policy on the wait queue to {@link AutoRevocationPolicy#UPON_START}
+   * and resets this object through {@link #resetEntitySubClassLocal},
+   * thus resetting the wait and serve queues
+   * and setting the proper initial server-access credits on the wait queue.
+   * Finally, it constructs a new {@link MultiSimQueueNotificationProcessor} for both sub-queues,
+   * and registers {@link #processSubQueueNotifications} as its processor.
    * 
    * @param eventList             The event list to use.
    * @param waitQueue             The wait queue.
@@ -93,8 +104,14 @@ public class BlackCompressedTandem2SimQueue
    * @see StartModel#COMPRESSED_TANDEM_2_QUEUE
    * @see #setStartModel
    * @see #getWaitQueue
+   * @see #getServeQueue
+   * @see SimEntity#setIgnoreEventListReset
    * @see SimQueue#setAutoRevocationPolicy
    * @see AutoRevocationPolicy#UPON_START
+   * @see #resetEntitySubClassLocal
+   * @see MultiSimQueueNotificationProcessor
+   * @see MultiSimQueueNotificationProcessor#setProcessor
+   * @see #processSubQueueNotifications
    * 
    */
   public BlackCompressedTandem2SimQueue
@@ -105,6 +122,7 @@ public class BlackCompressedTandem2SimQueue
   {
     super (eventList,
       (Set<DQ>) createQueuesSet (waitQueue, serveQueue),
+      // XXX: The SimQueueSelector is not used??
       new SimQueueSelector<J, DQ> ()
       {
         @Override
@@ -126,14 +144,20 @@ public class BlackCompressedTandem2SimQueue
       },
       delegateSimJobFactory);
     setStartModel (StartModel.COMPRESSED_TANDEM_2_QUEUE);
+    getWaitQueue ().setIgnoreEventListReset (true);
+    getServeQueue ().setIgnoreEventListReset (true);
     getWaitQueue ().setAutoRevocationPolicy (AutoRevocationPolicy.UPON_START);
+    resetEntitySubClassLocal ();
+    final MultiSimQueueNotificationProcessor<DJ, DQ>  subQueueEventProcessor =
+      new MultiSimQueueNotificationProcessor<> (getQueues ());
+    subQueueEventProcessor.setProcessor (this::processSubQueueNotifications);
   }
 
   /** Returns a new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
-   * serve queues and the same delegate-job factory.
+   *  serve queues and the same delegate-job factory.
    * 
    * @return A new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
-   * serve queues and the same delegate-job factory.
+   *         serve queues and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the wait or serve queues could not be copied through {@link SimQueue#getCopySimQueue}.
    * 
@@ -227,15 +251,48 @@ public class BlackCompressedTandem2SimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and sets the initial server-access credits on the wait queue.
+   * 
+   * <p>
+   * The super method will reset the wait and serve queues.
+   * Note that we actually rely on the wait queue being reset before the serve queue!
+   * 
+   * @see #resetEntitySubClassLocal
    * 
    */
   @Override
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
-    // Asses the initial server-access credits on the waitQueue.
-    // No need to check our local SACs; by contract of SimQueue, SACs should be infinite after reset.
+    resetEntitySubClassLocal ();
+  }
+  
+  /** Resets the local part of this entity.
+   * 
+   * <p>
+   * Used both in the constructor and in {@link #resetEntitySubClass}.
+   * 
+   * <p>
+   * Sets the server-access credits on the wait queue.
+   * Sets it to unity if the serve queue has {@code NoWaitArmed == true}, and to zero otherwise.
+   * This method silently assumes the availability of server-access credits on the local object.
+   * Although very similar to {@link #setServerAccessCreditsOnWaitQueue},
+   * we cannot use the latter method because of its explicit sanity check on the current server-access credits value
+   * on the wait queue.
+   * 
+   * <p>
+   * Note that this method (and the notification processor)
+   * assumes the following reset order: this object, then the wait queue and then the serve queue.
+   * 
+   * @see #getWaitQueue
+   * @see #getServeQueue
+   * @see SimQueue#setServerAccessCredits
+   * @see #getLastUpdateTime
+   * @see SimQueue#isNoWaitArmed
+   * 
+   */
+  protected final void resetEntitySubClassLocal ()
+  {
     getWaitQueue ().setServerAccessCredits (getLastUpdateTime (), getServeQueue ().isNoWaitArmed () ? 1 : 0);
   }
 
@@ -254,10 +311,10 @@ public class BlackCompressedTandem2SimQueue
    * 
    * @return The local AND operation of the {@code noWaitArmed} states on both sub-queues.
    * 
-   * @see #getStartModel
+   * @see StartModel#COMPRESSED_TANDEM_2_QUEUE
    * @see #getWaitQueue
    * @see #getServeQueue
-   * @see StartModel#COMPRESSED_TANDEM_2_QUEUE
+   * @see SimQueue#isNoWaitArmed
    * 
    */
   @Override
@@ -266,6 +323,54 @@ public class BlackCompressedTandem2SimQueue
     return getWaitQueue ().isNoWaitArmed () && getServeQueue ().isNoWaitArmed ();
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SET SERVER-ACCESS CREDITS ON WAIT QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Sets the server-access credits on the wait queue, based upon our server-access credits
+   *  and the {@link SimQueue#isNoWaitArmed} state on the server queue.
+   * 
+   * <p>
+   * At all times (well, if we have a consistent queue state),
+   * the server-access credits on the wait queue should be unity if and only if
+   * the local (this) queue {@link #hasServerAcccessCredits}
+   * AND the serve queue has {@link SimQueue#isNoWaitArmed}.
+   * In all other cases, the server-access credits on the wait queue should be zero.
+   * 
+   * <p>
+   * This method sets the server-access credits on the wait queue appropriately, but only if needed.
+   * 
+   * <p>
+   * Caution is advised for the use of this method.
+   * For one, because of its immediate side effects on the wait (and possibly serve) queue,
+   * you <i>should not</i> use it from within a sub-queue notification listener.
+   * 
+   * <p>
+   * This method is (left) protected for documentation (javadoc) purposes.
+   * 
+   * @throws IllegalStateException If the current server-access credits value on the wait queue is not zero or unity.
+   * 
+   * @see #getWaitQueue
+   * @see #getServeQueue
+   * @see #getLastUpdateTime
+   * @see #hasServerAcccessCredits
+   * @see SimQueue#getServerAccessCredits
+   * @see SimQueue#setServerAccessCredits
+   * @see SimQueue#isNoWaitArmed
+   * 
+   */
+  protected final void setServerAccessCreditsOnWaitQueue ()
+  {
+    final int oldWaitQueueSac = getWaitQueue ().getServerAccessCredits ();
+    if (oldWaitQueueSac < 0 || oldWaitQueueSac > 1)
+      throw new IllegalStateException ();
+    final int newWaitQueueSac = (hasServerAcccessCredits () && getServeQueue ().isNoWaitArmed ()) ? 1 : 0;
+    if (newWaitQueueSac != oldWaitQueueSac)
+      getWaitQueue ().setServerAccessCredits (getLastUpdateTime (), newWaitQueueSac);
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // ARRIVAL
@@ -315,48 +420,39 @@ public class BlackCompressedTandem2SimQueue
    * a (real) job can only be dropped because of one of the following reasons:
    * <ul>
    * <li>
-   * A delegate job is dropped on one of the sub-queues, see {@link #notifyDrop},
+   * A delegate job is dropped on one of the sub-queues, see {@link #processSubQueueNotifications},
    * and the semantics of the composite queue require the real job to be dropped as well (this is not a requirement).
    * The notification callback relies on {@link #drop} to perform the drop.
    * The delegate job has already left the sub-queue system when we are called.
    * <li>
-   * The composite queue <i>itself</i> decides to drop a (real) job, see {@link #drop}.
+   * The composite queue <i>itself</i> decides to drop a (real) job, see {@link #drop}
+   * and {@link AutoRevocationPolicy#UPON_START}.
    * In this case we are called while the delegate job is still present on one of the sub-queues,
    * or it resides in our (local) waiting area.
    * In any way, it has to be removed.
-   * (Note that we cannot forcibly drop it!)
+   * (Note that we cannot forcibly drop it from the sub-queue!)
    * </ul>
    * 
    * <p>
    * All we have to do is invoke {@link #removeJobFromQueueUponExit}.
    * 
    * @see #drop
-   * @see #notifyDrop
    * @see #removeJobFromQueueUponExit
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
+    // XXX This actually reschedules...
     removeJobFromQueueUponExit (job, time);
   }
 
   /** Empty, nothing to do.
    * 
-   * <p>
-   * A real job has been dropped from the composite queue, see {@link #removeJobFromQueueUponDrop} for the potential reasons.
-   * We immediately realize that dropping a delegate job from the
-   * wait queue (the first queue) does not require any rescheduling: the delegate job was waiting at the first queue,
-   * so it was not eligible for access to the server queue, and the mere fact of dropping it can never result in another
-   * job at the waiting queue getting access to the server, or result in a state change at the server queue (the second queue).
-   * Dropping (or revoking) a (delegate) job from the server queue can certainly affect its {@link #isNoWaitArmed} state,
-   * but this is reported to and handled by {@link #notifyNewNoWaitArmed}.
-   * 
    */
   @Override
   protected final void rescheduleAfterDrop (final J job, final double time)
   {
-    // EMPTY
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -376,25 +472,22 @@ public class BlackCompressedTandem2SimQueue
    * All we have to do is invoke {@link #removeJobFromQueueUponExit}.
    * 
    * @see #revoke
-   * @see #notifyRevocation
    * @see #removeJobFromQueueUponExit
    * 
    */
   @Override
   protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
+    // XXX This actually reschedules...
     removeJobFromQueueUponExit (job, time);
   }
 
   /** Empty, nothing to do.
    * 
-   * @see #rescheduleAfterDrop For an explanation as to why this method can be left empty. 
-   * 
    */
   @Override
   protected final void rescheduleAfterRevokation (final J job, final double time)
   {
-    // EMPTY
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -403,28 +496,29 @@ public class BlackCompressedTandem2SimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Calls super method (in order to make implementation final).
+  /** If our (local) server-access credits drop to zero,
+   *  sets the server access credits on the wait queue appropriately through invoking {@link #setServerAccessCreditsOnWaitQueue}.
+   * 
+   * @see #getServerAccessCredits
+   * @see #setServerAccessCreditsOnWaitQueue
    * 
    */
   @Override
   protected final void setServerAccessCreditsSubClass ()
   {
-    super.setServerAccessCreditsSubClass ();
+    if (getServerAccessCredits () == 0)
+      setServerAccessCreditsOnWaitQueue ();
   }
   
-  /** Sets the server access credits on the wait queue to unity if the serve queue is in {@code noWaitArmed} state.
+  /** Sets the server access credits on the wait queue (if needed) through {@link #setServerAccessCreditsOnWaitQueue}.
    * 
-   * @see #getServeQueue
-   * @see SimQueue#isNoWaitArmed
-   * @see #getWaitQueue
-   * @see SimQueue#setServerAccessCredits
+   * @see #setServerAccessCreditsOnWaitQueue
    * 
    */
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
   {
-    if (getServeQueue ().isNoWaitArmed ())
-      getWaitQueue ().setServerAccessCredits (time, 1);
+    setServerAccessCreditsOnWaitQueue ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -435,6 +529,10 @@ public class BlackCompressedTandem2SimQueue
   
   /** Inserts the job in the service area (after sanity checks).
    * 
+   * @see #jobQueue
+   * @see #jobsInServiceArea
+   * @see #getDelegateJob
+   * 
    */
   @Override
   protected final void insertJobInQueueUponStart (final J job, final double time)
@@ -443,14 +541,16 @@ public class BlackCompressedTandem2SimQueue
       throw new IllegalArgumentException ();
     if ((! this.jobQueue.contains (job)) || this.jobsInServiceArea.contains (job))
       throw new IllegalArgumentException ();
-    getDelegateJob (job); // Sanity on existance of delegate job.
+    getDelegateJob (job); // Sanity on existence of delegate job.
     this.jobsInServiceArea.add (job);
   }
 
-  /** Nothing to do apart from sanity check.
+  /** Lets the delegate job arrive at the serve queue, after sanity checks.
    * 
    * @see #jobQueue
    * @see #jobsInServiceArea
+   * @see #getServeQueue
+   * @see SimQueue#arrive
    * @see #getDelegateJob
    * 
    */
@@ -461,7 +561,8 @@ public class BlackCompressedTandem2SimQueue
       throw new IllegalArgumentException ();
     if ((! this.jobQueue.contains (job)) || (! this.jobsInServiceArea.contains (job)))
       throw new IllegalArgumentException ();
-    getDelegateJob (job); // Sanity on existance of delegate job.
+    final DJ delegateJob = getDelegateJob (job);
+    getServeQueue ().arrive (time, delegateJob);
   }
     
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -477,12 +578,13 @@ public class BlackCompressedTandem2SimQueue
    * a (real) job can only depart because of one of the following reasons:
    * <ul>
    * <li>
-   * A delegate job departs on the serve queue, see {@link #notifyDeparture},
+   * A delegate job departs on the serve queue, see {@link #processSubQueueNotifications},
    * and the real job must depart as well.
    * The notification callback relies on {@link #depart} to perform the departure.
    * The delegate job has already left the sub-queue system when we are called.
    * <li>
    * The composite queue <i>itself</i> decides that the (real) job is to depart, see {@link #depart}.
+   * (This is actually hypothetical at the current time for {@link BlackCompressedTandem2SimQueue}!)
    * In this case we are called while the delegate job is still present on one of the sub-queues,
    * or it resides in our (local) waiting area.
    * In any way, it has to be removed.
@@ -493,25 +595,22 @@ public class BlackCompressedTandem2SimQueue
    * All we have to do is invoke {@link #removeJobFromQueueUponExit}.
    * 
    * @see #depart
-   * @see #notifyDeparture
    * @see #removeJobFromQueueUponExit
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
+    // XXX This actually reschedules...
     removeJobFromQueueUponExit (departingJob, time);
   }
 
   /** Empty, nothing to do.
    * 
-   * @see #rescheduleAfterDrop For an explanation as to why this method can be left empty. 
-   * 
    */
   @Override
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
-    // EMPTY
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -525,7 +624,7 @@ public class BlackCompressedTandem2SimQueue
    * 
    * <p>
    * In case where the delegate job is still present on a sub-queue, we have to remove it from there.
-   * This done through (unconditional) revocation.
+   * This done through (unconditional) revocation of the delegate job on the sub-queue.
    * 
    * <p>
    * The real and delegate jobs are removed from the internal administration through {@link #removeJobsFromQueueLocal}.
@@ -534,7 +633,7 @@ public class BlackCompressedTandem2SimQueue
    * @param time The current time.
    * 
    * @see #getDelegateJob
-   * @see #revoke
+   * @see SimQueue#revoke
    * @see #removeJobsFromQueueLocal
    * 
    * @throws IllegalStateException If the delegate jobs reports its visiting a queue, but that queue does not agree.
@@ -564,36 +663,304 @@ public class BlackCompressedTandem2SimQueue
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // SUB-QUEUE RESET NOTIFICATION
+  // PROCESS SUB-QUEUE NOTIFICATIONS (THROUGH NOTIFICATION PROCESSOR); ALL EXCEPT UPDATE NOTIFICATIONS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Does nothing; assumes will have been reset or will soon be reset as well.
+  
+  /** Processes the pending atomic notifications from the sub-queues, one at a time (core sub-queue notification processor).
    * 
    * <p>
-   * The reset of a sub-queue can only be the result of this queue being resetting itself
-   * (and as a result, resetting its sub-queues),
-   * or because the event-list is being reset,
-   * in which case we will be reset ourselves soon, or have reset ourselves and our sub-queues already.
+   * Core method for reacting to {@link SimEntityListener#notifyStateChanged} events from both sub-queues.
+   * This method is registered as the processor for an anonymous {@link MultiSimQueueNotificationProcessor}
+   * (for both sub-queues) created upon construction,
+   * see {@link MultiSimQueueNotificationProcessor.Processor}
+   * and {@link MultiSimQueueNotificationProcessor#setProcessor}.
    * 
    * <p>
-   * In both case, no response is required upon receiving this notification.
+   * This method takes one notification at a time, starting at the head of the list, remove it
+   * and process it either with {@link #processWaitQueueNotification}
+   * or {@link #processServeQueueNotification}.
+   * While processing, new events may be added to the list; the list is processed until it is empty.
+   * 
+   * <p>
+   * Note that this {@link BlackCompressedTandem2SimQueue} still catches {@link SimEntityListener#notifyUpdate}
+   * notifications in the main class body (all other notification types are dealt with through the
+   * {@link MultiSimQueueNotificationProcessor}.
+   * 
+   * @param notifications The sub-queue notifications, will be modified; empty upon return.
+   * 
+   * @throws IllegalArgumentException If the list is {@code null} or empty, or contains a notification from another queue
+   *                                  than the two sub-queues (i.e., the wait- and serve-queues),
+   *                                  or if other sanity checks fail.
+   * 
+   * @see MultiSimQueueNotificationProcessor
+   * @see MultiSimQueueNotificationProcessor.Processor
+   * @see MultiSimQueueNotificationProcessor#setProcessor
+   * @see #processWaitQueueNotification
+   * @see #processServeQueueNotification
+   * @see #update
    * 
    */
-  @Override
-  public final void notifyResetEntity (final SimEntity entity)
+  protected final void processSubQueueNotifications
+  (final List<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> notifications)
   {
+    if (notifications == null || notifications.isEmpty ())
+      throw new IllegalArgumentException ();
+    while (! notifications.isEmpty ())
+    {
+      //System.err.println ("-> Notifications: [t=" + getLastUpdateTime () + "]:");
+      //  for (MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification : notifications)
+      //    System.err.println ("   " + notification + ".");
+      final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification = notifications.remove (0);
+      final DQ queue = notification.getQueue ();
+      if (queue == getWaitQueue ())
+        processWaitQueueNotification (notification);
+      else if (queue == getServeQueue ())
+        processServeQueueNotification (notification);        
+      else
+        throw new IllegalArgumentException ();
+    }
+  }
+  
+  /** Performs sanity checks on a notification from a sub-queue (irrespective of which one).
+   * 
+   * @param notification The notification.
+   * 
+   * @throws IllegalArgumentException If the time of the notification differs from our last update time,
+   *                                  or if a {@link SimEntitySimpleEventType#RESET} notification was found in combination
+   *                                  with other sub-notifications (i.e., as part of an atomic notification that includes
+   *                                  other sub-notifications next to the reset).
+   * 
+   */
+  protected final void sanitySubQueueNotification
+  (final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification)
+  {
+    if (notification.getTime () != getLastUpdateTime ())
+      throw new IllegalArgumentException ("on " + this + ": notification time [" + notification.getTime ()
+      + "] != last update time [" + getLastUpdateTime () + "], subnotifications: "
+      + notification.getSubNotifications () + ".");
+    for (final Map<SimEntitySimpleEventType.Member, DJ> subNotification : notification.getSubNotifications ())
+    {
+      final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
+      final DJ job = subNotification.values ().iterator ().next ();
+      if (notificationType == SimEntitySimpleEventType.RESET)
+      {
+        if (notification.getSubNotifications ().size () > 1)
+          throw new IllegalStateException ();
+      }
+    }
+  }
+  
+  /** Performs sanity checks on a notification from the wait queue.
+   * 
+   * @param notification The notification.
+   * 
+   * @throws IllegalArgumentException If the sanity checks fail.
+   * 
+   * @see #sanitySubQueueNotification
+   * 
+   */
+  protected final void sanityWaitQueueNotification
+  (final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification)
+  {
+    sanitySubQueueNotification (notification);
+    final DQ waitQueue = getWaitQueue ();
+    boolean foundStart = false;
+    DJ jobStarted = null;
+    boolean foundAutoRevocation = false;
+    DJ jobAutoRevoked = null;
+    for (final Map<SimEntitySimpleEventType.Member, DJ> subNotification : notification.getSubNotifications ())
+    {
+      final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
+      final DJ job = subNotification.values ().iterator ().next ();
+      if (notificationType == SimEntitySimpleEventType.RESET)
+        ;
+      else if (notificationType == SimQueueSimpleEventType.ARRIVAL)
+        getRealJob (job);
+      else if (notificationType == SimQueueSimpleEventType.QAV_START
+            || notificationType == SimQueueSimpleEventType.QAV_END)
+        throw new IllegalStateException ();
+      else if (notificationType == SimQueueSimpleEventType.NWA_FALSE
+            || notificationType == SimQueueSimpleEventType.NWA_TRUE)
+        ;
+      else if (notificationType == SimQueueSimpleEventType.OUT_OF_SAC
+           || notificationType == SimQueueSimpleEventType.REGAINED_SAC)
+        ;
+      else if (notificationType == SimQueueSimpleEventType.START)
+      {
+        if (foundStart)
+          throw new IllegalStateException ();
+        getRealJob (job);
+        foundStart = true;
+        jobStarted = job;
+      }
+      else if (notificationType == SimEntitySimpleEventType.DROP)
+        getRealJob (job, null);
+      else if (notificationType == SimEntitySimpleEventType.REVOCATION)
+        getRealJob (job, null);
+      else if (notificationType == SimEntitySimpleEventType.AUTO_REVOCATION)
+      {
+        if (foundAutoRevocation)
+          throw new IllegalStateException ();
+        getRealJob (job, null);
+        foundAutoRevocation = true;
+        jobAutoRevoked = job;
+      }
+      else if (notificationType == SimEntitySimpleEventType.DEPARTURE)
+        getRealJob (job, null);
+    }
+    if (foundStart != foundAutoRevocation || jobStarted != jobAutoRevoked)
+      throw new IllegalStateException ();
+  }
+  
+  /** Processes a notification from the wait queue.
+   * 
+   * @param notification The notification.
+   * 
+   * @see #sanityWaitQueueNotification
+   * 
+   */
+  protected final void processWaitQueueNotification
+  (final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification)
+  {
+    sanityWaitQueueNotification (notification);
+    final DQ waitQueue = getWaitQueue ();
+    for (final Map<SimEntitySimpleEventType.Member, DJ> subNotification : notification.getSubNotifications ())
+    {
+      final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
+      final DJ job = subNotification.values ().iterator ().next ();
+      if (notificationType == SimEntitySimpleEventType.RESET)
+      {
+        // Special treatment of reset notification, because of tricky update-time semantics.
+        // For instance, we cannot operate on a SimEntity 'in the past'.
+        // Note that we rely on this object being reset before its sub-queues
+        // AND on the wait queue being reset before the serve queue!
+        final DQ serveQueue = getServeQueue ();
+        waitQueue.setServerAccessCredits (waitQueue.getLastUpdateTime (), serveQueue.isNoWaitArmed () ? 1 : 0);
+      }
+      else if (notificationType == SimEntitySimpleEventType.DROP)
+        // XXX DropCollectorQueue??
+        drop (getRealJob (job, null), getLastUpdateTime ());
+      else if (notificationType == SimEntitySimpleEventType.REVOCATION)
+        ;
+      else if (notificationType == SimEntitySimpleEventType.AUTO_REVOCATION)
+        start (getLastUpdateTime (), getRealJob (job, null));
+      else if (notificationType == SimEntitySimpleEventType.DEPARTURE)
+      {
+        final J realJob = getRealJob (job, null);
+        if (! this.jobsInServiceArea.contains (realJob))
+          // Job departed from the waiting area of the wait queue.
+          // This corresponds to a direct departure from the waiting area of the wait queue, which is perfectly legal.
+          // Real job must depart as well (before its start).
+          depart (getLastUpdateTime (), realJob);
+        else
+          // Job departed from the service area of the wait queue.
+          // This means auto-revocation upon start failed.
+          throw new IllegalStateException ();
+      }
+    }
+  }
+  
+  /** Performs sanity checks on a notification from the serve queue.
+   * 
+   * @param notification The notification.
+   * 
+   * @throws IllegalArgumentException If the sanity checks fail.
+   * 
+   * @see #sanitySubQueueNotification
+   * 
+   */
+  protected final void sanityServeQueueNotification
+  (final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification)
+  {
+    sanitySubQueueNotification (notification);
+    final DQ serveQueue = getServeQueue ();
+    for (final Map<SimEntitySimpleEventType.Member, DJ> subNotification : notification.getSubNotifications ())
+    {
+      final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
+      final DJ job = subNotification.values ().iterator ().next ();
+      if (notificationType == SimEntitySimpleEventType.RESET)
+        ;
+      else if (notificationType == SimQueueSimpleEventType.ARRIVAL)
+        getRealJob (job);
+      else if (notificationType == SimQueueSimpleEventType.QAV_START
+            || notificationType == SimQueueSimpleEventType.QAV_END)
+        throw new IllegalStateException ();
+      else if (notificationType == SimQueueSimpleEventType.NWA_FALSE
+            || notificationType == SimQueueSimpleEventType.NWA_TRUE)
+        ;
+      else if (notificationType == SimQueueSimpleEventType.OUT_OF_SAC
+            || notificationType == SimQueueSimpleEventType.REGAINED_SAC)
+        throw new IllegalStateException ();
+      else if (notificationType == SimQueueSimpleEventType.START)
+        ;
+      else if (notificationType == SimEntitySimpleEventType.DROP)
+        getRealJob (job, null);
+      else if (notificationType == SimEntitySimpleEventType.REVOCATION)
+        getRealJob (job, null);
+      else if (notificationType == SimEntitySimpleEventType.AUTO_REVOCATION)
+        getRealJob (job, null);
+      else if (notificationType == SimEntitySimpleEventType.DEPARTURE)
+        getRealJob (job, null);
+    }
+  }
+  
+  /** Processes a notification from the wait queue.
+   * 
+   * @param notification The notification.
+   * 
+   * @see #sanityServeQueueNotification
+   * 
+   */
+  protected final void processServeQueueNotification
+  (final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification)
+  {
+    sanityServeQueueNotification (notification);
+    final DQ serveQueue = getServeQueue ();
+    boolean mustSetSacOnWaitQueue = true;
+    for (final Map<SimEntitySimpleEventType.Member, DJ> subNotification : notification.getSubNotifications ())
+    {
+      final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
+      final DJ job = subNotification.values ().iterator ().next ();
+      if (notificationType == SimEntitySimpleEventType.RESET)
+      {
+        mustSetSacOnWaitQueue = false;
+        // Special treatment of reset notification, because of tricky update-time semantics.
+        // For instance, we cannot operate on a SimEntity 'in the past'.
+        // Note that we rely on this object being reset before its sub-queues
+        // AND on the wait queue being reset before the serve queue!
+        final DQ waitQueue = getWaitQueue ();
+        waitQueue.setServerAccessCredits (waitQueue.getLastUpdateTime (), serveQueue.isNoWaitArmed () ? 1 : 0);
+      }
+      else if (notificationType == SimEntitySimpleEventType.DROP)
+        // XXX DropCollectorQueue??
+        drop (getRealJob (job, null), getLastUpdateTime ());
+      else if (notificationType == SimEntitySimpleEventType.AUTO_REVOCATION)
+        autoRevoke (getLastUpdateTime (), getRealJob (job, serveQueue));
+      else if (notificationType == SimEntitySimpleEventType.DEPARTURE)
+        depart (getLastUpdateTime (), getRealJob (job, null));
+      // XXX I think we still need special treatment of a stand-alone NoWaitArmed change in the server queue,
+      // because we have to report changes to our own NoWaitArmed state (even if nothing else happens...).
+    }
+    // Do not attempt to set SACs on the wait queue if we are a RESET event (and SACs have been set already above).
+    if (mustSetSacOnWaitQueue)
+      setServerAccessCreditsOnWaitQueue ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // SUB-QUEUE UPDATE / STATE CHANGED NOTIFICATION
+  // SUB-QUEUE UPDATE NOTIFICATION
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Calls {@link #update}.
+  /** Calls {@link #update} in order to update our own time in response to an increase in time on one of the sub-queues.
    * 
    * @throws IllegalArgumentException If the entity is {@code null} or not one of our sub-queues.
+   * @throws IllegalStateException    If time is in the past (and updates are not inhibited).
+   * 
+   * @see #getQueues
+   * @see #update
+   * @see #getLastUpdateTime
    * 
    */
   @Override
@@ -604,329 +971,141 @@ public class BlackCompressedTandem2SimQueue
     update (time);
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE NOTIFICATIONS OTHER THAN UPDATE (ALL EMPTY; SEE SUB-QUEUE NOTIFICATION PROCESSOR)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   /** Does nothing.
    * 
-   * @throws IllegalArgumentException If the entity is {@code null} or not one of our sub-queues.
+   * @see #processSubQueueNotifications
+   * 
+   */
+  @Override
+  public final void notifyResetEntity (final SimEntity entity)
+  {
+  }
+
+  /** Does nothing.
+   * 
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyStateChanged
   (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member, DJ>> notifications)
   {
-    if (entity == null || ! getQueues ().contains ((DQ) entity))
-      throw new IllegalArgumentException ();
   }
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE ARRIVAL NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Nothing to do apart from sanity check.
+  /** Does nothing.
    * 
-   * @see #getRealJob
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyArrival (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, queue); // Sanity on existance of real job.
   }
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE QUEUE-ACCESS-VACATION NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Throws {@link IllegalStateException}.
+  /** Does nothing.
    * 
-   * @throws IllegalStateException Because sub-queue-access vacations are not allowed.
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyStartQueueAccessVacation (final double time, final DQ queue)
   {
-    throw new IllegalStateException ();
   }
 
-  /** Throws {@link IllegalStateException}.
+  /** Does nothing.
    * 
-   * @throws IllegalStateException Because sub-queue-access vacations are not allowed.
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyStopQueueAccessVacation (final double time, final DQ queue)
   {
-    throw new IllegalStateException ();
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE NO-WAIT-ARMED NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Sets the server-access credits on the wait queue if the notification came from the serve queue.
+  /** Does nothing.
    * 
-   * <p>
-   * If the notification came from the serve queue, we <i>always</i> set the server-access credits on the wait queue.
-   * The conditions for setting it to unity are that the serve queue must report {@code noWaitArmed == true},
-   * and the <i>local</i> {@link #hasServerAcccessCredits} be {@code true}.
-   * In all other cases, it is set to zero.
-   * 
-   * <p>
-   * Note that setting the server-access credits on the wait queue is done through {@link SimQueue#doAfterNotifications}.
-   * 
-   * @see #getServeQueue
-   * @see #getWaitQueue
-   * @see SimQueue#doAfterNotifications
-   * @see SimQueue#setServerAccessCredits
-   * @see #hasServerAcccessCredits
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
   {
-    if (queue == getServeQueue ())
-      getWaitQueue ().doAfterNotifications (() ->
-      {
-        getWaitQueue ().setServerAccessCredits (time, (hasServerAcccessCredits () && noWaitArmed) ? 1 : 0);
-      });
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE SERVER-ACCESS-CREDITS NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Does nothing, apart from sanity checks.
+  /** Does nothing.
    * 
-   * <p>
-   * With {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, this composite queue is under full control
-   * of the server-access credits on the wait queue, and the server-access credits on the serve queue are always infinite.
-   * 
-   * @see #getServeQueue
-   * 
-   * @throws IllegalStateException If the notification came from the serve queue.
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyOutOfServerAccessCredits (final double time, final DQ queue)
   {
-    if (queue == getServeQueue ())
-      throw new IllegalStateException ();
   }
 
-  /** Does nothing, apart from sanity checks.
+  /** Does nothing.
    * 
-   * <p>
-   * With {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, this composite queue is under full control
-   * of the server-access credits on the wait queue, and the server-access credits on the serve queue are always infinite.
-   * 
-   * @see #getServeQueue
-   * 
-   * @throws IllegalStateException If the notification came from the serve queue.
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyRegainedServerAccessCredits (final double time, final DQ queue)
   {
-    if (queue == getServeQueue ())
-      throw new IllegalStateException ();
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE START NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** If the notification came from the wait queue, starts the corresponding real job
-   *  (which amounts only to local administration update and listener notification).
+  /** Does nothing.
    * 
-   * @see #getRealJob
-   * @see #getWaitQueue
-   * @see #start
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyStart (final double time, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job, queue);
-    if (queue == getWaitQueue ())
-    {
-      if (this.jobsInServiceArea.contains (realJob))
-        throw new IllegalStateException ();
-      start (time, realJob);
-    }
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE DROP NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Drops the corresponding real job, or sends the delegate job to the drop-destination sub-queue (if available).
+  /** Does nothing.
    * 
-   * <p>
-   * Starts the dropped job on a valid non-<code>null</code> result from {@link #getDropDestinationQueue};
-   * otherwise it gets the real job, sets its queue to <code>null</code> and drops it as well.
-   * 
-   * @see #getDropDestinationQueue
-   * @see SimQueue#doAfterNotifications
-   * @see #arrive
-   * @see #drop
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyDrop (final double time, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job, queue);
-    final DQ dropDestinationQueue = getDropDestinationQueue ();
-    if (dropDestinationQueue != null)
-    {
-      if (! getQueues ().contains (dropDestinationQueue))
-        throw new RuntimeException ();
-      dropDestinationQueue.doAfterNotifications (() ->
-      {
-        dropDestinationQueue.arrive (time, job);
-      });
-    }
-    else
-      drop (realJob, time);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE REVOCATION NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Nothing to do apart from sanity check.
+  /** Does nothing.
    * 
-   * @see #getRealJob
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyRevocation (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, queue); // Sanity on existance of real job.
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE AUTO-REVOCATION NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** If the notification came from the wait queue, lets the delegate job arrive at the serve queue
-   *  and updates the server-access credits on the wait queue after that;
-   *  if it came from the serve queue, auto-revokes the real job.
+  /** Does nothing.
    * 
-   * <p>
-   * In case the notification came from the wait queue, it schedules the arrival of the delegate job at the serve
-   * queue through {@link SimQueue#doAfterNotifications}. It also schedules at the serve queue,
-   * after the arrival of the delegate job, the update of the server-access credits on the wait queue:
-   * If we have local server-access credits and {@link #isNoWaitArmed} {@code == true},
-   * it sets the server-access credits on the wait queue to unity, again through {@link SimQueue#doAfterNotifications},
-   * yet this time scheduled on the wait queue.
-   * 
-   * <p>
-   * If the notification came from the serve queue, it invokes {@link #autoRevoke},
-   * allowing auto-revocations on the serve queue.
-   * 
-   * @see #getRealJob
-   * @see #getWaitQueue
-   * @see #getServeQueue
-   * @see SimQueue#doAfterNotifications
-   * @see SimQueue#arrive
-   * @see #hasServerAcccessCredits
-   * @see #isNoWaitArmed
-   * 
-   * @throws IllegalArgumentException If the notification came from wait nor serve queues.
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyAutoRevocation (final double time, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job, queue);
-    if (queue == getWaitQueue ())
-    {
-      // Sanity check...
-      if (! this.jobsInServiceArea.contains (realJob))
-        throw new IllegalStateException ();
-      // Schedule the arrival at the serve queue.
-      getServeQueue ().doAfterNotifications (() ->
-      {
-        getServeQueue ().arrive (time, job);
-        if (hasServerAcccessCredits ()
-        &&  isNoWaitArmed ())
-          getWaitQueue ().doAfterNotifications (() ->
-          {
-            getWaitQueue ().setServerAccessCredits (time, 1);
-          });
-      });
-    }
-    else if (queue == getServeQueue ())
-      autoRevoke (time, realJob);
-    else
-      throw new IllegalArgumentException ();
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE DEPARTURE NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Departs the real job.
+  /** Does nothing.
    * 
-   * <p>
-   * If the notification came from the wait queue, this method departs the real job if it has not yet been taken into service
-   * (i.e., it is not yet in the service area).
-   * This is quite legal, and corresponds to the fact that the wait queue allows job departures directly from the waiting area.
-   * If, however, the job has already been taken into service, we throw an exception because the delegate job should have
-   * been auto-revoked.
-   * 
-   * <p>
-   * If the notification came from the serve queue, this method departs the real job.
-   * 
-   * @throws IllegalArgumentException If the notification came from wait nor serve queues.
-   * 
-   * @see #getRealJob
-   * @see #getWaitQueue
-   * @see #getServeQueue
-   * @see #getJobsInServiceArea
-   * @see #depart
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyDeparture (final double time, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job, queue);
-    if (queue == getWaitQueue ())
-    {
-      if (! this.jobsInServiceArea.contains (realJob))
-        // Job departed from the waiting area of the wait queue.
-        // This corresponds to a direct departure from the waiting area of the wait queue, which is perfectly legal.
-        // Real job must depart as well (before its start).
-        depart (time, realJob);
-      else
-        // Job departed from the service area of the wait queue.
-        // This means auto-revocation upon start failed.
-        throw new IllegalStateException ();
-    }
-    else if (queue == getServeQueue ())
-      // Job departed from the serve queue.
-      // Let the real job depart as well.
-      depart (time, realJob);
-    else
-      // Job departed from unknown queue...
-      throw new RuntimeException ();
   }
 
 }

@@ -1,21 +1,31 @@
 package nl.jdj.jqueues.r5.entity.queue.composite;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.TestJob1;
+import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
 import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
+import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
+import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
+import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
+import nl.jdj.jqueues.r5.util.loadfactory.pattern.KnownLoadFactory_SQ_SV;
+import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_0010;
+import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
+import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_ComprTandem2;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DROP;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LCFS;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_SINK;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_ZERO;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
-import nl.jdj.jsimulation.r5.SimEvent;
-import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -51,249 +61,156 @@ public class ComprTandem2Test
   {
   }
   
-  public static List<TestJob1> scheduleJobArrivals
-  (final boolean reported, final int n, final SimEventList eventList, final SimQueue queue)
+  public void testComprTandem2Aux
+  (final SimQueue waitQueue,
+   final SimQueue serveQueue,
+   final AbstractSimQueuePredictor waitQueuePredictor,
+   final AbstractSimQueuePredictor serveQueuePredictor,
+   final int numberOfJobs,
+   final Set<LoadFactoryHint> hints,
+   final boolean silent,
+   final boolean deadSilent,
+   final double accuracy,
+   final Set<KnownLoadFactory_SQ_SV> omit)
+   throws SimQueuePredictionException
   {
-    final List<TestJob1> jobList = new ArrayList<>  ();
-    for (int i = 1; i <= n; i++)
-    {
-      final TestJob1 j = new TestJob1 (reported, i);
-      jobList.add (j);
-      final double arrTime = i;
-      eventList.add (new DefaultSimEvent ("ARRIVAL_" + i, arrTime, null, new SimEventAction ()
-      {
-        @Override
-        public void action (final SimEvent event)
-        {
-          queue.arrive (arrTime, j);
-        }
-      }));
-    }
-    return jobList;
+    final BlackCompressedTandem2SimQueue ctandem2 =
+      new BlackCompressedTandem2SimQueue (waitQueue.getEventList (), waitQueue, serveQueue, null);
+    final SimQueuePredictor_ComprTandem2 predictor_ctandem2 =
+      new SimQueuePredictor_ComprTandem2 (waitQueuePredictor, serveQueuePredictor);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (ctandem2, predictor_ctandem2, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
   }
-  
-  private int triangular (int n)
-  {
-    if (n < 0)
-      throw new RuntimeException ();
-    if (n == 0)
-      return 0;
-    return (n * (n+1)) / 2;
-  }
-  
-  private final boolean reported = false;
   
   /**
-   * Test of BlackCompressedTandem2SimQueue (FCFS+FCFS).
+   * Test of BlackCompressedTandem2SimQueue.
    * 
    */
   @Test
-  public void testBlackCompressedTandem2SimQueue_FCFS_FCFS ()
+  public void testComprTandem2 () throws SimQueuePredictionException
   {
-    final SimEventList<DefaultSimEvent> el = new DefaultSimEventList<> (DefaultSimEvent.class);
-    final FCFS fcfs1 = new FCFS (el);
-    final FCFS fcfs2 = new FCFS (el);
-    final BlackCompressedTandem2SimQueue queue = new BlackCompressedTandem2SimQueue (el, fcfs1, fcfs2, null);
-    //fcfs1.registerStdOutSimQueueListener();
-    //fcfs2.registerStdOutSimQueueListener();
-    queue.registerStdOutSimQueueListener();
-    System.out.println ("==========================================");
-    System.out.println (queue);
-    System.out.println ("==========================================");
-    for (int i = 0; i <= 1; i++)
-    {
-      if (this.reported)
-        System.out.println ("===== PASS " + i + " =====");
-      final List<TestJob1> jobs = scheduleJobArrivals (this.reported, 10, el, queue);
-      el.run ();
-      assert el.isEmpty ();
-      assertEquals (56.0, el.getTime (), 0.0);
-      for (TestJob1 j : jobs)
-      {
-        assert j.arrived;
-        assertEquals ((double) j.n, j.arrivalTime, 0.0);
-        assert j.started;
-        assertEquals (1.0 + (double) (triangular (j.n - 1)), j.startTime, 0.0);
-        assert j.departed;
-        assertEquals (j.startTime + (double) j.n, j.departureTime, 0.0);
-      }
-      // Test reset on the fly...
-      el.reset ();
-    }
+    final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
+    final int numberOfJobs = 50;
+    final Set<LoadFactoryHint> jitterHint = Collections.singleton (LoadFactory_SQ_SV_0010.SERVICE_TIME_JITTER);
+    final boolean silent = true;
+    final boolean deadSilent = true;
+    //
+    // ComprTandem2[FCFS, FCFS]
+    //
+    final FCFS fcfs1 = new FCFS (eventList);
+    fcfs1.setName ("fcfs1");
+    final FCFS fcfs2 = new FCFS (eventList);
+    fcfs2.setName ("fcfs2");
+    final AbstractSimQueuePredictor predictor_fcfs1 = new SimQueuePredictor_FCFS ();
+    final AbstractSimQueuePredictor predictor_fcfs2 = new SimQueuePredictor_FCFS ();
+    testComprTandem2Aux
+    ( fcfs1, fcfs2,
+      predictor_fcfs1, predictor_fcfs2,
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    //
+    // ComprTandem2[LCFS, FCFS]
+    //
+    final LCFS lcfs = new LCFS (eventList);
+    lcfs.setName ("lcfs");
+    final FCFS fcfs3 = new FCFS (eventList);
+    fcfs3.setName ("fcfs3");
+    final AbstractSimQueuePredictor predictor_lcfs = new SimQueuePredictor_LCFS ();
+    final AbstractSimQueuePredictor predictor_fcfs3 = new SimQueuePredictor_FCFS ();
+    testComprTandem2Aux
+    ( lcfs, fcfs3,
+      predictor_lcfs, predictor_fcfs3,
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    //
+    // ComprTandem2[DROP, FCFS]
+    //
+    final DROP drop1 = new DROP (eventList);
+    drop1.setName ("drop1");
+    final FCFS fcfs4 = new FCFS (eventList);
+    fcfs4.setName ("fcfs4");
+    final AbstractSimQueuePredictor predictor_drop1 = new SimQueuePredictor_DROP ();
+    final AbstractSimQueuePredictor predictor_fcfs4 = new SimQueuePredictor_FCFS ();
+    testComprTandem2Aux
+    ( drop1, fcfs4,
+      predictor_drop1, predictor_fcfs4,
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    //
+    // ComprTandem2[FCFS, DROP]
+    //
+    final FCFS fcfs5 = new FCFS (eventList);
+    fcfs5.setName ("fcfs5");
+    final DROP drop2 = new DROP (eventList);
+    drop2.setName ("drop2");
+    final AbstractSimQueuePredictor predictor_fcfs5 = new SimQueuePredictor_FCFS ();
+    final AbstractSimQueuePredictor predictor_drop2 = new SimQueuePredictor_DROP ();
+    testComprTandem2Aux
+    ( fcfs5, drop2,
+      predictor_fcfs5, predictor_drop2,
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    //
+    // ComprTandem2[SINK, FCFS]
+    //
+    final SINK sink1 = new SINK (eventList);
+    sink1.setName ("sink1");
+    final FCFS fcfs6 = new FCFS (eventList);
+    fcfs6.setName ("fcfs6");
+    final AbstractSimQueuePredictor predictor_sink1 = new SimQueuePredictor_SINK ();
+    final AbstractSimQueuePredictor predictor_fcfs6 = new SimQueuePredictor_FCFS ();
+    testComprTandem2Aux
+    ( sink1, fcfs6,
+      predictor_sink1, predictor_fcfs6,
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    //
+    // ComprTandem2[FCFS, SINK]
+    //
+    final FCFS fcfs7 = new FCFS (eventList);
+    fcfs7.setName ("fcfs7");
+    final SINK sink2 = new SINK (eventList);
+    sink2.setName ("sink2");
+    final AbstractSimQueuePredictor predictor_fcfs7 = new SimQueuePredictor_FCFS ();
+    final AbstractSimQueuePredictor predictor_sink2 = new SimQueuePredictor_SINK ();
+    testComprTandem2Aux
+    ( fcfs7, sink2,
+      predictor_fcfs7, predictor_sink2,
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    //
+    // ComprTandem2[ZERO, FCFS]
+    //
+    final ZERO zero1 = new ZERO (eventList);
+    zero1.setName ("zero1");
+    final FCFS fcfs8 = new FCFS (eventList);
+    fcfs8.setName ("fcfs8");
+    final AbstractSimQueuePredictor predictor_zero1 = new SimQueuePredictor_ZERO ();
+    final AbstractSimQueuePredictor predictor_fcfs8 = new SimQueuePredictor_FCFS ();
+    testComprTandem2Aux
+    ( zero1, fcfs8,
+      predictor_zero1, predictor_fcfs8,
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    //
+    // ComprTandem2[FCFS, ZERO]
+    //
+    final FCFS fcfs9 = new FCFS (eventList);
+    fcfs9.setName ("fcfs9");
+    final ZERO zero2 = new ZERO (eventList);
+    zero2.setName ("zero2");
+    final AbstractSimQueuePredictor predictor_fcfs9 = new SimQueuePredictor_FCFS ();
+    final AbstractSimQueuePredictor predictor_zero2 = new SimQueuePredictor_ZERO ();
+    testComprTandem2Aux
+    ( fcfs9, zero2,
+      predictor_fcfs9, predictor_zero2,
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    //
+    // ComprTandem2[ZERO, ZERO]
+    //
+    final ZERO zero3 = new ZERO (eventList);
+    zero3.setName ("zero3");
+    final ZERO zero4 = new ZERO (eventList);
+    zero4.setName ("zero4");
+    final AbstractSimQueuePredictor predictor_zero3 = new SimQueuePredictor_ZERO ();
+    final AbstractSimQueuePredictor predictor_zero4 = new SimQueuePredictor_ZERO ();
+    testComprTandem2Aux
+    ( zero3, zero4,
+      predictor_zero3, predictor_zero4,
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
   }
 
-  /**
-   * Test of BlackCompressedTandem2SimQueue (LCFS+FCFS).
-   * 
-   */
-  @Test
-  public void testBlackCompressedTandem2SimQueue_LCFS_FCFS ()
-  {
-    final SimEventList<DefaultSimEvent> el = new DefaultSimEventList<> (DefaultSimEvent.class);
-    final LCFS lcfs = new LCFS (el);
-    final FCFS fcfs = new FCFS (el);
-    final BlackCompressedTandem2SimQueue queue = new BlackCompressedTandem2SimQueue (el, lcfs, fcfs, null);
-    //lcfs.registerStdOutSimQueueListener();
-    //fcfs.registerStdOutSimQueueListener();
-    queue.registerStdOutSimQueueListener();
-    System.out.println ("==========================================");
-    System.out.println (queue);
-    System.out.println ("==========================================");
-    final List<TestJob1> jobs = scheduleJobArrivals (this.reported, 10, el, queue);
-    el.run ();
-    assert el.isEmpty ();
-    assertEquals (56.0, el.getTime (), 0.0);
-    for (TestJob1 j : jobs)
-    {
-      assert j.arrived;
-      assertEquals ((double) j.n, j.arrivalTime, 0.0);
-      assert j.started;
-      assert j.departed;
-      if (j.n == 1)
-        assertEquals (1.0, j.startTime, 0.0);
-      else if (j.n == 2)
-        assertEquals (2.0, j.startTime, 0.0);
-      // Job 3 arrives at t=3, 2 still being in service.
-      // Job 4 arrives exactly at the same time as the departure of job 2.
-      // So, either job 3 or job 4 is taken into service at t = 4.
-      // Given the nature of the underlying event list, both options have equal probability.
-      // We check for them both.
-      else if (jobs.get (2).startTime < jobs.get (3).startTime)
-      {
-        // Job 3 (!) started at t = 4, running from 4 to 7 inclusive.
-        if (j.n == 3)
-          assertEquals (4.0, j.startTime, 0.0);
-        // At t=7 two valid options: 6 from 7 to 13, or 7 from 7 to 14.
-        else if (jobs.get (5).startTime < jobs.get (6).startTime)
-        {
-          // t=7: Job 6 from 7 to 13.
-          if (j.n == 6)
-            assertEquals (7.0, j.startTime, 0.0);
-          // The remaining jobs are now served from t=13 onwards without ties.
-          else switch (j.n)
-          {
-            case 10:
-              assertEquals (13.0, j.startTime, 0.0);
-              break;
-            case 9:
-              assertEquals (23.0, j.startTime, 0.0);
-              break;
-            case 8:
-              assertEquals (32.0, j.startTime, 0.0);
-              break;
-            case 7:
-              assertEquals (40.0, j.startTime, 0.0);
-              break;
-            case 5:
-              assertEquals (47.0, j.startTime, 0.0);
-              break;
-            case 4:
-              assertEquals (52.0, j.startTime, 0.0);
-              break;
-            default:
-              fail ("Unexpected index.");
-          }
-        }
-        else
-        {
-          // t=7: Job 7 from 7 to 14.
-          if (j.n == 7)
-            assertEquals (7.0, j.startTime, 0.0);
-          // The remaining jobs are now served from t=14 onwards without ties.
-          else switch (j.n)
-          {
-            case 10:
-              assertEquals (14.0, j.startTime, 0.0);
-              break;
-            case 9:
-              assertEquals (24.0, j.startTime, 0.0);
-              break;
-            case 8:
-              assertEquals (33.0, j.startTime, 0.0);
-              break;
-            case 6:
-              assertEquals (41.0, j.startTime, 0.0);
-              break;
-            case 5:
-              assertEquals (47.0, j.startTime, 0.0);
-              break;
-            case 4:
-              assertEquals (52.0, j.startTime, 0.0);
-              break;
-            default:
-              fail ("Unexpected index.");
-          }
-        }
-      }
-      else
-      {
-        // Job 4 (!) started at t = 4, running from 4 to 8 inclusive.
-        if (j.n == 4)
-          assertEquals (4.0, j.startTime, 0.0);
-        // t=8: either 7 (from 8 to 15) or 8 (from 8 to 16).
-        else if (jobs.get (6).startTime < jobs.get (7).startTime)
-        {
-          // t=8: Job 7 from 8 to 15.
-          if (j.n == 7)
-            assertEquals (8.0, j.startTime, 0.0);
-          // The remaining jobs are now served from t=15 onwards without ties.
-          else switch (j.n)
-          {
-            case 10:
-              assertEquals (15.0, j.startTime, 0.0);
-              break;
-            case 9:
-              assertEquals (25.0, j.startTime, 0.0);
-              break;
-            case 8:
-              assertEquals (34.0, j.startTime, 0.0);
-              break;
-            case 6:
-              assertEquals (42.0, j.startTime, 0.0);
-              break;
-            case 5:
-              assertEquals (48.0, j.startTime, 0.0);
-              break;
-            case 3:
-              assertEquals (53.0, j.startTime, 0.0);
-              break;
-            default:
-              fail ("Unexpected index.");
-          }          
-        }
-        else
-        {
-          // t=8: Job 8 from 8 to 16.
-          if (j.n == 8)
-            assertEquals (8.0, j.startTime, 0.0);
-          // The remaining jobs are now served from t=16 onwards without ties.
-          else switch (j.n)
-          {
-            case 10:
-              assertEquals (16.0, j.startTime, 0.0);
-              break;
-            case 9:
-              assertEquals (26.0, j.startTime, 0.0);
-              break;
-            case 7:
-              assertEquals (35.0, j.startTime, 0.0);
-              break;
-            case 6:
-              assertEquals (42.0, j.startTime, 0.0);
-              break;
-            case 5:
-              assertEquals (48.0, j.startTime, 0.0);
-              break;
-            case 3:
-              assertEquals (53.0, j.startTime, 0.0);
-              break;
-            default:
-              fail ("Unexpected index.");
-          }          
-        }
-      }
-      assertEquals (j.startTime + (double) j.n, j.departureTime, 0.0);
-    }
-  }
-  
 }
