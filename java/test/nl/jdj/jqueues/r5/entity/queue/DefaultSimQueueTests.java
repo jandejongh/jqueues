@@ -100,7 +100,6 @@ public class DefaultSimQueueTests
           final List<Map<Double, Boolean>> actualQavLogs = qavLogger.getQueueAccessVacationLog ();
           final List<Map<Double, Boolean>> actualSacLogs = sacLogger.getServerAccessCreditsAvailabilityLog ();
           final List<Map<Double, Boolean>> actualNwaLogs = nwaLogger.getNoWaitArmedLog ();
-          // XXX SHOULD DO THE SAME FOR QAV!!
           assert SimQueueAccessVacationLogger.matchQueueAccessVacationLogs
                    (predictedQavLogs, actualQavLogs, accuracy);
           assert SimQueueServerAccessCreditsAvailabilityLogger.matchServerAccessCreditsAvailabilityLogs
