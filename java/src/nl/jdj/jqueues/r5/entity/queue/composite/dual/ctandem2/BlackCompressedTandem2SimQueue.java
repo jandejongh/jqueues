@@ -681,6 +681,11 @@ public class BlackCompressedTandem2SimQueue
    * and process it either with {@link #processWaitQueueNotification}
    * or {@link #processServeQueueNotification}.
    * While processing, new events may be added to the list; the list is processed until it is empty.
+   * It finally invokes {@link #triggerPotentialNewNoWaitArmed} to make sure we did not miss
+   * an "isolated" {@link SimQueue#isNoWaitArmed} notification from one of the sub-queues
+   * that requires a change in our own {@link SimQueue#isNoWaitArmed} state.
+   * (Note that after invocation of this method, no new (sub-queue) notifications are expected, at
+   * the expense of a {@link IllegalStateException}.)
    * 
    * <p>
    * Note that this {@link BlackCompressedTandem2SimQueue} still catches {@link SimEntityListener#notifyUpdate}
@@ -720,6 +725,9 @@ public class BlackCompressedTandem2SimQueue
       else
         throw new IllegalArgumentException ();
     }
+    triggerPotentialNewNoWaitArmed (getLastUpdateTime ());
+    if (! notifications.isEmpty ())
+      throw new IllegalStateException ();
   }
   
   /** Performs sanity checks on a notification from a sub-queue (irrespective of which one).
@@ -831,8 +839,6 @@ public class BlackCompressedTandem2SimQueue
       final DJ job = subNotification.values ().iterator ().next ();
       if (notificationType == SimEntitySimpleEventType.RESET)
       {
-        // Special treatment of reset notification, because of tricky update-time semantics.
-        // For instance, we cannot operate on a SimEntity 'in the past'.
         // Note that we rely on this object being reset before its sub-queues
         // AND on the wait queue being reset before the serve queue!
         final DQ serveQueue = getServeQueue ();
@@ -925,8 +931,6 @@ public class BlackCompressedTandem2SimQueue
       if (notificationType == SimEntitySimpleEventType.RESET)
       {
         mustSetSacOnWaitQueue = false;
-        // Special treatment of reset notification, because of tricky update-time semantics.
-        // For instance, we cannot operate on a SimEntity 'in the past'.
         // Note that we rely on this object being reset before its sub-queues
         // AND on the wait queue being reset before the serve queue!
         final DQ waitQueue = getWaitQueue ();
