@@ -19,7 +19,6 @@ import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_ComprTandem2;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DROP;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS;
-import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_IC;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LCFS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LeakyBucket;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_SINK;
