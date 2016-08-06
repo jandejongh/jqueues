@@ -179,6 +179,37 @@ extends SimEventListResetListener, SimQoS<J, Q>
    */
   double getLastUpdateTime ();
   
+  /** Returns whether this entity ignores event-list resets.
+   * 
+   * @return Whether this entity ignores event-list resets.
+   * 
+   * @see #setIgnoreEventListReset
+   * 
+   */
+  boolean isIgnoreEventListReset ();
+  
+  /** Sets whether this entity ignores future event-list resets.
+   * 
+   * <p>
+   * By contract, a {@link SimEntity} must reset with {@link #resetEntity}
+   * whenever the underlying event list (if present) is reset.
+   * The normal procedure to achieve this is to register as a {@link SimEventListResetListener},
+   * and invoke {@link #resetEntity} upon {@link SimEventListResetListener#notifyEventListReset}.
+   * 
+   * <p>
+   * There are cases, however, in which resetting this entity has to be delegated to another entity (or other type of
+   * object listening to the event list), for instance because the order in which entities are reset is important.
+   * Through this method, the automatic resetting of this entity upon an event-list reset can be disabled.
+   * Note, however, that the contract remains that the entity has to follow event-list resets.
+   * 
+   * @param ignoreEventListReset Whether this entity ignores future event-list resets.
+   * 
+   * @see #isIgnoreEventListReset
+   * @see SimEventListResetListener#notifyEventListReset
+   * 
+   */
+  void setIgnoreEventListReset (boolean ignoreEventListReset);
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // ACTION (AFTER NOTIFICATIONS)

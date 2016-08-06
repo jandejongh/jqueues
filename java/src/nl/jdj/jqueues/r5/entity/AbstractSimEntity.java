@@ -270,16 +270,34 @@ implements SimEntity<J, Q>
     fireAndLockPendingNotifications ();
   }
   
-  /** Calls {@link #resetEntity}.
+  private boolean ignoreEventListReset = false;
+  
+  @Override
+  public final boolean isIgnoreEventListReset ()
+  {
+    return this.ignoreEventListReset;
+  }
+  
+  @Override
+  public final void setIgnoreEventListReset (final boolean ignoreEventListReset)
+  {
+    this.ignoreEventListReset = ignoreEventListReset;
+  }
+  
+  /** Calls {@link #resetEntity}, unless this entity ignores event-list reset notifications.
    * 
    * <p>
    * This method is <code>final</code>; use {@link #resetEntitySubClass} to override/augment behavior.
+   * 
+   * @see SimEntity#isIgnoreEventListReset
+   * @see SimEntity#setIgnoreEventListReset
    * 
    */
   @Override
   public final void notifyEventListReset (final SimEventList eventList)
   {
-    resetEntity ();
+    if (! this.ignoreEventListReset)
+      resetEntity ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
