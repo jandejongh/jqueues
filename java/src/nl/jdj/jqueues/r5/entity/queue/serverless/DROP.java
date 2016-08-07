@@ -65,7 +65,7 @@ extends AbstractServerlessSimQueue<J, Q>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE
+  // NoWaitArmed
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -82,7 +82,7 @@ extends AbstractServerlessSimQueue<J, Q>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // MAIN OPERATIONS
+  // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -95,27 +95,43 @@ extends AbstractServerlessSimQueue<J, Q>
     super.resetEntitySubClass ();
   }  
   
-  /** Does nothing (effectively forcing the job to be dropped).
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ARRIVAL
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Adds the job to the {@link #jobQueue} (as single member).
+   * 
+   * @throws IllegalStateException If the job-queue is non-empty upon entry.
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    /* EMPTY */    
+    if (! this.jobQueue.isEmpty ())
+      throw new IllegalStateException ();
+    this.jobQueue.add (job);
   }
 
-  /** Throws {@link IllegalStateException}.
+  /** Drops the job.
    * 
-   * @throws IllegalStateException Always, as this method is not expected to be invoked.
+   * @see #drop
    * 
    */
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    throw new IllegalStateException ();
+    drop (job, time);
   }
 
-  /** Throws {@link IllegalStateException}.
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DROP
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Removes the job from the {@link #jobQueue}.
    * 
    * @throws IllegalStateException Always, as this method is not expected to be invoked.
    * 
@@ -123,26 +139,27 @@ extends AbstractServerlessSimQueue<J, Q>
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
-    throw new IllegalStateException ();
+    this.jobQueue.remove (job);
   }
 
-  /** Throws {@link IllegalStateException}.
-   * 
-   * @throws IllegalStateException Always, as this method is not expected to be invoked.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void rescheduleAfterDrop (final J job, final double time)
   {
-    throw new IllegalStateException ();
+    /* EMPTY */
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // REVOCATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Throws {@link IllegalStateException}.
    * 
-   * <p>
-   * XXX This is not correctly stated. but somehow correct. This method should not be called??
-   * 
-   * @throws IllegalStateException Always, as this {@link SimQueue} does not allow revocations.
+   * @throws IllegalStateException Always, as this method is not expected to be invoked.
    * 
    */
   @Override
@@ -153,7 +170,7 @@ extends AbstractServerlessSimQueue<J, Q>
 
   /** Throws {@link IllegalStateException}.
    * 
-   * @throws IllegalStateException Always, as this {@link SimQueue} does not allow revocations.
+   * @throws IllegalStateException Always, as this method is not expected to be invoked.
    * 
    */
   @Override
@@ -162,9 +179,15 @@ extends AbstractServerlessSimQueue<J, Q>
     throw new IllegalStateException ();
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DEPARTURE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Throws {@link IllegalStateException}.
    * 
-   * @throws IllegalStateException Always, as this {@link SimQueue} does not allow departures.
+   * @throws IllegalStateException Always, as this method is not expected to be invoked.
    * 
    */
   @Override
@@ -175,22 +198,13 @@ extends AbstractServerlessSimQueue<J, Q>
 
   /** Throws {@link IllegalStateException}.
    * 
-   * @throws IllegalStateException Always, as this {@link SimQueue} does not allow departures.
+   * @throws IllegalStateException Always, as this method is not expected to be invoked.
    * 
    */
   @Override
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
     throw new IllegalStateException ();
-  }
-
-  /** Does nothing.
-   * 
-   */
-  @Override
-  protected final void rescheduleForNewServerAccessCredits (final double time)
-  {
-    /* EMPTY */
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
