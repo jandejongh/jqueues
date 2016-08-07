@@ -1346,7 +1346,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * and that this method is invoked immediately after {@link #removeJobFromQueueUponDeparture}.
    * 
    * <p>
-   * Implementations must <i>not</i> insert {@link SimEntitySimpleEventType#DROP} notification,
+   * Implementations must <i>not</i> insert {@link SimEntitySimpleEventType#DEPARTURE} notification,
    * as this is already done by the base class {@link AbstractSimQueue}.
    * They must, however, add appropriate notifications for other internal state-changing events.
    * 
