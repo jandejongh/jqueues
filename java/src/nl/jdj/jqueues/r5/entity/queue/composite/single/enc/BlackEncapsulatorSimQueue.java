@@ -2,7 +2,6 @@ package nl.jdj.jqueues.r5.entity.queue.composite.single.enc;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
@@ -12,7 +11,7 @@ import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite.StartMode
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.listener.MultiSimQueueNotificationProcessor;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link BlackSimQueueComposite} encapsulating a single {@link SimQueue}.
@@ -504,6 +503,22 @@ public class BlackEncapsulatorSimQueue
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // PROCESS SUB-QUEUE STATE-CHANGE NOTIFICATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Clears the notifications list (i.e., not implemented yet).
+   * 
+   */
+  @Override
+  protected final void processSubQueueNotifications
+  (final List<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> notifications)
+  {
+    notifications.clear ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // SUB-QUEUE RESET NOTIFICATION
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -523,38 +538,6 @@ public class BlackEncapsulatorSimQueue
   @Override
   public final void notifyResetEntity (final SimEntity entity)
   {
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE UPDATE / STATE CHANGED NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Calls {@link #update}.
-   * 
-   * @throws IllegalArgumentException If the entity is {@code null} or not one of our sub-queues.
-   * 
-   */
-  @Override
-  public final void notifyUpdate (final double time, final SimEntity entity)
-  {
-    if (entity == null || ! getQueues ().contains ((DQ) entity))
-      throw new IllegalArgumentException ();
-    update (time);
-  }
-  
-  /** Does nothing.
-   * 
-   * @throws IllegalArgumentException If the entity is {@code null} or not one of our sub-queues.
-   * 
-   */
-  @Override
-  public final void notifyStateChanged
-  (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member, DJ>> notifications)
-  {
-    if (entity == null || ! getQueues ().contains ((DQ) entity))
-      throw new IllegalArgumentException ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

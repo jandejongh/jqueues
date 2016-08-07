@@ -138,7 +138,9 @@ public class BlackCompressedTandem2SimQueue
    *  and an optional factory for delegate jobs.
    *
    * <p>
-   * The constructor sets the {@link StartModel} to {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
+   * The constructor,
+   * after dealing with the super constructor,
+   * sets the {@link StartModel} to {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
    * and inhibits future automatic resets of the wait and serve queue from the event list,
    * since this object will take care of that (and depends on the absence of "independent" resets
    * of the sub-queues).
@@ -146,8 +148,6 @@ public class BlackCompressedTandem2SimQueue
    * and resets this object through {@link #resetEntitySubClassLocal},
    * thus (amongst others) resetting the wait and serve queues
    * and setting the proper initial server-access credits on the wait queue.
-   * Finally, it constructs a new {@link MultiSimQueueNotificationProcessor} for both sub-queues,
-   * and registers {@link #processSubQueueNotifications} as its processor.
    * 
    * @param eventList             The event list to use.
    * @param waitQueue             The wait queue.
@@ -168,9 +168,6 @@ public class BlackCompressedTandem2SimQueue
    * @see SimQueue#setAutoRevocationPolicy
    * @see AutoRevocationPolicy#UPON_START
    * @see #resetEntitySubClassLocal
-   * @see MultiSimQueueNotificationProcessor
-   * @see MultiSimQueueNotificationProcessor#setProcessor
-   * @see #processSubQueueNotifications
    * 
    */
   public BlackCompressedTandem2SimQueue
@@ -207,9 +204,6 @@ public class BlackCompressedTandem2SimQueue
     getServeQueue ().setIgnoreEventListReset (true);
     getWaitQueue ().setAutoRevocationPolicy (AutoRevocationPolicy.UPON_START);
     resetEntitySubClassLocal ();
-    final MultiSimQueueNotificationProcessor<DJ, DQ>  subQueueEventProcessor =
-      new MultiSimQueueNotificationProcessor<> (getQueues ());
-    subQueueEventProcessor.setProcessor (this::processSubQueueNotifications);
   }
 
   /** Returns a new {@link BlackCompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
@@ -720,23 +714,16 @@ public class BlackCompressedTandem2SimQueue
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // PROCESS SUB-QUEUE NOTIFICATIONS (THROUGH NOTIFICATION PROCESSOR); ALL EXCEPT UPDATE NOTIFICATIONS
+  // PROCESS SUB-QUEUE STATE-CHANGE NOTIFICATIONS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Processes the pending atomic notifications from the sub-queues, one at a time (core sub-queue notification processor).
    * 
    * <p>
-   * Core method for reacting to {@link SimEntityListener#notifyStateChanged} notifications from both sub-queues.
-   * This method is registered as the processor for an anonymous {@link MultiSimQueueNotificationProcessor}
-   * (for both sub-queues) created upon construction,
-   * see {@link MultiSimQueueNotificationProcessor.Processor}
-   * and {@link MultiSimQueueNotificationProcessor#setProcessor}.
-   * 
-   * <p>
    * This method takes one notification at a time, starting at the head of the list, removes it
    * and processes it either with {@link #processWaitQueueNotification}
-   * or {@link #processServeQueueNotification}.
+   * or {@link #processServeQueueNotification}, depending on the source of the notification.
    * While processing, new notifications may be added to the list; the list is processed until it is empty.
    * 
    * <p>
@@ -752,20 +739,13 @@ public class BlackCompressedTandem2SimQueue
    * notifications in the main class body (all other notification types are dealt with through the
    * {@link MultiSimQueueNotificationProcessor}.
    * 
-   * @param notifications The sub-queue notifications, will be modified; empty upon return.
-   * 
-   * @throws IllegalArgumentException If the list is {@code null} or empty, or contains a notification from another queue
-   *                                  than the two sub-queues (i.e., the wait- and serve-queues),
-   *                                  or if other sanity checks fail.
-   * 
-   * @see MultiSimQueueNotificationProcessor
-   * @see MultiSimQueueNotificationProcessor.Processor
-   * @see MultiSimQueueNotificationProcessor#setProcessor
+   * @see MultiSimQueueNotificationProcessor.Notification#getQueue
    * @see #processWaitQueueNotification
    * @see #processServeQueueNotification
    * @see #update
    * 
    */
+  @Override
   protected final void processSubQueueNotifications
   (final List<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> notifications)
   {
@@ -1095,31 +1075,7 @@ public class BlackCompressedTandem2SimQueue
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // SUB-QUEUE UPDATE NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Calls {@link #update} in order to update our own time in response to an increase in time on one of the sub-queues.
-   * 
-   * @throws IllegalArgumentException If the entity is {@code null} or not one of our sub-queues.
-   * @throws IllegalStateException    If time is in the past.
-   * 
-   * @see #getQueues
-   * @see #update
-   * @see #getLastUpdateTime
-   * 
-   */
-  @Override
-  public final void notifyUpdate (final double time, final SimEntity entity)
-  {
-    if (entity == null || ! getQueues ().contains ((DQ) entity))
-      throw new IllegalArgumentException ();
-    update (time);
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE NOTIFICATIONS OTHER THAN UPDATE (ALL EMPTY; SEE SUB-QUEUE NOTIFICATION PROCESSOR)
+  // SUB-QUEUE NOTIFICATIONS OTHER THAN UPDATE/STATE-CHANGE (ALL EMPTY; SEE SUB-QUEUE NOTIFICATION PROCESSOR)
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1133,17 +1089,6 @@ public class BlackCompressedTandem2SimQueue
   {
   }
 
-  /** Does nothing.
-   * 
-   * @see #processSubQueueNotifications
-   * 
-   */
-  @Override
-  public final void notifyStateChanged
-  (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member, DJ>> notifications)
-  {
-  }
-  
   /** Does nothing.
    * 
    * @see #processSubQueueNotifications

@@ -1,12 +1,11 @@
 package nl.jdj.jqueues.r5.entity.queue.composite;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.listener.MultiSimQueueNotificationProcessor;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A partial implementation of a {@link BlackSimQueueComposite} restricted to {@link StartModel#LOCAL}.
@@ -382,6 +381,22 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // PROCESS SUB-QUEUE STATE-CHANGE NOTIFICATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Clears the notifications list (i.e., not implemented yet).
+   * 
+   */
+  @Override
+  protected final void processSubQueueNotifications
+  (final List<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> notifications)
+  {
+    notifications.clear ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // SUB-QUEUE RESET NOTIFICATION
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -401,38 +416,6 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   @Override
   public final void notifyResetEntity (final SimEntity entity)
   {
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE UPDATE / STATE CHANGED NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Calls {@link #update}.
-   * 
-   * @throws IllegalArgumentException If the entity is {@code null} or not one of our sub-queues.
-   * 
-   */
-  @Override
-  public final void notifyUpdate (final double time, final SimEntity entity)
-  {
-    if (entity == null || ! getQueues ().contains ((DQ) entity))
-      throw new IllegalArgumentException ();
-    update (time);
-  }
-  
-  /** Does nothing.
-   * 
-   * @throws IllegalArgumentException If the entity is {@code null} or not one of our sub-queues.
-   * 
-   */
-  @Override
-  public final void notifyStateChanged
-  (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member, DJ>> notifications)
-  {
-    if (entity == null || ! getQueues ().contains ((DQ) entity))
-      throw new IllegalArgumentException ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
