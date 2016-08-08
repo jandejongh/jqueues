@@ -12,6 +12,7 @@ import nl.jdj.jqueues.r5.entity.queue.composite.dual.collector.BlackDropCollecto
 import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.single.enc.BlackEncapsulatorSimQueue;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.listener.MultiSimQueueNotificationProcessor;
 import nl.jdj.jsimulation.r5.SimEventList;
 
@@ -44,7 +45,11 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * 
    * <p>
    * After calling the super constructor,
-   * it creates a new {@link MultiSimQueueNotificationProcessor} for all sub-queues,
+   * this methods sets the delegate job factory,
+   * and inhibits future automatic resets from the event list on all sub-queues,
+   * since this object will take care of that (and depends on the absence of "independent" resets
+   * of the sub-queues).
+   * It then creates a new {@link MultiSimQueueNotificationProcessor} for all sub-queues,
    * and registers (the abstract) {@link #processSubQueueNotifications} as its processor.
    * Finally, it invokes {@link #resetEntitySubClassLocal}.
    * 
@@ -54,12 +59,12 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    *                                if {@code null}, no sub-queues will be visited.
    * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
    * 
-   * 
    * @throws IllegalArgumentException If the event list is {@code null},
    *                                    or the <code>queue</code> argument is <code>null</code> or has <code>null</code> members.
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
+   * @see SimEntity#setIgnoreEventListReset
    * @see MultiSimQueueNotificationProcessor
    * @see MultiSimQueueNotificationProcessor#setProcessor
    * @see #processSubQueueNotifications
@@ -74,6 +79,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   {
     super (eventList, queues, simQueueSelector);
     this.delegateSimJobFactory = ((delegateSimJobFactory == null) ? new DefaultDelegateSimJobFactory () : delegateSimJobFactory);
+    for (final DQ q : getQueues ())
+      q.setIgnoreEventListReset (true);
     final MultiSimQueueNotificationProcessor<DJ, DQ>  subQueueEventProcessor =
       new MultiSimQueueNotificationProcessor<> (getQueues ());
     subQueueEventProcessor.setProcessor (this::processSubQueueNotifications);
@@ -401,7 +408,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // PROCESS SUB-QUEUE STATE-CHANGE NOTIFICATIONS
+  // PROCESS (AND SANITY ON) SUB-QUEUE STATE-CHANGE NOTIFICATIONS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -432,6 +439,47 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    */
   protected abstract void processSubQueueNotifications
   (final List<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> notifications);
+  
+  /** Performs sanity checks on a notification from a sub-queue (irrespective of which one).
+   * 
+   * <p>
+   * Convenience method for sub-classes.
+   * 
+   * @param notification The notification.
+   * 
+   * @throws IllegalArgumentException If the time of the notification differs from our last update time.
+   * @throws IllegalStateException    If a {@link SimEntitySimpleEventType#RESET} notification was found in combination
+   *                                  with other sub-notifications (i.e., as part of an atomic notification that includes
+   *                                  other sub-notifications next to the reset),
+   *                                  or if a Queue-Access Vacation notification was found.
+   * 
+   * @see MultiSimQueueNotificationProcessor.Notification#getTime
+   * @see #getLastUpdateTime
+   * @see SimQueueSimpleEventType#RESET
+   * @see MultiSimQueueNotificationProcessor.Notification#getSubNotifications
+   * 
+   */
+  protected final void sanitySubQueueNotification
+  (final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification)
+  {
+    if (notification.getTime () != getLastUpdateTime ())
+      throw new IllegalArgumentException ("on " + this + ": notification time [" + notification.getTime ()
+      + "] != last update time [" + getLastUpdateTime () + "], subnotifications: "
+      + notification.getSubNotifications () + ".");
+    for (final Map<SimEntitySimpleEventType.Member, DJ> subNotification : notification.getSubNotifications ())
+    {
+      final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
+      if (notificationType == SimEntitySimpleEventType.RESET)
+      {
+        if (notification.getSubNotifications ().size () > 1)
+          throw new IllegalStateException ();
+      }
+      else if (notificationType == SimQueueSimpleEventType.QAV_START
+            || notificationType == SimQueueSimpleEventType.QAV_END)
+        // Queue-Access Vacations are forbidden on sub-queues.
+        throw new IllegalStateException ();
+    }
+  }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //

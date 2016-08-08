@@ -139,11 +139,8 @@ public class BlackCompressedTandem2SimQueue
    *
    * <p>
    * The constructor,
-   * after dealing with the super constructor,
-   * sets the {@link StartModel} to {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
-   * and inhibits future automatic resets of the wait and serve queue from the event list,
-   * since this object will take care of that (and depends on the absence of "independent" resets
-   * of the sub-queues).
+   * after invoking the super constructor,
+   * sets the {@link StartModel} to {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}.
    * The constructor then sets the auto-revocation policy on the wait queue to {@link AutoRevocationPolicy#UPON_START}
    * and resets this object through {@link #resetEntitySubClassLocal},
    * thus (amongst others) resetting the wait and serve queues
@@ -164,7 +161,6 @@ public class BlackCompressedTandem2SimQueue
    * @see #setStartModel
    * @see #getWaitQueue
    * @see #getServeQueue
-   * @see SimEntity#setIgnoreEventListReset
    * @see SimQueue#setAutoRevocationPolicy
    * @see AutoRevocationPolicy#UPON_START
    * @see #resetEntitySubClassLocal
@@ -200,8 +196,6 @@ public class BlackCompressedTandem2SimQueue
       },
       delegateSimJobFactory);
     setStartModel (StartModel.COMPRESSED_TANDEM_2_QUEUE);
-    getWaitQueue ().setIgnoreEventListReset (true);
-    getServeQueue ().setIgnoreEventListReset (true);
     getWaitQueue ().setAutoRevocationPolicy (AutoRevocationPolicy.UPON_START);
     resetEntitySubClassLocal ();
   }
@@ -770,35 +764,6 @@ public class BlackCompressedTandem2SimQueue
       throw new IllegalStateException ();
   }
   
-  /** Performs sanity checks on a notification from a sub-queue (irrespective of which one).
-   * 
-   * @param notification The notification.
-   * 
-   * @throws IllegalArgumentException If the time of the notification differs from our last update time,
-   *                                  or if a {@link SimEntitySimpleEventType#RESET} notification was found in combination
-   *                                  with other sub-notifications (i.e., as part of an atomic notification that includes
-   *                                  other sub-notifications next to the reset).
-   * 
-   */
-  protected final void sanitySubQueueNotification
-  (final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification)
-  {
-    if (notification.getTime () != getLastUpdateTime ())
-      throw new IllegalArgumentException ("on " + this + ": notification time [" + notification.getTime ()
-      + "] != last update time [" + getLastUpdateTime () + "], subnotifications: "
-      + notification.getSubNotifications () + ".");
-    for (final Map<SimEntitySimpleEventType.Member, DJ> subNotification : notification.getSubNotifications ())
-    {
-      final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
-      final DJ job = subNotification.values ().iterator ().next ();
-      if (notificationType == SimEntitySimpleEventType.RESET)
-      {
-        if (notification.getSubNotifications ().size () > 1)
-          throw new IllegalStateException ();
-      }
-    }
-  }
-  
   /** Performs sanity checks on a notification from the wait queue.
    * 
    * <p>
@@ -824,21 +789,9 @@ public class BlackCompressedTandem2SimQueue
     {
       final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
       final DJ job = subNotification.values ().iterator ().next ();
-      if (notificationType == SimEntitySimpleEventType.RESET)
-        ;
-      else if (notificationType == SimQueueSimpleEventType.ARRIVAL)
+      if (notificationType == SimQueueSimpleEventType.ARRIVAL)
         // The real job must exist (but may have already left).
         getRealJob (job);
-      else if (notificationType == SimQueueSimpleEventType.QAV_START
-            || notificationType == SimQueueSimpleEventType.QAV_END)
-        // Queue-Access Vacations are forbidden on both wait and serve queues.
-        throw new IllegalStateException ();
-      else if (notificationType == SimQueueSimpleEventType.NWA_FALSE
-            || notificationType == SimQueueSimpleEventType.NWA_TRUE)
-        ;
-      else if (notificationType == SimQueueSimpleEventType.OUT_OF_SAC
-           || notificationType == SimQueueSimpleEventType.REGAINED_SAC)
-        ;
       else if (notificationType == SimQueueSimpleEventType.START)
       {
         // Only a single START sub-notification is allowed in the atomic-event notification.
@@ -901,14 +854,14 @@ public class BlackCompressedTandem2SimQueue
    * @param notification The notification.
    * 
    * @see #sanityWaitQueueNotification
-   * @see SimEntitySimpleEventType#RESET
-   * @see SimQueue#setIgnoreEventListReset
    * @see SimEntitySimpleEventType#DROP
    * @see SimEntitySimpleEventType#AUTO_REVOCATION
    * @see SimEntitySimpleEventType#DEPARTURE
    * @see #drop
    * @see #start
    * @see #depart
+   * @see SimQueueSimpleEventType#RESET
+   * @see SimQueue#setIgnoreEventListReset
    * 
    */
   protected final void processWaitQueueNotification
@@ -920,17 +873,8 @@ public class BlackCompressedTandem2SimQueue
     {
       final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
       final DJ job = subNotification.values ().iterator ().next ();
-      if (notificationType == SimEntitySimpleEventType.RESET)
-        // There is nothing to do; autonomous RESETs on sub-queues are not allowed,
-        // and we have inhibited RESETs from the event list on the sub-queues.
-        // Hence, a RESET can only be caused by a RESET on the composite queue,
-        // and it will soon set the server-access credits on the wait queue,
-        // as well as its own NoWaitArmed state.
-        ;
-      else if (notificationType == SimEntitySimpleEventType.DROP)
+      if (notificationType == SimEntitySimpleEventType.DROP)
         drop (getRealJob (job, null), getLastUpdateTime ());
-      else if (notificationType == SimEntitySimpleEventType.REVOCATION)
-        ;
       else if (notificationType == SimEntitySimpleEventType.AUTO_REVOCATION)
         start (getLastUpdateTime (), getRealJob (job, null));
       else if (notificationType == SimEntitySimpleEventType.DEPARTURE)
@@ -970,23 +914,9 @@ public class BlackCompressedTandem2SimQueue
     {
       final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
       final DJ job = subNotification.values ().iterator ().next ();
-      if (notificationType == SimEntitySimpleEventType.RESET)
-        ;
-      else if (notificationType == SimQueueSimpleEventType.ARRIVAL)
+      if (notificationType == SimQueueSimpleEventType.ARRIVAL)
         // The real job must exist (but may have already left).
         getRealJob (job);
-      else if (notificationType == SimQueueSimpleEventType.QAV_START
-            || notificationType == SimQueueSimpleEventType.QAV_END)
-        // Queue-Access Vacations are forbidden on both wait and serve queues.
-        throw new IllegalStateException ();
-      else if (notificationType == SimQueueSimpleEventType.NWA_FALSE
-            || notificationType == SimQueueSimpleEventType.NWA_TRUE)
-        ;
-      else if (notificationType == SimQueueSimpleEventType.OUT_OF_SAC
-            || notificationType == SimQueueSimpleEventType.REGAINED_SAC)
-        // Server-Access Credits events should never occur on the serve queue;
-        // it should always have infinite server-access credits.
-        throw new IllegalStateException ();
       else if (notificationType == SimQueueSimpleEventType.START)
         // The real job must exist (but may have already left).
         getRealJob (job);

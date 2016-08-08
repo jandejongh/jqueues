@@ -2,7 +2,9 @@ package nl.jdj.jqueues.r5.entity.queue.composite.single.enc;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import nl.jdj.jqueues.r5.SimEntity;
+import nl.jdj.jqueues.r5.SimEntityListener;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
@@ -11,6 +13,9 @@ import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite.StartMode
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
+import nl.jdj.jqueues.r5.event.SimQueueJobRevocationEvent;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.listener.MultiSimQueueNotificationProcessor;
 import nl.jdj.jsimulation.r5.SimEventList;
 
@@ -178,13 +183,17 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and clears the pending revocation event for the encapsulated queue.
+   * 
+   * @see #removeJobFromQueueUponRevokation
+   * @see #rescheduleAfterRevokation
    * 
    */
   @Override
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
+    this.pendingDelegateRevocationEvent = null;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -252,48 +261,41 @@ public class BlackEncapsulatorSimQueue
   /** Drops the given (real) job.
    * 
    * <p>
-   * In the {@link BlackEncapsulatorSimQueue}, a (real) job can only be dropped because of one of the following reasons:
-   * <ul>
-   * <li>
-   * A delegate job is dropped on the encapsulated queue, see {@link #notifyDrop},
-   * so we must drop the corresponding real job.
+   * In the {@link BlackEncapsulatorSimQueue},
+   * a (real) job can only be dropped because
+   * its delegate job is dropped on the encapsulated queue, see {@link #processSubQueueNotifications},
+   * and the semantics of this composite queue require the real job to be dropped as well (this is not a general requirement).
    * The notification callback relies on {@link #drop} to perform the drop.
    * The delegate job has already left the sub-queue system when we are called.
-   * <li>
-   * The composite queue <i>itself</i> decides to drop a (real) job, see {@link #drop}.
-   * In this case we are called while the delegate job is still present on one of the sub-queues,
-   * or it resides in our (local) waiting area.
-   * In any way, it has to be removed.
-   * (Note that we cannot forcibly drop it!)
-   * </ul>
    * 
    * <p>
-   * All we have to do is invoke {@link #removeJobFromQueueUponExit}.
+   * All we have to do is invoke {@link #removeJobsFromQueueLocal}.
+   * 
+   * @throws IllegalStateException If the delegate job is still visiting a (any) queue.
    * 
    * @see #drop
-   * @see #notifyDrop
-   * @see #removeJobFromQueueUponExit
+   * @see #removeJobsFromQueueLocal
+   * @see #rescheduleAfterDrop
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
-    removeJobFromQueueUponExit (job, time);
+    final DJ delegateJob = getDelegateJob (job);
+    final DQ subQueue = (DQ) delegateJob.getQueue ();
+    if (subQueue != null)
+      throw new IllegalStateException ();
+    removeJobsFromQueueLocal (job, delegateJob);
   }
 
   /** Empty, nothing to do.
    * 
-   * <p>
-   * A real job has been dropped from the composite queue, see {@link #removeJobFromQueueUponDrop} for the potential reasons.
-   * We realize that dropping a delegate job from the encapsulated queue does not require any rescheduling.
-   * Dropping (or revoking) a (delegate) job from the encapsulated queue can certainly affect its {@link #isNoWaitArmed} state,
-   * but this is reported to and handled by {@link #notifyNewNoWaitArmed}.
+   * @see #removeJobFromQueueUponDrop
    * 
    */
   @Override
   protected final void rescheduleAfterDrop (final J job, final double time)
   {
-    // EMPTY
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -302,36 +304,74 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /** The pending delegate revocation event is a single event used to store the need to revoke a delegate job
+   *  on the sub queue it resides on.
+   * 
+   * <p>
+   * It is needed in-between {@link #removeJobFromQueueUponRevokation} and {@link #rescheduleAfterRevokation}.
+   * 
+   */
+  private SimQueueJobRevocationEvent pendingDelegateRevocationEvent = null;
+
   /** Removes a job if revocation is successful.
    * 
    * <p>
-   * In a {@link BlackEncapsulatorSimQueue}, revocations on real jobs can only be the result of external requests,
-   * in other words, through {@link #revoke}, not because of events on delegate jobs
-   * (unlike <i>auto</i>-revocations).
+   * In a {@link BlackEncapsulatorSimQueue}, revocations on real jobs can occur either
+   * through external requests, in other words, through {@link #revoke}, or because of auto-revocations
+   * on the composite (this) queue through {@link #autoRevoke}.
+   * In both cases, the delegate job is still present on the encapsulated queue,
+   * and we have to forcibly revoke it.
+   * Because we cannot perform the revocation here (we are <i>not</i> allowed to reschedule!),
+   * we defer until {@link #removeJobFromQueueUponRevokation} by raising an internal flag
+   * (in fact a newly created, though not scheduled {@link SimQueueJobRevocationEvent}).
+   * We have to use this method in order to remember the delegate job to be revoked,
+   * which is wiped from the internal administration by {@link #removeJobsFromQueueLocal},
+   * which is invoked last.
    * 
    * <p>
-   * All we have to do is invoke {@link #removeJobFromQueueUponExit}.
+   * Note that even though a {@link SimQueueJobRevocationEvent} is used internally to flag the
+   * required delegate-job revocation, it is never actually scheduled on the event list!
+   * 
+   * @throws IllegalStateException If the delegate job is <i>not</i> visiting a sub-queue,
+   *                               or if a pending delegate revocation has already been flagged (or been forgotten to clear).
    * 
    * @see #revoke
-   * @see #notifyRevocation
-   * @see #removeJobFromQueueUponExit
+   * @see #autoRevoke
+   * @see SimQueueJobRevocationEvent
+   * @see #rescheduleAfterRevokation
    * 
    */
   @Override
   protected final void removeJobFromQueueUponRevokation (final J job, final double time)
   {
-    removeJobFromQueueUponExit (job, time);
+    final DJ delegateJob = getDelegateJob (job);
+    final DQ subQueue = (DQ) delegateJob.getQueue ();
+    if (subQueue == null)
+      throw new IllegalStateException ();
+    if (this.pendingDelegateRevocationEvent != null)
+      throw new IllegalStateException ();
+    this.pendingDelegateRevocationEvent = new SimQueueJobRevocationEvent (delegateJob, subQueue, time, true);
+    removeJobsFromQueueLocal (job, delegateJob);
   }
 
-  /** Empty, nothing to do.
+  /** Performs the pending revocation on the sub-queue, after clearing it.
    * 
-   * @see #rescheduleAfterDrop For an explanation as to why this method can be left empty. 
+   * @throws IllegalStateException If no pending delegate revocation was found.
+   * 
+   * @see SimQueueJobRevocationEvent
+   * @see #removeJobFromQueueUponRevokation
    * 
    */
   @Override
   protected final void rescheduleAfterRevokation (final J job, final double time)
   {
-    // EMPTY
+    if (this.pendingDelegateRevocationEvent == null)
+      throw new IllegalStateException ();
+    final SimQueueJobRevocationEvent event = this.pendingDelegateRevocationEvent;
+    this.pendingDelegateRevocationEvent = null;
+    // Invoking the event's action equivalent to next line:
+    // event.getQueue ().revoke (event.getTime (), event.getJob (), event.isInterruptService ());
+    event.getEventAction ().action (event);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -402,7 +442,7 @@ public class BlackEncapsulatorSimQueue
       throw new IllegalArgumentException ();
     getDelegateJob (job); // Sanity on existence of delegate job.
   }
-    
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // DEPARTURE
@@ -413,204 +453,243 @@ public class BlackEncapsulatorSimQueue
    * 
    * <p>
    * In the {@link BlackEncapsulatorSimQueue},
-   * a (real) job can only depart because of one of the following reasons:
-   * <ul>
-   * <li>
-   * A delegate job departs on the encapsulated, see {@link #notifyDeparture},
-   * and the real job must depart as well.
-   * The notification callback relies on {@link #depart} to perform the departure.
+   * a (real) job can only depart when its delegate job departs from the encapsulated queue.
+   * The notification callback from the encapsulated queue relies on {@link #depart} to perform the departure.
    * The delegate job has already left the sub-queue system when we are called.
-   * <li>
-   * The composite queue <i>itself</i> decides that the (real) job is to depart, see {@link #depart}.
-   * In this case we are called while the delegate job is still present on one of the sub-queues,
-   * or it resides in our (local) waiting area.
-   * In any way, it has to be removed.
-   * (Note that we cannot forcibly depart it!)
-   * </ul>
    * 
    * <p>
-   * All we have to do is invoke {@link #removeJobFromQueueUponExit}.
+   * All we have to do is invoke {@link #removeJobsFromQueueLocal}.
+   * 
+   * @throws IllegalStateException If the delegate job is still visiting a (any) queue.
    * 
    * @see #depart
-   * @see #notifyDeparture
-   * @see #removeJobFromQueueUponExit
+   * @see #removeJobsFromQueueLocal
+   * @see #rescheduleAfterDeparture
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    removeJobFromQueueUponExit (departingJob, time);
+    final DJ delegateJob = getDelegateJob (departingJob);
+    final DQ subQueue = (DQ) delegateJob.getQueue ();
+    if (subQueue != null)
+      throw new IllegalStateException ();
+    removeJobsFromQueueLocal (departingJob, delegateJob);
   }
 
   /** Empty, nothing to do.
    * 
-   * @see #rescheduleAfterDrop For an explanation as to why this method can be left empty. 
+   * @see #removeJobFromQueueUponDeparture
    * 
    */
   @Override
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
-    // EMPTY
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // EXIT (DROP/REVOCATION/DEPARTURE)
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Performs the exit of a real job: Revokes the delegate job if it is still present on a sub-queue,
-   *  and removes the real and delegate jobs from the internal administration.
-   * 
-   * <p>
-   * In case where the delegate job is still present on a sub-queue, we have to remove it from there.
-   * This done through (unconditional) revocation.
-   * 
-   * <p>
-   * The real and delegate jobs are removed from the internal administration through {@link #removeJobsFromQueueLocal}.
-   * 
-   * @param job  The job that exists, non-{@code null}.
-   * @param time The current time.
-   * 
-   * @see #getDelegateJob
-   * @see #revoke
-   * @see #removeJobsFromQueueLocal
-   * 
-   * @throws IllegalStateException If the delegate jobs reports its visiting a queue, but that queue does not agree.
-   * @throws RuntimeException      If sanity checks after revocation of the delegate job fail (somehow still present on sub-queue,
-   *                               or job still reporting a visit to any queue).
-   * 
-   */
-  protected final void removeJobFromQueueUponExit (final J job, final double time)
-  {
-    final DJ delegateJob = getDelegateJob (job);
-    final DQ subQueue = (DQ) delegateJob.getQueue ();
-    if (subQueue != null)
-    {
-      // Santity check...
-      if (! subQueue.getJobs ().contains (delegateJob))
-        throw new IllegalStateException ();
-      subQueue.revoke (time, delegateJob);
-      // More santity checks...
-      if (subQueue.getJobs ().contains (delegateJob)
-        || subQueue.getJobsInWaitingArea ().contains (delegateJob)
-        || subQueue.getJobsInServiceArea ().contains (delegateJob)
-        || delegateJob.getQueue () != null)
-        throw new RuntimeException ();
-    }
-    removeJobsFromQueueLocal (job, delegateJob);
-  }
-  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // PROCESS SUB-QUEUE STATE-CHANGE NOTIFICATIONS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Clears the notifications list (i.e., not implemented yet).
+  /** Processes the pending atomic notifications from the sub-queue, one at a time (core sub-queue notification processor).
+   * 
+   * <p>
+   * This method takes one notification at a time, starting at the head of the list, removes it
+   * and processes it with {@link #processEncapsulatedQueueNotification}.
+   * While processing, new notifications may be added to the list; the list is processed until it is empty.
+   * 
+   * <p>
+   * It finally invokes {@link #triggerPotentialNewNoWaitArmed} to make sure we did not miss
+   * an "isolated" {@link SimQueue#isNoWaitArmed} notification from the encapsulated queue
+   * that requires a change in our own {@link SimQueue#isNoWaitArmed} state,
+   * because this is not explicitly dealt with in auxiliary processor methods.
+   * (Note that after invocation of this method, no new (sub-queue) notifications are expected,
+   * at the expense of a {@link IllegalStateException}.)
+   * 
+   * <p>
+   * Note that this {@link BlackEncapsulatorSimQueue} still catches {@link SimEntityListener#notifyUpdate}
+   * notifications in the main class body (all other notification types are dealt with through the
+   * {@link MultiSimQueueNotificationProcessor}.
+   * 
+   * @see MultiSimQueueNotificationProcessor.Notification#getQueue
+   * @see #processEncapsulatedQueueNotification
+   * @see #update
    * 
    */
   @Override
   protected final void processSubQueueNotifications
   (final List<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> notifications)
   {
-    notifications.clear ();
+    if (notifications == null || notifications.isEmpty ())
+      throw new IllegalArgumentException ();
+    while (! notifications.isEmpty ())
+    {
+      //System.err.println ("-> Notifications: [t=" + getLastUpdateTime () + "]:");
+      //  for (MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification : notifications)
+      //    System.err.println ("   " + notification + ".");
+      final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification = notifications.remove (0);
+      final DQ queue = notification.getQueue ();
+      if (queue == getEncapsulatedQueue ())
+        processEncapsulatedQueueNotification (notification);
+      else
+        throw new IllegalArgumentException ();
+    }
+    triggerPotentialNewNoWaitArmed (getLastUpdateTime ());
+    if (! notifications.isEmpty ())
+      throw new IllegalStateException ();
+  }
+  
+  /** Performs sanity checks on a notification from the encapsulated queue.
+   * 
+   * <p>
+   * A full description of the sanity checks would make this {@code javadoc} become uninterestingly large.
+   * Please refer to the documentation in the source code.
+   * 
+   * @param notification The notification.
+   * 
+   * @throws IllegalArgumentException If the sanity checks fail.
+   * 
+   * @see #sanitySubQueueNotification
+   * 
+   */
+  protected final void sanityEncapsulatedQueueNotification
+  (final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification)
+  {
+    sanitySubQueueNotification (notification);
+    for (final Map<SimEntitySimpleEventType.Member, DJ> subNotification : notification.getSubNotifications ())
+    {
+      final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
+      final DJ job = subNotification.values ().iterator ().next ();
+      if (notificationType == SimQueueSimpleEventType.ARRIVAL)
+        // The real job must exist (but may have already left).
+        getRealJob (job);
+      else if (notificationType == SimQueueSimpleEventType.START)
+        // The real job must exist (but may have already left).
+        getRealJob (job);
+      else if (notificationType == SimEntitySimpleEventType.DROP)
+        // The real job must exist, but its delegate job must not be present on any sub-queue.
+        getRealJob (job, null);
+      else if (notificationType == SimEntitySimpleEventType.REVOCATION)
+        // Do NOT check for the real job here; revocations (but NOT auto-revocations) are always caused by the composite queue,
+        // hence the real job has already left!
+        ;
+      else if (notificationType == SimEntitySimpleEventType.AUTO_REVOCATION)
+        // Auto revocations are not allowed on the encapsulated queue.
+        throw new IllegalStateException ();
+      else if (notificationType == SimEntitySimpleEventType.DEPARTURE)
+        // The real job must exist, but its delegate job must not be present on any sub-queue.
+        getRealJob (job, null);
+    }
+  }
+  
+  /** Processes a notification from the encapsulated queue.
+   * 
+   * <p>
+   * This method iterates over the sub-notifications (from the encapsulated queue) and:
+   * <ul>
+   * <li>Invokes {@link #drop} for the applicable real job upon a {@link SimEntitySimpleEventType#DROP};
+   * <li>Invokes {@link #start} for the applicable real job upon a {@link SimEntitySimpleEventType#START};
+   * <li>Invokes {@link #depart} for the applicable real job upon a {@link SimEntitySimpleEventType#DEPARTURE};
+   * <li>Ignores all other sub-notification types (apart from sanity checks).
+   * </ul>
+   * 
+   * <p>
+   * Note that we can ignore {@link SimEntitySimpleEventType#RESET}, apart from sanity checks,
+   * because autonomous resets on sub-queues are not allowed,
+   * and we have inhibited resets from the event list on the sub-queues through {@link SimQueue#setIgnoreEventListReset}.
+   * Hence, a reset can only be caused by a reset on the composite queue.
+   * 
+   * @param notification The notification.
+   * 
+   * @see #sanityEncapsulatedQueueNotification
+   * @see SimEntitySimpleEventType#RESET
+   * @see SimQueue#setIgnoreEventListReset
+   * @see SimEntitySimpleEventType#DROP
+   * @see SimEntitySimpleEventType#START
+   * @see SimEntitySimpleEventType#DEPARTURE
+   * @see #drop
+   * @see #start
+   * @see #depart
+   * 
+   */
+  protected final void processEncapsulatedQueueNotification
+  (final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification)
+  {
+    sanityEncapsulatedQueueNotification (notification);
+    for (final Map<SimEntitySimpleEventType.Member, DJ> subNotification : notification.getSubNotifications ())
+    {
+      final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
+      final DJ job = subNotification.values ().iterator ().next ();
+      if (notificationType == SimEntitySimpleEventType.DROP)
+        drop (getRealJob (job), getLastUpdateTime ());
+      else if (notificationType == SimEntitySimpleEventType.START)
+        start (getLastUpdateTime (), getRealJob (job));
+      else if (notificationType == SimEntitySimpleEventType.DEPARTURE)
+        depart (getLastUpdateTime (), getRealJob (job));
+    }
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // SUB-QUEUE RESET NOTIFICATION
+  // SUB-QUEUE NOTIFICATIONS OTHER THAN UPDATE/STATE-CHANGE (ALL EMPTY; SEE SUB-QUEUE NOTIFICATION PROCESSOR)
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Does nothing; assumes will have been reset or will soon be reset as well.
+  /** Does nothing.
    * 
-   * <p>
-   * The reset of a sub-queue can only be the result of this queue being resetting itself
-   * (and as a result, resetting its sub-queues),
-   * or because the event-list is being reset,
-   * in which case we will be reset ourselves soon, or have reset ourselves and our sub-queues already.
-   * 
-   * <p>
-   * In both case, no response is required upon receiving this notification.
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyResetEntity (final SimEntity entity)
   {
   }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE ARRIVAL NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Nothing to do apart from sanity check.
+  /** Does nothing.
    * 
-   * @see #getRealJob(nl.jdj.jqueues.r5.SimJob)
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyArrival (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job); // Sanity on existence of real job.
   }
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE QUEUE-ACCESS-VACATION NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Throws {@link IllegalStateException}.
+  /** Does nothing.
    * 
-   * @throws IllegalStateException Because sub-queue-access vacations are not allowed.
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyStartQueueAccessVacation (final double time, final DQ queue)
   {
-    throw new IllegalStateException ();
   }
 
-  /** Throws {@link IllegalStateException}.
+  /** Does nothing.
    * 
-   * @throws IllegalStateException Because sub-queue-access vacations are not allowed.
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyStopQueueAccessVacation (final double time, final DQ queue)
   {
-    throw new IllegalStateException ();
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE NO-WAIT-ARMED NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Invokes {@link #triggerPotentialNewNoWaitArmed} to make sure that the state-change is notified to listeners
-   *  in case it is an autonomous event on the encapsulated queue.
+  /** Does nothing.
    * 
-   * @see #triggerPotentialNewNoWaitArmed
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
   {
-    triggerPotentialNewNoWaitArmed (time);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE SERVER-ACCESS-CREDITS NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Does nothing, since server-access credits on the encapsulated queue are under our full control,
-   *  and cannot change other than due to an (monitored) event at this {@link BlackEncapsulatorSimQueue}.
+  /** Does nothing.
+   * 
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
@@ -618,8 +697,9 @@ public class BlackEncapsulatorSimQueue
   {
   }
 
-  /** Does nothing, since server-access credits on the encapsulated queue are under our full control,
-   *  and cannot change other than due to an (monitored) event at this {@link BlackEncapsulatorSimQueue}.
+  /** Does nothing.
+   * 
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
@@ -627,117 +707,54 @@ public class BlackEncapsulatorSimQueue
   {
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE START NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Starts the corresponding real job
-   *  (which amounts only to local administration update and listener notification).
+  /** Does nothing.
    * 
-   * @see #getRealJob
-   * @see #start
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyStart (final double time, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job);
-    if (this.jobsInServiceArea.contains (realJob))
-      throw new IllegalStateException ();
-    start (time, realJob);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE DROP NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Drops the corresponding real job, or sends the delegate job to the drop-destination sub-queue (if available).
+  /** Does nothing.
    * 
-   * <p>
-   * Starts the dropped job on a valid non-<code>null</code> result from {@link #getDropDestinationQueue};
-   * otherwise it gets the real job, sets its queue to <code>null</code> and drops it as well.
-   * 
-   * @see #getRealJob(nl.jdj.jqueues.r5.SimJob, nl.jdj.jqueues.r5.SimQueue)
-   * @see #getDropDestinationQueue
-   * @see SimQueue#doAfterNotifications
-   * @see #arrive
-   * @see #drop
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyDrop (final double time, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job, null);
-    final DQ dropDestinationQueue = getDropDestinationQueue ();
-    if (dropDestinationQueue != null)
-    {
-      if (! getQueues ().contains (dropDestinationQueue))
-        throw new RuntimeException ();
-      dropDestinationQueue.doAfterNotifications (() ->
-      {
-        dropDestinationQueue.arrive (time, job);
-      });
-    }
-    else
-      drop (realJob, time);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE REVOCATION NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Nothing to do apart from sanity check.
+  /** Does nothing.
    * 
-   * @see #getRealJob
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyRevocation (final double time, final DJ job, final DQ queue)
   {
-    getRealJob (job, null); // Sanity on existence of real job.
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE AUTO-REVOCATION NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Invokes {@link #autoRevoke} on the real job at this queue, allowing auto-revocations on the encapsulated queue.
+  /** Does nothing.
    * 
-   * @see #getRealJob
-   * @see #autoRevoke
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyAutoRevocation (final double time, final DJ job, final DQ queue)
   {
-    autoRevoke (time, getRealJob (job, queue));
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SUB-QUEUE DEPARTURE NOTIFICATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Departs the real job.
+  /** Does nothing.
    * 
-   * @see #getRealJob(nl.jdj.jqueues.r5.SimJob, nl.jdj.jqueues.r5.SimQueue)
-   * @see #depart
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   public final void notifyDeparture (final double time, final DJ job, final DQ queue)
   {
-    final J realJob = getRealJob (job, null);
-    depart (time, realJob);
   }
 
 }
