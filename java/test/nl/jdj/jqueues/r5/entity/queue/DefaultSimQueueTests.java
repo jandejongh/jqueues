@@ -95,17 +95,18 @@ public class DefaultSimQueueTests
             actualJobQueueVisitLogs = new HashMap<> ();
           for (final SimJob j : jobs) 
             actualJobQueueVisitLogs.put (j, ((DefaultVisitsLoggingSimJob) j).getVisitLogs ());
+          final String testString = "Test: " + klf + ", pass " + pass;
           assert predictor.matchVisitLogs_SQ_SV
-            (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, accuracy, System.err);
+            (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, accuracy, System.err, testString);
           final List<Map<Double, Boolean>> actualQavLogs = qavLogger.getQueueAccessVacationLog ();
           final List<Map<Double, Boolean>> actualSacLogs = sacLogger.getServerAccessCreditsAvailabilityLog ();
           final List<Map<Double, Boolean>> actualNwaLogs = nwaLogger.getNoWaitArmedLog ();
           assert SimQueueAccessVacationLogger.matchQueueAccessVacationLogs
-                   (predictedQavLogs, actualQavLogs, accuracy);
+                   (predictedQavLogs, actualQavLogs, accuracy, testString);
           assert SimQueueServerAccessCreditsAvailabilityLogger.matchServerAccessCreditsAvailabilityLogs
-                   (predictedSacLogs, actualSacLogs, accuracy);
+                   (predictedSacLogs, actualSacLogs, accuracy, testString);
           assert SimQueueNoWaitArmedLogger.matchNoWaitArmedLogs
-                   (predictedNwaLogs, actualNwaLogs, accuracy);
+                   (predictedNwaLogs, actualNwaLogs, accuracy, testString);
           el.reset ();
         }
       else if (! deadSilent)

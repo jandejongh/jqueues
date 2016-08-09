@@ -78,6 +78,7 @@ extends DefaultSimQueueListener
    * @param predictedQavLogs The predicted queue-access-vacation logs.
    * @param actualQavLogs    The actual queue-access-vacation logs.
    * @param accuracy         The allowed deviation in key values (times-of-change).
+   * @param testString       An optional String identifying the test in place.
    * 
    * @return {@code true} if the two logs match.
    * 
@@ -85,7 +86,10 @@ extends DefaultSimQueueListener
    * 
    */
   public static boolean matchQueueAccessVacationLogs
-  (final List<Map<Double, Boolean>> predictedQavLogs, final List<Map<Double, Boolean>> actualQavLogs, final double accuracy)
+  (final List<Map<Double, Boolean>> predictedQavLogs,
+   final List<Map<Double, Boolean>> actualQavLogs,
+   final double accuracy,
+   final String testString)
   {
     if (predictedQavLogs == null || actualQavLogs == null)
       throw new IllegalArgumentException ();
@@ -113,6 +117,8 @@ extends DefaultSimQueueListener
     if (! retVal)
     {
       System.err.println ("Queue-Access Vacation Logs mismatch!");
+      if (testString != null)
+        System.err.println ("  Test     : " + testString + ".");
       System.err.println ("  Predicted: " + predictedQavLogs + ".");
       System.err.println ("  Actual   : " + actualQavLogs + ".");
     }

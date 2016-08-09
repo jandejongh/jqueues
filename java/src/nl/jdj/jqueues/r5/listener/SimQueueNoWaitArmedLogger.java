@@ -70,6 +70,7 @@ extends DefaultSimQueueListener
    * @param predictedNwaLogs The predicted {@code NoWaitArmed} logs.
    * @param actualNwaLogs    The actual {@code NoWaitArmed} logs.
    * @param accuracy         The allowed deviation in key values (times-of-change).
+   * @param testString       An optional String identifying the test in place.
    * 
    * @return {@code true} if the two logs match.
    * 
@@ -77,7 +78,10 @@ extends DefaultSimQueueListener
    * 
    */
   public static boolean matchNoWaitArmedLogs
-  (final List<Map<Double, Boolean>> predictedNwaLogs, final List<Map<Double, Boolean>> actualNwaLogs, final double accuracy)
+  (final List<Map<Double, Boolean>> predictedNwaLogs,
+   final List<Map<Double, Boolean>> actualNwaLogs,
+   final double accuracy,
+   final String testString)
   {
     if (predictedNwaLogs == null || actualNwaLogs == null)
       throw new IllegalArgumentException ();
@@ -105,6 +109,8 @@ extends DefaultSimQueueListener
     if (! retVal)
     {
       System.err.println ("NoWaitArmed Logs mismatch!");
+      if (testString != null)
+        System.err.println ("  Test     : " + testString + ".");
       System.err.println ("  Predicted: " + predictedNwaLogs + ".");
       System.err.println ("  Actual   : " + actualNwaLogs + ".");
     }

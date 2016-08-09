@@ -149,12 +149,13 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
    * particular job) to numbered {@link JobQueueVisitLog} of that job at that particular arrival time
    * (this allows multiple arrivals of the same job at the same time).
    * 
-   * @param queue     The queue, non-{@code null}.
-   * @param predicted The predicted {@link JobQueueVisitLog}s, indexed by job-arrival time; arrival at other queues
-   *                  are (to be) ignored.
-   * @param actual    The actual {@link JobQueueVisitLog}s, see above.
-   * @param accuracy  The accuracy (maximum  deviation of times in a {@link JobQueueVisitLog}), non-negative.
-   * @param stream    An optional stream for mismatch reporting.
+   * @param queue      The queue, non-{@code null}.
+   * @param predicted  The predicted {@link JobQueueVisitLog}s, indexed by job-arrival time; arrival at other queues
+   *                   are (to be) ignored.
+   * @param actual     The actual {@link JobQueueVisitLog}s, see above.
+   * @param accuracy   The accuracy (maximum  deviation of times in a {@link JobQueueVisitLog}), non-negative.
+   * @param stream     An optional stream for mismatch reporting.
+   * @param testString An optional String identifying the test in place.
    * 
    * @return Whether the predicted and actual maps map within the given accuracy.
    * 
@@ -168,7 +169,8 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
       final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predicted,
       final Map<SimJob, TreeMap<Double, TreeMap<Integer, JobQueueVisitLog<SimJob, Q>>>> actual,
       final double accuracy,
-      final PrintStream stream)
+      final PrintStream stream,
+      final String testString)
   {
     if (queue == null || predicted == null || actual == null || accuracy < 0)
       throw new IllegalArgumentException ();
@@ -194,7 +196,8 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
             {
               success = false;
               if (stream != null)
-                stream.println ("[matchVisitLogs_SQ_SV] Found multiple visits of job " + job + " to queue " + queue +".");
+                stream.println ("[matchVisitLogs_SQ_SV: " + testString
+                  + "] Found multiple visits of job " + job + " to queue " + queue +".");
               else
                 return false;
             }
@@ -211,7 +214,8 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
         success = false;
         if (stream != null)
         {
-          stream.println ("[matchVisitLogs_SQ_SV] Absent predicted visit of job " + job + " to queue " + queue +":");
+          stream.println ("[matchVisitLogs_SQ_SV: " + testString
+                  + "] Absent predicted visit of job " + job + " to queue " + queue +":");
           stream.println ("Predicted visit log: ");
           predictedVisitLog.print (stream);
         }
@@ -224,7 +228,8 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
         success = false;
         if (stream != null)
         {
-          stream.println ("[matchVisitLogs_SQ_SV] Found mismatch for visit of job " + job + " to queue " + queue +":");
+          stream.println ("[matchVisitLogs_SQ_SV: " + testString
+                  + "] Found mismatch for visit of job " + job + " to queue " + queue +":");
           stream.println ("Accuracy = " + accuracy + ".");
           stream.println ("Predicted and actual visit logs: ");
           predictedVisitLog.print (stream);

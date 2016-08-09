@@ -78,6 +78,7 @@ extends DefaultSimQueueListener
    * @param predictedSacLogs The predicted server-access-credits availability logs.
    * @param actualSacLogs    The actual server-access-credits availability logs.
    * @param accuracy         The allowed deviation in key values (times-of-change).
+   * @param testString       An optional String identifying the test in place.
    * 
    * @return {@code true} if the two logs match.
    * 
@@ -85,7 +86,10 @@ extends DefaultSimQueueListener
    * 
    */
   public static boolean matchServerAccessCreditsAvailabilityLogs
-  (final List<Map<Double, Boolean>> predictedSacLogs, final List<Map<Double, Boolean>> actualSacLogs, final double accuracy)
+  (final List<Map<Double, Boolean>> predictedSacLogs,
+   final List<Map<Double, Boolean>> actualSacLogs,
+   final double accuracy,
+   final String testString)
   {
     if (predictedSacLogs == null || actualSacLogs == null)
       throw new IllegalArgumentException ();
@@ -113,6 +117,8 @@ extends DefaultSimQueueListener
     if (! retVal)
     {
       System.err.println ("Server-Access Credits Availability Logs mismatch!");
+      if (testString != null)
+        System.err.println ("  Test     : " + testString + ".");
       System.err.println ("  Predicted: " + predictedSacLogs + ".");
       System.err.println ("  Actual   : " + actualSacLogs + ".");
     }
