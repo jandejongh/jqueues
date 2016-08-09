@@ -6,7 +6,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite_LocalStartModel;
+import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -21,7 +21,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  */
 public class BlackDropCollectorSimQueue
   <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackDropCollectorSimQueue>
-  extends AbstractBlackSimQueueComposite_LocalStartModel<DJ, DQ, J, Q>
+  extends AbstractBlackSimQueueComposite<DJ, DQ, J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
