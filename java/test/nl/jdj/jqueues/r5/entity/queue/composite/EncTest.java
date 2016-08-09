@@ -13,6 +13,7 @@ import nl.jdj.jqueues.r5.entity.queue.processorsharing.CUPS;
 import nl.jdj.jqueues.r5.entity.queue.processorsharing.PS;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
+import nl.jdj.jqueues.r5.entity.queue.serverless.LeakyBucket;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
@@ -26,6 +27,7 @@ import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_Enc;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS_B;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LCFS;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LeakyBucket;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_PS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_P_LCFS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_SINK;
@@ -179,6 +181,13 @@ public class EncTest
     final SimQueuePredictor_Enc predictor_enc_enc_enc_p_lcfs2 = new SimQueuePredictor_Enc (predictor_enc_enc_p_lcfs2);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (enc_enc_enc_p_lcfs2, predictor_enc_enc_enc_p_lcfs2, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    // Enc[LeakyBucket[0.1]]
+    final LeakyBucket lb1 = new LeakyBucket (eventList, 0.1);
+    final SimQueuePredictor predictor_lb1 = new SimQueuePredictor_LeakyBucket ();
+    final BlackEncapsulatorSimQueue enc_lb1 = new BlackEncapsulatorSimQueue (eventList, lb1, null);
+    final SimQueuePredictor_Enc predictor_enc_lb1 = new SimQueuePredictor_Enc (predictor_lb1);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (enc_lb1, predictor_enc_lb1, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-9, null);
   }
 
 }
