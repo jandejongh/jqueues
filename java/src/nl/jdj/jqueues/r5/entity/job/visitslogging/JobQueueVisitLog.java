@@ -146,6 +146,31 @@ public class JobQueueVisitLog<J extends SimJob, Q extends SimQueue>
     this.departureTime = departureTime;
   }
 
+  /** Creates a copy of this visit log, but replaces the queue with given one, the destination queue.
+   * 
+   * @param <R> The (generic) type of the destination queue.
+   * 
+   * @param destQueue The destination queue, non-{@code null}.
+   * 
+   * @return A copy of this visit log in which the queue is replaced with the destination queue.
+   * 
+   * @throws IllegalArgumentException If the destination queue is {@link null}.
+   * 
+   */
+  public <R extends SimQueue> JobQueueVisitLog<J, R> copyForQueue (final R destQueue)
+  {
+    if (destQueue == null)
+      throw new IllegalArgumentException ();
+    return new JobQueueVisitLog<>
+      (job, destQueue,
+        this.arrived, this.arrivalTime,
+        this.sequenceNumber,
+        this.started, this.startTime,
+        this.dropped, this.dropTime,
+        this.revoked, this.revocationTime,
+        this.departed, this.departureTime);
+  }
+  
   /** Tests this {@link JobQueueVisitLog} with a supplied one for equality.
    * 
    * <p>
