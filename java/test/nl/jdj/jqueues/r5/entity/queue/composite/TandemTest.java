@@ -11,16 +11,20 @@ import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackTandemSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IC;
 import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
+import nl.jdj.jqueues.r5.entity.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
+import nl.jdj.jqueues.r5.entity.queue.serverless.LeakyBucket;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_0010;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DELAY;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DROP;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_IC;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LeakyBucket;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_P_LCFS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_SINK;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_Tandem;
@@ -163,6 +167,50 @@ public class TandemTest
       new SimQueuePredictor_Tandem (predictor_tandem_p_lcfs_drop2_set);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (tandem_p_lcfs_drop2, predictor_tandem_p_lcfs_drop2, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    // Tandem[DELAY[0.17], DELAY[0.33]]
+    final DELAY delay1 = new DELAY (eventList, 0.17);
+    final DELAY delay2 = new DELAY (eventList, 0.33);
+    final SimQueuePredictor predictor_delay1 = new SimQueuePredictor_DELAY ();
+    final SimQueuePredictor predictor_delay2 = new SimQueuePredictor_DELAY ();
+    final Set<SimQueue> delay1_delay2_set = new LinkedHashSet<> ();
+    delay1_delay2_set.add (delay1);
+    delay1_delay2_set.add (delay2);
+    final BlackTandemSimQueue tandem_delay1_delay2 = new BlackTandemSimQueue (eventList, delay1_delay2_set, null);
+    final List<SimQueuePredictor> predictor_tandem_delay1_delay2_set = new ArrayList ();
+    predictor_tandem_delay1_delay2_set.add (predictor_delay1);
+    predictor_tandem_delay1_delay2_set.add (predictor_delay2);
+    final SimQueuePredictor_Tandem predictor_tandem_delay1_delay2 =
+      new SimQueuePredictor_Tandem (predictor_tandem_delay1_delay2_set);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (tandem_delay1_delay2, predictor_tandem_delay1_delay2, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+    // Tandem[LeakyBucket[0.12]]
+    final LeakyBucket lb1 = new LeakyBucket (eventList, 0.12);
+    final SimQueuePredictor predictor_lb1 = new SimQueuePredictor_LeakyBucket ();
+    final Set<SimQueue> lb1_set = new LinkedHashSet<> ();
+    lb1_set.add (lb1);
+    final BlackTandemSimQueue tandem_lb1 = new BlackTandemSimQueue (eventList, lb1_set, null);
+    final List<SimQueuePredictor> predictor_tandem_lb1_set = new ArrayList ();
+    predictor_tandem_lb1_set.add (predictor_lb1);
+    final SimQueuePredictor_Tandem predictor_tandem_lb1 =
+      new SimQueuePredictor_Tandem (predictor_tandem_lb1_set);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (tandem_lb1, predictor_tandem_lb1, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    // Tandem[LeakyBucket[0.33], LeakyBucket[0.1]]
+    final LeakyBucket lb2 = new LeakyBucket (eventList, 0.33);
+    final SimQueuePredictor predictor_lb2 = new SimQueuePredictor_LeakyBucket ();
+    final LeakyBucket lb3 = new LeakyBucket (eventList, 0.1);
+    final SimQueuePredictor predictor_lb3 = new SimQueuePredictor_LeakyBucket ();
+    final Set<SimQueue> lb2_lb3_set = new LinkedHashSet<> ();
+    lb2_lb3_set.add (lb2);
+    lb2_lb3_set.add (lb3);
+    final BlackTandemSimQueue tandem_lb2_lb3 = new BlackTandemSimQueue (eventList, lb2_lb3_set, null);
+    final List<SimQueuePredictor> predictor_tandem_lb2_lb3_set = new ArrayList ();
+    predictor_tandem_lb2_lb3_set.add (predictor_lb2);
+    predictor_tandem_lb2_lb3_set.add (predictor_lb3);
+    final SimQueuePredictor_Tandem predictor_tandem_lb2_lb3 =
+      new SimQueuePredictor_Tandem (predictor_tandem_lb2_lb3_set);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (tandem_lb2_lb3, predictor_tandem_lb2_lb3, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
   }
 
 }
