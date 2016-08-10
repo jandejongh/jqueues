@@ -49,14 +49,15 @@ extends DefaultSelfListeningSimJob<J, Q>
    * Visit counts start with zero.
    * 
    * <p>
-   * A reference to the internal data is returned; it should not be altered.
+   * A new map is created for the outer-level, but no deep-cloning is performed.
+   * Hence changes to the visit logs (for instance) will "write though" to the visit logs of this job.
    * 
    * @return The {@link JobQueueVisitLog}s; indexed by arrival time.
    * 
    */
   public final TreeMap<Double, TreeMap<Integer, JobQueueVisitLog>> getVisitLogs ()
   {
-    return this.visitLogs;
+    return new TreeMap<> (this.visitLogs);
   }
 
   /** Clears the visit logs gathered thus far.
