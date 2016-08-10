@@ -1,5 +1,6 @@
 package nl.jdj.jqueues.r5.util.predictor.queues;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
@@ -176,7 +177,8 @@ extends AbstractSimQueuePredictor<LeakyBucket>
     {
       if (! queueState.getJobs ().isEmpty ())
       {
-        final Set<SimJob> departures = new HashSet<> (queueState.getJobArrivalsMap ().firstEntry ().getValue ());
+        // Make sure we only let depart a single job here, even if multiple jobs have identical arrival times!
+        final Set<SimJob> departures = Collections.singleton (queueState.getJobArrivalsMap ().firstEntry ().getValue ().get (0));
         queueState.doExits (time, null, null, departures, null, visitLogsSet);
         queueStateHandler.setLastDepTime (time);
         queueStateHandler.setRateLimited (true);
@@ -188,7 +190,7 @@ extends AbstractSimQueuePredictor<LeakyBucket>
       throw new RuntimeException ();
     if (eventType != null)
       queueEventTypes.remove (eventType);
-  }  
+  }
   
   @Override
   public void updateToTime (final LeakyBucket queue, final SimQueueState queueState, final double newTime)
