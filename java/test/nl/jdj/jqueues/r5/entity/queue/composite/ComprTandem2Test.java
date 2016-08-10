@@ -6,7 +6,10 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
 import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_B;
+import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_c;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
 import nl.jdj.jqueues.r5.entity.queue.serverless.LeakyBucket;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
@@ -82,6 +85,24 @@ public class ComprTandem2Test
       new SimQueuePredictor_ComprTandem2 (waitQueuePredictor, serveQueuePredictor);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (ctandem2, predictor_ctandem2, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
+  }
+  
+  public void testComprTandem2Aux
+  (final SimQueue waitQueue,
+   final SimQueue serveQueue,
+   final SimQueue predictorQueue,
+   final int numberOfJobs,
+   final Set<LoadFactoryHint> hints,
+   final boolean silent,
+   final boolean deadSilent,
+   final double accuracy,
+   final Set<KnownLoadFactory_SQ_SV> omit)
+   throws SimQueuePredictionException
+  {
+    final BlackCompressedTandem2SimQueue ctandem2 =
+    new BlackCompressedTandem2SimQueue (waitQueue.getEventList (), waitQueue, serveQueue, null);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (ctandem2, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
   }
   
   /**
@@ -173,6 +194,14 @@ public class ComprTandem2Test
     ( new LeakyBucket (eventList, 0.5), new LeakyBucket (eventList, 0.1),
       new SimQueuePredictor_LeakyBucket (), new SimQueuePredictor_LeakyBucket (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    //
+    // ComprTandem2[FCFS_B[0],FCFS_2] == NoBuffer_2
+    //
+    testComprTandem2Aux
+    ( new FCFS_B (eventList, 0), new FCFS_c (eventList, 2),
+      new NoBuffer_c (eventList, 2),
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+    
   }
 
 }
