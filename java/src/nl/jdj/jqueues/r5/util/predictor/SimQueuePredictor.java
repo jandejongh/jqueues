@@ -164,7 +164,7 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
    *                                  accuracy argument is negative.
    * 
    */
-  public default boolean matchVisitLogs_SQ_SV
+  public static <Q extends SimQueue> boolean matchVisitLogs_SQ_SV
     (final Q queue,
       final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predicted,
       final Map<SimJob, TreeMap<Double, TreeMap<Integer, JobQueueVisitLog<SimJob, Q>>>> actual,
