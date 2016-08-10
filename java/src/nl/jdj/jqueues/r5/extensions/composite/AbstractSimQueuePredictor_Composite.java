@@ -44,7 +44,7 @@ extends AbstractSimQueuePredictor<Q>
     this.subQueuePredictors = subQueuePredictors;
   }
 
-  protected <T> Set<T> asSet (final T t)
+  protected final static <T> Set<T> asSet (final T t)
   {
     if (t == null)
       throw new IllegalArgumentException ();
@@ -165,6 +165,26 @@ extends AbstractSimQueuePredictor<Q>
     return minNextEventTime;
   }
 
+  protected void dropJobs
+  (final double time,
+   final Q queue,
+   final SimQueueState<SimJob, Q> queueState,
+   final Set<SimJob> drops,
+   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
+  {
+    queueState.doExits (time, drops, null, null, null, visitLogsSet);
+  }
+  
+  protected void revokeJobs
+  (final double time,
+   final Q queue,
+   final SimQueueState<SimJob, Q> queueState,
+   final Set<SimJob> revokers,
+   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
+  {
+    queueState.doExits (time, null, revokers, null, null, visitLogsSet);
+  }
+  
   protected void startJobs
   (final double time,
    final Q queue,
@@ -188,6 +208,17 @@ extends AbstractSimQueuePredictor<Q>
         doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (headQueueEvent), visitLogsSet);
       }
     }
+  }
+  
+  protected void departJobs
+  (final double time,
+   final Q queue,
+   final SimQueueState<SimJob, Q> queueState,
+   final Set<SimJob> departers,
+   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
+  throws SimQueuePredictionException
+  {
+    queueState.doExits (time, null, null, departers, null, visitLogsSet);
   }
   
   @Override
@@ -250,7 +281,7 @@ extends AbstractSimQueuePredictor<Q>
         {
           final Set<SimJob> revocations = new HashSet<> ();
           revocations.add (job);
-          queueState.doExits (time, null, revocations, null, null, visitLogsSet);
+          revokeJobs (time, queue, queueState, revocations, visitLogsSet);
           for (int i = 0; i < queue.getQueues ().size (); i++)
           {
             final DefaultSimQueueState subQueueState = queueStateHandler.getSubQueueState (i);
@@ -362,11 +393,11 @@ extends AbstractSimQueuePredictor<Q>
       // Check the visit logs for drops and departures.
       for (JobQueueVisitLog<SimJob,Q> jvl : subQueueVisitLogsSet)
         if (jvl.dropped)
-          queueState.doExits (time, Collections.singleton (jvl.job), null, null, null, visitLogsSet);
+          dropJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
         else if (jvl.departed)
         {
           if (subQueueIndex == subQueues.size () - 1)
-            queueState.doExits (time, null, null, Collections.singleton (jvl.job), null, visitLogsSet);
+            departJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
           else
           {
             // Apply the arrival at the next queue through recursion.
