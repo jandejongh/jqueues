@@ -110,7 +110,10 @@ extends DefaultSimQueueListener
     {
       System.err.println ("NoWaitArmed Logs mismatch!");
       if (testString != null)
-        System.err.println ("  Test     : " + testString + ".");
+      {
+        System.err.println ("  Test:");
+        System.err.println (testString);
+      }
       System.err.println ("  Predicted: " + predictedNwaLogs + ".");
       System.err.println ("  Actual   : " + actualNwaLogs + ".");
     }

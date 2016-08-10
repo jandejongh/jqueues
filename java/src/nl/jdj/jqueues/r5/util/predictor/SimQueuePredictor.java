@@ -198,8 +198,14 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
             {
               success = false;
               if (stream != null)
-                stream.println ("[matchVisitLogs_SQ_SV: " + testString
-                  + "] Found multiple visits of job " + job + " to queue " + queue +".");
+              {
+                stream.println ("[matchVisitLogs_SQ_SV:] Found multiple visits of job " + job + " to queue " + queue +".");
+                if (testString != null)
+                {
+                  stream.println ("  Test:");
+                  stream.println (testString);
+                }
+              }
               else
                 return false;
             }
@@ -216,8 +222,12 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
         success = false;
         if (stream != null)
         {
-          stream.println ("[matchVisitLogs_SQ_SV: " + testString
-                  + "] Absent predicted visit of job " + job + " to queue " + queue +":");
+          stream.println ("[matchVisitLogs_SQ_SV] Absent predicted visit of job " + job + " to queue " + queue +":");
+          if (testString != null)
+          {
+            stream.println ("  Test:");
+            stream.println (testString);
+          }
           stream.println ("Predicted visit log: ");
           predictedVisitLog.print (stream);
         }
@@ -230,8 +240,12 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
         success = false;
         if (stream != null)
         {
-          stream.println ("[matchVisitLogs_SQ_SV: " + testString
-                  + "] Found mismatch for visit of job " + job + " to queue " + queue +":");
+          stream.println ("[matchVisitLogs_SQ_SV: Found mismatch for visit of job " + job + " to queue " + queue +":");
+          if (testString != null)
+          {
+            stream.println ("  Test:");
+            stream.println (testString);
+          }
           stream.println ("Accuracy = " + accuracy + ".");
           stream.println ("Predicted and actual visit logs: ");
           predictedVisitLog.print (stream);

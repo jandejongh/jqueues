@@ -118,7 +118,10 @@ extends DefaultSimQueueListener
     {
       System.err.println ("Queue-Access Vacation Logs mismatch!");
       if (testString != null)
-        System.err.println ("  Test     : " + testString + ".");
+      {
+        System.err.println ("  Test:");
+        System.err.println (testString);
+      }
       System.err.println ("  Predicted: " + predictedQavLogs + ".");
       System.err.println ("  Actual   : " + actualQavLogs + ".");
     }

@@ -201,7 +201,16 @@ public class DefaultSimQueueTests
           else
             throw new RuntimeException ();
           // Create a test string to be passed to the matching functions.
-          final String testString = "Test: " + klf + ", pass " + pass;
+          final String testString =
+                                           "    Load Factory   : " + klf
+            + "\n"
+            +                              "    Pass           : " + pass
+            + "\n"
+            +                              "    Queue          : " + queue
+            + "\n"
+            + ((predictor != null) ?      ("    Predictor      : " + predictor) : "")
+            + ((predictorQueue != null) ? ("    Predictor Queue: " + predictorQueue) : "")
+            ;
           // Confront the predicted and actual logs for job-visits, qav, sac and nwa.
           assert SimQueuePredictor.matchVisitLogs_SQ_SV
             (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, accuracy, System.err, testString);

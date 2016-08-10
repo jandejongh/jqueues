@@ -118,7 +118,10 @@ extends DefaultSimQueueListener
     {
       System.err.println ("Server-Access Credits Availability Logs mismatch!");
       if (testString != null)
-        System.err.println ("  Test     : " + testString + ".");
+      {
+        System.err.println ("  Test:");
+        System.err.println (testString);
+      }
       System.err.println ("  Predicted: " + predictedSacLogs + ".");
       System.err.println ("  Actual   : " + actualSacLogs + ".");
     }
