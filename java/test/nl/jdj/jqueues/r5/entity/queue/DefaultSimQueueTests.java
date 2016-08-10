@@ -158,7 +158,10 @@ public class DefaultSimQueueTests
             final Set<SimEntityEvent> predictorQueueEvents = new LinkedHashSet<> ();
             for (final SimEntityEvent e : queueEventsAsSet)
               predictorQueueEvents.add (e.copyForQueue (predictorQueue));
-            // Run the simulationm with queue.
+            // Set the requested service time from predictorQueue for each job to that requested from queue.
+            for (final SimJob j : jobs)
+              ((DefaultVisitsLoggingSimJob) j).setRequestedServiceTimeMappingForQueue (predictorQueue, j.getServiceTime (queue));
+            // Run the simulation with queue.
             el.run ();
             assert el.isEmpty ();
             // Store the visit logs and reset the visit-logging on all jobs (in preparation of another simulation).
