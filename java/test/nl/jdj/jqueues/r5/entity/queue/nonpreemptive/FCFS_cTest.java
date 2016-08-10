@@ -65,7 +65,8 @@ public class FCFS_cTest
     {
       final FCFS_c queue = new FCFS_c (eventList, c);
       final SimQueuePredictor predictor = new SimQueuePredictor_FCFS_c (c);
-      DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      DefaultSimQueueTests.doSimQueueTests_SQ_SV
+       (queue, predictor, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
     }
   }
 

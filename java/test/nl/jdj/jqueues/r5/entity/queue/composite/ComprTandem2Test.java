@@ -81,7 +81,7 @@ public class ComprTandem2Test
     final SimQueuePredictor_ComprTandem2 predictor_ctandem2 =
       new SimQueuePredictor_ComprTandem2 (waitQueuePredictor, serveQueuePredictor);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (ctandem2, predictor_ctandem2, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
+      (ctandem2, predictor_ctandem2, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
   }
   
   /**

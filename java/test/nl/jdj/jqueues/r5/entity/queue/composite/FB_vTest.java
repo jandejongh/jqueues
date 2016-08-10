@@ -80,7 +80,7 @@ public class FB_vTest
     final SimQueuePredictor_FB_v predictor_fb_v =
       new SimQueuePredictor_FB_v (encQueuePredictor);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (fb_v, predictor_fb_v, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
+      (fb_v, predictor_fb_v, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
   }
   
   /**

@@ -88,7 +88,7 @@ public class TandemTest
     final SimQueuePredictor_Tandem predictor_tandem_zero =
       new SimQueuePredictor_Tandem (Collections.singletonList (predictor_zero));
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_zero, predictor_tandem_zero, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+      (tandem_zero, predictor_tandem_zero, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
     // Tandem[DROP]
     final DROP drop = new DROP (eventList);
     final SimQueuePredictor predictor_drop = new SimQueuePredictor_DROP ();
@@ -96,7 +96,7 @@ public class TandemTest
     final SimQueuePredictor_Tandem predictor_tandem_drop =
       new SimQueuePredictor_Tandem (Collections.singletonList (predictor_drop));
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_drop, predictor_tandem_drop, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+      (tandem_drop, predictor_tandem_drop, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
     // Tandem[IC]
     final IC ic = new IC (eventList);
     final SimQueuePredictor predictor_ic = new SimQueuePredictor_IC ();
@@ -104,7 +104,7 @@ public class TandemTest
     final SimQueuePredictor_Tandem predictor_tandem_ic =
       new SimQueuePredictor_Tandem (Collections.singletonList (predictor_ic));
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_ic, predictor_tandem_ic, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+      (tandem_ic, predictor_tandem_ic, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
     // Tandem[IC, IC]
     final IC ic1 = new IC (eventList);
     final IC ic2 = new IC (eventList);
@@ -120,7 +120,7 @@ public class TandemTest
     final SimQueuePredictor_Tandem predictor_tandem_ic1_ic2 =
       new SimQueuePredictor_Tandem (predictor_tandem_ic1_ic2_set);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_ic1_ic2, predictor_tandem_ic1_ic2, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+      (tandem_ic1_ic2, predictor_tandem_ic1_ic2, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
     // Tandem[Tandem[IC, SINK]]
     final IC ic3 = new IC (eventList);
     final SINK sink = new SINK (eventList);
@@ -142,7 +142,7 @@ public class TandemTest
     final SimQueuePredictor predictor_tandem_tandem_ic3_sink =
       new SimQueuePredictor_Tandem (predictor_tandem_tandem_ic3_sink_set);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_tandem_ic3_sink, predictor_tandem_tandem_ic3_sink, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+      (tandem_tandem_ic3_sink, predictor_tandem_tandem_ic3_sink, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
     // Tandem[FCFS]
     final FCFS fcfs = new FCFS (eventList);
     final SimQueuePredictor predictor_fcfs = new SimQueuePredictor_FCFS ();
@@ -150,7 +150,7 @@ public class TandemTest
     final SimQueuePredictor_Tandem predictor_tandem_fcfs =
       new SimQueuePredictor_Tandem (Collections.singletonList (predictor_fcfs));
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_fcfs, predictor_tandem_fcfs, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+      (tandem_fcfs, predictor_tandem_fcfs, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
     // Tandem[P_LCFS, DROP]
     final P_LCFS p_lcfs = new P_LCFS (eventList, null);
     final SimQueuePredictor predictor_p_lcfs = new SimQueuePredictor_P_LCFS ();
@@ -166,7 +166,7 @@ public class TandemTest
     final SimQueuePredictor_Tandem predictor_tandem_p_lcfs_drop2 =
       new SimQueuePredictor_Tandem (predictor_tandem_p_lcfs_drop2_set);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_p_lcfs_drop2, predictor_tandem_p_lcfs_drop2, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      (tandem_p_lcfs_drop2, predictor_tandem_p_lcfs_drop2, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
     // Tandem[DELAY[0.17], DELAY[0.33]]
     final DELAY delay1 = new DELAY (eventList, 0.17);
     final DELAY delay2 = new DELAY (eventList, 0.33);
@@ -182,7 +182,7 @@ public class TandemTest
     final SimQueuePredictor_Tandem predictor_tandem_delay1_delay2 =
       new SimQueuePredictor_Tandem (predictor_tandem_delay1_delay2_set);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_delay1_delay2, predictor_tandem_delay1_delay2, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+      (tandem_delay1_delay2, predictor_tandem_delay1_delay2, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
     // Tandem[LeakyBucket[0.12]]
     final LeakyBucket lb1 = new LeakyBucket (eventList, 0.12);
     final SimQueuePredictor predictor_lb1 = new SimQueuePredictor_LeakyBucket ();
@@ -194,7 +194,7 @@ public class TandemTest
     final SimQueuePredictor_Tandem predictor_tandem_lb1 =
       new SimQueuePredictor_Tandem (predictor_tandem_lb1_set);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_lb1, predictor_tandem_lb1, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      (tandem_lb1, predictor_tandem_lb1, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
     // Tandem[LeakyBucket[0.33], LeakyBucket[0.1]]
     final LeakyBucket lb2 = new LeakyBucket (eventList, 0.33);
     final SimQueuePredictor predictor_lb2 = new SimQueuePredictor_LeakyBucket ();
@@ -210,7 +210,7 @@ public class TandemTest
     final SimQueuePredictor_Tandem predictor_tandem_lb2_lb3 =
       new SimQueuePredictor_Tandem (predictor_tandem_lb2_lb3_set);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_lb2_lb3, predictor_tandem_lb2_lb3, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      (tandem_lb2_lb3, predictor_tandem_lb2_lb3, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
   }
 
 }

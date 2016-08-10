@@ -60,7 +60,7 @@ public class LeakyBucketTest
       final int numberOfJobs = 50;
       final boolean silent = true;
       final boolean deadSilent = true;
-      DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+      DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
     }
   }
 

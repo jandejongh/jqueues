@@ -39,6 +39,7 @@ public class DefaultSimQueueTests
   public static <Q extends SimQueue> boolean doSimQueueTests_SQ_SV
     (final Q queue,
      final SimQueuePredictor<Q> predictor,
+     final SimQueue predictorQueue,
      final int numberOfJobs,
      final Set<LoadFactoryHint> hints,
      final boolean silent,
@@ -47,10 +48,23 @@ public class DefaultSimQueueTests
      final Set<KnownLoadFactory_SQ_SV> omit)
   throws SimQueuePredictionException
   {
-    if (queue == null || predictor == null || numberOfJobs < 0 || queue.getEventList () == null || accuracy < 0)
+    if (queue == null
+    || (predictor == null && predictorQueue == null)
+    || numberOfJobs < 0
+    || queue.getEventList () == null
+    || (predictorQueue != null && predictorQueue.getEventList () != queue.getEventList ())
+    || accuracy < 0)
       throw new IllegalArgumentException ();
+    if (predictor != null && predictorQueue != null)
+    {
+      return
+        doSimQueueTests_SQ_SV (queue, predictor, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit)
+     && doSimQueueTests_SQ_SV (queue, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
+    }
     System.out.println ("========== SimQueue Tests [SQ/SV] ==============================================");
     System.out.println (queue);
+    if (predictorQueue != null)
+      System.out.println (" == " + predictorQueue);
     System.out.println ("================================================================================");
     final SimEventList<SimEvent> el = queue.getEventList ();
     if (! (silent || deadSilent))
@@ -83,7 +97,8 @@ public class DefaultSimQueueTests
           final Set<SimEntityEvent> queueEventsAsSet = new HashSet<> ();
           for (final Set<SimEntityEvent> queueEventsAtTime : queueEventsAsMap.values ())
             queueEventsAsSet.addAll (queueEventsAtTime);
-          final SimQueuePrediction_SQ_SV<Q> prediction = predictor.predict_SQ_SV_ROEL_U (queue, queueEventsAsSet);
+          final SimQueuePredictor realPredictor = ((predictor != null) ? predictor : null /* XXX */);
+          final SimQueuePrediction_SQ_SV<Q> prediction = realPredictor.predict_SQ_SV_ROEL_U (queue, queueEventsAsSet);
           final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictedJobQueueVisitLogs = prediction.getVisitLogs ();
           final List<Map<Double, Boolean>> predictedQavLogs = prediction.getQueueAccessVacationLog ();
           final List<Map<Double, Boolean>> predictedSacLogs = prediction.getServerAccessCreditsAvailabilityLog ();

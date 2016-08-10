@@ -65,7 +65,8 @@ public class NoBuffer_cTest
     {
       final NoBuffer_c queue = new NoBuffer_c (eventList, c);
       final SimQueuePredictor predictor = new SimQueuePredictor_NoBuffer_c (c);
-      DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      DefaultSimQueueTests.doSimQueueTests_SQ_SV
+        (queue, predictor, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
     }
   }
 
