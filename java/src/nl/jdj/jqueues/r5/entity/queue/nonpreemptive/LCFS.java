@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
+import nl.jdj.jqueues.r5.extensions.qos.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link LCFS} queue serves jobs one at a time in reverse order of arrival times.
@@ -20,7 +21,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see P_LCFS
  * 
  */
-public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
+public class LCFS<J extends SimJob, Q extends LCFS>
+extends AbstractNonPreemptiveWorkConservingSimQueue<J, Q>
+implements SimQoS<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +39,7 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
    */
   public LCFS (final SimEventList eventList)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE, 1);
   }
   
   /** Returns a new {@link LCFS} object on the same {@link SimEventList}.
@@ -71,6 +74,30 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // QoS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Class getQoSClass ()
+  {
+    return super.getQoSClass ();
+  }
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Object getQoS ()
+  {
+    return super.getQoS ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,12 +120,62 @@ public class LCFS<J extends SimJob, Q extends LCFS> extends AbstractNonPreemptiv
   /** Inserts the job at the head of the job queue.
    * 
    * @see #jobQueue
+   * @see #insertJobInQueueUponArrival
    * 
    */
   @Override
-  protected final void insertJobInQueueUponArrival (final J job, final double time)
+  protected final void insertAdmittedJobInQueueUponArrival (final J job, final double time)
   {
     this.jobQueue.add (0, job);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the result from {@link #getFirstJobInWaitingArea}.
+   * 
+   * @return The result from {@link #getFirstJobInWaitingArea}.
+   * 
+   */
+  @Override
+  protected final J selectJobToStart ()
+  {
+    return getFirstJobInWaitingArea ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  protected final double getServiceTimeForJob (final J job)
+  {
+    return super.getServiceTimeForJob (job);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // EXIT
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponExit  (final J exitingJob, final double time)
+  {
+    super.removeJobFromQueueUponExit (exitingJob, time);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

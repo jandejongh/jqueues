@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
+import nl.jdj.jqueues.r5.extensions.qos.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link NoBuffer_c} queueing system serves jobs with multiple servers but has no buffer space (i.c., no wait queue).
@@ -20,7 +21,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see DROP
  * 
  */
-public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends AbstractNonPreemptiveFiniteServerSimQueue<J, Q>
+public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c>
+extends AbstractNonPreemptiveWorkConservingSimQueue<J, Q>
+implements SimQoS<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,14 +35,14 @@ public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends Abstract
   /** Creates a NoBuffer_c queue given an event list.
    *
    * @param eventList The event list to use.
-   * @param c The (non-negative) number of servers.
+   * @param c         The (non-negative) number of servers.
    *
    * @throws IllegalArgumentException If the number of servers is strictly negative.
    * 
    */
   public NoBuffer_c (final SimEventList eventList, final int c)
   {
-    super (eventList, c);
+    super (eventList, 0, c);
   }
   
   /** Returns a new {@link NoBuffer_c} object on the same {@link SimEventList} with the same number of servers.
@@ -75,6 +78,30 @@ public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends Abstract
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // QoS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Class getQoSClass ()
+  {
+    return super.getQoSClass ();
+  }
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Object getQoS ()
+  {
+    return super.getQoS ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,21 +121,67 @@ public class NoBuffer_c<J extends SimJob, Q extends NoBuffer_c> extends Abstract
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of the job queue if a server is available and there are server-access credits.
+  /** Inserts the job at the tail of the job queue.
    * 
-   * @see #getNumberOfJobs
-   * @see #getNumberOfServers
-   * @see #hasServerAcccessCredits
    * @see #jobQueue
+   * @see #insertJobInQueueUponArrival
    * 
    */
   @Override
-  protected final void insertJobInQueueUponArrival (final J job, final double time)
+  protected final void insertAdmittedJobInQueueUponArrival (final J job, final double time)
   {
-    if (getNumberOfJobs () + 1 <= getNumberOfServers () && hasServerAcccessCredits ())
-      this.jobQueue.add (job);
+    this.jobQueue.add (job);
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the result from {@link #getFirstJobInWaitingArea}.
+   * 
+   * @return The result from {@link #getFirstJobInWaitingArea}.
+   * 
+   */
+  @Override
+  protected final J selectJobToStart ()
+  {
+    return getFirstJobInWaitingArea ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  protected final double getServiceTimeForJob (final J job)
+  {
+    return super.getServiceTimeForJob (job);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // EXIT
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponExit  (final J exitingJob, final double time)
+  {
+    super.removeJobFromQueueUponExit (exitingJob, time);
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // END OF FILE

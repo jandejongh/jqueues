@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 import java.util.Random;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.extensions.qos.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link RANDOM} queue serves jobs one at a time in random order.
@@ -11,7 +12,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <Q> The type of {@link SimQueue}s supported.
  *
  */
-public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
+public class RANDOM<J extends SimJob, Q extends RANDOM>
+extends AbstractNonPreemptiveWorkConservingSimQueue<J, Q>
+implements SimQoS<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,7 +45,7 @@ public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreem
    */
   public RANDOM (final SimEventList eventList, final Random RNG)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE, 1);
     this.RNG = ((RNG == null) ? new Random () : RNG);
   }
   
@@ -99,6 +102,30 @@ public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreem
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // QoS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Class getQoSClass ()
+  {
+    return super.getQoSClass ();
+  }
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Object getQoS ()
+  {
+    return super.getQoS ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,14 +149,64 @@ public class RANDOM<J extends SimJob, Q extends RANDOM> extends AbstractNonPreem
    * 
    * @see #jobQueue
    * @see #getRNG
+   * @see #insertJobInQueueUponArrival
    * 
    */
   @Override
-  protected final void insertJobInQueueUponArrival (final J job, final double time)
+  protected final void insertAdmittedJobInQueueUponArrival (final J job, final double time)
   {
     final int newPosition = getRNG ().nextInt (this.jobQueue.size () + 1);
     this.jobQueue.add (newPosition, job);
-  }  
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the result from {@link #getFirstJobInWaitingArea}.
+   * 
+   * @return The result from {@link #getFirstJobInWaitingArea}.
+   * 
+   */
+  @Override
+  protected final J selectJobToStart ()
+  {
+    return getFirstJobInWaitingArea ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  protected final double getServiceTimeForJob (final J job)
+  {
+    return super.getServiceTimeForJob (job);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // EXIT
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponExit  (final J exitingJob, final double time)
+  {
+    super.removeJobFromQueueUponExit (exitingJob, time);
+  }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //

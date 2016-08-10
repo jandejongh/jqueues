@@ -2,10 +2,12 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.extensions.qos.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link IS_CST} queue serves all jobs simultaneously with fixed job-independent service times.
  *
+ * <p>
  * Infinite Server with Constant Service Times.
  *
  * <P>
@@ -24,7 +26,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  *
  */
 public class IS_CST<J extends SimJob, Q extends IS_CST>
-extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
+extends AbstractNonPreemptiveWorkConservingSimQueue<J, Q>
+implements SimQoS<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +46,7 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
    */
   public IS_CST (final SimEventList eventList, final double serviceTime)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE, Integer.MAX_VALUE);
     if (serviceTime < 0)
       throw new IllegalArgumentException ();
     this.serviceTime = serviceTime;
@@ -111,6 +114,30 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // QoS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Class getQoSClass ()
+  {
+    return super.getQoSClass ();
+  }
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Object getQoS ()
+  {
+    return super.getQoS ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,6 +150,56 @@ extends AbstractNonPreemptiveInfiniteServerSimQueue<J, Q>
   {
     super.resetEntitySubClass ();
   }  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ARRIVAL
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Inserts the job at the tail of the job queue.
+   * 
+   * @see #jobQueue
+   * @see #insertJobInQueueUponArrival
+   * 
+   */
+  @Override
+  protected final void insertAdmittedJobInQueueUponArrival (final J job, final double time)
+  {
+    this.jobQueue.add (job);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the result from {@link #getFirstJobInWaitingArea}.
+   * 
+   * @return The result from {@link #getFirstJobInWaitingArea}.
+   * 
+   */
+  @Override
+  protected final J selectJobToStart ()
+  {
+    return getFirstJobInWaitingArea ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // EXIT
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponExit  (final J exitingJob, final double time)
+  {
+    super.removeJobFromQueueUponExit (exitingJob, time);
+  }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //

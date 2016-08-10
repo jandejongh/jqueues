@@ -2,63 +2,56 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.extensions.qos.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** The {@link FCFS_c} queueing system serves jobs in order of arrival times with multiple servers.
+/** A {@link FCFS} queue with fixed (possibly infinite) buffer size and fixed (possibly infinite) number of servers.
  *
  * <p>
- * First Come First Served with c (possibly infinite) servers and infinite buffer size.
- *
- * <p>
- * Although the queue will work with zero servers, the optimized {@link SINK} queuing system is specially
- * designed for "no server" systems.
+ * Jobs arriving when the buffer is full are dropped.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
- *
- * @see FCFS
- * @see FCFS_B
- * @see SINK
  * 
  */
-public class FCFS_c<J extends SimJob, Q extends FCFS_c>
+public class FCFS_B_c<J extends SimJob, Q extends FCFS_B_c>
 extends AbstractNonPreemptiveWorkConservingSimQueue<J, Q>
 implements SimQoS<J, Q>
 {
-
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // CONSTRUCTOR(S) / CLONING / FACTORIES
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a FCFS_c queue given an event list.
+  /** Creates a single-server FCFS queue given an event list and with fixed buffer size and number of servers.
    *
-   * @param eventList The event list to use.
-   * @param c         The (non-negative) number of servers, {@link Integer#MAX_VALUE} is interpreted as infinity.
+   * @param eventList  The event list to use.
+   * @param bufferSize The buffer size (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
+   * @param c          The (non-negative) number of servers, {@link Integer#MAX_VALUE} is interpreted as infinity.
    *
-   * @throws IllegalArgumentException If the number of servers is strictly negative.
+   * @throws IllegalArgumentException If the buffer size is negative.
    * 
    */
-  public FCFS_c (final SimEventList eventList, final int c)
+  public FCFS_B_c (final SimEventList eventList, final int bufferSize, final int c)
   {
-    super (eventList, Integer.MAX_VALUE, c);
+    super (eventList, bufferSize, c);
   }
   
-  /** Returns a new {@link FCFS_c} object on the same {@link SimEventList} with the same number of servers.
+  /** Returns a new {@link FCFS_B} object on the same {@link SimEventList} with the same buffer size and the same number of servers.
    * 
-   * @return A new {@link FCFS_c} object on the same {@link SimEventList} with the same number of servers.
+   * @return A new {@link FCFS_B} object on the same {@link SimEventList} with the same buffer size and the same number of servers.
    * 
    * @see #getEventList
+   * @see #getBufferSize
    * @see #getNumberOfServers
    * 
    */
   @Override
-  public FCFS_c<J, Q> getCopySimQueue ()
+  public FCFS_B_c<J, Q> getCopySimQueue ()
   {
-    return new FCFS_c<> (getEventList (), getNumberOfServers ());
+    return new FCFS_B_c<> (getEventList (), getBufferSize (), getNumberOfServers ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,15 +60,15 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "FCFS_numberOfServers".
+  /** Returns "FCFS_B_numberOfServers[buffer size]".
    * 
-   * @return "FCFS_numberOfServers".
+   * @return "FCFS_B_numberOfServers[buffer size]".
    * 
    */
   @Override
   public String toStringDefault ()
   {
-    return "FCFS_" + getNumberOfServers ();
+    return "FCFS_B_" + getNumberOfServers () + "[" + getBufferSize () + "]";
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

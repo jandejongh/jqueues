@@ -2,11 +2,15 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.extensions.qos.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A {@link FCFS} queue with finite buffer size.
+/** A {@link FCFS} queue with given (possibly infinite) buffer size.
  *
+ * <p>
+ * First Come First Served with buffer size B and a single server.
+ * 
+ * <p>
  * Jobs arriving when the buffer is full are dropped.
  * 
  * @param <J> The type of {@link SimJob}s supported.
@@ -14,7 +18,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  */
 public class FCFS_B<J extends SimJob, Q extends FCFS_B>
-extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
+extends AbstractNonPreemptiveWorkConservingSimQueue<J, Q>
+implements SimQoS<J, Q>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -23,20 +28,17 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a single-server FCFS queue given an event list and finite buffer size.
+  /** Creates a single-server FCFS queue given an event list and given (possibly infinite) buffer size.
    *
    * @param eventList  The event list to use.
-   * @param bufferSize The buffer size (non-negative).
+   * @param bufferSize The buffer size (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
    *
    * @throws IllegalArgumentException If the buffer size is negative.
    * 
    */
   public FCFS_B (final SimEventList eventList, final int bufferSize)
   {
-    super (eventList);
-    if (bufferSize < 0)
-      throw new IllegalArgumentException ();
-    this.bufferSize = bufferSize;
+    super (eventList, bufferSize, 1);
   }
   
   /** Returns a new {@link FCFS_B} object on the same {@link SimEventList} with the same buffer size.
@@ -72,25 +74,28 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // BUFFER SIZE
+  // QoS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private final int bufferSize;
-  
-  /** Returns the buffer size.
-   * 
-   * <p>
-   * The buffer size is fixed upon construction and cannot be changed.
-   * 
-   * @return The buffer size (non-negative).
+  /** Calls super method (in order to make implementation final).
    * 
    */
-  public final int getBufferSize ()
+  @Override
+  public final Class getQoSClass ()
   {
-    return this.bufferSize;
+    return super.getQoSClass ();
   }
-
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Object getQoS ()
+  {
+    return super.getQoS ();
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // RESET
@@ -112,32 +117,67 @@ extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of the job queue if it will be taken into service immediately,
-   * or else if there is still waiting room available.
+  /** Inserts the job at the tail of the job queue.
    * 
-   * <p>
-   * Note that we must temporarily accept the fact that in case there is no waiting room left, but we know that the job will
-   * be taken into service immediately, we leave the queue in an inconsistent state by adding the job to {@link #jobQueue},
-   * having more jobs waiting than allowed.
-   * Here we rely on the fact that by contract of {@link AbstractSimQueue#arrive}, between corresponding calls to
-   * {@link #insertJobInQueueUponArrival} and {@link #rescheduleAfterArrival} there can be no event handling from the event list
-   * or from notifications from elsewhere.
-   * 
-   * @see #hasServerAcccessCredits
-   * @see #isNoWaitArmed
-   * @see #getNumberOfJobsInWaitingArea
-   * @see #getBufferSize
    * @see #jobQueue
+   * @see #insertJobInQueueUponArrival
    * 
    */
   @Override
-  protected final void insertJobInQueueUponArrival (final J job, final double time)
+  protected final void insertAdmittedJobInQueueUponArrival (final J job, final double time)
   {
-    if ((hasServerAcccessCredits () && isNoWaitArmed ())
-      || getNumberOfJobsInWaitingArea () < getBufferSize ())
-      this.jobQueue.add (job);
+    this.jobQueue.add (job);
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the result from {@link #getFirstJobInWaitingArea}.
+   * 
+   * @return The result from {@link #getFirstJobInWaitingArea}.
+   * 
+   */
+  @Override
+  protected final J selectJobToStart ()
+  {
+    return getFirstJobInWaitingArea ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  protected final double getServiceTimeForJob (final J job)
+  {
+    return super.getServiceTimeForJob (job);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // EXIT
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponExit  (final J exitingJob, final double time)
+  {
+    super.removeJobFromQueueUponExit (exitingJob, time);
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // END OF FILE

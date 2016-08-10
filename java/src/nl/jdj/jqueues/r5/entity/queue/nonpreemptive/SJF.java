@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.extensions.qos.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** The {@link SJF} queue serves jobs one at a time in order of ascending requested service times.
@@ -19,7 +20,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see LJF
  *
  */
-public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveSingleServerSimQueue<J, Q>
+public class SJF<J extends SimJob, Q extends SJF>
+extends AbstractNonPreemptiveWorkConservingSimQueue<J, Q>
+implements SimQoS<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,7 +38,7 @@ public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveS
    */
   public SJF (final SimEventList eventList)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE, 1);
   }
   
   /** Returns a new {@link SJF} object on the same {@link SimEventList}.
@@ -70,6 +73,30 @@ public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveS
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // QoS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Class getQoSClass ()
+  {
+    return super.getQoSClass ();
+  }
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Object getQoS ()
+  {
+    return super.getQoS ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,20 +118,71 @@ public class SJF<J extends SimJob, Q extends SJF> extends AbstractNonPreemptiveS
   
   /** Inserts the job in the job queue maintaining non-decreasing service-time ordering.
    * 
+   * <p>
    * In case of ties, jobs are scheduled for service in order of arrival from the underlying event list.
    * 
    * @see #jobQueue
-   * @see SimJob#getServiceTime
+   * @see #getServiceTimeForJob
+   * @see #insertJobInQueueUponArrival
    * 
    */
   @Override
-  protected final void insertJobInQueueUponArrival (final J job, final double time)
+  protected final void insertAdmittedJobInQueueUponArrival (final J job, final double time)
   {
     int newPosition = 0;
     while (newPosition < this.jobQueue.size ()
-      && this.jobQueue.get (newPosition).getServiceTime (this) <= job.getServiceTime (this))
+      && this.jobQueue.get (newPosition).getServiceTime (this) <= getServiceTimeForJob (job))
       newPosition++;
     this.jobQueue.add (newPosition, job);    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the result from {@link #getFirstJobInWaitingArea}.
+   * 
+   * @return The result from {@link #getFirstJobInWaitingArea}.
+   * 
+   */
+  @Override
+  protected final J selectJobToStart ()
+  {
+    return getFirstJobInWaitingArea ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  protected final double getServiceTimeForJob (final J job)
+  {
+    return super.getServiceTimeForJob (job);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // EXIT
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponExit  (final J exitingJob, final double time)
+  {
+    super.removeJobFromQueueUponExit (exitingJob, time);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
