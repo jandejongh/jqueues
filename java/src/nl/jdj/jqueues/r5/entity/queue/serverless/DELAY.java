@@ -140,6 +140,10 @@ extends AbstractServerlessSimQueue<J, Q>
   /** If needed, schedules a departure event for the arrived job respecting the fixed wait time of this queue;
    *  otherwise (zero wait time), makes the job depart immediately.
    * 
+   * <p>
+   * If the wait time is {@link Double#POSITIVE_INFINITY}, no departure events are scheduled, in other words,
+   * this queue does not schedule departures at infinity.
+   * 
    * @see #getWaitTime
    * @see #scheduleDepartureEvent
    * @see #depart
@@ -149,10 +153,15 @@ extends AbstractServerlessSimQueue<J, Q>
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
     final double waitTime = getWaitTime ();
-    if (waitTime > 0)
+    if (waitTime < 0)
+      throw new IllegalStateException ();
+    else if (waitTime == 0)
+      depart (time, job);
+    else if (! Double.isInfinite (waitTime))
       scheduleDepartureEvent (time + waitTime, job);
     else
-      depart (time, job);
+      // waitTime is positive infinity; do not schedule a departure event!
+      ;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +198,8 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Cancels the departure of the job and removes it, after passing sanity checks, from the job queue {@link #jobQueue}.
+  /** Cancels the departure of the job (if present) and removes it,
+   *  after passing sanity checks, from the job queue {@link #jobQueue}.
    * 
    * @see #cancelDepartureEvent
    * 
@@ -201,7 +211,8 @@ extends AbstractServerlessSimQueue<J, Q>
       throw new IllegalArgumentException ();
     if (! this.jobsInServiceArea.isEmpty ())
       throw new IllegalStateException ();
-    cancelDepartureEvent (job);
+    if (! getDepartureEvents (job).isEmpty ())
+      cancelDepartureEvent (job);
     this.jobQueue.remove (job);
   }
 

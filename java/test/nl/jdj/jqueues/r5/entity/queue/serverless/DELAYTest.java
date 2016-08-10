@@ -55,7 +55,7 @@ public class DELAYTest
     final int numberOfJobs = 50;
     final boolean silent = true;
     final boolean deadSilent = true;
-    final double[] waitingTimeValues = { 0.0, 3.39, 27.833 };
+    final double[] waitingTimeValues = { 0.0, 3.39, 27.833, Double.POSITIVE_INFINITY };
     for (final double waitingTime : waitingTimeValues)
     {
       final DELAY queue = new DELAY (eventList, waitingTime);
@@ -66,6 +66,10 @@ public class DELAYTest
     final DELAY delay0 = new DELAY (eventList, 0);
     final ZERO zero = new ZERO (eventList);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV (delay0, null, zero, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+    // DELAY[infinity] == SINK
+    final DELAY delay_inf = new DELAY (eventList, Double.POSITIVE_INFINITY);
+    final SINK sink = new SINK (eventList);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV (delay_inf, null, sink, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
   }
 
 }

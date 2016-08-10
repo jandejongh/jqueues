@@ -39,7 +39,7 @@ extends AbstractSimQueuePredictor<DELAY>
       || queueEventTypes == null)
       throw new IllegalArgumentException ();
     queueEventTypes.clear ();
-    if (queueState.getJobs ().isEmpty ())
+    if (queueState.getJobs ().isEmpty () || Double.isInfinite (queue.getWaitTime ()))
       return Double.NaN;
     else
     {
