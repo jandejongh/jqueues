@@ -154,7 +154,7 @@ public class JobQueueVisitLog<J extends SimJob, Q extends SimQueue>
    * 
    * @return A copy of this visit log in which the queue is replaced with the destination queue.
    * 
-   * @throws IllegalArgumentException If the destination queue is {@link null}.
+   * @throws IllegalArgumentException If the destination queue is {@code null}.
    * 
    */
   public <R extends SimQueue> JobQueueVisitLog<J, R> copyForQueue (final R destQueue)

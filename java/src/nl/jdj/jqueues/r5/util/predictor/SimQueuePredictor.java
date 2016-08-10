@@ -149,6 +149,8 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
    * particular job) to numbered {@link JobQueueVisitLog} of that job at that particular arrival time
    * (this allows multiple arrivals of the same job at the same time).
    * 
+   * @param <Q> The (generic) type of the queue.
+   * 
    * @param queue      The queue, non-{@code null}.
    * @param predicted  The predicted {@link JobQueueVisitLog}s, indexed by job-arrival time; arrival at other queues
    *                   are (to be) ignored.

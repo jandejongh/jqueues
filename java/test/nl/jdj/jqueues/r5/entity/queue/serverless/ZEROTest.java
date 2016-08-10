@@ -58,6 +58,10 @@ public class ZEROTest
     final boolean silent = true;
     final boolean deadSilent = true;
     DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+    // ZERO == DELAY[0.0]
+    final ZERO zero = new ZERO (eventList);
+    final DELAY delay0 = new DELAY (eventList, 0);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV (zero, null, delay0, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
   }
 
 }

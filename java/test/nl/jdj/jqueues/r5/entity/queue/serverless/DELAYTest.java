@@ -52,16 +52,20 @@ public class DELAYTest
   public void testDELAY () throws SimQueuePredictionException
   {
     final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
+    final int numberOfJobs = 50;
+    final boolean silent = true;
+    final boolean deadSilent = true;
     final double[] waitingTimeValues = { 0.0, 3.39, 27.833 };
     for (final double waitingTime : waitingTimeValues)
     {
       final DELAY queue = new DELAY (eventList, waitingTime);
       final SimQueuePredictor predictor = new SimQueuePredictor_DELAY ();
-      final int numberOfJobs = 50;
-      final boolean silent = true;
-      final boolean deadSilent = true;
       DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
     }
+    // DELAY[0.0] == ZERO
+    final DELAY delay0 = new DELAY (eventList, 0);
+    final ZERO zero = new ZERO (eventList);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV (delay0, null, zero, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
   }
 
 }
