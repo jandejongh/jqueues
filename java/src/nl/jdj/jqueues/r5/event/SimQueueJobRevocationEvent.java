@@ -17,7 +17,7 @@ extends SimEntityEvent<J, Q>
  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR(S)
+  // CONSTRUCTOR(S) / FACTORY / CLONING
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -51,6 +51,14 @@ extends SimEntityEvent<J, Q>
   {
     super ("Rev[" + job + "]@" + queue, revocationTime, queue, job, createAction (job, queue, interruptService));
     this.interruptService = interruptService;
+  }
+  
+  @Override
+  public SimEntityEvent<J, Q> copyForQueue (final Q destQueue)
+  {
+    if (destQueue == null)
+      throw new IllegalArgumentException ();
+    return new SimQueueJobRevocationEvent<> (getJob (), destQueue, getTime (), isInterruptService ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

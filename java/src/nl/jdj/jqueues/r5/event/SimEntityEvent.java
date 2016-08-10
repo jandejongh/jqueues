@@ -22,7 +22,7 @@ extends DefaultSimEvent
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR(S)
+  // CONSTRUCTOR(S) / FACTORY / CLONING
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -41,6 +41,19 @@ extends DefaultSimEvent
     this.queue = queue;
     this.job = job;
   }
+  
+  /** Creates a copy of this event, but for a different queue.
+   * 
+   * @param destQueue The new destination queue (the {@link SimQueue} to which the newly created event applies), non-{@code null}.
+   * 
+   * @return A copy of this event but for given queue.
+   * 
+   * @throws UnsupportedOperationException If creating a copy for a different queue is not supported by the queue type,
+   *                                         for instance, because it is a queue-internal event.
+   * @throws IllegalArgumentException      If the argument is {@code null}.
+   * 
+   */
+  public abstract SimEntityEvent<J, Q> copyForQueue (final Q destQueue);
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //

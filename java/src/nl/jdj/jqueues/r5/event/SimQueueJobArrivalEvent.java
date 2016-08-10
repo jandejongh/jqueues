@@ -17,7 +17,7 @@ extends SimEntityEvent<J, Q>
  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR(S)
+  // CONSTRUCTOR(S) / FACTORY / CLONING
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -49,6 +49,14 @@ extends SimEntityEvent<J, Q>
   (final J job, final Q queue, final double arrivalTime)
   {
     super ("Arr[" + job + "]@" + queue, arrivalTime, queue, job, createAction (job, queue));
+  }
+  
+  @Override
+  public SimEntityEvent<J, Q> copyForQueue (final Q destQueue)
+  {
+    if (destQueue == null)
+      throw new IllegalArgumentException ();
+    return new SimQueueJobArrivalEvent<> (getJob (), destQueue, getTime ());
   }
   
 }

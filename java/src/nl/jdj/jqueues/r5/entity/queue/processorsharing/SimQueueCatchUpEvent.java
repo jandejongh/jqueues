@@ -47,5 +47,19 @@ extends SimEntityEvent<J, Q>
     if (action == null)
       throw new IllegalArgumentException ();
   }
+
+  /** Throws an {@link UnsupportedOperationException}.
+   * 
+   * <p>
+   * A {@link SimQueueCatchUpEvent} is a queue-internal event.
+   * 
+   * @throws UnsupportedOperationException Always.
+   * 
+   */
+  @Override
+  public final SimEntityEvent<J, Q> copyForQueue (final Q destQueue)
+  {
+    throw new UnsupportedOperationException ();
+  }
   
 }

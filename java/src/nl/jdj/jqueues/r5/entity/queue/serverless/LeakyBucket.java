@@ -304,6 +304,7 @@ extends AbstractServerlessSimQueue<J, Q>
   protected final static class RateLimitExpirationEvent<Q extends LeakyBucket>
   extends SimEntityEvent<SimJob, Q>
   {
+    
     /** Creates the actions that invokes {@link LeakyBucket#rateLimitExpiration} on the queue,
      *  and invokes the super method.
      * 
@@ -322,6 +323,21 @@ extends AbstractServerlessSimQueue<J, Q>
         queue.rateLimitExpiration ((RateLimitExpirationEvent) event);
       });
     }   
+
+    /** Throws an {@link UnsupportedOperationException}.
+     * 
+     * <p>
+     * A {@link RateLimitExpirationEvent} is a queue-internal event.
+     * 
+     * @throws UnsupportedOperationException Always.
+     * 
+     */
+    @Override
+    public final SimEntityEvent<SimJob, Q> copyForQueue (final Q destQueue)
+    {
+      throw new UnsupportedOperationException ();
+    }
+    
   }
 
   /** Schedules a suitable {@link SimEvent} for a rate-limit expiration on the event list.

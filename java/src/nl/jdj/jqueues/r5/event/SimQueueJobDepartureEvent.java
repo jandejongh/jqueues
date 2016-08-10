@@ -21,7 +21,7 @@ extends SimEntityEvent<J, Q>
  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR(S)
+  // CONSTRUCTOR(S) / FACTORY / CLONING
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -44,6 +44,20 @@ extends SimEntityEvent<J, Q>
     super ("Dep[" + job + "]@" + queue, departureTime, queue, job, action);
     if (action == null)
       throw new IllegalArgumentException ();
+  }
+  
+  /** Throws an {@link UnsupportedOperationException}.
+   * 
+   * <p>
+   * A {@link SimQueueJobDepartureEvent} is a queue-internal event.
+   * 
+   * @throws UnsupportedOperationException Always.
+   * 
+   */
+  @Override
+  public final SimEntityEvent<J, Q> copyForQueue (final Q destQueue)
+  {
+    throw new UnsupportedOperationException ();
   }
   
 }

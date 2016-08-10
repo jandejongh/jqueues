@@ -23,7 +23,7 @@ extends SimEntityEvent<J, Q>
  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR(S)
+  // CONSTRUCTOR(S) / FACTORY / CLONING
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -77,6 +77,14 @@ extends SimEntityEvent<J, Q>
   {
     super (createName (queue, gatePassageCredits), time, queue, null, createAction (queue, gatePassageCredits));
     this.gatePassageCredits = gatePassageCredits;
+  }
+  
+  @Override
+  public SimEntityEvent<J, Q> copyForQueue (final Q destQueue)
+  {
+    if (destQueue == null)
+      throw new IllegalArgumentException ();
+    return new SimQueueGateEvent<> (destQueue, getTime (), getGatePassageCredits ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
