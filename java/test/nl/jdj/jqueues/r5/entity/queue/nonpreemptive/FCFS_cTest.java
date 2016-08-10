@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.nonpreemptive;
 import java.util.Collections;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
+import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_0010;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
@@ -68,6 +69,11 @@ public class FCFS_cTest
       DefaultSimQueueTests.doSimQueueTests_SQ_SV
        (queue, predictor, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
     }
+    // FCFS_0 == SINK
+    final FCFS_c fcfs_0 = new FCFS_c (eventList, 0);
+    final SINK sink = new SINK (eventList);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+     (fcfs_0, null, sink, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
   }
 
 }
