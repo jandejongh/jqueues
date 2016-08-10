@@ -75,7 +75,6 @@ public class DefaultSimQueueTests
           if (! deadSilent)
             System.out.println ("===== Test: " + klf + ", pass " + pass + " =====");
           assert ! queue.isQueueAccessVacation ();
-          final boolean predictedInitNwa = predictor.isNoWaitArmed (queue, predictor.createQueueState (queue, true));
           final SimJobFactory jobFactory = new DefaultVisitsLoggingSimJobQoSFactory<> ();
           final NavigableMap<Double, Set<SimEntityEvent>> queueEventsAsMap = new TreeMap<> ();
           final LoadFactory_SQ_SV loadFactory = klf.getLoadFactory ();
