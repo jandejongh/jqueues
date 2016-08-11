@@ -25,7 +25,7 @@ public enum PreemptionStrategy
    * 
    */
   REDRAW,
-  /** Departs the preempted job, even though it has not finished its service requirements.
+  /** Departs the preempted job, even though may not have finished its service requirements.
    * 
    */
   DEPART,
