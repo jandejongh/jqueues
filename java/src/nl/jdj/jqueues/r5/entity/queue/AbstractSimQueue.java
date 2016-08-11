@@ -344,6 +344,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       // We may safely assume that we are still in our reset procedures,
       // and that our sub-class has presented us with a notification while resetting.
       // Our only option now is the set the initial NoWaitArmed here...
+      // Note, by the way, that the (time) argument is ignored.
       setInitNoWaitArmed (getLastUpdateTime ());
     final boolean noWaitArmed = isNoWaitArmed ();
     final Iterator<Map<SimEntitySimpleEventType.Member, J>> i_pendingNotifications = pendingNotifications.iterator ();
