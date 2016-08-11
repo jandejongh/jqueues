@@ -162,7 +162,7 @@ implements SimQueueListener
     // Draw wait queue.
     g2d.setColor (Color.black);
     final BasicStroke savedStroke = (BasicStroke) g2d.getStroke ();
-    if (this.queue.isNoWaitArmed ())
+    if (this.queue.isStartArmed ())
       g2d.setStroke (new BasicStroke
         (savedStroke.getLineWidth (),
           savedStroke.getEndCap (),
@@ -297,7 +297,7 @@ implements SimQueueListener
   }
 
   @Override
-  public void notifyNewNoWaitArmed (final double t, final SimQueue queue, final boolean noWaitArmed)
+  public void notifyNewStartArmed (final double t, final SimQueue queue, final boolean startArmed)
   {
     notifyQueueChanged (t, queue);
   }
