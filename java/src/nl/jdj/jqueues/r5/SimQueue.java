@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r5;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 
@@ -13,7 +14,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * <p>
  * The following {@code javadoc} section aims at concisely specifying the {@link SimQueue} interface.
  * The assumptions and constraints in the sequel should not be interpreted as "agreed upon in the field",
- * but motivations for them are not given in order to keep the section at (hopefully) pleasant length.
+ * but motivations for them are not given here in order to keep the section at (hopefully) pleasant length.
  * 
  * <p>
  * A {@link SimQueue} accepts so-called <i>jobs</i> (in our case {@link SimJob}s) for a <i>visit</i>.
@@ -73,11 +74,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * <p>
  * The <i>state</i> of a {@link SimQueue} includes at least the set of jobs present (and in which area each resides),
  * its queue-access vacation state and its remaining number of server-access credits.
- * In addition, the so-called {@code noWaitArmed} state has to be maintained.
- * If a queue is in {@code noWaitArmed} state, any job will start service immediately or exit immediately upon arrival,
- * <i>assuming</i> the absence of a queue access vacation and at least one server-access credit
- * (i.e., ignoring the actual state settings for these features).
- * See {@link #isNoWaitArmed}.
+ * In addition, the so-called {@code startArmed} state has to be maintained, see {@link #isStartArmed}.
  * 
  * <p>
  * Each {@link SimQueue} (and {@link SimJob} for that matter) must notify all state changes,
@@ -132,6 +129,10 @@ extends SimEntity<J, Q>
   
   /** The auto-revocation policy.
    * 
+   * <p>
+   * Auto-revocation refers to the revocation of jobs upon a specific user-specified state condition.
+   * It plays an essential role in composite queues, notably {@link BlackCompressedTandem2SimQueue}.
+   * 
    */
   public enum AutoRevocationPolicy
   {
@@ -149,23 +150,29 @@ extends SimEntity<J, Q>
    * 
    * @return The auto-revocation policy of this queue.
    * 
+   * @see AutoRevocationPolicy
+   * 
    */
   AutoRevocationPolicy getAutoRevocationPolicy ();
   
   /** Sets the auto-revocation policy of this queue.
    * 
+   * <p>
    * The auto-revocation policy on a queue should be set only once and before the queue's use.
+   * It must survive queue resets.
    * 
    * @param autoRevocationPolicy The new auto-revocation policy, non-{@code null}.
    * 
    * @throws IllegalArgumentException If the policy is {@code null}.
+   * 
+   * @see AutoRevocationPolicy
    * 
    */
   void setAutoRevocationPolicy (final AutoRevocationPolicy autoRevocationPolicy);
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE
+  // JOBS / JOBS IN WAITING AREA / JOBS IN SERVICE AREA
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -255,6 +262,12 @@ extends SimEntity<J, Q>
    */
   public int getNumberOfJobsInServiceArea ();
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // QUEUE-ACCESS VACATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Returns whether or not the queue is on queue-access vacation.
    * 
    * @return Whether or not the queue is on queue-access vacation.
@@ -264,34 +277,6 @@ extends SimEntity<J, Q>
    */
   public boolean isQueueAccessVacation ();
   
-  /** Gets the (remaining) server-access credits.
-   *
-   * The value {@link Integer#MAX_VALUE} is treated as infinity.
-   * 
-   * @return The remaining server-access credits, non-negative, with {@link Integer#MAX_VALUE} treated as infinity.
-   * 
-   */
-  public int getServerAccessCredits ();
-  
-  /** Returns whether the next arriving job is guaranteed to suffer zero-waiting time before starting service or exiting.
-   * 
-   * <p>
-   * The return value is <i>independent</i> of queue-access and server-access vacations.
-   * 
-   * @return True if the next arriving job is guaranteed to suffer zero-waiting time before starting service or exiting,
-   *         in the absence of queue-access and server-access vacations.
-   * 
-   * @see SimQueueListener#notifyNewNoWaitArmed
-   * 
-   */
-  public boolean isNoWaitArmed ();
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // MAIN OPERATIONS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
   /** Starts or ends a queue-access vacation.
    * 
    * <p>
@@ -306,6 +291,12 @@ extends SimEntity<J, Q>
    */
   public void setQueueAccessVacation (double time, boolean start);
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ARRIVAL
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   /** Arrival of a job at the queue.
    *
    * <p>
@@ -326,6 +317,12 @@ extends SimEntity<J, Q>
    */
   public void arrive (double time, J job);
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // REVOCATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** Revocation (attempt) of a job at a queue.
    *
    * <p>
@@ -366,6 +363,29 @@ extends SimEntity<J, Q>
     revoke (time, job, true);
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVER-ACCESS CREDITS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Gets the (remaining) server-access credits.
+   *
+   * <p>
+   * The number of server-access credits is the remaining number of jobs allowed to start.
+   * They play an essential role in composite queues, notably {@link BlackCompressedTandem2SimQueue}.
+   * 
+   * <p>
+   * Upon reset, the initial value <i>must</i> be {@link Integer#MAX_VALUE},
+   * which is treated as infinity.
+   * 
+   * @return The remaining server-access credits, non-negative, with {@link Integer#MAX_VALUE} treated as infinity.
+   * 
+   * @see #setServerAccessCredits
+   * 
+   */
+  public int getServerAccessCredits ();
+  
   /** Sets the server-access credits.
    * 
    * @param time    The time at which to set the credits, i.c., the current time.
@@ -373,7 +393,49 @@ extends SimEntity<J, Q>
    * 
    * @throws IllegalArgumentException If credits is (strictly) negative.
    * 
+   * @see #getServerAccessCredits
+   * 
    */
   public void setServerAccessCredits (double time, int credits);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // StartArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+  /** Returns the {@code StartArmed} state of the queue.
+   * 
+   * <p>
+   * Formally: A queue is in {@code StartArmed} state,
+   * and this method returns {@code true},
+   * if and only if any (hypothetical) arriving job will start service immediately
+   * (i.e., enter the service area upon arrival immediately),
+   * <i>assuming</i> the following (i.e., ignoring the actual state settings):
+   * <ul>
+   * <li>the absence of a queue access vacation,
+   * <li>at least one server-access credit,
+   * <li>an empty waiting area.
+   * </ul>
+   * Note that the actual values of the state properties above is irrelevant.
+   * 
+   * <p>
+   * Informally, the {@code StartArmed} state of a queue reflects the fact that not all service capacity
+   * of the queue is used at the present time (for whatever reason);
+   * not used to such an extent that the queue <i>would</i> start an arriving job immediately
+   * if the three requirements mentioned above <i>would</i> hold.
+   * 
+   * <p>
+   * The {@code StartArmed} state of a queue is admittedly difficult to grasp and unlikely to find many uses in practice,
+   * but it is essential for specific types of so-called <i>composite</i> queues,
+   * i.e., queues that are composed of other queues.
+   * See, for instance, {@link BlackCompressedTandem2SimQueue}.
+   * 
+   * @return True if the queue is in {@code StartArmed} state.
+   * 
+   * @see SimQueueListener#notifyNewStartArmed
+   * 
+   */
+  public boolean isStartArmed ();
   
 }

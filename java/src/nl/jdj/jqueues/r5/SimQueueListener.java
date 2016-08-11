@@ -15,17 +15,6 @@ public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
 extends SimEntityListener<J, Q>
 {
  
-  /** Notification of a change of a {@link SimQueue} <code>noWaitArmed</code> state.
-   * 
-   * @param time        The (current) time.
-   * @param queue       The queue.
-   * @param noWaitArmed The new <code>noWaitArmed</code> state.
-   * 
-   * @see SimQueue#isNoWaitArmed
-   * 
-   */
-  public void notifyNewNoWaitArmed (double time, Q queue, boolean noWaitArmed);
-  
   /** Notification of the start of a queue-access vacation.
    * 
    * @param time  The (current) time.
@@ -63,5 +52,16 @@ extends SimEntityListener<J, Q>
    * 
    */
   public void notifyRegainedServerAccessCredits (double time, Q queue);
+  
+  /** Notification of a change of a {@link SimQueue} <code>startArmed</code> state.
+   * 
+   * @param time       The (current) time.
+   * @param queue      The queue.
+   * @param startArmed The new <code>startArmed</code> state.
+   * 
+   * @see SimQueue#isStartArmed
+   * 
+   */
+  public void notifyNewStartArmed (double time, Q queue, boolean startArmed);
   
 }
