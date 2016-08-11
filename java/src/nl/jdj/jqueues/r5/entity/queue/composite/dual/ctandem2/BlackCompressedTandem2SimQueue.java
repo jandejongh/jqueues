@@ -28,7 +28,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * implementation with another one in order to, e.g., change from FIFO behavior in the waiting area to LIFO behavior.
  * It attempts to achieve this by controlling the server-access credits on the first sub-queue, the <i>wait</i> queue,
  * allowing jobs on it to start (one at a time) <i>only</i> if the second queue, the <i>serve</i> queue,
- * has {@link SimQueue#isNoWaitArmed} set to {@code true}.
+ * has {@link SimQueue#isStartArmed} set to {@code true}.
  * Jobs that start on the wait queue are then auto-revoked ({@link AutoRevocationPolicy#UPON_START}),
  * and the composite queue (this) lets the job (well, in fact, its <i>delegate</i> job)
  * arrive on the serve queue.
@@ -36,11 +36,15 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * When the delegate job departs from the serve queue, its real job departs from the composite queue.
  * 
  * <p>
+ * Notice that a {@link BlackCompressedTandem2SimQueue} guarantees that the serve queue is not on queue-access vacation.
+ * always has infinite server-access credits, and always has an empty waiting area.
+ * This explains the three conditions mentioned in {@link SimQueue#isStartArmed}.
+ * 
+ * <p>
  * The interpretation in terms of replacing the wait-behavior and job-selection behavior of the serve queue
  * with that of the wait queue has several complications, and does not hold in general.
  * For instance, the wait queue may never start a job, jobs may depart from its waiting area,
- * and the {@code NoWaitArmed == true} condition on the serve queue does not guarantee "start upon arrival"
- * (it may be dropped, or it may depart without starting at all).
+ * and the serve queue may not support the service area at all.
  * 
  * <p>
  * Despite its complications, the {@link BlackCompressedTandem2SimQueue} can be very useful to
