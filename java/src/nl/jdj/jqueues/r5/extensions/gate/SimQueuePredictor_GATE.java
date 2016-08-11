@@ -29,14 +29,9 @@ extends AbstractSimQueuePredictor<GATE>
 {
 
   @Override
-  public boolean isNoWaitArmed (final GATE queue, final SimQueueState<SimJob, GATE> queueState)
+  public boolean isStartArmed (final GATE queue, final SimQueueState<SimJob, GATE> queueState)
   {
-    if (queue == null || queueState == null)
-      throw new IllegalArgumentException ();
-    final SimQueueWithGateStateHandler queueStateHandler =
-      (SimQueueWithGateStateHandler)
-        ((DefaultSimQueueState) queueState).getHandler ("SimQueueWithGateHandler");
-    return queueStateHandler.getGatePassageCredits () > 0;
+    return false;
   }
 
   /** Registers a new {@link SimQueueWithGateWorkloadScheduleHandler} at the object created by super method.
