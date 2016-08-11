@@ -96,8 +96,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
-    return this.waitQueuePredictor.isNoWaitArmed (getWaitQueue (queue), getWaitQueueState (queue, queueState))
-        && this.serveQueuePredictor.isNoWaitArmed (getServeQueue (queue), getServeQueueState (queue, queueState));
+    return this.serveQueuePredictor.isNoWaitArmed (getServeQueue (queue), getServeQueueState (queue, queueState));
   }
 
   private class SimQueueAndSimQueueState
