@@ -407,7 +407,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * <p>
    * Finally, if the start model is {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
    * it sets the server-access credits on the wait (first) sub-queue to unity
-   * if the serve (second) queue has {@link SimQueue#isNoWaitArmed} value {@code true},
+   * if the serve (second) queue has {@link SimQueue#isStartArmed} value {@code true},
    * and zero if not.
    * 
    * @see #removeJobFromQueueUponRevokation
@@ -416,7 +416,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * @see #getStartModel
    * @see StartModel#COMPRESSED_TANDEM_2_QUEUE
    * @see SimQueue#setServerAccessCredits
-   * @see SimQueue#isNoWaitArmed
+   * @see SimQueue#isStartArmed
    * 
    */
   @Override
@@ -435,46 +435,46 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     for (final DQ q : getQueues ())
       q.resetEntity ();
     if (getStartModel () == StartModel.COMPRESSED_TANDEM_2_QUEUE)
-      getQueue (0).setServerAccessCredits (getLastUpdateTime (), getQueue (1).isNoWaitArmed () ? 1 : 0);
+      getQueue (0).setServerAccessCredits (getLastUpdateTime (), getQueue (1).isStartArmed () ? 1 : 0);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // isNoWaitArmed
+  // isStartArmed
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Returns the {@code noWaitArmed} state of the composite queue, possibly depending on the state of its sub-queues.
+  /** Returns the {@code startArmed} state of the composite queue, possibly depending on the state of its sub-queues.
    * 
    * <p>
    * For {@link StartModel#LOCAL}, this method returns {@code true}.
    * 
    * <p>
-   * For {@link StartModel#ENCAPSULATOR_QUEUE}, this method returns the {@link SimQueue#isNoWaitArmed}
+   * For {@link StartModel#ENCAPSULATOR_QUEUE}, this method returns the {@link SimQueue#isStartArmed}
    * state of the encapsulated queue.
    * 
    * <p>
-   * For {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, this method returns the {@link SimQueue#isNoWaitArmed}
+   * For {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, this method returns the {@link SimQueue#isStartArmed}
    * state of the serve (i.e., second) queue.
    * 
-   * @return The {@code noWaitArmed} state of the composite queue, possibly depending on the state of its sub-queues.
+   * @return The {@code startArmed} state of the composite queue, possibly depending on the state of its sub-queues.
    * 
    * @see #getStartModel
    * @see StartModel
-   * @see SimQueue#isNoWaitArmed
+   * @see SimQueue#isStartArmed
    * 
    */
   @Override
-  public final boolean isNoWaitArmed ()
+  public final boolean isStartArmed ()
   {
     switch (getStartModel ())
     {
       case LOCAL:
         return true;
       case ENCAPSULATOR_QUEUE:
-        return getQueue (0).isNoWaitArmed ();
+        return getQueue (0).isStartArmed ();
       case COMPRESSED_TANDEM_2_QUEUE:
-        return getQueue (1).isNoWaitArmed ();
+        return getQueue (1).isStartArmed ();
       default:
         throw new RuntimeException ();
     }
@@ -487,7 +487,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /** Sets the server-access credits on the wait queue, based upon our server-access credits
-   *  and the {@link SimQueue#isNoWaitArmed} state on the server queue.
+   *  and the {@link SimQueue#isStartArmed} state on the server queue.
    * 
    * <p>
    * This method can only be used with {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
@@ -498,7 +498,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * at all times (well, if we have a consistent queue state),
    * the server-access credits on the wait queue should be unity if and only if
    * the local (this) queue {@link #hasServerAcccessCredits}
-   * AND the serve queue has {@link SimQueue#isNoWaitArmed}.
+   * AND the serve queue has {@link SimQueue#isStartArmed}.
    * In all other cases, the server-access credits on the wait queue should be zero.
    * 
    * <p>
@@ -524,7 +524,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * @see #hasServerAcccessCredits
    * @see SimQueue#getServerAccessCredits
    * @see SimQueue#setServerAccessCredits
-   * @see SimQueue#isNoWaitArmed
+   * @see SimQueue#isStartArmed
    * 
    */
   protected final void setServerAccessCreditsOnWaitQueue ()
@@ -536,7 +536,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       final int oldWaitQueueSac = waitQueue.getServerAccessCredits ();
       if (oldWaitQueueSac < 0 || oldWaitQueueSac > 1)
         throw new IllegalStateException ();
-      final int newWaitQueueSac = (hasServerAcccessCredits () && serveQueue.isNoWaitArmed ()) ? 1 : 0;
+      final int newWaitQueueSac = (hasServerAcccessCredits () && serveQueue.isStartArmed ()) ? 1 : 0;
       if (newWaitQueueSac != oldWaitQueueSac)
         waitQueue.setServerAccessCredits (getLastUpdateTime (), newWaitQueueSac);
     }
@@ -1018,8 +1018,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * 
    * <p>
    * After all notification have been processed, and the notification list is empty,
-   * we invoke {@link #triggerPotentialNewNoWaitArmed} on the composite queue,
-   * in order to make sure we are not missing an autonomous change in {@link SimQueue#isNoWaitArmed}
+   * we invoke {@link #triggerPotentialNewStartArmed} on the composite queue,
+   * in order to make sure we are not missing an autonomous change in {@link SimQueue#isStartArmed}
    * on a sub-queue.
    * Since we do not expect any back-fire notifications from sub-queues from that method,
    * we check again the notification list, and throw an exception if it is non-empty.
@@ -1047,7 +1047,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * @see #selectNextQueue
    * @see #depart
    * @see #setServerAccessCreditsOnWaitQueue
-   * @see #triggerPotentialNewNoWaitArmed
+   * @see #triggerPotentialNewStartArmed
    * @see #clearAndUnlockPendingNotificationsIfLocked
    * @see #fireAndLockPendingNotifications
    * 
@@ -1124,7 +1124,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       if (getStartModel () == StartModel.COMPRESSED_TANDEM_2_QUEUE && getIndex (subQueue) == 1)
         setServerAccessCreditsOnWaitQueue ();
     }
-    triggerPotentialNewNoWaitArmed (getLastUpdateTime ());
+    triggerPotentialNewStartArmed (getLastUpdateTime ());
     if (! notifications.isEmpty ())
       throw new IllegalStateException ();
     if (isTopLevel)
@@ -1317,7 +1317,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * 
    */
   @Override
-  public final void notifyNewNoWaitArmed (final double time, final DQ queue, final boolean noWaitArmed)
+  public final void notifyNewStartArmed (final double time, final DQ queue, final boolean startArmed)
   {
   }
 
