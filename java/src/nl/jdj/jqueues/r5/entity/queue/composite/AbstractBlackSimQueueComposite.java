@@ -1121,7 +1121,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
             nextQueue.arrive (notificationTime, job);
         }
       }
-      if (getStartModel () == StartModel.COMPRESSED_TANDEM_2_QUEUE)
+      if (getStartModel () == StartModel.COMPRESSED_TANDEM_2_QUEUE && getIndex (subQueue) == 1)
         setServerAccessCreditsOnWaitQueue ();
     }
     triggerPotentialNewNoWaitArmed (getLastUpdateTime ());
