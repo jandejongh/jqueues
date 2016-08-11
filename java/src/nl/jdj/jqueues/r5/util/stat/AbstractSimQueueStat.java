@@ -410,7 +410,7 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void notifyNewNoWaitArmed (final double time, final Q queue, final boolean noWaitArmed)
+  public void notifyNewStartArmed (final double time, final Q queue, final boolean startArmed)
   {
   }
 
