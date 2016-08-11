@@ -23,11 +23,11 @@ extends AbstractSimQueuePredictor<DELAY>
 {
 
   @Override
-  public boolean isNoWaitArmed (final DELAY queue, final SimQueueState<SimJob, DELAY> queueState)
+  public boolean isStartArmed (final DELAY queue, final SimQueueState<SimJob, DELAY> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
-    return queue.getWaitTime () == 0.0;
+    return false;
   }
 
   @Override
