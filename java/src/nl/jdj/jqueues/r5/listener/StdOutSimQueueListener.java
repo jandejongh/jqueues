@@ -16,16 +16,6 @@ implements SimQueueListener<J, Q>
 {
 
   @Override
-  public void notifyNewNoWaitArmed (final double time, final Q queue, final boolean noWaitArmed)
-  {
-    if (! isOnlyUpdatesAndStateChanges ())
-    {
-      System.out.print (getHeaderString () + " ");
-      System.out.println ("t=" + time + ", queue=" + queue + ": NO_WAIT_ARMED -> " + noWaitArmed + ".");
-    }
-  }
-  
-  @Override
   public void notifyStartQueueAccessVacation (final double time, final Q queue)
   {
     if (! isOnlyUpdatesAndStateChanges ())
@@ -62,6 +52,16 @@ implements SimQueueListener<J, Q>
     {
       System.out.print (getHeaderString () + " ");
       System.out.println ("t=" + time + ", queue=" + queue + ": REGAINED SERVER-ACCESS CREDITS.");
+    }
+  }
+  
+  @Override
+  public void notifyNewStartArmed (final double time, final Q queue, final boolean startArmed)
+  {
+    if (! isOnlyUpdatesAndStateChanges ())
+    {
+      System.out.print (getHeaderString () + " ");
+      System.out.println ("t=" + time + ", queue=" + queue + ": START_ARMED -> " + startArmed + ".");
     }
   }
   

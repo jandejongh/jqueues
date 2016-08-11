@@ -21,14 +21,6 @@ implements SimQueueListener<J, Q>
    * 
    */
   @Override
-  public void notifyNewNoWaitArmed (final double time, final Q queue, final boolean noWaitArmed)
-  {
-  }
-  
-  /** Does nothing.
-   * 
-   */
-  @Override
   public void notifyStartQueueAccessVacation (final double time, final Q queue)
   {
   }
@@ -54,6 +46,14 @@ implements SimQueueListener<J, Q>
    */
   @Override
   public void notifyRegainedServerAccessCredits (final double time, final Q queue)
+  {
+  }
+  
+  /** Does nothing.
+   * 
+   */
+  @Override
+  public void notifyNewStartArmed (final double time, final Q queue, final boolean startArmed)
   {
   }
   

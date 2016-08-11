@@ -8,37 +8,37 @@ import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.SimQueueListener;
 
-/** A {@link SimQueueListener} that logs {@code NoWaitArmed} in between resets.
+/** A {@link SimQueueListener} that logs {@code StartArmed} in between resets.
  * 
  * @see SimQueue#resetEntity
  * @see SimQueueListener#notifyResetEntity
- * @see SimQueueListener#notifyNewNoWaitArmed
+ * @see SimQueueListener#notifyNewStartArmed
  *
  */
-public class SimQueueNoWaitArmedLogger
+public class SimQueueStartArmedLogger
 extends DefaultSimQueueListener
 {
   
-  private final List<Map<Double, Boolean>> nwaLog = new ArrayList<> ();
+  private final List<Map<Double, Boolean>> staLog = new ArrayList<> ();
   
-  /** Returns the {@code NoWaitArmed} log (unmodifiable).
+  /** Returns the {@code StartArmed} log (unmodifiable).
    * 
    * <p>
    * The log is constructed as a list of non-null and unique single-entry maps,
-   * corresponding to a reported state change in {@code NoWaitArmed}.
-   * The entry holds the time as its key and the new {@code NoWaitArmed} as its value.
+   * corresponding to a reported state change in {@code StartArmed}.
+   * The entry holds the time as its key and the new {@code StartArmed} as its value.
    * 
    * <p>
-   * The {@code NoWaitArmed} log is automatically cleared upon a (reported) queue reset.
+   * The {@code StartArmed} log is automatically cleared upon a (reported) queue reset.
    * 
-   * @return The {@code NoWaitArmed} log (unmodifiable).
+   * @return The {@code StartArmed} log (unmodifiable).
    * 
    * @see SimQueueListener#notifyResetEntity
    * 
    */
-  public final List<Map<Double, Boolean>> getNoWaitArmedLog ()
+  public final List<Map<Double, Boolean>> getStartArmedLog ()
   {
-    return Collections.unmodifiableList (this.nwaLog);
+    return Collections.unmodifiableList (this.staLog);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,25 +50,25 @@ extends DefaultSimQueueListener
   @Override
   public void notifyResetEntity (final SimEntity entity)
   {
-    this.nwaLog.clear ();
+    this.staLog.clear ();
   }
 
   @Override
-  public void notifyNewNoWaitArmed (final double time, final SimQueue queue, final boolean noWaitArmed)
+  public void notifyNewStartArmed (final double time, final SimQueue queue, final boolean startArmed)
   {
-    this.nwaLog.add (Collections.singletonMap (time, noWaitArmed));
+    this.staLog.add (Collections.singletonMap (time, startArmed));
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // MATCH NoWaitArmed LOGS
+  // MATCH StartArmed LOGS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Compares two {@code NoWaitArmed} logs (predicted and actual), and reports inequalities to {@link System#err}.
+  /** Compares two {@code StartArmed} logs (predicted and actual), and reports inequalities to {@link System#err}.
    * 
-   * @param predictedNwaLogs The predicted {@code NoWaitArmed} logs.
-   * @param actualNwaLogs    The actual {@code NoWaitArmed} logs.
+   * @param predictedStaLogs The predicted {@code StartArmed} logs.
+   * @param actualStaLogs    The actual {@code StartArmed} logs.
    * @param accuracy         The allowed deviation in key values (times-of-change).
    * @param testString       An optional String identifying the test in place.
    * 
@@ -77,30 +77,30 @@ extends DefaultSimQueueListener
    * @throws IllegalArgumentException If an argument is {@code null} or improperly structured.
    * 
    */
-  public static boolean matchNoWaitArmedLogs
-  (final List<Map<Double, Boolean>> predictedNwaLogs,
-   final List<Map<Double, Boolean>> actualNwaLogs,
+  public static boolean matchStartArmedLogs
+  (final List<Map<Double, Boolean>> predictedStaLogs,
+   final List<Map<Double, Boolean>> actualStaLogs,
    final double accuracy,
    final String testString)
   {
-    if (predictedNwaLogs == null || actualNwaLogs == null)
+    if (predictedStaLogs == null || actualStaLogs == null)
       throw new IllegalArgumentException ();
     boolean retVal = true;
-    if (predictedNwaLogs.size () != actualNwaLogs.size ())
+    if (predictedStaLogs.size () != actualStaLogs.size ())
       retVal = false;
     else
-      for (int i = 0; i < predictedNwaLogs.size (); i++)
+      for (int i = 0; i < predictedStaLogs.size (); i++)
       {
-        if (predictedNwaLogs.get (i).size () != 1 || actualNwaLogs.get (i).size () != 1)
+        if (predictedStaLogs.get (i).size () != 1 || actualStaLogs.get (i).size () != 1)
           throw new IllegalArgumentException ();
-        if (Math.abs (predictedNwaLogs.get (i).keySet ().iterator ().next ()
-                    - actualNwaLogs.get (i).keySet ().iterator ().next ())
+        if (Math.abs (predictedStaLogs.get (i).keySet ().iterator ().next ()
+                    - actualStaLogs.get (i).keySet ().iterator ().next ())
                     > accuracy)
         {
           retVal = false;
           break;
         }
-        if (! predictedNwaLogs.get (i).values ().iterator ().next ().equals (actualNwaLogs.get (i).values ().iterator ().next ()))
+        if (! predictedStaLogs.get (i).values ().iterator ().next ().equals (actualStaLogs.get (i).values ().iterator ().next ()))
         {
           retVal = false;
           break;
@@ -108,14 +108,14 @@ extends DefaultSimQueueListener
       }
     if (! retVal)
     {
-      System.err.println ("NoWaitArmed Logs mismatch!");
+      System.err.println ("StartArmed Logs mismatch!");
       if (testString != null)
       {
         System.err.println ("  Test:");
         System.err.println (testString);
       }
-      System.err.println ("  Predicted: " + predictedNwaLogs + ".");
-      System.err.println ("  Actual   : " + actualNwaLogs + ".");
+      System.err.println ("  Predicted: " + predictedStaLogs + ".");
+      System.err.println ("  Actual   : " + actualStaLogs + ".");
     }
     return retVal;
   }
