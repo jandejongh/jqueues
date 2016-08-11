@@ -49,15 +49,15 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   protected AbstractSimQueue (final SimEventList eventList)
   {
     super (eventList);
-    registerPreEventHook (this::setInitNoWaitArmed);
+    registerPreEventHook (this::setInitStartArmed);
     registerPreNotificationHook (this::serverAccessCreditsPreNotificationHook);
-    registerPreNotificationHook (this::noWaitArmedPreNotificationHook);
+    registerPreNotificationHook (this::startArmedPreNotificationHook);
     registerNotificationType (SimQueueSimpleEventType.QAV_START, this::fireStartQueueAccessVacation);
     registerNotificationType (SimQueueSimpleEventType.QAV_END, this::fireStopQueueAccessVacation);
     registerNotificationType (SimQueueSimpleEventType.OUT_OF_SAC, this::fireOutOfServerAccessCredits);
     registerNotificationType (SimQueueSimpleEventType.REGAINED_SAC, this::fireRegainedServerAccessCredits);
-    registerNotificationType (SimQueueSimpleEventType.NWA_FALSE, this::fireLostNoWaitArmed);
-    registerNotificationType (SimQueueSimpleEventType.NWA_TRUE, this::fireRegainedNoWaitArmed);
+    registerNotificationType (SimQueueSimpleEventType.STA_FALSE, this::fireLostStartArmed);
+    registerNotificationType (SimQueueSimpleEventType.STA_TRUE, this::fireRegainedStartArmed);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -167,8 +167,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     return this.jobQueue.size ();
   }
 
-  /** Jobs currently being executed by the server(s).
+  /** Jobs currently in the service area.
    *
+   * <p>
    * Any job in this set must also be in {@link #jobQueue}.
    * 
    */
@@ -277,7 +278,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // RESET ENTITY
+  // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
@@ -297,7 +298,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     for (SimEvent e : this.eventsScheduled)
       getEventList ().remove (e);
     this.eventsScheduled.clear ();
-    this.previousNoWaitArmedSet = false;
+    this.previousStartArmedSet = false;
     this.isQueueAccessVacation = false;
     this.serverAccessCredits = Integer.MAX_VALUE;
     this.previousSacAvailability = true;
@@ -305,15 +306,15 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // NoWaitArmed (CACHING)
+  // StartArmed (CACHING)
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private boolean previousNoWaitArmedSet = false;
+  private boolean previousStartArmedSet = false;
   
-  private boolean previousNoWaitArmed = false;
+  private boolean previousStartArmed = false;
   
-  /** Sets the initial state (after construction or after a reset) of {@code NoWaitArmed}.
+  /** Sets the initial state (after construction or after a reset) of {@code StartArmed}.
    * 
    * <p>
    * This method is called as a pre-event hook, and not meant to be called from user code (in sub-classes).
@@ -321,105 +322,105 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param newTime The new time.
    * 
    */
-  private void setInitNoWaitArmed (final double newTime)
+  private void setInitStartArmed (final double newTime)
   {
-    if (! this.previousNoWaitArmedSet)
+    if (! this.previousStartArmedSet)
     {
-      this.previousNoWaitArmedSet = true;
-      this.previousNoWaitArmed = isNoWaitArmed ();
+      this.previousStartArmedSet = true;
+      this.previousStartArmed = isStartArmed ();
     }
   }
 
-  /** The registered pre-notification hook for {@code noWaitArmed} state-change notifications.
+  /** The registered pre-notification hook for {@code startArmed} state-change notifications.
    * 
    * @param pendingNotifications The pending notifications.
    * 
    */
-  protected final void noWaitArmedPreNotificationHook (final List<Map<SimEntitySimpleEventType.Member, J>> pendingNotifications)
+  protected final void startArmedPreNotificationHook (final List<Map<SimEntitySimpleEventType.Member, J>> pendingNotifications)
   {
     if (pendingNotifications == null)
       throw new IllegalArgumentException ();
-    if (! this.previousNoWaitArmedSet)
-      // Our initial NoWaitArmed has not been set yet, even though we registered a pre-event hook.
+    if (! this.previousStartArmedSet)
+      // Our initial StartArmed has not been set yet, even though we registered a pre-event hook.
       // We may safely assume that we are still in our reset procedures,
       // and that our sub-class has presented us with a notification while resetting.
-      // Our only option now is the set the initial NoWaitArmed here...
+      // Our only option now is the set the initial StartArmed here...
       // Note, by the way, that the (time) argument is ignored.
-      setInitNoWaitArmed (getLastUpdateTime ());
-    final boolean noWaitArmed = isNoWaitArmed ();
+      setInitStartArmed (getLastUpdateTime ());
+    final boolean startArmed = isStartArmed ();
     final Iterator<Map<SimEntitySimpleEventType.Member, J>> i_pendingNotifications = pendingNotifications.iterator ();
     boolean hasNwaNotification = false;
     while (i_pendingNotifications.hasNext ())
     {
       final SimEntitySimpleEventType.Member notificationType = i_pendingNotifications.next ().keySet ().iterator ().next ();
-      if (notificationType == SimQueueSimpleEventType.NWA_FALSE || notificationType == SimQueueSimpleEventType.NWA_TRUE)
+      if (notificationType == SimQueueSimpleEventType.STA_FALSE || notificationType == SimQueueSimpleEventType.STA_TRUE)
       {
-        if ((notificationType == SimQueueSimpleEventType.NWA_TRUE) != noWaitArmed)
+        if ((notificationType == SimQueueSimpleEventType.STA_TRUE) != startArmed)
           throw new IllegalArgumentException ();
         else
           i_pendingNotifications.remove ();
         hasNwaNotification = true;
       }
     }
-    if (hasNwaNotification || (noWaitArmed != this.previousNoWaitArmed))
+    if (hasNwaNotification || (startArmed != this.previousStartArmed))
     {
-      if (noWaitArmed)
-        pendingNotifications.add (Collections.singletonMap (SimQueueSimpleEventType.NWA_TRUE, null));
+      if (startArmed)
+        pendingNotifications.add (Collections.singletonMap (SimQueueSimpleEventType.STA_TRUE, null));
       else
-        pendingNotifications.add (Collections.singletonMap (SimQueueSimpleEventType.NWA_FALSE, null));
+        pendingNotifications.add (Collections.singletonMap (SimQueueSimpleEventType.STA_FALSE, null));
     }
-    this.previousNoWaitArmed = noWaitArmed;
+    this.previousStartArmed = startArmed;
   }
   
-  /** Triggers a potential, autonomous (top-level) change in the {@link #isNoWaitArmed} status (for sub-class use).
+  /** Triggers a potential, autonomous (top-level) change in the {@link #isStartArmed} status (for sub-class use).
    * 
    * <p>
-   * In most cases, a change in the {@link #isNoWaitArmed} state will be the result of operations in this {@link SimQueue},
+   * In most cases, a change in the {@link #isStartArmed} state will be the result of operations in this {@link SimQueue},
    * and will be noted and reported automatically
-   * through the use of the pre-notification hook {@link #noWaitArmedPreNotificationHook}.
+   * through the use of the pre-notification hook {@link #startArmedPreNotificationHook}.
    * 
    * <p>
-   * It is, however, perfectly legal that the {@link #isNoWaitArmed} state of a {@link SimQueue}
+   * It is, however, perfectly legal that the {@link #isStartArmed} state of a {@link SimQueue}
    * changes independently from external or other monitored internal events.
-   * Concrete subclasses must therefore invoke this method upon suspected autonomous changes in the {@link #isNoWaitArmed} state,
+   * Concrete subclasses must therefore invoke this method upon suspected autonomous changes in the {@link #isStartArmed} state,
    * in order to make sure that they are properly notified to listeners.
    * 
    * <p>
-   * The implementation checks if the current {@link #isNoWaitArmed} state is different from the cached value
-   * as maintained by {@link #noWaitArmedPreNotificationHook}.
+   * The implementation checks if the current {@link #isStartArmed} state is different from the cached value
+   * as maintained by {@link #startArmedPreNotificationHook}.
    * If so, and if it is a top-level event, as assessed with {@link #clearAndUnlockPendingNotificationsIfLocked},
    * it invokes {@link #update}, adds and fires a proper notification, i.c.,
-   * {@link SimQueueSimpleEventType#NWA_TRUE} or
-   * {@link SimQueueSimpleEventType#NWA_FALSE},
+   * {@link SimQueueSimpleEventType#STA_TRUE} or
+   * {@link SimQueueSimpleEventType#STA_FALSE},
    * and fires a notification through {@link #fireAndLockPendingNotifications}.
    * 
    * <p>
    * In all other cases, this method does nothing,
-   * relying on the pre-notification hook {@link #noWaitArmedPreNotificationHook}.
+   * relying on the pre-notification hook {@link #startArmedPreNotificationHook}.
    * 
    * @param time The current time.
    * 
    * @see #clearAndUnlockPendingNotificationsIfLocked
-   * @see #isNoWaitArmed
+   * @see #isStartArmed
    * @see #update
    * @see #addPendingNotification
-   * @see SimQueueSimpleEventType#NWA_TRUE
-   * @see SimQueueSimpleEventType#NWA_FALSE
+   * @see SimQueueSimpleEventType#STA_TRUE
+   * @see SimQueueSimpleEventType#STA_FALSE
    * @see #fireAndLockPendingNotifications
    * 
    */
-  protected final void triggerPotentialNewNoWaitArmed (final double time)
+  protected final void triggerPotentialNewStartArmed (final double time)
   {
-    final boolean noWaitArmed = isNoWaitArmed ();
-    if ((! this.previousNoWaitArmedSet) || noWaitArmed != this.previousNoWaitArmed)
+    final boolean startArmed = isStartArmed ();
+    if ((! this.previousStartArmedSet) || startArmed != this.previousStartArmed)
     {
       final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
       if (isTopLevel)
       {
         update (time);
-        this.previousNoWaitArmedSet = true;
-        this.previousNoWaitArmed = noWaitArmed;
-        addPendingNotification (noWaitArmed ? SimQueueSimpleEventType.NWA_TRUE : SimQueueSimpleEventType.NWA_FALSE, null);
+        this.previousStartArmedSet = true;
+        this.previousStartArmed = startArmed;
+        addPendingNotification (startArmed ? SimQueueSimpleEventType.STA_TRUE : SimQueueSimpleEventType.STA_FALSE, null);
         fireAndLockPendingNotifications ();
       }
     }
@@ -1611,26 +1612,26 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
         ((SimQueueListener) l).notifyRegainedServerAccessCredits (time, this);
   }
 
-  /** Notifies all queue listeners of a change in the <code>noWaitArmed</code> property, turning {@code false}.
+  /** Notifies all queue listeners of a change in the <code>startArmed</code> property, turning {@code false}.
    * 
    */
-  private void fireLostNoWaitArmed (final SimJob job)
+  private void fireLostStartArmed (final SimJob job)
   {
     final double time = getLastUpdateTime ();
     for (SimEntityListener<J, Q> l : getSimEntityListeners ())
       if (l instanceof SimQueueListener)
-        ((SimQueueListener) l).notifyNewNoWaitArmed (time, this, false);
+        ((SimQueueListener) l).notifyNewStartArmed (time, this, false);
   }
 
-  /** Notifies all queue listeners of a change in the <code>noWaitArmed</code> property, turning {@code true}.
+  /** Notifies all queue listeners of a change in the <code>startArmed</code> property, turning {@code true}.
    * 
    */
-  private void fireRegainedNoWaitArmed (final SimJob job)
+  private void fireRegainedStartArmed (final SimJob job)
   {
     final double time = getLastUpdateTime ();
     for (SimEntityListener<J, Q> l : getSimEntityListeners ())
       if (l instanceof SimQueueListener)
-        ((SimQueueListener) l).notifyNewNoWaitArmed (time, this, true);
+        ((SimQueueListener) l).notifyNewStartArmed (time, this, true);
   }
 
 }
