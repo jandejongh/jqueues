@@ -76,7 +76,8 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
    * @param numberOfServers The number of servers (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
    *
    */
-  protected AbstractNonPreemptiveWorkConservingSimQueue (final SimEventList eventList, final int bufferSize, final int numberOfServers)
+  protected AbstractNonPreemptiveWorkConservingSimQueue
+  (final SimEventList eventList, final int bufferSize, final int numberOfServers)
   {
     super (eventList);
     if (bufferSize < 0 || numberOfServers < 0)
