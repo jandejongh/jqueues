@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
 import nl.jdj.jqueues.r5.entity.queue.serverless.GATE;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
+import nl.jdj.jqueues.r5.entity.queue.serverless.WUR;
 import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
@@ -52,19 +54,15 @@ public final class ServerlessExample
     System.out.println ("-> Creating event list...");
     final SimEventList<DefaultSimEvent> el = new DefaultSimEventList<> (DefaultSimEvent.class);
     System.out.println ("-> Creating SINK queue...");
-    final SimQueue noneQueue = new SINK (el);
+    final SimQueue sinkQueue = new SINK (el);
     System.out.println ("-> Submitting jobs to SINK ('Hotel California') queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, (SimEventAction) (final SimEvent event) ->
       {
-        @Override
-        public void action (final SimEvent event)
-        {
-          noneQueue.arrive (arrTime, j);
-        }
+        sinkQueue.arrive (arrTime, j);
       }));
     }
     System.out.println ("-> Executing event list...");
@@ -78,13 +76,9 @@ public final class ServerlessExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, (SimEventAction) (final SimEvent event) ->
       {
-        @Override
-        public void action (final SimEvent event)
-        {
-          delayQueue.arrive (arrTime, j);
-        }
+        delayQueue.arrive (arrTime, j);
       }));
     }
     System.out.println ("-> Executing event list...");
@@ -98,13 +92,9 @@ public final class ServerlessExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, (SimEventAction) (final SimEvent event) ->
       {
-        @Override
-        public void action (final SimEvent event)
-        {
-          delayQueue2.arrive (arrTime, j);
-        }
+        delayQueue2.arrive (arrTime, j);
       }));
     }
     System.out.println ("-> Executing event list...");
@@ -118,13 +108,9 @@ public final class ServerlessExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, (SimEventAction) (final SimEvent event) ->
       {
-        @Override
-        public void action (final SimEvent event)
-        {
-          zeroQueue.arrive (arrTime, j);
-        }
+        zeroQueue.arrive (arrTime, j);
       }));
     }
     System.out.println ("-> Executing event list...");
@@ -138,13 +124,9 @@ public final class ServerlessExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, (SimEventAction) (final SimEvent event) ->
       {
-        @Override
-        public void action (final SimEvent event)
-        {
-          dropQueue.arrive (arrTime, j);
-        }
+        dropQueue.arrive (arrTime, j);
       }));
     }
     System.out.println ("-> Executing event list...");
@@ -158,13 +140,9 @@ public final class ServerlessExample
     {
       final SimJob j = jobList.get (i);
       final double arrTime = i + 1;
-      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, new SimEventAction ()
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, (SimEventAction) (final SimEvent event) ->
       {
-        @Override
-        public void action (final SimEvent event)
-        {
-          gateQueue.arrive (arrTime, j);
-        }
+        gateQueue.arrive (arrTime, j);
       }));
     }
     // Close gate between t = 2.5 and t = 3.5.
@@ -186,6 +164,23 @@ public final class ServerlessExample
     {
       ((GATE) gateQueue).setGatePassageCredits (event.getTime (), Integer.MAX_VALUE);
     });
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Creating WUR queue...");
+    final SimQueue wurQueue = new WUR (el);
+    ((AbstractSimQueue) wurQueue).registerStdOutSimQueueListener ();
+    System.out.println ("-> Submitting jobs to WUR queue...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = i + 1;
+      el.add (new DefaultSimEvent ("ARRIVAL_" + i + 1, i + 1, null, (SimEventAction) (final SimEvent event) ->
+      {
+        wurQueue.arrive (arrTime, j);
+      }));
+    }
     System.out.println ("-> Executing event list...");
     el.run ();
     System.out.println ("-> Resetting event list...");
