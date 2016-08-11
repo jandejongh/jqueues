@@ -145,6 +145,26 @@ extends AbstractSimQueuePredictor_Composite<Q>
     final SimQueueCompositeStateHandler queueStateHandler =
       (SimQueueCompositeStateHandler)
         ((DefaultSimQueueState) queueState).getHandler ("SimQueueCompositeHandler");
+    //
+    // Set the initial SAC on the waitQueue (only if we have no jobs, which is a prerequisite for a RESET), and only if needed.
+    //
+    if (queueState.getJobs ().isEmpty ())
+    {
+      final boolean needSacOnWaitQueue =
+        (this.serveQueuePredictor.isStartArmed (getServeQueue (queue), getServeQueueState (queue, queueState)) 
+         && queueState.getServerAccessCredits () > 0);
+      final boolean sacOnWaitQueue =
+        this.waitQueuePredictor.hasServerAccessCredits (getServeQueue (queue), getWaitQueueState (queue, queueState));
+      if (needSacOnWaitQueue != sacOnWaitQueue)
+      {
+        // System.err.println ("SimQueuePredictor_ComprTandem2; t=" + time
+        //  + ": Setting (initial) sac on " + getWaitQueue (queue) + " to " + (needSacOnWaitQueue ? 1 : 0) + ".");
+        final SubQueueSimpleEvent waitQueueSacEvent =
+          new SubQueueSimpleEvent
+            (getWaitQueue (queue), SimQueueSimpleEventType.SERVER_ACCESS_CREDITS, null, null, needSacOnWaitQueue ? 1 : 0);
+        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (waitQueueSacEvent), visitLogsSet);
+      }
+    }
     final SimEntitySimpleEventType.Member eventType = (workloadEventTypes.isEmpty ()
       ? null
       : workloadEventTypes.iterator ().next ());

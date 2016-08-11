@@ -349,7 +349,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       setInitStartArmed (getLastUpdateTime ());
     final boolean startArmed = isStartArmed ();
     final Iterator<Map<SimEntitySimpleEventType.Member, J>> i_pendingNotifications = pendingNotifications.iterator ();
-    boolean hasNwaNotification = false;
+    boolean hasStaNotification = false;
     while (i_pendingNotifications.hasNext ())
     {
       final SimEntitySimpleEventType.Member notificationType = i_pendingNotifications.next ().keySet ().iterator ().next ();
@@ -359,10 +359,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
           throw new IllegalArgumentException ();
         else
           i_pendingNotifications.remove ();
-        hasNwaNotification = true;
+        hasStaNotification = true;
       }
     }
-    if (hasNwaNotification || (startArmed != this.previousStartArmed))
+    if (hasStaNotification || (startArmed != this.previousStartArmed))
     {
       if (startArmed)
         pendingNotifications.add (Collections.singletonMap (SimQueueSimpleEventType.STA_TRUE, null));

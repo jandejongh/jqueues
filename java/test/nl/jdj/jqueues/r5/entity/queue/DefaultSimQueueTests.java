@@ -79,21 +79,21 @@ public class DefaultSimQueueTests
         for (final SimQueue subQueue : (Set<SimQueue>) ((SimQueueComposite) queue).getQueues ())
           subQueue.registerSimEntityListener (listener);
     }
-    // Create the loggers (qav/sac/nwa) for the queue, and register them as listeners.
+    // Create the loggers (qav/sac/sta) for the queue, and register them as listeners.
     final SimQueueAccessVacationLogger qavLogger = new SimQueueAccessVacationLogger ();
     queue.registerSimEntityListener (qavLogger);
     final SimQueueServerAccessCreditsAvailabilityLogger sacLogger = new SimQueueServerAccessCreditsAvailabilityLogger ();
     queue.registerSimEntityListener (sacLogger);
     final SimQueueStartArmedLogger staLogger = new SimQueueStartArmedLogger ();
     queue.registerSimEntityListener (staLogger);
-    // Create the loggers (qav/sac/nwa) for the predictorQueue (even if non-present).
+    // Create the loggers (qav/sac/sta) for the predictorQueue (even if non-present).
     final SimQueueAccessVacationLogger predictorQueueQavLogger
       = new SimQueueAccessVacationLogger ();
     final SimQueueServerAccessCreditsAvailabilityLogger predictorQueueSacLogger =
       new SimQueueServerAccessCreditsAvailabilityLogger ();
     final SimQueueStartArmedLogger predictorQueueStaLogger
       = new SimQueueStartArmedLogger ();
-    // Register the loggers (qav/sac/nwa) for the predictorQueue if non-present.
+    // Register the loggers (qav/sac/sta) for the predictorQueue if non-present.
     if (predictorQueue != null)
     {
       predictorQueue.registerSimEntityListener (predictorQueueQavLogger);
@@ -193,7 +193,7 @@ public class DefaultSimQueueTests
               final JobQueueVisitLog visitLog_j = visitLogs_j.values ().iterator ().next ().values ().iterator ().next ();
               predictedJobQueueVisitLogs.put (j, visitLog_j.copyForQueue (queue));
             }
-            // Obtain the qav/sac/nwa logs (no need to copy here anymore).
+            // Obtain the qav/sac/sta logs (no need to copy here anymore).
             predictedQavLogs = predictorQueueQavLogger.getQueueAccessVacationLog ();
             predictedSacLogs = predictorQueueSacLogger.getServerAccessCreditsAvailabilityLog ();
             predictedStaLogs = predictorQueueStaLogger.getStartArmedLog ();
@@ -211,7 +211,7 @@ public class DefaultSimQueueTests
             + ((predictor != null) ?      ("    Predictor      : " + predictor) : "")
             + ((predictorQueue != null) ? ("    Predictor Queue: " + predictorQueue) : "")
             ;
-          // Confront the predicted and actual logs for job-visits, qav, sac and nwa.
+          // Confront the predicted and actual logs for job-visits, qav, sac and sta.
           assert SimQueuePredictor.matchVisitLogs_SQ_SV
             (queue, predictedJobQueueVisitLogs, actualJobQueueVisitLogs, accuracy, System.err, testString);
           assert SimQueueAccessVacationLogger.matchQueueAccessVacationLogs
