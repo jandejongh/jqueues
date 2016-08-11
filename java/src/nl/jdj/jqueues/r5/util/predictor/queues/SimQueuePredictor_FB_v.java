@@ -48,7 +48,7 @@ implements SimQueuePredictor<BlackNumVisitsFeedbackSimQueue>
   }
 
   @Override
-  public boolean isNoWaitArmed
+  public boolean isStartArmed
   (final BlackNumVisitsFeedbackSimQueue queue, final SimQueueState<SimJob, BlackNumVisitsFeedbackSimQueue> queueState)
   {
     if (queue == null || queueState == null)

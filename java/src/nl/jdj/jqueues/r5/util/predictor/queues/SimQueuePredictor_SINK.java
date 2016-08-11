@@ -23,7 +23,7 @@ extends AbstractSimQueuePredictor<SINK>
 {
 
   @Override
-  public boolean isNoWaitArmed (final SINK queue, final SimQueueState<SimJob, SINK> queueState)
+  public boolean isStartArmed (final SINK queue, final SimQueueState<SimJob, SINK> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();

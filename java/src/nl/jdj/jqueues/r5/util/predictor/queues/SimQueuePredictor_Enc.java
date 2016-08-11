@@ -76,7 +76,7 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
   }
 
   @Override
-  public boolean isNoWaitArmed
+  public boolean isStartArmed
   (final BlackEncapsulatorSimQueue queue,
    final SimQueueState<SimJob, BlackEncapsulatorSimQueue> queueState)
   {
@@ -87,7 +87,7 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
         ((DefaultSimQueueState) queueState).getHandler ("SimQueueCompositeHandler");
     if (queueState == null)
       throw new IllegalArgumentException ();
-    return this.encQueuePredictor.isNoWaitArmed (queue.getEncapsulatedQueue (), queueStateHandler.getSubQueueState (0));
+    return this.encQueuePredictor.isStartArmed (queue.getEncapsulatedQueue (), queueStateHandler.getSubQueueState (0));
   }
 
   @Override
@@ -162,8 +162,8 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
     }
     final List<Map<Double, Boolean>> encQavLog = encPrediction.getQueueAccessVacationLog ();
     final List<Map<Double, Boolean>> encSacLog = encPrediction.getServerAccessCreditsAvailabilityLog ();
-    final List<Map<Double, Boolean>> encNwaLog = encPrediction.getNoWaitArmedLog ();
-    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, encQavLog, encSacLog, encNwaLog);
+    final List<Map<Double, Boolean>> encStaLog = encPrediction.getStartArmedLog ();
+    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, encQavLog, encSacLog, encStaLog);
   }
   
   @Override

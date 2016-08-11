@@ -55,7 +55,7 @@ extends AbstractSimQueuePredictor<SimQueue>
   }
 
   @Override
-  public boolean isNoWaitArmed (final SimQueue queue, final SimQueueState<SimJob, SimQueue> queueState)
+  public boolean isStartArmed (final SimQueue queue, final SimQueueState<SimJob, SimQueue> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();

@@ -28,7 +28,7 @@ extends SimQueuePredictor_Preemptive<SRTF>
 {
 
   @Override
-  public boolean isNoWaitArmed (final SRTF queue, final SimQueueState<SimJob, SRTF> queueState)
+  public boolean isStartArmed (final SRTF queue, final SimQueueState<SimJob, SRTF> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();

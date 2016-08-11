@@ -92,11 +92,11 @@ extends AbstractSimQueuePredictor_Composite<Q>
   }
   
   @Override
-  public boolean isNoWaitArmed (final Q queue, final SimQueueState<SimJob, Q> queueState)
+  public boolean isStartArmed (final Q queue, final SimQueueState<SimJob, Q> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
-    return this.serveQueuePredictor.isNoWaitArmed (getServeQueue (queue), getServeQueueState (queue, queueState));
+    return this.serveQueuePredictor.isStartArmed (getServeQueue (queue), getServeQueueState (queue, queueState));
   }
 
   private class SimQueueAndSimQueueState
@@ -215,7 +215,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
       final SimQueue waitQueue = getWaitQueue (queue);
       if (oldSac == 0
           && newSac > 0
-          && this.serveQueuePredictor.isNoWaitArmed (getServeQueue (queue), getServeQueueState (queue, queueState)))
+          && this.serveQueuePredictor.isStartArmed (getServeQueue (queue), getServeQueueState (queue, queueState)))
       {
         // System.err.println ("SimQueuePredictor_ComprTandem2; t=" + time + ": Setting sac on " + waitQueue + " to " + 1 + ".");
         final SubQueueSimpleEvent waitQueueSacEvent =
@@ -321,13 +321,13 @@ extends AbstractSimQueuePredictor_Composite<Q>
       final int sac = queueState.getServerAccessCredits ();
       final int waitQueueSac = getWaitQueueState (queue, queueState).getServerAccessCredits ();
       final DefaultSimQueueState serveQueueState = getServeQueueState (queue, queueState);
-      if (sac > 0 && this.serveQueuePredictor.isNoWaitArmed (serveQueue, serveQueueState) && waitQueueSac == 0)
+      if (sac > 0 && this.serveQueuePredictor.isStartArmed (serveQueue, serveQueueState) && waitQueueSac == 0)
       {
         final SubQueueSimpleEvent waitQueueSacEvent =
           new SubQueueSimpleEvent (waitQueue, SimQueueSimpleEventType.SERVER_ACCESS_CREDITS, null, null, (Integer) 1);
         doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (waitQueueSacEvent), visitLogsSet);
       }
-      else if ((sac == 0 || ! this.serveQueuePredictor.isNoWaitArmed (serveQueue, serveQueueState)) && waitQueueSac > 0)
+      else if ((sac == 0 || ! this.serveQueuePredictor.isStartArmed (serveQueue, serveQueueState)) && waitQueueSac > 0)
       {
         final SubQueueSimpleEvent waitQueueSacEvent =
           new SubQueueSimpleEvent (waitQueue, SimQueueSimpleEventType.SERVER_ACCESS_CREDITS, null, null, (Integer) 0);
