@@ -7,6 +7,7 @@ import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
 import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_B;
+import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_B_c;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_c;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
@@ -201,7 +202,19 @@ public class ComprTandem2Test
     ( new FCFS_B (eventList, 0), new FCFS_c (eventList, 2),
       new NoBuffer_c (eventList, 2),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
-    
+    //
+    // ComprTandem2[FCFS_B, FCFS_c] == FCFS_B_c
+    //
+    final int[] bValues = { 0, 1, 2, 100 };
+    final int[] cValues = { 0, 1, 2, 10, 100 };
+    for (final int B : bValues)
+      for (final int c : cValues)
+      {
+        testComprTandem2Aux
+        ( new FCFS_B (eventList, B), new FCFS_c (eventList, c),
+          new FCFS_B_c (eventList, B, c),
+          numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      }
   }
 
 }
