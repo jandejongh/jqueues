@@ -152,25 +152,6 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // noWaitArmed
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Returns whether a server is available.
-   * 
-   * @return Whether a server is available, i.e., the result from {@link #hasServerAvailable}.
-   * 
-   * @see #hasServerAvailable
-   * 
-   */
-  @Override
-  public final boolean isNoWaitArmed ()
-  {
-    return hasServerAvailable ();
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
   // ARRIVAL
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +168,7 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
    * or from notifications from elsewhere.
    * 
    * @see #hasServerAcccessCredits
-   * @see #isNoWaitArmed
+   * @see #isStartArmed
    * @see #getNumberOfJobsInWaitingArea
    * @see #getBufferSize
    * @see #jobQueue
@@ -196,7 +177,7 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    if ((hasServerAcccessCredits () && isNoWaitArmed ())
+    if ((hasServerAcccessCredits () && isStartArmed ())
       || getBufferSize () == Integer.MAX_VALUE
       || getNumberOfJobsInWaitingArea () < getBufferSize ())
     {
@@ -313,6 +294,25 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
     reschedule (time);
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // StartArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Returns whether a server is available.
+   * 
+   * @return Whether a server is available, i.e., the result from {@link #hasServerAvailable}.
+   * 
+   * @see #hasServerAvailable
+   * 
+   */
+  @Override
+  public final boolean isStartArmed ()
+  {
+    return hasServerAvailable ();
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // START
