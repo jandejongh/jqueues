@@ -37,14 +37,9 @@ extends AbstractSimQueuePredictor<LeakyBucket>
   }
 
   @Override
-  public boolean isNoWaitArmed (final LeakyBucket queue, final SimQueueState<SimJob, LeakyBucket> queueState)
+  public boolean isStartArmed (final LeakyBucket queue, final SimQueueState<SimJob, LeakyBucket> queueState)
   {
-    if (queue == null || queueState == null)
-      throw new IllegalArgumentException ();
-    final SimQueueRateLimitStateHandler queueStateHandler =
-      (SimQueueRateLimitStateHandler)
-        ((DefaultSimQueueState) queueState).getHandler ("SimQueueRateLimitStateHandler");
-    return queueState.getJobs ().isEmpty () && ! queueStateHandler.isRateLimited ();
+    return false;
   }
   
   @Override
@@ -110,7 +105,7 @@ extends AbstractSimQueuePredictor<LeakyBucket>
       if (queueState.isQueueAccessVacation ())
         // Drops.
         queueState.doExits (time, arrivals, null, null, null, visitLogsSet);
-      else if (isNoWaitArmed (queue, queueState))
+      else if (queueState.getJobs ().isEmpty () && ! queueStateHandler.isRateLimited ())
       {
         // Departures.
         queueState.doExits (time, null, null, arrivals, null, visitLogsSet);
