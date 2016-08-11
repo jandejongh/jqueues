@@ -21,10 +21,6 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * <p>
  * Ties are broken at random with equal probabilities.
  * 
- * <p>
- * A queue of this type is in <code>noWaitArmed</code> state if all there are no sub-queues (and immediate departure is guaranteed)
- * or all sub-queues with shortest queue length are in <code>noWaitArmed</code> state.
- * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
