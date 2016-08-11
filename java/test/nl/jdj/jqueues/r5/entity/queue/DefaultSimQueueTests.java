@@ -17,7 +17,7 @@ import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueComposite;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.listener.SimQueueAccessVacationLogger;
-import nl.jdj.jqueues.r5.listener.SimQueueNoWaitArmedLogger;
+import nl.jdj.jqueues.r5.listener.SimQueueStartArmedLogger;
 import nl.jdj.jqueues.r5.listener.SimQueueServerAccessCreditsAvailabilityLogger;
 import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
@@ -84,21 +84,21 @@ public class DefaultSimQueueTests
     queue.registerSimEntityListener (qavLogger);
     final SimQueueServerAccessCreditsAvailabilityLogger sacLogger = new SimQueueServerAccessCreditsAvailabilityLogger ();
     queue.registerSimEntityListener (sacLogger);
-    final SimQueueNoWaitArmedLogger nwaLogger = new SimQueueNoWaitArmedLogger ();
-    queue.registerSimEntityListener (nwaLogger);
+    final SimQueueStartArmedLogger staLogger = new SimQueueStartArmedLogger ();
+    queue.registerSimEntityListener (staLogger);
     // Create the loggers (qav/sac/nwa) for the predictorQueue (even if non-present).
     final SimQueueAccessVacationLogger predictorQueueQavLogger
       = new SimQueueAccessVacationLogger ();
     final SimQueueServerAccessCreditsAvailabilityLogger predictorQueueSacLogger =
       new SimQueueServerAccessCreditsAvailabilityLogger ();
-    final SimQueueNoWaitArmedLogger predictorQueueNwaLogger
-      = new SimQueueNoWaitArmedLogger ();
+    final SimQueueStartArmedLogger predictorQueueStaLogger
+      = new SimQueueStartArmedLogger ();
     // Register the loggers (qav/sac/nwa) for the predictorQueue if non-present.
     if (predictorQueue != null)
     {
       predictorQueue.registerSimEntityListener (predictorQueueQavLogger);
       predictorQueue.registerSimEntityListener (predictorQueueSacLogger);
-      predictorQueue.registerSimEntityListener (predictorQueueNwaLogger);
+      predictorQueue.registerSimEntityListener (predictorQueueStaLogger);
     }
     // Loop over (1) the known load factories and (2) the consequetive passes.
     for (final KnownLoadFactory_SQ_SV klf : KnownLoadFactory_SQ_SV.values ())
@@ -123,13 +123,13 @@ public class DefaultSimQueueTests
           final Map<SimJob, JobQueueVisitLog<SimJob, Q>> predictedJobQueueVisitLogs;
           final List<Map<Double, Boolean>> predictedQavLogs;
           final List<Map<Double, Boolean>> predictedSacLogs;
-          final List<Map<Double, Boolean>> predictedNwaLogs;
+          final List<Map<Double, Boolean>> predictedStaLogs;
           // The actual data to be obtained from running a simulation with queue.
           final Map<SimJob, TreeMap<Double,TreeMap<Integer,JobQueueVisitLog<SimJob, Q>>>> actualJobQueueVisitLogs
             = new HashMap<> ();
           final List<Map<Double, Boolean>> actualQavLogs;
           final List<Map<Double, Boolean>> actualSacLogs;
-          final List<Map<Double, Boolean>> actualNwaLogs;
+          final List<Map<Double, Boolean>> actualStaLogs;
           if (predictor != null)
           {
             // Use predictor; note that this does not disturb the event list.
@@ -139,7 +139,7 @@ public class DefaultSimQueueTests
             predictedJobQueueVisitLogs = prediction.getVisitLogs ();
             predictedQavLogs = prediction.getQueueAccessVacationLog ();
             predictedSacLogs = prediction.getServerAccessCreditsAvailabilityLog ();
-            predictedNwaLogs = prediction.getNoWaitArmedLog ();
+            predictedStaLogs = prediction.getStartArmedLog ();
             // Run the simulation with queue.
             el.run ();
             assert el.isEmpty ();
@@ -148,7 +148,7 @@ public class DefaultSimQueueTests
               actualJobQueueVisitLogs.put (j, ((DefaultVisitsLoggingSimJob) j).getVisitLogs ());
             actualQavLogs = qavLogger.getQueueAccessVacationLog ();
             actualSacLogs = sacLogger.getServerAccessCreditsAvailabilityLog ();
-            actualNwaLogs = nwaLogger.getNoWaitArmedLog ();
+            actualStaLogs = staLogger.getStartArmedLog ();
           }
           else if (predictorQueue != null)
           {
@@ -173,7 +173,7 @@ public class DefaultSimQueueTests
             // Gather the other logs; make shallow copies because the loggers are about to be reset.
             actualQavLogs = new ArrayList<> (qavLogger.getQueueAccessVacationLog ());
             actualSacLogs = new ArrayList<> (sacLogger.getServerAccessCreditsAvailabilityLog ());
-            actualNwaLogs = new ArrayList<> (nwaLogger.getNoWaitArmedLog ());
+            actualStaLogs = new ArrayList<> (staLogger.getStartArmedLog ());
             // Reset the event list (and its queues and its loggers).
             el.reset ();
             // Populate the event list with the copied events for predictorQueue.
@@ -196,7 +196,7 @@ public class DefaultSimQueueTests
             // Obtain the qav/sac/nwa logs (no need to copy here anymore).
             predictedQavLogs = predictorQueueQavLogger.getQueueAccessVacationLog ();
             predictedSacLogs = predictorQueueSacLogger.getServerAccessCreditsAvailabilityLog ();
-            predictedNwaLogs = predictorQueueNwaLogger.getNoWaitArmedLog ();
+            predictedStaLogs = predictorQueueStaLogger.getStartArmedLog ();
           }
           else
             throw new RuntimeException ();
@@ -218,9 +218,9 @@ public class DefaultSimQueueTests
                    (predictedQavLogs, actualQavLogs, accuracy, testString);
           assert SimQueueServerAccessCreditsAvailabilityLogger.matchServerAccessCreditsAvailabilityLogs
                    (predictedSacLogs, actualSacLogs, accuracy, testString);
-          assert SimQueueNoWaitArmedLogger.matchNoWaitArmedLogs
-                   (predictedNwaLogs, actualNwaLogs, accuracy, testString);
-            // Reset the event list (and its queues and its loggers) for the next run.
+          assert SimQueueStartArmedLogger.matchStartArmedLogs
+                   (predictedStaLogs, actualStaLogs, accuracy, testString);
+          // Reset the event list (and its queues and its loggers) for the next run.
           el.reset ();
         }
       else if (! deadSilent)
