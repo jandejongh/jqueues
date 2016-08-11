@@ -340,7 +340,11 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     if (pendingNotifications == null)
       throw new IllegalArgumentException ();
     if (! this.previousNoWaitArmedSet)
-      throw new IllegalStateException ();
+      // Our initial NoWaitArmed has not been set yet, even though we registered a pre-event hook.
+      // We may safely assume that we are still in our reset procedures,
+      // and that our sub-class has presented us with a notification while resetting.
+      // Our only option now is the set the initial NoWaitArmed here...
+      setInitNoWaitArmed (getLastUpdateTime ());
     final boolean noWaitArmed = isNoWaitArmed ();
     final Iterator<Map<SimEntitySimpleEventType.Member, J>> i_pendingNotifications = pendingNotifications.iterator ();
     boolean hasNwaNotification = false;
@@ -361,7 +365,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       if (noWaitArmed)
         pendingNotifications.add (Collections.singletonMap (SimQueueSimpleEventType.NWA_TRUE, null));
       else
-        pendingNotifications.add (Collections.singletonMap (SimQueueSimpleEventType.NWA_FALSE, null));          
+        pendingNotifications.add (Collections.singletonMap (SimQueueSimpleEventType.NWA_FALSE, null));
     }
     this.previousNoWaitArmed = noWaitArmed;
   }
