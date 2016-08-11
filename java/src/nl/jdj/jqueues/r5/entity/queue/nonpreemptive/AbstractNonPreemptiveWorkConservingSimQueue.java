@@ -98,7 +98,7 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
    * <p>
    * The buffer size is fixed upon construction and cannot be changed.
    * 
-   * @return The buffer size (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity..
+   * @return The buffer size (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
    * 
    */
   public final int getBufferSize ()
@@ -155,21 +155,17 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Returns whether the number of jobs present is strictly smaller than the number of servers,
-   *  or whether the number of servers is infinite.
+  /** Returns whether a server is available.
    * 
-   * @return Whether the number of jobs present is strictly smaller than the number of servers,
-   *           or whether the number of servers is infinite.
+   * @return Whether a server is available, i.e., the result from {@link #hasServerAvailable}.
    * 
-   * @see #getNumberOfServers
-   * @see #getNumberOfJobs
+   * @see #hasServerAvailable
    * 
    */
   @Override
   public final boolean isNoWaitArmed ()
   {
-    return getNumberOfServers () == Integer.MAX_VALUE
-        || getNumberOfJobs () < getNumberOfServers ();
+    return hasServerAvailable ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
