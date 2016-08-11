@@ -28,7 +28,7 @@ implements SimQueuePrediction_SQ_SV<Q>
    * @param visitLogs The job-visit logs, non-{@code null}.
    * @param qavLog    The queue-access-vacation logs, non-{@code null}.
    * @param sacLog    The server-access-credits availability logs, non-{@code null}.
-   * @param nwaLog    The {@code NoWaitArmed} logs, non-{@code null}.
+   * @param staLog    The {@code StartArmed} logs, non-{@code null}.
    * 
    * @throws IllegalArgumentException If any of the arguments is {@code null} or improperly structured.
    * 
@@ -38,7 +38,7 @@ implements SimQueuePrediction_SQ_SV<Q>
    final Map<SimJob, JobQueueVisitLog<SimJob, Q>> visitLogs,
    final List<Map<Double, Boolean>> qavLog,
    final List<Map<Double, Boolean>> sacLog,
-   final List<Map<Double, Boolean>> nwaLog)
+   final List<Map<Double, Boolean>> staLog)
   {
     if (queue == null)
       throw new IllegalArgumentException ();
@@ -48,7 +48,7 @@ implements SimQueuePrediction_SQ_SV<Q>
       throw new IllegalArgumentException ();
     if (sacLog == null)
       throw new IllegalArgumentException ();
-    if (nwaLog == null)
+    if (staLog == null)
       throw new IllegalArgumentException ();
     if (visitLogs.containsKey (null) || visitLogs.containsValue (null))
       throw new IllegalArgumentException ();
@@ -67,14 +67,14 @@ implements SimQueuePrediction_SQ_SV<Q>
     for (final Map<Double, Boolean> entry : sacLog)
       if (entry == null || entry.size () != 1)
         throw new IllegalArgumentException ();
-    for (final Map<Double, Boolean> entry : nwaLog)
+    for (final Map<Double, Boolean> entry : staLog)
       if (entry == null || entry.size () != 1)
         throw new IllegalArgumentException ();
     this.queue = queue;
     this.visitLogs = visitLogs;
     this.qavLog = qavLog;
     this.sacLog = sacLog;
-    this.nwaLog = nwaLog;
+    this.staLog = staLog;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -135,16 +135,16 @@ implements SimQueuePrediction_SQ_SV<Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // NWA LOG
+  // STA LOG
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private final List<Map<Double, Boolean>> nwaLog;
+  private final List<Map<Double, Boolean>> staLog;
   
   @Override
-  public final List<Map<Double, Boolean>> getNoWaitArmedLog ()
+  public final List<Map<Double, Boolean>> getStartArmedLog ()
   {
-    return this.nwaLog;
+    return this.staLog;
   }
   
 }

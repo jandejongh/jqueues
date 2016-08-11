@@ -45,12 +45,12 @@ public interface SimQueuePrediction_SQ_SV<Q extends SimQueue>
    */
   List<Map<Double, Boolean>> getServerAccessCreditsAvailabilityLog ();
   
-  /** Returns the predicted {@code NoWaitArmed} (changes).
+  /** Returns the predicted {@code StartArmed} (changes).
    * 
-   * @return A list with singleton maps holding the time of change in the NWA state (key) and the new state (value).
+   * @return A list with singleton maps holding the time of change in the STA state (key) and the new state (value).
    *         The list must be ordered non-decreasing in event time.
    * 
    */
-  List<Map<Double, Boolean>> getNoWaitArmedLog ();
+  List<Map<Double, Boolean>> getStartArmedLog ();
 
 }

@@ -78,7 +78,7 @@ implements SimQueuePredictor<Q>
     final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet = new HashSet<> ();
     final List<Map<Double, Boolean>> qavLog = new ArrayList<> ();
     final List<Map<Double, Boolean>> sacLog = new ArrayList<> ();
-    final List<Map<Double, Boolean>> nwaLog = new ArrayList<> ();
+    final List<Map<Double, Boolean>> staLog = new ArrayList<> ();
     try
     {
       //
@@ -109,9 +109,9 @@ implements SimQueuePredictor<Q>
       //
       boolean hasSac = hasServerAccessCredits (queue, queueState);
       //
-      // Maintain the current NWA state of the queue.
+      // Maintain the current STA state of the queue.
       //
-      boolean isNwa = isNoWaitArmed (queue, queueState);
+      boolean isSta = isStartArmed (queue, queueState);
       //
       // Main loop; proceed as long as "the workload has more load" or "the queue still has events".
       //
@@ -150,7 +150,7 @@ implements SimQueuePredictor<Q>
             throw new RuntimeException ();
           if (hasServerAccessCredits (queue, queueState) != hasSac)
             throw new RuntimeException ();
-          if (isNoWaitArmed (queue, queueState) != isNwa)
+          if (isStartArmed (queue, queueState) != isSta)
             throw new RuntimeException ();
         }
         if (doWorkloadEvent && doQueueEvent)
@@ -175,10 +175,10 @@ implements SimQueuePredictor<Q>
           hasSac = ! hasSac;
           sacLog.add (Collections.singletonMap (nextEventTime, hasSac));
         }
-        if (isNoWaitArmed (queue, queueState) != isNwa)
+        if (isStartArmed (queue, queueState) != isSta)
         {
-          isNwa = ! isNwa;
-          nwaLog.add (Collections.singletonMap (nextEventTime, isNwa));
+          isSta = ! isSta;
+          staLog.add (Collections.singletonMap (nextEventTime, isSta));
         }
         finished = ! (hasWorkloadEvent || hasQueueEvent);
       }
@@ -202,7 +202,7 @@ implements SimQueuePredictor<Q>
         throw new RuntimeException ();
       visitLogs.put (jqvl.job, jqvl);
     }
-    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog, sacLog, nwaLog);
+    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog, sacLog, staLog);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -248,7 +248,7 @@ implements SimQueuePredictor<Q>
     final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet = new HashSet<> ();
     final List<Map<Double, Boolean>> qavLog = new ArrayList<> ();
     final List<Map<Double, Boolean>> sacLog = new ArrayList<> ();
-    final List<Map<Double, Boolean>> nwaLog = new ArrayList<> ();
+    final List<Map<Double, Boolean>> staLog = new ArrayList<> ();
     try
     {
       //
@@ -279,9 +279,9 @@ implements SimQueuePredictor<Q>
       //
       boolean hasSac = hasServerAccessCredits (queue, queueState);
       //
-      // Maintain the current NWA state of the queue.
+      // Maintain the current STA state of the queue.
       //
-      boolean isNwa = isNoWaitArmed (queue, queueState);
+      boolean isSta = isStartArmed (queue, queueState);
       //
       // Main loop; proceed as long as "the workload has more load" or "the queue still has events".
       //
@@ -318,7 +318,7 @@ implements SimQueuePredictor<Q>
             throw new RuntimeException ();
           if (hasServerAccessCredits (queue, queueState) != hasSac)
             throw new RuntimeException ();
-          if (isNoWaitArmed (queue, queueState) != isNwa)
+          if (isStartArmed (queue, queueState) != isSta)
             throw new RuntimeException ();
         }
         if (doWorkloadEvent && doQueueEvent)
@@ -343,10 +343,10 @@ implements SimQueuePredictor<Q>
           hasSac = ! hasSac;
           sacLog.add (Collections.singletonMap (nextEventTime, hasSac));
         }
-        if (isNoWaitArmed (queue, queueState) != isNwa)
+        if (isStartArmed (queue, queueState) != isSta)
         {
-          isNwa = ! isNwa;
-          nwaLog.add (Collections.singletonMap (nextEventTime, isNwa));
+          isSta = ! isSta;
+          staLog.add (Collections.singletonMap (nextEventTime, isSta));
         }
         finished = ! (hasWorkloadEvent || hasQueueEvent);
       }
@@ -370,7 +370,7 @@ implements SimQueuePredictor<Q>
         throw new RuntimeException ();
       visitLogs.put (jqvl.job, jqvl);
     }
-    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog, sacLog, nwaLog);
+    return new DefaultSimQueuePrediction_SQ_SV<> (queue, visitLogs, qavLog, sacLog, staLog);
   }
 
   /** Check unambiguity under a ROEL for workload and queue-state events occurring simultaneously.

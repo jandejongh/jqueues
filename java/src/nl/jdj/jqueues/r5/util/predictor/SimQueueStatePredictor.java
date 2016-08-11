@@ -54,16 +54,16 @@ public interface SimQueueStatePredictor<Q extends SimQueue>
     return queueState.getServerAccessCredits () > 0;
   }
   
-  /** Checks whether a given state represents {@code NoWaitArmed} on given queue.
+  /** Checks whether a given state represents {@code StartArmed} on given queue.
    * 
    * @param queue      The queue.
    * @param queueState The queue state, non-{@code null}.
    * 
-   * @return True if the state represents {@code NoWaitArmed} at given queue.
+   * @return True if the state represents {@code StartArmed} at given queue.
    * 
    * @throws IllegalArgumentException If any of the arguments is {@code null}.
    * 
    */
-  boolean isNoWaitArmed (Q queue, SimQueueState<SimJob, Q> queueState);
+  boolean isStartArmed (Q queue, SimQueueState<SimJob, Q> queueState);
   
 }
