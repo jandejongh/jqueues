@@ -60,8 +60,7 @@ extends AbstractSimQueuePredictor<SimQueue>
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
     if (this.hasc)
-      // return queueState.getJobsInServiceArea ().size () < this.c;
-      return queueState.getJobs ().size () < this.c;
+      return queueState.getJobsInServiceArea ().size () < this.c;
     else
       return true;
   }
