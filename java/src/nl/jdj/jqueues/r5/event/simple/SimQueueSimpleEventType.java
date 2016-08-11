@@ -54,14 +54,14 @@ extends SimEntitySimpleEventType
    */
   public static Member REGAINED_SAC = new Member ("REGAIN_SAC");
   
-  /** The loss of {@code noWaitArmed}.
+  /** The loss of {@code startArmed}.
    * 
    */
-  public static Member NWA_FALSE = new Member ("NWA_FALSE");
+  public static Member STA_FALSE = new Member ("STA_FALSE");
   
-  /** The gain of {@code noWaitArmed}.
+  /** The gain of {@code startArmed}.
    * 
    */
-  public static Member NWA_TRUE = new Member ("NWA_TRUE");
+  public static Member STA_TRUE = new Member ("STA_TRUE");
   
 }
