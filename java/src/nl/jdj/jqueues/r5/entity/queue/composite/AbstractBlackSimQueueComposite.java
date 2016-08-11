@@ -454,8 +454,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * state of the encapsulated queue.
    * 
    * <p>
-   * For {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, this method returns the result of the local AND
-   * operation on both {@link SimQueue#isNoWaitArmed} states of the (two) sub-queues.
+   * For {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, this method returns the {@link SimQueue#isNoWaitArmed}
+   * state of the serve (i.e., second) queue.
    * 
    * @return The {@code noWaitArmed} state of the composite queue, possibly depending on the state of its sub-queues.
    * 
@@ -474,7 +474,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       case ENCAPSULATOR_QUEUE:
         return getQueue (0).isNoWaitArmed ();
       case COMPRESSED_TANDEM_2_QUEUE:
-        return getQueue (0).isNoWaitArmed () && getQueue (1).isNoWaitArmed ();
+        return getQueue (1).isNoWaitArmed ();
       default:
         throw new RuntimeException ();
     }
@@ -492,7 +492,6 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * <p>
    * This method can only be used with {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
    * at the expense of an exception.
-   * The explanation below only applies to .
    * 
    * <p>
    * With {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
@@ -983,11 +982,20 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * While processing, new notifications may be added to the list; the list is processed until it is empty.
    * 
    * <p>
+   * However, before processing any event it checks for {@link SimEntitySimpleEventType#RESET}
+   * (sub-)notifications. If it finds <i>any</i>, the notifications list is cleared and immediate return from this method follows.
+   * 
+   * Otherwise, this method processes the notifications are described;
+   * the remainder of the method is encapsulated in a
+   * {@link #clearAndUnlockPendingNotificationsIfLocked} and {@link #fireAndLockPendingNotifications} pair,
+   * to make sure we create atomic notifications in case of a top-level event.
+   * 
+   * <p>
    * A notification consists of a (fixed) sequence of sub-notifications,
    * see {@link MultiSimQueueNotificationProcessor.Notification#getSubNotifications},
    * each of which is processed in turn as follows:
    * <ul>
-   * <li>With {@link SimEntitySimpleEventType#RESET}, we do nothing.
+   * <li>With {@link SimEntitySimpleEventType#RESET}, impossible, see above; throws an {@link IllegalStateException}.
    * <li>With {@link SimEntitySimpleEventType#DROP}, we let the dropped delegate job arrive on a drop-destination queue,
    *                                                 if provided through {@link #getDropDestinationQueue},
    *                                                 otherwise, drops the real job through {@link #drop}.
@@ -1040,6 +1048,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * @see #depart
    * @see #setServerAccessCreditsOnWaitQueue
    * @see #triggerPotentialNewNoWaitArmed
+   * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #fireAndLockPendingNotifications
    * 
    */
   protected final void processSubQueueNotifications
@@ -1047,19 +1057,38 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   {
     if (notifications == null || notifications.isEmpty ())
       throw new IllegalArgumentException ();
+    // Special treatment of RESET notifications: clear everthing and return immediately.
+    boolean containsResetNotification = false;
+    for (final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification : notifications)
+    {
+      for (final Map<SimEntitySimpleEventType.Member, DJ> subNotification : notification.getSubNotifications ())
+        if (subNotification.keySet ().iterator ().next () == SimEntitySimpleEventType.RESET)
+        {
+          containsResetNotification = true;
+          break;
+        }
+      if (containsResetNotification)
+        break;
+    }
+    if (containsResetNotification)
+    {
+      notifications.clear ();
+      return;
+    }
+    // Make sure we capture a top-level event, so we can keep our own notifications atomic.
+    final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
     while (! notifications.isEmpty ())
     {
       final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification = notifications.remove (0);
       sanitySubQueueNotification (notification);
       final double notificationTime = notification.getTime ();
       final DQ subQueue = notification.getQueue ();
-      boolean mustSetSacOnWaitQueue = (getIndex (subQueue) == 1); // serve queue (if applicable)
       for (final Map<SimEntitySimpleEventType.Member, DJ> subNotification : notification.getSubNotifications ())
       {
         final SimEntitySimpleEventType.Member notificationType = subNotification.keySet ().iterator ().next ();
         final DJ job = subNotification.values ().iterator ().next ();
         if (notificationType == SimEntitySimpleEventType.RESET)
-          mustSetSacOnWaitQueue = false;
+          throw new IllegalStateException ();
         else if (notificationType == SimEntitySimpleEventType.DROP)
         {
           final J realJob = getRealJob (job);
@@ -1092,12 +1121,14 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
             nextQueue.arrive (notificationTime, job);
         }
       }
-      if (getStartModel () == StartModel.COMPRESSED_TANDEM_2_QUEUE && mustSetSacOnWaitQueue)
+      if (getStartModel () == StartModel.COMPRESSED_TANDEM_2_QUEUE)
         setServerAccessCreditsOnWaitQueue ();
     }
     triggerPotentialNewNoWaitArmed (getLastUpdateTime ());
     if (! notifications.isEmpty ())
       throw new IllegalStateException ();
+    if (isTopLevel)
+      fireAndLockPendingNotifications ();
   }
   
   /** Performs sanity checks on a notification from a sub-queue (irrespective of which one).
