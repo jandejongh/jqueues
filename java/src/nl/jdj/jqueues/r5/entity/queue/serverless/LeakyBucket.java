@@ -127,23 +127,6 @@ extends AbstractServerlessSimQueue<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // NoWaitArmed
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns {@code true} if there are no jobs present in the system and this queue is not {@link #isRateLimited}.
-   * 
-   * @return {@code true} if there are no jobs present in the system and this queue is not {@link #isRateLimited}.
-   * 
-   */
-  @Override
-  public final boolean isNoWaitArmed ()
-  {
-    return getNumberOfJobs () == 0 && ! isRateLimited ();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -263,7 +246,7 @@ extends AbstractServerlessSimQueue<J, Q>
    * 
    * <p>
    * If there are job in the waiting area, it makes depart the first one.
-   * Otherwise, it invokes {@link #triggerPotentialNewNoWaitArmed}.
+   * Otherwise, it invokes {@link #triggerPotentialNewStartArmed}.
    * 
    * @param event The event that invoked us through its {@link SimEventAction}, non-{@code null}.
    * 
@@ -283,7 +266,7 @@ extends AbstractServerlessSimQueue<J, Q>
     if (! this.jobQueue.isEmpty ())
       depart (time, getFirstJobInWaitingArea ());
     else
-      triggerPotentialNewNoWaitArmed (time);
+      triggerPotentialNewStartArmed (time);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
