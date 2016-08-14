@@ -70,7 +70,7 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a non-preemptive queue given an event list.
+  /** Creates a non-preemptive queue given an event list, buffer size and number of servers.
    *
    * @param eventList       The event list to use.
    * @param bufferSize      The buffer size (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
