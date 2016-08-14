@@ -26,7 +26,7 @@ public abstract class AbstractPreemptiveSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a preemptive queue given an event list and preemption strategy.
+  /** Creates a preemptive queue given an event list, buffer size, number of servers and preemption strategy.
    *
    * <p>
    * The constructor registers a pre-update hook that updates the remaining service time.
