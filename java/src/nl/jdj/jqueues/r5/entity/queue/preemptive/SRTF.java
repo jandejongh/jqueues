@@ -25,7 +25,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  */
 public class SRTF<J extends SimJob, Q extends SRTF>
-extends AbstractPreemptiveSingleServerSimQueue<J, Q>
+extends AbstractPreemptiveSimQueue<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,7 +34,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a single-server preemptive SRTF queue given an event list and preemption strategy.
+  /** Creates a single-server preemptive SRTF queue with infinite buffer size given an event list and preemption strategy.
    *
    * @param eventList          The event list to use.
    * @param preemptionStrategy The preemption strategy, if {@code null}, the default is used (preemptive-resume).
@@ -44,7 +44,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    */
   public SRTF (final SimEventList eventList, final PreemptionStrategy preemptionStrategy)
   {
-    super (eventList, preemptionStrategy);
+    super (eventList, Integer.MAX_VALUE, 1, preemptionStrategy);
   }
   
   /** Returns a new (preemptive) {@link SRTF} object on the same {@link SimEventList} and the same preemption strategy.
@@ -78,6 +78,30 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
     return "SRTF[" + getPreemptionStrategy () + "]";
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // QoS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Class getQoSClass ()
+  {
+    return super.getQoSClass ();
+  }
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Object getQoS ()
+  {
+    return super.getQoS ();
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // RESET
@@ -139,6 +163,15 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void setServerAccessCreditsSubClass ()
+  {
+    super.setServerAccessCreditsSubClass ();
+  }
+
   /** Starts jobs as long as there are server-access credits and jobs waiting.
    * 
    * @see #hasServerAcccessCredits
@@ -247,6 +280,23 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
     }
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  protected final double getServiceTimeForJob (final J job)
+  {
+    return super.getServiceTimeForJob (job);
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // EXIT (DEPARTURE / DROP / REVOKATION)

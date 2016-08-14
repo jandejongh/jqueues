@@ -7,7 +7,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.preemptive.PreemptionStrategy;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** The Priority-Queueing queueing discipline.
+/** The Priority-Queueing queueing discipline with a single server and infinite buffer size.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -15,7 +15,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  */
 public class PQ<J extends SimJob, Q extends PQ, P extends Comparable>
-extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
+extends AbstractPreemptiveSimQueueQoS<J, Q, P>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,7 +24,8 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a Priority Queue given an event list, preemption strategy, and QoS structure.
+  /** Creates a Priority Queue with infinite buffer size and a single server,
+   *  given an event list, preemption strategy, and QoS structure.
    *
    * @param eventList          The event list to use.
    * @param preemptionStrategy The preemption strategy, if {@code null}, the default is used (preemptive-resume).
@@ -40,7 +41,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
     final Class<P> qosClass,
     final P defaultJobQoS)
   {
-    super (eventList, preemptionStrategy, qosClass, defaultJobQoS);
+    super (eventList, Integer.MAX_VALUE, 1, preemptionStrategy, qosClass, defaultJobQoS);
   }
   
   /** Returns a new {@link PQ} object on the same {@link SimEventList} with the same preemption strategy and QoS structure.
@@ -143,6 +144,15 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void setServerAccessCreditsSubClass ()
+  {
+    super.setServerAccessCreditsSubClass ();
+  }
+
   /** Invokes {@link #reschedule}.
    * 
    */
@@ -226,6 +236,23 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
       depart (time, job);
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  protected final double getServiceTimeForJob (final J job)
+  {
+    return super.getServiceTimeForJob (job);
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // EXIT

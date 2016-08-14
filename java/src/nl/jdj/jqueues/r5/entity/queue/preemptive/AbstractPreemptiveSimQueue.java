@@ -9,11 +9,11 @@ import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.util.collection.HashMapWithPreImageAndOrderedValueSet;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** Partial implementation of a preemptive {@link SimQueue}.
- * 
+/** An abstract base class for preemptive queueing disciplines.
+ *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
- *
+ * 
  */
 public abstract class AbstractPreemptiveSimQueue
   <J extends SimJob, Q extends AbstractPreemptiveSimQueue>
@@ -32,6 +32,8 @@ public abstract class AbstractPreemptiveSimQueue
    * The constructor registers a pre-update hook that updates the remaining service time.
    * 
    * @param eventList          The event list to use.
+   * @param bufferSize         The buffer size (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
+   * @param numberOfServers    The number of servers (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
    * @param preemptionStrategy The preemption strategy, if {@code null}, the default is used (preemptive-resume).
    * 
    * @throws IllegalArgumentException If the event list is <code>null</code>.
@@ -39,9 +41,14 @@ public abstract class AbstractPreemptiveSimQueue
    * @see #updateRemainingServiceTime
    * 
    */
-  protected AbstractPreemptiveSimQueue (final SimEventList eventList, final PreemptionStrategy preemptionStrategy)
+  protected AbstractPreemptiveSimQueue
+  (final SimEventList eventList, final int bufferSize, final int numberOfServers, final PreemptionStrategy preemptionStrategy)
   {
     super (eventList);
+    if (bufferSize < 0 || numberOfServers < 0)
+      throw new IllegalArgumentException ();
+    this.bufferSize = bufferSize;
+    this.numberOfServers= numberOfServers;
     if (preemptionStrategy == null)
       this.preemptionStrategy = AbstractPreemptiveSimQueue.DEFAULT_PREEMPTION_STRATEGY;
     else
@@ -49,6 +56,48 @@ public abstract class AbstractPreemptiveSimQueue
     registerPreUpdateHook (this::updateRemainingServiceTime);
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // BUFFER SIZE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final int bufferSize;
+  
+  /** Returns the buffer size.
+   * 
+   * <p>
+   * The buffer size is fixed upon construction and cannot be changed.
+   * 
+   * @return The buffer size (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
+   * 
+   */
+  public final int getBufferSize ()
+  {
+    return this.bufferSize;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NUMBER OF SERVERS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The number of servers, non-negative.
+   * 
+   */
+  private final int numberOfServers;
+  
+  /** Returns the number of servers (non-negative).
+   * 
+   * @return The number of servers (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
+   * 
+   */
+  public final int getNumberOfServers ()
+  {
+    return this.numberOfServers;
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // PREEMPTION STRATEGY
