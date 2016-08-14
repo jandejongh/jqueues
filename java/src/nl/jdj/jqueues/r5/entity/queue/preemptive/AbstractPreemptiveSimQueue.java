@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.AbstractClassicSimQueue;
 import nl.jdj.jqueues.r5.util.collection.HashMapWithPreImageAndOrderedValueSet;
 import nl.jdj.jsimulation.r5.SimEventList;
 
@@ -17,7 +17,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  */
 public abstract class AbstractPreemptiveSimQueue
   <J extends SimJob, Q extends AbstractPreemptiveSimQueue>
-  extends AbstractSimQueue<J, Q>
+  extends AbstractClassicSimQueue<J, Q>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,11 +44,7 @@ public abstract class AbstractPreemptiveSimQueue
   protected AbstractPreemptiveSimQueue
   (final SimEventList eventList, final int bufferSize, final int numberOfServers, final PreemptionStrategy preemptionStrategy)
   {
-    super (eventList);
-    if (bufferSize < 0 || numberOfServers < 0)
-      throw new IllegalArgumentException ();
-    this.bufferSize = bufferSize;
-    this.numberOfServers= numberOfServers;
+    super (eventList, bufferSize, numberOfServers);
     if (preemptionStrategy == null)
       this.preemptionStrategy = AbstractPreemptiveSimQueue.DEFAULT_PREEMPTION_STRATEGY;
     else
@@ -56,48 +52,6 @@ public abstract class AbstractPreemptiveSimQueue
     registerPreUpdateHook (this::updateRemainingServiceTime);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // BUFFER SIZE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  private final int bufferSize;
-  
-  /** Returns the buffer size.
-   * 
-   * <p>
-   * The buffer size is fixed upon construction and cannot be changed.
-   * 
-   * @return The buffer size (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
-   * 
-   */
-  public final int getBufferSize ()
-  {
-    return this.bufferSize;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // NUMBER OF SERVERS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** The number of servers, non-negative.
-   * 
-   */
-  private final int numberOfServers;
-  
-  /** Returns the number of servers (non-negative).
-   * 
-   * @return The number of servers (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
-   * 
-   */
-  public final int getNumberOfServers ()
-  {
-    return this.numberOfServers;
-  }
-  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // PREEMPTION STRATEGY

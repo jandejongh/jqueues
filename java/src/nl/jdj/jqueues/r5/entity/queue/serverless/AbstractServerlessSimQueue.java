@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.serverless;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.AbstractClassicSimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link SimQueue} that does not provide service to {@link SimJob}s.
@@ -12,7 +12,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  */
 public abstract class AbstractServerlessSimQueue<J extends SimJob, Q extends AbstractServerlessSimQueue>
-extends AbstractSimQueue<J, Q>
+extends AbstractClassicSimQueue<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -21,14 +21,15 @@ extends AbstractSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a server-less queue given an event list.
+  /** Creates a server-less queue given an event list and buffer size.
    *
-   * @param eventList The event list to use.
+   * @param eventList  The event list to use.
+   * @param bufferSize The buffer size (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
    *
    */
-  public AbstractServerlessSimQueue (final SimEventList eventList)
+  public AbstractServerlessSimQueue (final SimEventList eventList, final int bufferSize)
   {
-    super (eventList);
+    super (eventList, bufferSize, 0);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

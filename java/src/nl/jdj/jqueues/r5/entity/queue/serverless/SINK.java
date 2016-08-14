@@ -24,14 +24,14 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a {@link SINK} queue given an event list.
+  /** Creates a {@link SINK} queue with infinite buffer size given an event list.
    *
    * @param eventList The event list to use.
    *
    */
   public SINK (final SimEventList eventList)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE);
   }
   
   /** Returns a new {@link SINK} object on the same {@link SimEventList}.

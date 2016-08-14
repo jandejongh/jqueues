@@ -2,7 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.processorsharing;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.entity.queue.AbstractClassicSimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** An abstract base class for (generalized) processor-sharing queueing disciplines
@@ -16,7 +16,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  */
 public abstract class AbstractProcessorSharingSimQueue
   <J extends SimJob, Q extends AbstractProcessorSharingSimQueue>
-  extends AbstractSimQueue<J, Q>
+  extends AbstractClassicSimQueue<J, Q>
   implements SimQueue<J, Q>
 {
 
@@ -35,53 +35,7 @@ public abstract class AbstractProcessorSharingSimQueue
    */
   protected AbstractProcessorSharingSimQueue (final SimEventList eventList, final int bufferSize, final int numberOfServers)
   {
-    super (eventList);
-    if (bufferSize < 0 || numberOfServers < 0)
-      throw new IllegalArgumentException ();
-    this.bufferSize = bufferSize;
-    this.numberOfServers= numberOfServers;
+    super (eventList, bufferSize, numberOfServers);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // BUFFER SIZE
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  private final int bufferSize;
-  
-  /** Returns the buffer size.
-   * 
-   * <p>
-   * The buffer size is fixed upon construction and cannot be changed.
-   * 
-   * @return The buffer size (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
-   * 
-   */
-  public final int getBufferSize ()
-  {
-    return this.bufferSize;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // NUMBER OF SERVERS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** The number of servers, non-negative.
-   * 
-   */
-  private final int numberOfServers;
-  
-  /** Returns the number of servers (non-negative).
-   * 
-   * @return The number of servers (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
-   * 
-   */
-  public final int getNumberOfServers ()
-  {
-    return this.numberOfServers;
-  }
-  
 }

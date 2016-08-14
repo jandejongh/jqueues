@@ -38,7 +38,7 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a {@link LeakyBucket} queue given an event list and (departure) rate limit.
+  /** Creates a {@link LeakyBucket} queue with infinite buffer size given an event list and (departure) rate limit.
    *
    * @param eventList The event list to use.
    * @param rateLimit The (departure) rate limit, non-negative.
@@ -48,7 +48,7 @@ extends AbstractServerlessSimQueue<J, Q>
    */
   public LeakyBucket (final SimEventList eventList, final double rateLimit)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE);
     if (rateLimit < 0)
       throw new IllegalArgumentException ();
     this.rateLimit = rateLimit;

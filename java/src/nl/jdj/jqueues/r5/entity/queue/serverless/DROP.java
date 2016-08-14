@@ -30,7 +30,7 @@ extends AbstractServerlessSimQueue<J, Q>
    */
   public DROP (final SimEventList eventList)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE);
   }
   
   /** Returns a new {@link DROP} object on the same {@link SimEventList}.

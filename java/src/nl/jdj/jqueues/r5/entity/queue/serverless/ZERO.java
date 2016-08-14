@@ -25,14 +25,14 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a {@link ZERO} queue given an event list.
+  /** Creates a {@link ZERO} queue with infinite buffer size given an event list.
    *
    * @param eventList The event list to use.
    *
    */
   public ZERO (final SimEventList eventList)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE);
   }
   
   /** Returns a new {@link ZERO} object on the same {@link SimEventList}.

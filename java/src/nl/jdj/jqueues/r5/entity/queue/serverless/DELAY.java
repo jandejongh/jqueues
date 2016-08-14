@@ -25,7 +25,7 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a {@link DELAY} queue given an event list and (fixed) wait time.
+  /** Creates a {@link DELAY} queue with infinite buffer size given a (fixed) waiting time and an event list,.
    *
    * @param eventList The event list to use.
    * @param waitTime  The (fixed) wait time for all jobs.
@@ -35,7 +35,7 @@ extends AbstractServerlessSimQueue<J, Q>
    */
   public DELAY (final SimEventList eventList, final double waitTime)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE);
     if (waitTime < 0)
       throw new IllegalArgumentException ();
     this.waitTime = waitTime;

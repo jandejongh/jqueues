@@ -45,14 +45,14 @@ implements SimQueueWithGate<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a {@link GATE} queue given an event list.
+  /** Creates a {@link GATE} queue with infinite buffer size given an event list.
    *
    * @param eventList The event list to use.
    *
    */
   public GATE (final SimEventList eventList)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE);
     registerNotificationType (SimQueueWithGateSimpleEventType.GATE_CLOSED, this::fireGateClosed);
     registerNotificationType (SimQueueWithGateSimpleEventType.GATE_OPEN, this::fireGateOpen);
     registerPreNotificationHook (this::gatePassageCreditsPreNotificationHook);

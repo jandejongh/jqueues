@@ -23,14 +23,14 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a {@link WUR} queue given an event list.
+  /** Creates a {@link WUR} queue with infinite buffer size given an event list.
    *
    * @param eventList The event list to use.
    *
    */
   public WUR (final SimEventList eventList)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE);
   }
   
   /** Returns a new {@link WUR} object on the same {@link SimEventList}.
