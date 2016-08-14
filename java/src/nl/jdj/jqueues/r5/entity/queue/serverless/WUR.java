@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.serverless;
 
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SUR;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** In the {@link WUR} queue jobs wait until the arrival of the next job, at which point they depart from the waiting area.
@@ -12,6 +13,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
+ * @see SUR
+ * 
  */
 public class WUR<J extends SimJob, Q extends WUR>
 extends AbstractServerlessSimQueue<J, Q>
