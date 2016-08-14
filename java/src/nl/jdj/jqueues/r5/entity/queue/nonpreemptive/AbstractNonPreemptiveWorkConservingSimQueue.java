@@ -46,6 +46,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  *      by implementing {@link #insertAdmittedJobInQueueUponArrival}.
  * <li> Selecting which job to start by implementing {@link #selectJobToStart}
  *      (the moments to start jobs are entirely managed by this class).
+ * <li> If needed, override {@link #getServiceTimeForJob}.
  * <li> Removing a job from the system, if queue-specific data structures are maintained for visiting jobs,
  *      by overriding {@link #removeJobFromQueueUponExit}.
  * <li> If applicable, exposing the queue's QoS structure (which can only affect the waiting-area behavior)
@@ -371,7 +372,7 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
     else
       depart (time, job);
   }
-  
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // DEPARTURE
