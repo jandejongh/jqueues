@@ -19,7 +19,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  *
  */
 public class PS<J extends SimJob, Q extends PS>
-extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
+extends AbstractProcessorSharingSimQueue<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a PS queue given an event list.
+  /** Creates a single-server PS queue with infinite buffer size given an event list.
    *
    * <p>
    * The constructor registers a pre-update hook that sets the virtual time upon updates.
@@ -41,7 +41,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
    */
   public PS (final SimEventList eventList)
   {
-    super (eventList);
+    super (eventList, Integer.MAX_VALUE, 1);
     registerPreUpdateHook (this::updateVirtualTime);
   }
   
@@ -73,6 +73,30 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   public String toStringDefault ()
   {
     return "PS";
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // QoS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Class getQoSClass ()
+  {
+    return super.getQoSClass ();
+  }
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  public final Object getQoS ()
+  {
+    return super.getQoS ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -292,6 +316,15 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void setServerAccessCreditsSubClass ()
+  {
+    super.setServerAccessCreditsSubClass ();
+  }
+
   /** Starts jobs as long as there are server-access credits and jobs waiting.
    * 
    * @see #hasServerAcccessCredits
@@ -378,6 +411,23 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
       depart (time, job);
   }
     
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  protected final double getServiceTimeForJob (final J job)
+  {
+    return super.getServiceTimeForJob (job);
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // DEPARTURE
