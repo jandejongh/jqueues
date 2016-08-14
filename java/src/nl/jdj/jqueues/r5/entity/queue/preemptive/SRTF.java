@@ -105,7 +105,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
    * In case of ties, jobs are inserted in order of arrival.
    * 
    * @see #jobQueue
-   * @see SimJob#getServiceTime
+   * @see #getServiceTimeForJob
    * 
    */
   @Override
@@ -113,7 +113,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   {
     int newPosition = 0;
     while (newPosition < this.jobQueue.size ()
-      && this.jobQueue.get (newPosition).getServiceTime (this) <= job.getServiceTime (this))
+      && getServiceTimeForJob (this.jobQueue.get (newPosition)) <= getServiceTimeForJob (job))
       newPosition++;
     this.jobQueue.add (newPosition, job);    
   }
@@ -179,7 +179,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
   
   /** Inserts the job, after sanity checks, in the service area and administers its remaining service time.
    * 
-   * @see SimJob#getServiceTime
+   * @see #getServiceTimeForJob
    * @see #remainingServiceTime
    * 
    */
@@ -192,7 +192,7 @@ extends AbstractPreemptiveSingleServerSimQueue<J, Q>
     || this.remainingServiceTime.containsKey (job))
       throw new IllegalArgumentException ();
     this.jobsInServiceArea.add (job);
-    final double jobServiceTime = job.getServiceTime (this);
+    final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
     this.remainingServiceTime.put (job, jobServiceTime);

@@ -216,7 +216,7 @@ public abstract class AbstractPreemptiveSimQueue
    * @see #getPreemptionStrategy
    * @see #drop
    * @see #cancelDepartureEvent
-   * @see SimJob#getServiceTime
+   * @see #getServiceTimeForJob
    * @see #depart
    * 
    */
@@ -238,7 +238,7 @@ public abstract class AbstractPreemptiveSimQueue
       case RESTART:
         this.jobsBeingServed.remove (job);
         cancelDepartureEvent (job);
-        this.remainingServiceTime.put (job, job.getServiceTime (this));
+        this.remainingServiceTime.put (job, getServiceTimeForJob (job));
         break;
       case REDRAW:
         throw new UnsupportedOperationException ("PreemptionStrategy.REDRAW is not supported.");

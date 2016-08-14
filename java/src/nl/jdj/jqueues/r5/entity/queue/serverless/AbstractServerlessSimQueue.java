@@ -91,4 +91,21 @@ extends AbstractSimQueue<J, Q>
     /* EMPTY */
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Throws {@link IllegalStateException}.
+   * 
+   * @throws IllegalStateException Always, as a call to this method is unexpected.
+   * 
+   */
+  @Override
+  protected final double getServiceTimeForJob (final J job)
+  {
+    throw new IllegalStateException ();
+  }
+
 }

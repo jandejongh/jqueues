@@ -285,7 +285,7 @@ implements SimQueueQoS<J, Q, P>
   /** Reschedules due to the start of a job, making it depart immediately if its requested service time is zero,
    *  or rescheduling the (single) departure event of this queue otherwise.
    * 
-   * @see SimJob#getServiceTime
+   * @see #getServiceTimeForJob
    * @see #rescheduleDepartureEvent
    * @see #depart
    * 
@@ -297,7 +297,7 @@ implements SimQueueQoS<J, Q, P>
     || (! getJobs ().contains (job))
     || (! getJobsInServiceArea ().contains (job)))
       throw new IllegalArgumentException ();
-    final double jobServiceTime = job.getServiceTime (this);
+    final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
     if (jobServiceTime > 0)
@@ -374,6 +374,7 @@ implements SimQueueQoS<J, Q, P>
    * @see #cancelDepartureEvent
    * @see #jobsInServiceArea
    * @see #getFirstJobInServiceArea
+   * @see #getServiceTimeForJob
    * @see #scheduleDepartureEvent
    * @see #depart
    * @see #getLastUpdateTime
@@ -393,7 +394,7 @@ implements SimQueueQoS<J, Q, P>
     if (getNumberOfJobsInServiceArea () == 1)
     {
       final J job = getFirstJobInServiceArea ();
-      final double jobServiceTime = job.getServiceTime (this);
+      final double jobServiceTime = getServiceTimeForJob (job);
       if (jobServiceTime < 0)
         throw new RuntimeException ();
       if (jobServiceTime > 0)

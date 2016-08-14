@@ -475,7 +475,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   
   /** Inserts the job, after sanity checks, in the service area and administers its required and initial obtained service times.
    * 
-   * @see SimJob#getServiceTime
+   * @see #getServiceTimeForJob
    * @see #requiredServiceTime
    * @see #obtainedServiceTimeMap
    * 
@@ -490,7 +490,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
       throw new IllegalArgumentException ();
     sanityInternalAdministration ();
     this.jobsInServiceArea.add (job);
-    final double jobRequiredServiceTime = job.getServiceTime (this);
+    final double jobRequiredServiceTime = getServiceTimeForJob (job);
     if (jobRequiredServiceTime < 0)
       throw new RuntimeException ();
     this.requiredServiceTime.put (job, jobRequiredServiceTime);

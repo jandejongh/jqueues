@@ -131,7 +131,7 @@ implements SimQoS<J, Q>
   {
     int newPosition = 0;
     while (newPosition < this.jobQueue.size ()
-      && this.jobQueue.get (newPosition).getServiceTime (this) <= getServiceTimeForJob (job))
+      && getServiceTimeForJob (this.jobQueue.get (newPosition)) <= getServiceTimeForJob (job))
       newPosition++;
     this.jobQueue.add (newPosition, job);    
   }

@@ -180,6 +180,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
   /** Adds the job to the service area and updates {@link #remainingServiceTime}.
    * 
    * @see #jobsInServiceArea
+   * @see #getServiceTimeForJob
    * @see #remainingServiceTime
    * 
    */
@@ -192,7 +193,7 @@ extends AbstractPreemptiveSingleServerSimQueueQoS<J, Q, P>
     || this.remainingServiceTime.containsKey (job))
       throw new IllegalArgumentException ();
     this.jobsInServiceArea.add (job);
-    final double jobServiceTime = job.getServiceTime (this);
+    final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
     this.remainingServiceTime.put (job, jobServiceTime);

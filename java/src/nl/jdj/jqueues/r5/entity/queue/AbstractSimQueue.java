@@ -1233,6 +1233,45 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the service time for a job at this queue.
+   * 
+   * <p>
+   * Intended to be the core method for obtaining the service time of a job during a visit.
+   * 
+   * <p>
+   * Implementations must always return a non-negative value.
+   * 
+   * <p>
+   * Implementations must always return the same value prior to a <i>single</i> visit,
+   * and during the visit itself.
+   * This method can only change its return value immediately after a job visit.
+   * 
+   * <p>
+   * Note that this base class does not use this method; it is for sub-class use.
+   * Also note that certain queueing disciplines may not support the notion
+   * of a job's service time, and thus completely ignore this method.
+   * At the discretion of the implementation,
+   * an {@link UnsupportedOperationException} may even the thrown then.
+   * 
+   * @param job The job, non-<code>null</code>.
+   * 
+   * @return The required service time, non-negative.
+   * 
+   * @throws UnsupportedOperationException If the notion of the service time of a job is not supported by this queue type
+   *                                       (e.g., because it does not allow jobs to start).
+   * 
+   */
+  protected double getServiceTimeForJob (final J job)
+  {
+    return job.getServiceTime (this);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // DEPARTURE
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

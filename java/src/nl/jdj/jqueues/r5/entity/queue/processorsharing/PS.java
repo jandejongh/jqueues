@@ -332,7 +332,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
   
   /** Inserts the job, after sanity checks, in the service area and administers its virtual departure time.
    * 
-   * @see SimJob#getServiceTime
+   * @see #getServiceTimeForJob
    * @see #getVirtualTime
    * @see #virtualDepartureTime
    * 
@@ -346,7 +346,7 @@ extends AbstractProcessorSharingSingleServerSimQueue<J, Q>
     || this.virtualDepartureTime.containsKey (job))
       throw new IllegalArgumentException ();
     this.jobsInServiceArea.add (job);
-    final double jobServiceTime = job.getServiceTime (this);
+    final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
     final double jobVirtualDepartureTime = getVirtualTime () + jobServiceTime;

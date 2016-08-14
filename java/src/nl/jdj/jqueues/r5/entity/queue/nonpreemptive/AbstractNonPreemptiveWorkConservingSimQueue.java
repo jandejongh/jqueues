@@ -374,36 +374,6 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // SERVICE TIME FOR JOB
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns the service time for a job at this queue.
-   * 
-   * <p>
-   * XXX
-   * This method should be moved upwards to AbstractSimQueue.
-   * 
-   * <p>
-   * Implementations must always return a non-negative value.
-   * Otherwise, a {@link RuntimeException} is thrown in (a.o.) {@link #reschedule}.
-   * 
-   * <p>
-   * The default implementation uses {@link SimJob#getServiceTime}, but this may be overridden.
-   * Note that implementations must return the same value for the service time during a <i>single</i> visit.
-   * 
-   * @param job The job, non-<code>null</code>.
-   * 
-   * @return The required service time, non-negative.
-   * 
-   */
-  protected double getServiceTimeForJob (final J job)
-  {
-    return job.getServiceTime (this);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
   // DEPARTURE
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
