@@ -11,7 +11,7 @@ import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A {@link BlackSimQueueComposite} encapsulating a single {@link SimQueue} of which job start are hidden.
+/** A {@link BlackSimQueueComposite} encapsulating a single {@link SimQueue} of which job starts are hidden.
  *
  * <p>
  * This composite queue mimics the {@link SimQueue} interface of the encapsulated queue.
