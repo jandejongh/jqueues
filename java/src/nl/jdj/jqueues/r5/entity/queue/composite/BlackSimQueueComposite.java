@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.composite;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.single.enc.BlackEncapsulatorHideStartSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.single.enc.BlackEncapsulatorSimQueue;
 
 /** A network of {@link SimQueue}s embedded in a single queue hiding its internal structural details.
@@ -66,7 +67,7 @@ extends SimQueueComposite<DJ, DQ, J, Q>
      */
     LOCAL,
     /** The waiting and service area of real jobs, and the semantics of server-access credits and starting a real job,
-     *  coincide with the single sub queue.
+     *  coincide with those on the single sub queue.
      * 
      * <p>
      * This model can only be applied in case of a single sub-queue.
@@ -79,6 +80,22 @@ extends SimQueueComposite<DJ, DQ, J, Q>
      * 
      */
     ENCAPSULATOR_QUEUE,
+    /** The waiting area of the composite queue is the combined waiting and service area of the single sub queue,
+     *  and job starts on the sub queue are hidden on the composite queue.
+     *
+     * <p>
+     * This model can only be applied in case of a single sub-queue.
+     * Whenever a real job is in the waiting area of the (super) queue, its delegate job resides on the sub-queue,
+     * but may be either in its waiting or service area.
+     * The number of server access credits on this queue is nicely maintained, but they have no effect
+     * since real jobs do not start; the number of server-access credits on the sub-queue is always positive infinity
+     * (i.e., {@link Integer#MAX_VALUE}.
+     * The {@link #isStartArmed} state on this queue is always {@code false}.
+     * 
+     * @see BlackEncapsulatorHideStartSimQueue
+     * 
+     */
+    ENCAPSULATOR_HIDE_START_QUEUE,
     /** The waiting area of the first queue is that of the composite queue;
      *  the service area of the second queue is that of the composite queue
      *  in a system with exactly two sub-queues.

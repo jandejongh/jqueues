@@ -11,20 +11,20 @@ import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A {@link BlackSimQueueComposite} encapsulating a single {@link SimQueue}.
+/** A {@link BlackSimQueueComposite} encapsulating a single {@link SimQueue} of which job start are hidden.
  *
  * <p>
  * This composite queue mimics the {@link SimQueue} interface of the encapsulated queue.
  * 
- * <p>The main purpose of this apparently rather futile {@link SimQueue}
- * is to test the maturity of the {@link SimQueue} interface and its notifications:
- * Can we reconstruct a {@link SimQueue} interface by acting on and monitoring another {@link SimQueue}?.
- * It is, however, also useful to extract a bare {@link SimQueue} interface at the {@code Java} level
- * from a much more complicated queue implementation.
+ * <p>
+ * The main purpose of this {@link SimQueue} is to provide a means to "hide" job starts on the encapsulated queue
+ * and concentrate on arrival, drops, revocations and departures only.
+ * This allows for instance to test the equality of job visits of {@link SimQueue} implementations
+ * that are equal in terms of sojourn times, but not in terms of start times (or in terms of the occurrence of job starts).
  * 
  * <p>
  * This queue has non-default semantics for the waiting and service area of the black composite queue.
- * For more details, refer to {@link StartModel#ENCAPSULATOR_QUEUE}.
+ * For more details, refer to {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -33,13 +33,13 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * @see BlackSimQueueComposite
  * @see StartModel
- * @see StartModel#ENCAPSULATOR_QUEUE
+ * @see StartModel#ENCAPSULATOR_HIDE_START_QUEUE
  * @see #setStartModel
- * @see BlackEncapsulatorHideStartSimQueue
+ * @see BlackEncapsulatorSimQueue
  * 
  */
-public class BlackEncapsulatorSimQueue
-  <DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackEncapsulatorSimQueue>
+public class BlackEncapsulatorHideStartSimQueue
+  <DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackEncapsulatorHideStartSimQueue>
   extends AbstractBlackSimQueueComposite<DJ, DQ, J, Q>
 {
   
@@ -49,10 +49,10 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a black encapsulator queue given an event list and a queue.
+  /** Creates a black encapsulator queue that hides its sub-queue starts given an event list and a queue.
    *
    * <p>
-   * The constructor sets the {@link StartModel} to {@link StartModel#ENCAPSULATOR_QUEUE}.
+   * The constructor sets the {@link StartModel} to {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE}.
    * 
    * @param eventList             The event list to use.
    * @param queue                 The encapsulated queue.
@@ -63,11 +63,11 @@ public class BlackEncapsulatorSimQueue
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
    * @see StartModel
-   * @see StartModel#ENCAPSULATOR_QUEUE
+   * @see StartModel#ENCAPSULATOR_HIDE_START_QUEUE
    * @see #setStartModel
    * 
    */
-  public BlackEncapsulatorSimQueue
+  public BlackEncapsulatorHideStartSimQueue
   (final SimEventList eventList,
    final DQ queue,
    final DelegateSimJobFactory delegateSimJobFactory)
@@ -90,14 +90,14 @@ public class BlackEncapsulatorSimQueue
         }
       },
       delegateSimJobFactory);
-    setStartModel (StartModel.ENCAPSULATOR_QUEUE);
+    setStartModel (StartModel.ENCAPSULATOR_HIDE_START_QUEUE);
   }
   
-  /** Returns a new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
-   *  queue and the same delegate-job factory.
+  /** Returns a new {@link BlackEncapsulatorHideStartSimQueue} object on the same {@link SimEventList}
+   *  with a copy of the encapsulated queue and the same delegate-job factory.
    * 
-   * @return A new {@link BlackEncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
-   *         queue and the same delegate-job factory.
+   * @return A new {@link BlackEncapsulatorHideStartSimQueue} object on the same {@link SimEventList}
+   *         with a copy of the encapsulated queue and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
    * 
@@ -107,10 +107,10 @@ public class BlackEncapsulatorSimQueue
    * 
    */
   @Override
-  public BlackEncapsulatorSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  public BlackEncapsulatorHideStartSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final SimQueue<DJ, DQ> encapsulatedQueueCopy = getEncapsulatedQueue ().getCopySimQueue ();
-    return new BlackEncapsulatorSimQueue (getEventList (), encapsulatedQueueCopy, getDelegateSimJobFactory ());
+    return new BlackEncapsulatorHideStartSimQueue (getEventList (), encapsulatedQueueCopy, getDelegateSimJobFactory ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -135,15 +135,15 @@ public class BlackEncapsulatorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "Enc[encapsulated queue]".
+  /** Returns "EncHS[encapsulated queue]".
    * 
-   * @return "Enc[encapsulated queue]".
+   * @return "EncHS[encapsulated queue]".
    * 
    */
   @Override
   public String toStringDefault ()
   {
-    return "Enc[" + getQueues ().iterator ().next () + "]";
+    return "EncHS[" + getQueues ().iterator ().next () + "]";
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

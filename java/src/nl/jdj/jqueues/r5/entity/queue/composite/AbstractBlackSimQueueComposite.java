@@ -11,6 +11,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.dual.collector.BlackDropCollectorSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.composite.single.enc.BlackEncapsulatorHideStartSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.single.enc.BlackEncapsulatorSimQueue;
 import nl.jdj.jqueues.r5.event.SimQueueJobRevocationEvent;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
@@ -133,12 +134,14 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * @param startModel The new start model (non-{@code null}).
    * 
    * @throws IllegalArgumentException If the argument is {@code null},
-   *                                  or {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE} is chosen
+   *                                  or {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_QUEUE}
+   *                                  or {@link BlackSimQueueComposite.StartModel#ENCAPSULATOR_HIDE_START_QUEUE} is chosen
    *                                  while there are fewer or more than <i>one</i> sub-queues,
    *                                  or {@link BlackSimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE} is chosen
    *                                  while there are fewer or more than <i>two</i> sub-queues,
    * 
    * @see BlackEncapsulatorSimQueue
+   * @see BlackEncapsulatorHideStartSimQueue
    * @see BlackCompressedTandem2SimQueue
    * 
    */
@@ -147,6 +150,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     if (startModel == null)
       throw new IllegalArgumentException ();
     if (startModel == StartModel.ENCAPSULATOR_QUEUE && getQueues ().size () != 1)
+      throw new IllegalArgumentException ();
+    if (startModel == StartModel.ENCAPSULATOR_HIDE_START_QUEUE && getQueues ().size () != 1)
       throw new IllegalArgumentException ();
     if (startModel == StartModel.COMPRESSED_TANDEM_2_QUEUE && getQueues ().size () != 2)
       throw new IllegalArgumentException ();
@@ -454,6 +459,9 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * state of the encapsulated queue.
    * 
    * <p>
+   * For {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE}, this method returns {@code false}.
+   * 
+   * <p>
    * For {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, this method returns the {@link SimQueue#isStartArmed}
    * state of the serve (i.e., second) queue.
    * 
@@ -473,6 +481,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
         return true;
       case ENCAPSULATOR_QUEUE:
         return getQueue (0).isStartArmed ();
+      case ENCAPSULATOR_HIDE_START_QUEUE:
+        return false;
       case COMPRESSED_TANDEM_2_QUEUE:
         return getQueue (1).isStartArmed ();
       default:
@@ -568,7 +578,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * For {@link StartModel#LOCAL}, this method invokes {@link #start} if there are (local) server-access credits.
    * 
    * <p>
-   * For {@link StartModel#ENCAPSULATOR_QUEUE}, this method lets the delegate job arrive at the encapsulated queue.
+   * For {@link StartModel#ENCAPSULATOR_QUEUE} and {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE},
+   * this method lets the delegate job arrive at the encapsulated queue.
    * 
    * <p>
    * For {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, this method lets the delegate job arrive at the wait queue.
@@ -596,6 +607,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
           start (time, job);
         break;
       case ENCAPSULATOR_QUEUE:
+      case ENCAPSULATOR_HIDE_START_QUEUE:
       case COMPRESSED_TANDEM_2_QUEUE:
         getQueue (0).arrive (time, delegateJob);
         break;
@@ -757,6 +769,11 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * For {@link StartModel#ENCAPSULATOR_QUEUE}, this method copies the new server-access credits into the encapsulated queue.
    * 
    * <p>
+   * For {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE}, this method does nothing,
+   * since (real) jobs cannot start on the composite queue, and the number of server-access credits on the
+   * encapsulated queue in always infinite.
+   * 
+   * <p>
    * For {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, this method sets the server-access credits on the wait queue
    *                                                   <i>only</i> if we run out of local server-access credits.
    * Note that the case in which we regain them is dealt with by {@link #rescheduleForNewServerAccessCredits}.
@@ -780,6 +797,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       case ENCAPSULATOR_QUEUE:
         getQueue (0).setServerAccessCredits (getLastUpdateTime (), getServerAccessCredits ());
         break;
+      case ENCAPSULATOR_HIDE_START_QUEUE:
+        break;
       case COMPRESSED_TANDEM_2_QUEUE:
         if (getServerAccessCredits () == 0)
           setServerAccessCreditsOnWaitQueue ();
@@ -799,6 +818,11 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * <p>
    * For {@link StartModel#ENCAPSULATOR_QUEUE}, this method does nothing (we follow the server-access credits on the
    *                                            encapsulated queue, and only set them upon external request).
+   * 
+   * <p>
+   * For {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE}, this method does nothing (the server-access credits on the
+   *                                            encapsulated queue is always infinite,
+   *                                            and on the composite queue there are no job starts).
    * 
    * <p>
    * For {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, this method sets the server-access credits on the wait queue.
@@ -824,6 +848,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
           start (time, getFirstJobInWaitingArea ());
         break;
       case ENCAPSULATOR_QUEUE:
+      case ENCAPSULATOR_HIDE_START_QUEUE:
         break;
       case COMPRESSED_TANDEM_2_QUEUE:
         setServerAccessCreditsOnWaitQueue ();
@@ -841,6 +866,11 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
   
   /** Inserts the job in the service area (after sanity checks).
    * 
+   * @throws IllegalStateException If the start model is {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE},
+   *                               or if other sanity checks on internal consistency fail.
+   * 
+   * @see #getStartModel
+   * @see StartModel#ENCAPSULATOR_HIDE_START_QUEUE
    * @see #jobsInServiceArea
    * @see #rescheduleAfterStart
    * 
@@ -852,6 +882,9 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       throw new IllegalArgumentException ();
     if ((! this.jobQueue.contains (job)) || this.jobsInServiceArea.contains (job))
       throw new IllegalArgumentException ();
+    if (getStartModel () == StartModel.ENCAPSULATOR_HIDE_START_QUEUE)
+      // Real jobs cannot start; so a call of this method should not happen!
+      throw new IllegalStateException ();
     getDelegateJob (job); // Sanity on existence of delegate job.
     this.jobsInServiceArea.add (job);
   }
@@ -869,6 +902,11 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * For {@link StartModel#ENCAPSULATOR_QUEUE}, this method does nothing (we are merely being notified of the start of a delegate
    *                                            job on the encapsulated queue, and our own notification will be dealt with by
    *                                            our caller, {@link #start}).
+   * 
+   * <p>
+   * For {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE}, this method throws an {@link IllegalStateException}
+   *                                                       because (real) jobs cannot start and an invocation of this method
+   *                                                       is therefore unexpected (illegal).
    * 
    * <p>
    * For {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}, lets the delegate job arrive on the serve queue (the second queue).
@@ -907,6 +945,9 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
         break;
       case ENCAPSULATOR_QUEUE:
         break;
+      case ENCAPSULATOR_HIDE_START_QUEUE:
+        // Real jobs cannot start; so a call of this method should not happen!
+        throw new IllegalStateException ();
       case COMPRESSED_TANDEM_2_QUEUE:
         // Arrive at serve queue.
         getQueue (1).arrive (time, delegateJob);
