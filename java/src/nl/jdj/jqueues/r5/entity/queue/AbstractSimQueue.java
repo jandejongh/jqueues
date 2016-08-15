@@ -1488,13 +1488,18 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   /** Cancels a pending departure event on the event list.
    * 
-   * After several rigorous sanity checks, this default implementation
-   * removes the event from the event list and from {@link #eventsScheduled}.
+   * <p>
+   * After sanity checks on the event not being {@code null},
+   * and on the event's presence in {@link #getEventList} and {@link #eventsScheduled},
+   * this method removes the event from the event list and from {@link #eventsScheduled}.
    * 
    * <p>
    * The base class {@link AbstractSimQueue} does not use this method; it is provided as a service to subclasses.
    * 
-   * @param event The departure event to cancel.
+   * @param event The departure event to cancel, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the argument is {@code null}, or not present
+   *                                  in both {@link #getEventList} and {@link #eventsScheduled}.
    * 
    * @see #eventsScheduled
    * @see #getEventList
@@ -1508,8 +1513,11 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalArgumentException ();
     if (! this.eventsScheduled.contains (event))
       throw new IllegalArgumentException ();
-    if (! this.jobQueue.contains (event.getJob ()))
-      throw new IllegalArgumentException ();
+    // The following check seems a bit too much...
+    // This method is often called from the need to reschedule, e.g., after a revocation,
+    // and thus we should not insist that the job is still being present in the jobQueue.
+    // if (! this.jobQueue.contains (event.getJob ()))
+    //   throw new IllegalArgumentException ();
     this.eventsScheduled.remove (event);
     getEventList ().remove (event);
   }
