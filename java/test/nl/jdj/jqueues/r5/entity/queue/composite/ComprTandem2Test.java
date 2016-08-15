@@ -101,7 +101,7 @@ public class ComprTandem2Test
    throws SimQueuePredictionException
   {
     final BlackCompressedTandem2SimQueue ctandem2 =
-    new BlackCompressedTandem2SimQueue (waitQueue.getEventList (), waitQueue, serveQueue, null);
+      new BlackCompressedTandem2SimQueue (waitQueue.getEventList (), waitQueue, serveQueue, null);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (ctandem2, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
   }
