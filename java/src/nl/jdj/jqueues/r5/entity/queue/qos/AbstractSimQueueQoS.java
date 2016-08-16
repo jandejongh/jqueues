@@ -89,7 +89,7 @@ implements SimQueueQoS<J, Q, P>
    * 
    */
   @Override
-  public final void setQoS (P qos)
+  public final void setQoS (final P qos)
   {
     SimQueueQoS.super.setQoS (qos);
   }
