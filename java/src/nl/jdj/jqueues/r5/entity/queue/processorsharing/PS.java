@@ -234,7 +234,7 @@ extends AbstractEgalitarianProcessorSharingSimQueue<J, Q>
     super.setServerAccessCreditsSubClass ();
   }
 
-  /** Starts jobs as long as there are server-access credits and jobs waiting.
+  /** Starts jobs in arrival order as long as there are server-access credits and jobs waiting.
    * 
    * @see #hasServerAcccessCredits
    * @see #hasJobsInWaitingArea
