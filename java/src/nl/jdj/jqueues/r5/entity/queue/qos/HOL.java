@@ -105,7 +105,7 @@ implements SimQueueQoS<J, Q, P>
     if (this.jobsInServiceArea.contains (job))
       throw new IllegalStateException ();
     this.jobQueue.add (job);
-    final P qos = getAndCheckJobQoS (job);
+    final P qos = SimQueueQoSUtils.getAndCheckJobQoS (job, this);
     if (! this.jobsQoSMap.containsKey (qos))
       this.jobsQoSMap.put (qos, new LinkedHashSet<> ());
     this.jobsQoSMap.get (qos).add (job);
@@ -191,7 +191,7 @@ implements SimQueueQoS<J, Q, P>
       cancelDepartureEvent (job);
     }
     this.jobQueue.remove (job);
-    final P qos = getAndCheckJobQoS (job);
+    final P qos = SimQueueQoSUtils.getAndCheckJobQoS (job, this);
     if (! this.jobsQoSMap.containsKey (qos))
       throw new IllegalStateException ();
     if (this.jobsQoSMap.get (qos) == null || ! this.jobsQoSMap.get (qos).contains (job))
@@ -357,7 +357,7 @@ implements SimQueueQoS<J, Q, P>
       throw new IllegalStateException ();
     this.jobQueue.remove (departingJob);
     this.jobsInServiceArea.remove (departingJob);
-    final P qos = getAndCheckJobQoS (departingJob);
+    final P qos = SimQueueQoSUtils.getAndCheckJobQoS (departingJob, this);
     if (! this.jobsQoSMap.containsKey (qos))
       throw new IllegalStateException ();
     if (this.jobsQoSMap.get (qos) == null || ! this.jobsQoSMap.get (qos).contains (departingJob))

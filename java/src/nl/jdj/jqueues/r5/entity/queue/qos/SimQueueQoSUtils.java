@@ -1,0 +1,75 @@
+package nl.jdj.jqueues.r5.entity.queue.qos;
+
+import nl.jdj.jqueues.r5.SimJob;
+import nl.jdj.jqueues.r5.extensions.qos.SimEntityQoS;
+import nl.jdj.jqueues.r5.extensions.qos.SimJobQoS;
+import nl.jdj.jqueues.r5.extensions.qos.SimQueueQoS;
+
+/** Utility methods related to QoS.
+ * 
+ * @see SimEntityQoS
+ * @see SimJobQoS
+ * @see SimQueueQoS
+ *
+ */
+public final class SimQueueQoSUtils
+{
+  
+  /** Prevents instantiation.
+   * 
+   */
+  private SimQueueQoSUtils ()
+  {  
+  }
+  
+  /** Gets the (validated) QoS value for given job at given queue (where the job does not have to be present on the queue yet).
+   * 
+   * <p>
+   * The QoS value is validated in the sense that if the {@link SimJob} returns a non-{@code null}
+   * {@link SimJob#getQoSClass}, the class or interface returned must be a sub-class or sub-interface
+   * of the queue's {@link SimQueueQoS#getQoSClass}, in other words,
+   * the job's QoS structure must be compatible with that of the queue.
+   * In addition, if the job returns a non-{@code null} {@link SimJob#getQoSClass},
+   * it must return a non-{@code null} QoS value from {@link SimJob#getQoS},
+   * and this QoS value must be an instance of the reported job QoS class.
+   * In all other case, including the case in which the job is {@code null},
+   * an {@link IllegalArgumentException} is thrown.
+   * 
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueueQoS}s supported.
+   * @param <P> The type used for QoS.
+   * 
+   * @param job   The job, non-{@code null}.
+   * @param queue The queue, non-{@code null}.
+   * 
+   * @return The validated QoS value of the job, taking the default (only) if the job reports {@code null} QoS class and value.
+   * 
+   * @throws IllegalArgumentException If the job or queue is {@code null} or if one or more QoS-related sanity checks fail.
+   * 
+   */
+  public static
+  <J extends SimJob, Q extends SimQueueQoS, P extends Comparable>
+  P getAndCheckJobQoS (final J job, final Q queue)
+  {
+    if (job == null || queue == null)
+      throw new IllegalArgumentException ();
+    if (job.getQoSClass () == null)
+    {
+      if (job.getQoS () != null)
+        throw new IllegalArgumentException ();
+      else
+        return (P) queue.getDefaultJobQoS ();
+    }
+    else
+    {
+      if (! queue.getQoSClass ().isAssignableFrom (job.getQoSClass ()))
+        throw new IllegalArgumentException ();
+      if (job.getQoS () == null)
+        return (P) queue.getDefaultJobQoS ();
+      if (! queue.getQoSClass ().isInstance (job.getQoS ()))
+        throw new IllegalArgumentException ();
+      return (P) job.getQoS ();
+    }
+  }
+
+}

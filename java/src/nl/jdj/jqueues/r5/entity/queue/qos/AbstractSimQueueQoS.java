@@ -108,49 +108,6 @@ implements SimQueueQoS<J, Q, P>
     return this.defaultJobQoS;
   }
 
-  /** Gets the (validated) QoS value for given job (which does not have to be present in the queue yet).
-   * 
-   * <p>
-   * The QoS value is validated in the sense that if the {@link SimJob} returns a non-{@code null}
-   * {@link SimJob#getQoSClass}, the class or interface returned must be a sub-class or sub-interface
-   * of {@link #getQoSClass}, in other words,
-   * the job's QoS structure must be compatible with this queue.
-   * In addition, if the job return non-{@code null} {@link SimJob#getQoSClass},
-   * it must return a non-{@code null} QoS value from {@link SimJob#getQoS},
-   * and this QoS value must be an instance of the reported job QoS class.
-   * In all other case, including the case in which the job is {@code null},
-   * an {@link IllegalArgumentException} is thrown.
-   * 
-   * @param job The job, non-{@code null}.
-   * 
-   * @return The validated QoS value of the job, taking the default (only) if the job reports {@code null} QoS class and value.
-   * 
-   * @throws IllegalArgumentException If the job is {@code null} or if one or more QoS-related sanity checks fail.
-   * 
-   */
-  protected final P getAndCheckJobQoS (final J job)
-  {
-    if (job == null)
-      throw new IllegalArgumentException ();
-    if (job.getQoSClass () == null)
-    {
-      if (job.getQoS () != null)
-        throw new IllegalArgumentException ();
-      else
-        return getDefaultJobQoS ();
-    }
-    else
-    {
-      if (! getQoSClass ().isAssignableFrom (job.getQoSClass ()))
-        throw new IllegalArgumentException ();
-      if (job.getQoS () == null)
-        return getDefaultJobQoS ();
-      if (! getQoSClass ().isInstance (job.getQoS ()))
-        throw new IllegalArgumentException ();
-      return (P) job.getQoS ();
-    }
-  }
-
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // STATE: RESET ENTITY
@@ -166,7 +123,7 @@ implements SimQueueQoS<J, Q, P>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // STATE: JOBS QoS MAP
+  // JOB QoS MAP
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
