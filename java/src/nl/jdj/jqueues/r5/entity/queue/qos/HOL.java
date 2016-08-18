@@ -94,7 +94,7 @@ implements SimQueueQoS<J, Q, P>
   
   /** Inserts the job into {@link #jobQueue} (tail) and {@link #jobsQoSMap}.
    * 
-   * @see #getAndCheckJobQoS
+   * @see SimQueueQoSUtils#getAndCheckJobQoS
    * 
    */
   @Override
