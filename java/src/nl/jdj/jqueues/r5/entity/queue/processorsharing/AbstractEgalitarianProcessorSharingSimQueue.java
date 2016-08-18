@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.processorsharing;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.queue.qos.HOL_PS;
 import nl.jdj.jqueues.r5.util.collection.HashMapWithPreImageAndOrderedValueSet;
 import nl.jdj.jsimulation.r5.SimEventList;
 
@@ -238,6 +239,7 @@ public abstract class AbstractEgalitarianProcessorSharingSimQueue
   /** Calls {@link #removeJobFromQueueUponRevokation} for the departed job.
    * 
    * @see #removeJobFromQueueUponRevokation
+   * @see #rescheduleAfterDeparture
    * 
    */
   @Override
@@ -248,11 +250,16 @@ public abstract class AbstractEgalitarianProcessorSharingSimQueue
 
   /** Calls {@link #rescheduleDepartureEvent}.
    * 
+   * <p>
+   * May be overridden/augmented by sub-classes
+   * if additional actions/checks are required upon a departure (e.g., in {@link HOL_PS}.
+   * 
    * @see #rescheduleDepartureEvent
+   * @see #removeJobFromQueueUponDeparture
    * 
    */
   @Override
-  protected final void rescheduleAfterDeparture (final J departedJob, final double time)
+  protected void rescheduleAfterDeparture (final J departedJob, final double time)
   {
     if (departedJob == null)
       throw new IllegalArgumentException ();
