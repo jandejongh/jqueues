@@ -11,7 +11,7 @@ import nl.jdj.jqueues.r5.SimQueue;
  * @param <P> The type used for QoS.
  * 
  */
-public interface SimEntityQoS<J extends SimJob, Q extends SimQueue, P extends Comparable>
+public interface SimEntityQoS<J extends SimJob, Q extends SimQueue, P>
 extends SimEntity<J, Q>, SimQoS<J, Q>
 {
 

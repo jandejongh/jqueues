@@ -25,7 +25,7 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 /** A {@link SimQueuePredictor} for {@link HOL_PS}.
  * 
  */
-public class SimQueuePredictor_HOL_PS<J extends SimJob, Q extends HOL_PS, P extends Comparable>
+public class SimQueuePredictor_HOL_PS<J extends SimJob, Q extends HOL_PS, P>
 extends AbstractSimQueuePredictor<HOL_PS>
 {
 
@@ -38,7 +38,7 @@ extends AbstractSimQueuePredictor<HOL_PS>
   public SimQueueState<SimJob, HOL_PS> createQueueState (final HOL_PS queue, final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
-    queueState.registerHandler (new SimQueueQoSStateHandler<> ());
+    queueState.registerHandler (new SimQueueQoSStateHandler<> (false));
     return queueState;
   }
 

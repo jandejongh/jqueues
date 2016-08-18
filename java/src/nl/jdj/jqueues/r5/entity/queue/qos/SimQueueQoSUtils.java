@@ -48,7 +48,7 @@ public final class SimQueueQoSUtils
    * 
    */
   public static
-  <J extends SimJob, Q extends SimQueueQoS, P extends Comparable>
+  <J extends SimJob, Q extends SimQueueQoS, P>
   P getAndCheckJobQoS (final J job, final Q queue)
   {
     if (job == null || queue == null)

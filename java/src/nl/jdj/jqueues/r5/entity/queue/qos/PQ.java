@@ -1,7 +1,9 @@
 package nl.jdj.jqueues.r5.entity.queue.qos;
 
 import java.util.LinkedHashSet;
+import java.util.NavigableMap;
 import java.util.Set;
+import java.util.TreeMap;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.preemptive.PreemptionStrategy;
@@ -79,17 +81,34 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // STATE: JOBS QoS MAP
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  protected final NavigableMap<P, Set<J>> jobsQoSMap = new TreeMap<> ();
+  
+  @Override
+  public final NavigableMap<P, Set<J>> getJobsQoSMap ()
+  {
+    return this.jobsQoSMap;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and clear {@link #jobsQoSMap}.
+   * 
+   * @see #jobsQoSMap
    * 
    */
   @Override
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
+    this.jobsQoSMap.clear ();
   }  
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +119,7 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
   
   /** Inserts the job into {@link #jobQueue} (tail) and {@link #jobsQoSMap}.
    * 
-   * @see #getAndCheckJobQoS
+   * @see  SimQueueQoSUtils#getAndCheckJobQoS
    * 
    */
   @Override
@@ -113,7 +132,7 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
     if (this.jobsBeingServed.keySet ().contains (job))
       throw new IllegalStateException ();
     this.jobQueue.add (job);
-    final P qos = getAndCheckJobQoS (job);
+    final P qos = SimQueueQoSUtils.getAndCheckJobQoS (job, this);
     if (! this.jobsQoSMap.containsKey (qos))
       this.jobsQoSMap.put (qos, new LinkedHashSet<> ());
     this.jobsQoSMap.get (qos).add (job);
@@ -132,7 +151,8 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
       throw new IllegalStateException ();
     if (this.jobsInServiceArea.contains (job))
       throw new IllegalStateException ();
-    if (! this.jobsQoSMap.get (getAndCheckJobQoS (job)).contains (job))
+    final P qos = SimQueueQoSUtils.getAndCheckJobQoS (job, this);
+    if (! this.jobsQoSMap.get (qos).contains (job))
       throw new IllegalStateException ();
     if (getExecutableJobWithHighestPriority () == job)
       start (time, job);
@@ -267,7 +287,7 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
    * @see #jobsBeingServed
    * @see #getDepartureEvents
    * @see #cancelDepartureEvent
-   * @see #getAndCheckJobQoS
+   * @see SimQueueQoSUtils#getAndCheckJobQoS
    * @see #getJobsQoSMap
    * 
    */
@@ -294,7 +314,7 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
       }
       this.jobsInServiceArea.remove (exitingJob);
     }
-    final P qos = getAndCheckJobQoS (exitingJob);
+    final P qos = SimQueueQoSUtils.getAndCheckJobQoS (exitingJob, this);
     if (! this.jobsQoSMap.containsKey (qos))
       throw new IllegalStateException ();
     if (! this.jobsQoSMap.get (qos).contains (exitingJob))

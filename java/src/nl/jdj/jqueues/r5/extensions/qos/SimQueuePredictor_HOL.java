@@ -1,5 +1,6 @@
 package nl.jdj.jqueues.r5.extensions.qos;
 
+import java.util.NavigableMap;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
@@ -34,7 +35,7 @@ extends SimQueuePredictor_FCFS
   public SimQueueState<SimJob, SimQueue> createQueueState (final SimQueue queue, final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
-    queueState.registerHandler (new SimQueueQoSStateHandler<> ());
+    queueState.registerHandler (new SimQueueQoSStateHandler<> (true));
     return queueState;
   }
 
@@ -56,7 +57,7 @@ extends SimQueuePredictor_FCFS
       (SimQueueQoSStateHandler)
         ((DefaultSimQueueState) queueState).getHandler ("SimQueueQoSHandler");
     queueStateHandler.updateJobsQoSMap ();
-    return queueStateHandler.getJobsQoSMap ().firstEntry ().getValue ().iterator ().next ();
+    return ((NavigableMap<P, Set<J>>) queueStateHandler.getJobsQoSMap ()).firstEntry ().getValue ().iterator ().next ();
   }
 
   @Override

@@ -1,9 +1,9 @@
 package nl.jdj.jqueues.r5.entity.queue.qos;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.NavigableMap;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.processorsharing.AbstractEgalitarianProcessorSharingSimQueue;
@@ -35,7 +35,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see PS
  * 
  */
-public class HOL_PS<J extends SimJob, Q extends HOL_PS, P extends Comparable>
+public class HOL_PS<J extends SimJob, Q extends HOL_PS, P>
 extends AbstractEgalitarianProcessorSharingSimQueue<J, Q>
 implements SimQueueQoS<J, Q, P>
 {
@@ -165,10 +165,10 @@ implements SimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  protected final NavigableMap<P, Set<J>> jobsQoSMap = new TreeMap<> ();
+  protected final Map<P, Set<J>> jobsQoSMap = new HashMap<> ();
   
   @Override
-  public final NavigableMap<P, Set<J>> getJobsQoSMap ()
+  public final Map<P, Set<J>> getJobsQoSMap ()
   {
     return this.jobsQoSMap;
   }

@@ -1,7 +1,9 @@
 package nl.jdj.jqueues.r5.entity.queue.qos;
 
 import java.util.LinkedHashSet;
+import java.util.NavigableMap;
 import java.util.Set;
+import java.util.TreeMap;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.extensions.qos.SimQueueQoS;
@@ -73,17 +75,67 @@ implements SimQueueQoS<J, Q, P>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // JOB QoS MAP
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  protected final NavigableMap<P, Set<J>> jobsQoSMap = new TreeMap<> ();
+  
+  @Override
+  public final NavigableMap<P, Set<J>> getJobsQoSMap ()
+  {
+    return this.jobsQoSMap;
+  }
+  
+  /** Gets the job in the waiting area that is next to serve.
+   * 
+   * <p>
+   * Iterates over the job sets in increasing order of QoS value,
+   * and iterates over the jobs within each set in order as enforced by the standard Java {@link Set} iterator,
+   * and returns the first job it finds that is <i>not</i> in {@link #jobsInServiceArea}.
+   * 
+   * <p>
+   * This method does (some) sanity checks on {@link #jobsQoSMap} on the fly.
+   * 
+   * @return The job in the waiting area that is next to serve, {@code null} if there are no waiting jobs.
+   * 
+   * @throws IllegalStateException If the {@link #jobsQoSMap} is in an illegal state.
+   * 
+   * @see #jobsQoSMap
+   * @see #jobQueue
+   * @see #jobsInServiceArea
+   * 
+   */
+  protected final J getNextJobToServeInWaitingArea ()
+  {
+    for (final Set<J> jobsP: jobsQoSMap.values ())
+      if (jobsP == null || jobsP.isEmpty ())
+        throw new IllegalStateException ();
+      else
+        for (final J job : jobsP)
+          if (job == null || ! this.jobQueue.contains (job))
+            throw new IllegalStateException ();
+          else if (! this.jobsInServiceArea.contains (job))
+            return job;
+    return null;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and clear {@link #jobsQoSMap}.
+   * 
+   * @see #jobsQoSMap
    * 
    */
   @Override
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
+    this.jobsQoSMap.clear ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

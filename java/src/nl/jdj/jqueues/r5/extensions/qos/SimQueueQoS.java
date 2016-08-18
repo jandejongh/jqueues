@@ -1,6 +1,6 @@
 package nl.jdj.jqueues.r5.extensions.qos;
 
-import java.util.NavigableMap;
+import java.util.Map;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
@@ -12,7 +12,7 @@ import nl.jdj.jqueues.r5.SimQueue;
  * @param <P> The type used for QoS.
  * 
  */
-public interface SimQueueQoS<J extends SimJob, Q extends SimQueueQoS, P extends Comparable>
+public interface SimQueueQoS<J extends SimJob, Q extends SimQueueQoS, P>
 extends SimEntityQoS<J, Q, P>, SimQueue<J, Q>
 {
   
@@ -46,7 +46,7 @@ extends SimEntityQoS<J, Q, P>, SimQueue<J, Q>
    * {@link #getDefaultJobQoS}.
    * 
    * <p>
-   * Most if not all concrete subclasses will impose an ordering on the value sets.
+   * Note that many concrete subclasses will impose an ordering on the keys and/or on the value sets.
    * 
    * @return The mapping QoS values onto jobs currently visiting this queue with that particular QoS value.
    * 
@@ -55,7 +55,7 @@ extends SimEntityQoS<J, Q, P>, SimQueue<J, Q>
    * @see #getDefaultJobQoS
    * 
    */
-  public NavigableMap<P, Set<J>> getJobsQoSMap ();
+  public Map<P, Set<J>> getJobsQoSMap ();
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //

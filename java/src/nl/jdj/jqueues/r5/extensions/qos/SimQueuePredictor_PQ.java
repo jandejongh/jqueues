@@ -49,7 +49,7 @@ extends SimQueuePredictor_Preemptive<Q>
   public SimQueueState<SimJob, Q> createQueueState (final Q queue, final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
-    queueState.registerHandler (new SimQueueQoSStateHandler<> ());
+    queueState.registerHandler (new SimQueueQoSStateHandler<> (true));
     return queueState;
   }
 
