@@ -761,7 +761,30 @@ implements SimEntity<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // UNKNOWN NOTIFICATION-TYPE POLICY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private UnknownNotificationTypePolicy unknownNotificationTypePolicy = UnknownNotificationTypePolicy.FIRE_AND_WARN;
+
+  @Override
+  public final UnknownNotificationTypePolicy getUnknownNotificationTypePolicy ()
+  {
+    return this.unknownNotificationTypePolicy;
+  }
+
+  @Override
+  public final void setUnknownNotificationTypePolicy (final UnknownNotificationTypePolicy unknownNotificationTypePolicy)
+  {
+    if (unknownNotificationTypePolicy == null)
+      throw new IllegalArgumentException ();
+    this.unknownNotificationTypePolicy = unknownNotificationTypePolicy;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // NOTIFICATION MAP
+  // REGISTERED NOTIFICATION TYPES
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -790,20 +813,31 @@ implements SimEntity<J, Q>
   
   /** Registers a mapping between a notification type (reset, arrival, departures, etc.) and a {@link Notifier} for it.
    * 
-   * @param notificationType The notification type; non-{@code null} and not yet registered.
-   * @param notifier         The {@link Notifier} for it, non-{@code null}.
+   * <p>
+   * The notifier may be {@code null}, meaning the notification type is (will be) known, and will be
+   * reported through {@link SimEntityListener#notifyStateChanged},
+   * but no additional actions/notifications (through a {@link Notifier}) will be taken on listeners.
    * 
-   * @throws IllegalArgumentException If any of the arguments is {@code null}, or a notifier is already registered for given type.
+   * @param notificationType The notification type; non-{@code null} and not yet registered.
+   * @param notifier         The {@link Notifier} for it, may be {@code null}.
+   * 
+   * @throws IllegalArgumentException If the notification type is {@code null} or already registered. 
    * 
    */
   protected final void registerNotificationType
   (final SimEntitySimpleEventType.Member notificationType, final Notifier<J> notifier)
   {
-    if (notificationType == null || notifier == null)
+    if (notificationType == null)
       throw new IllegalArgumentException ();
     if (this.notificationMap.containsKey (notificationType))
       throw new IllegalArgumentException ();
     this.notificationMap.put (notificationType, notifier);
+  }
+  
+  @Override
+  public final Set<SimEntitySimpleEventType.Member> getRegisteredNotificationTypes ()
+  {
+    return Collections.unmodifiableSet (new LinkedHashSet<> (this.notificationMap.keySet ()));
   }
  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1058,15 +1092,32 @@ implements SimEntity<J, Q>
       for (final PreNotificationHook preNotificationHook : this.preNotificationHooks)
         preNotificationHook.hook (this.pendingNotifications);
     final double time = getLastUpdateTime ();
+    // Respect policy for unknown notification types.
+    for (final Map<SimEntitySimpleEventType.Member, J> notification : this.pendingNotifications)
+    {
+      final SimEntitySimpleEventType.Member notificationType = notification.keySet ().iterator ().next ();
+      if (! this.notificationMap.containsKey (notificationType))
+        switch (this.unknownNotificationTypePolicy)
+        {
+          case FIRE_AND_WARN:
+            LOGGER.log (Level.WARNING, "Unknown notification type {0}.", notificationType);
+            break;
+          case FIRE_SILENTLY:
+            break;
+          case ERROR:
+            throw new IllegalArgumentException ();
+          default:
+            throw new RuntimeException ();
+        }
+    }    
     for (SimEntityListener l : this.simEntityListeners)
       l.notifyStateChanged (time, this, this.pendingNotifications);
     for (final Map<SimEntitySimpleEventType.Member, J> notification : this.pendingNotifications)
     {
       final SimEntitySimpleEventType.Member notificationType = notification.keySet ().iterator ().next ();
       final J job = notification.values ().iterator ().next ();
-      if (! this.notificationMap.containsKey (notificationType))
-        LOGGER.log (Level.WARNING, "Unknown notification type {0}.", notificationType);
-      else
+      if (this.notificationMap.containsKey (notificationType)
+      &&  this.notificationMap.get (notificationType) != null)
         this.notificationMap.get (notificationType).fire (job);
     }
     if (this instanceof SimQueue)

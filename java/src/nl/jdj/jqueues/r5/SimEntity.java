@@ -1,7 +1,9 @@
 package nl.jdj.jqueues.r5;
 
 import java.util.Set;
+import java.util.logging.Level;
 import nl.jdj.jqueues.r5.entity.AbstractSimEntity;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.extensions.qos.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 import nl.jdj.jsimulation.r5.SimEventListResetListener;
@@ -140,7 +142,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // OPERATIONS
+  // REGISTERED OPERATIONS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -246,6 +248,68 @@ extends SimEventListResetListener, SimQoS<J, Q>
   <O extends SimEntityOperation, Req extends SimEntityOperation.Request, Rep extends SimEntityOperation.Reply>
   Rep doOperation (double time, Req request);
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // UNKNOWN NOTIFICATION-TYPE POLICY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Possible courses of action when an unknown notification is to be published.
+   * 
+   * @see #getUnknownNotificationTypePolicy
+   * @see #setUnknownNotificationTypePolicy
+   * @see #getRegisteredNotificationTypes
+   * 
+   */
+  public enum UnknownNotificationTypePolicy
+  {
+    /** Unknown notification types are fired as {@link SimEntityListener#notifyStateChanged},
+     *  but a warning is issued in the log at {@link Level#WARNING}.
+     * 
+     * <p>
+     * This is the default.
+     * 
+     */
+    FIRE_AND_WARN,
+    /** Unknown notification types are fired (otherwise silently) as {@link SimEntityListener#notifyStateChanged}.
+     * 
+     */
+    FIRE_SILENTLY,
+    /** Unknown notification types lead to an error (exception).
+     * 
+     */
+    ERROR
+  }
+  
+  /** Returns the policy for unknown notifications types.
+   * 
+   * @return The policy for unknown operations, non-{@code null}.
+   * 
+   */
+  UnknownNotificationTypePolicy getUnknownNotificationTypePolicy ();
+  
+  /** Sets the policy for unknown notifications types.
+   * 
+   * @param unknownNotificationTypePolicy The new policy for unknown notification types, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the argument is {@code null}.
+   * 
+   */
+  void setUnknownNotificationTypePolicy (UnknownNotificationTypePolicy unknownNotificationTypePolicy);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // REGISTERED NOTIFICATION TYPES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Gets the registered notification types of this entity.
+   * 
+   * @return The registered notifications types of this entity (in registration order).
+   * 
+   */
+  Set<SimEntitySimpleEventType.Member> getRegisteredNotificationTypes ();
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // RESET
