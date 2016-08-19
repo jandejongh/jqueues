@@ -10,8 +10,10 @@ import nl.jdj.jqueues.r5.SimJobFactory;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
+import nl.jdj.jqueues.r5.event.SimQueueOperationEvent;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueGateEvent;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGate;
+import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGateOperationUtils;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -34,14 +36,16 @@ extends LoadFactory_SQ_SV_0010<J, Q>
    * This method
    * <ul>
    * <li> generates the job load according to {@link LoadFactory_SQ_SV_0010#generate};
-   * <li> <i>only if</i> the queue is a {@link SimQueueWithGate},
+   * <li> <i>only if</i> the queue is a {@link SimQueueWithGate}
+   *         or has {@link SimQueueWithGateOperationUtils.GatePassageCreditsOperation} registered,
    *         it adds setting the number of gate-passage credits on the queue at 11.19, 22.19, 33.19, etc.
    * </ul>
    * 
    * <p>
-   * Note: this method generates {@link SimQueueGateEvent}s <i>only</i> for {@link SimQueueWithGate}s.
+   * Note: this method generates {@link SimQueueGateEvent}s <i>only</i> for {@link SimQueueWithGate}s
+   * or queues that have has {@link SimQueueWithGateOperationUtils.GatePassageCreditsOperation} registered as operation.
    * The check is done at runtime, and not reflected in the generic-type arguments of this class.
-   * If the queue is not a {@link SimQueueWithGate}, instances of this class behave as if they
+   * Otherwise, instances of this class behave as if they
    * were a {@link LoadFactory_SQ_SV_0010}.
    * 
    * <p>
@@ -66,7 +70,8 @@ extends LoadFactory_SQ_SV_0010<J, Q>
   {
     final Set<J> jobs = super.generate (eventList, attachSimJobsToEventList,
       queue, jobFactory, numberOfJobs, reset, resetTime, hints, queueExternalEvents);
-    if (queue instanceof SimQueueWithGate)
+    if ((queue instanceof SimQueueWithGate)
+      || queue.getRegisteredOperations ().contains (SimQueueWithGateOperationUtils.GatePassageCreditsOperation.getInstance ()))
     {
       final NavigableMap<Double, Set<SimEntityEvent>> realQueueExternalEvents =
         ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
@@ -79,17 +84,32 @@ extends LoadFactory_SQ_SV_0010<J, Q>
         final double scheduleTime = 11.0 * i + 0.19;
         final int draw = rngPassageCredits.nextInt (4);
         final int gatePassageCredits;
-        if (draw == 0)
-          gatePassageCredits = 0;
-        else if (draw == 1)
-          gatePassageCredits = 1;
-        else if (draw == 2)
-          gatePassageCredits = 5;
-        else if (draw == 3)
-          gatePassageCredits = Integer.MAX_VALUE;
+        switch (draw)
+        {
+          case 0:
+            gatePassageCredits = 0;
+            break;
+          case 1:
+            gatePassageCredits = 1;
+            break;
+          case 2:
+            gatePassageCredits = 5;
+            break;
+          case 3:
+            gatePassageCredits = Integer.MAX_VALUE;
+            break;
+          default:
+            throw new RuntimeException ();
+        }
+        final SimEntityEvent<J, Q> gateSchedule;
+        if (queue instanceof SimQueueWithGate)
+          gateSchedule = new SimQueueGateEvent<> (queue, scheduleTime, gatePassageCredits);
         else
-          throw new RuntimeException ();
-        final SimEntityEvent<J, Q> gateSchedule = new SimQueueGateEvent<> (queue, scheduleTime, gatePassageCredits);
+        {
+          final SimQueueWithGateOperationUtils.GatePassageCreditsRequest request =
+            new SimQueueWithGateOperationUtils.GatePassageCreditsRequest (gatePassageCredits);
+          gateSchedule = new SimQueueOperationEvent (queue, scheduleTime, request);
+        }
         if (! realQueueExternalEvents.containsKey (scheduleTime))
           realQueueExternalEvents.put (scheduleTime, new LinkedHashSet<> ());
         realQueueExternalEvents.get (scheduleTime).add (gateSchedule);
