@@ -1,6 +1,8 @@
 package nl.jdj.jqueues.r5.entity.queue.composite.single.enc;
 
 import java.util.Collections;
+import java.util.Set;
+import nl.jdj.jqueues.r5.SimEntityOperation;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
@@ -9,6 +11,7 @@ import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite.StartMode
 import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
+import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link BlackSimQueueComposite} encapsulating a single {@link SimQueue} of which job starts are hidden.
@@ -91,6 +94,15 @@ public class BlackEncapsulatorHideStartSimQueue
       },
       delegateSimJobFactory);
     setStartModel (StartModel.ENCAPSULATOR_HIDE_START_QUEUE);
+    // Find the operations on the encapsulated queue that we do not know, and install a delegate for it.
+    for (final SimEntityOperation oDQueue : (Set<SimEntityOperation>) queue.getRegisteredOperations ())
+      if (! getRegisteredOperations ().contains (oDQueue))
+        registerDelegatedOperation (oDQueue, new DelegatedSimQueueOperation (this, queue, oDQueue));
+    // Register unknown notifications from the encapsulated queue.
+    for (final SimEntitySimpleEventType.Member nDQueue :
+      (Set<SimEntitySimpleEventType.Member>) queue.getRegisteredNotificationTypes ())
+      if (! getRegisteredNotificationTypes ().contains (nDQueue))
+        registerNotificationType (nDQueue, null);
   }
   
   /** Returns a new {@link BlackEncapsulatorHideStartSimQueue} object on the same {@link SimEventList}

@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.composite;
 
 import java.util.Collections;
 import java.util.Set;
+import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
 import nl.jdj.jqueues.r5.entity.queue.composite.single.enc.BlackEncapsulatorHideStartSimQueue;
@@ -17,6 +18,7 @@ import nl.jdj.jqueues.r5.entity.queue.processorsharing.CUPS;
 import nl.jdj.jqueues.r5.entity.queue.processorsharing.PS;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
+import nl.jdj.jqueues.r5.entity.queue.serverless.GATE;
 import nl.jdj.jqueues.r5.entity.queue.serverless.LeakyBucket;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.entity.queue.serverless.WUR;
@@ -106,6 +108,8 @@ public class EncTest
       cQueue = new BlackEncapsulatorSimQueue (encQueue.getEventList (), encQueue, null);
       cQueuePredictor = new SimQueuePredictor_Enc (encQueuePredictor);
     }
+    encQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
+    cQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (cQueue, cQueuePredictor, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
   }
@@ -127,6 +131,9 @@ public class EncTest
       cQueue = new BlackEncapsulatorHideStartSimQueue (encQueue.getEventList (), encQueue, null);
     else
       cQueue = new BlackEncapsulatorSimQueue (encQueue.getEventList (), encQueue, null);
+    encQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
+    cQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
+    predictorQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (cQueue, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
   }
@@ -417,6 +424,28 @@ public class EncTest
           deadSilent,
           1.0e-12,
           null);
+    if (hideStart)
+      // EncHS[GATE] == GATE
+      testEncAux (hideStart,
+        new GATE (eventList),
+        new GATE (eventList),
+        numberOfJobs,
+        null,
+        silent,
+        deadSilent,
+        1.0e-12,
+        null);
+    else
+      // Enc[GATE] == GATE
+      testEncAux (hideStart,
+        new GATE (eventList),
+        new GATE (eventList),
+        numberOfJobs,
+        null,
+        silent,
+        deadSilent,
+        1.0e-12,
+        null);
   }
 
   /**
