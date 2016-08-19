@@ -120,19 +120,29 @@ implements SimQueueWithGate<J, Q>
   @Override
   public final void setGatePassageCredits (final double time, final int gatePassageCredits)
   {
-    update (time);
-    if (! clearAndUnlockPendingNotificationsIfLocked ())
-      throw new IllegalStateException ();
     if (gatePassageCredits < 0)
       throw new IllegalArgumentException ();
-    this.gatePassageCredits = gatePassageCredits;
-    while (this.gatePassageCredits > 0 && ! this.jobQueue.isEmpty ())
+    final int oldGatePassageCredits = this.gatePassageCredits;
+    if (oldGatePassageCredits != gatePassageCredits)
     {
-      depart (time, getFirstJobInWaitingArea ());
-      if (this.gatePassageCredits < Integer.MAX_VALUE)
-        this.gatePassageCredits--;
+      update (time);
+      this.gatePassageCredits = gatePassageCredits;
+      final boolean lostCredits = (oldGatePassageCredits > 0 && this.gatePassageCredits == 0);
+      final boolean regainedCredits = (oldGatePassageCredits == 0 && this.gatePassageCredits > 0);
+      final boolean needsNotification = lostCredits || regainedCredits;
+      if (needsNotification)
+      {
+        if (! clearAndUnlockPendingNotificationsIfLocked ())
+          throw new IllegalStateException ();
+        while (this.gatePassageCredits > 0 && ! this.jobQueue.isEmpty ())
+        {
+          depart (time, getFirstJobInWaitingArea ());
+          if (this.gatePassageCredits < Integer.MAX_VALUE)
+            this.gatePassageCredits--;
+        }
+        fireAndLockPendingNotifications ();
+      }
     }
-    fireAndLockPendingNotifications ();
   }
   
   // Every SimQueueWithGate must have infinite gpcs upon construction and after reset.
