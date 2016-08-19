@@ -112,13 +112,26 @@ public class SimQueueWithGateOperationUtils
     (final double time, final SimEntity<? extends SimJob, ? extends SimQueue> entity, final GatePassageCreditsRequest request)
     {
       if (entity == null
-        || (! (entity instanceof SimQueueWithGate))
         || request == null
         || (! (request instanceof GatePassageCreditsRequest))
         || request.getOperation () != getInstance ())
         throw new IllegalArgumentException ();
-      ((SimQueueWithGate) entity).setGatePassageCredits (time, request.getCredits ());
-      return new GatePassageCreditsReply (request);
+      if (entity instanceof SimQueueWithGate)
+      {
+        // Our target entity has native support for gate-passage credits, hence we directly invoke the appropriate method.
+        ((SimQueueWithGate) entity).setGatePassageCredits (time, request.getCredits ());
+        return new GatePassageCreditsReply (request);
+      }
+      else if (entity.getRegisteredOperations ().contains
+        (SimQueueWithGateOperationUtils.GatePassageCreditsOperation.getInstance ()))
+        // Our target entity does NOT have native support for gate-passage credits.
+        // We take the risk of directly issuing the request at the entity (XXX at the huge risk of infinite recursion!).
+        return entity.doOperation (time, request);
+      else
+        // Our target entity has no clue of gate-passage credits.
+        // We can either throw an exception here, or put our hopes on the entity accepting unknown operations.
+        // We put our stakes on the last option...
+        return entity.doOperation (time, request);
     }
     
   }
