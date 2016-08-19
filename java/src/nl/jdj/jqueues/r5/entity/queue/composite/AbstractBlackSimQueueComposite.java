@@ -1051,6 +1051,13 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * <li>With {@link SimQueueSimpleEventType#DEPARTURE}, we invoke {@link #selectNextQueue} on the real job,
    *                                                     and let the delegate job arrive at the next queue if provided,
    *                                                     or makes the real job depart if not through {@link #depart}.
+   * <li>With any non-standard notification type, see {@link #isStandardNotification},
+   *                                              and start model {@link StartModel#ENCAPSULATOR_QUEUE}
+   *                                              or {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE},
+   *                                              we add the notification from the sub-queue to our own notification list
+   *                                              (through {@link #addPendingNotification}),
+   *                                              replacing a job in the sub-queue notification with its corresponding real job
+   *                                              in our own notification.
    * </ul>
    * After all sub-notifications have been processed, and if the start model is {@link StartModel#COMPRESSED_TANDEM_2_QUEUE},
    * we make sure the server-access credits on the wait queue are set properly with {@link #setServerAccessCreditsOnWaitQueue},
@@ -1082,6 +1089,8 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * @see SimEntitySimpleEventType#AUTO_REVOCATION
    * @see SimEntitySimpleEventType#START
    * @see SimEntitySimpleEventType#DEPARTURE
+   * @see #isStandardNotification
+   * @see #addPendingNotification
    * @see #getDropDestinationQueue
    * @see SimQueue#arrive
    * @see #start
@@ -1160,6 +1169,14 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
             depart (notificationTime, realJob);
           else
             nextQueue.arrive (notificationTime, job);
+        }
+        else if ((! isStandardNotification (notificationType))
+          && (getStartModel () == StartModel.ENCAPSULATOR_QUEUE || getStartModel () == StartModel.ENCAPSULATOR_HIDE_START_QUEUE))
+        {
+          // XXX At the present time, only supports non-job related notifications!
+          // In future, must check for presence of job parameter, check presence of delegate job in admin,
+          // and replace with real job.
+          addPendingNotification (notificationType, null);          
         }
       }
       if (getStartModel () == StartModel.COMPRESSED_TANDEM_2_QUEUE && getIndex (subQueue) == 1)
@@ -1269,6 +1286,34 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
       if (nrStarted > 1 || nrAutoRevocations > 1 || nrStarted != nrAutoRevocations || lastJobStarted != lastJobAutoRevoked)
         throw new IllegalStateException ();
     }
+  }
+  
+  /** Checks whether a notification type is standard (i.e., belonging to a {@link SimQueue} without notification extensions).
+   * 
+   * @param notificationType The notification type, non-{@code null}.
+   * 
+   * @return True if the notification type is standard.
+   * 
+   * @throws IllegalArgumentException If the notification type is {@code null}.
+   * 
+   */
+  protected final boolean isStandardNotification (final SimEntitySimpleEventType.Member notificationType)
+  {
+    if (notificationType == null)
+      throw new IllegalArgumentException ();
+    return notificationType == SimEntitySimpleEventType.RESET
+        || notificationType == SimQueueSimpleEventType.QAV_START
+        || notificationType == SimQueueSimpleEventType.QAV_END
+        || notificationType == SimQueueSimpleEventType.ARRIVAL
+        || notificationType == SimQueueSimpleEventType.DROP
+        || notificationType == SimQueueSimpleEventType.REVOCATION
+        || notificationType == SimQueueSimpleEventType.AUTO_REVOCATION
+        || notificationType == SimQueueSimpleEventType.STA_FALSE
+        || notificationType == SimQueueSimpleEventType.STA_TRUE
+        || notificationType == SimQueueSimpleEventType.OUT_OF_SAC
+        || notificationType == SimQueueSimpleEventType.REGAINED_SAC
+        || notificationType == SimQueueSimpleEventType.START
+        || notificationType == SimQueueSimpleEventType.DEPARTURE;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
