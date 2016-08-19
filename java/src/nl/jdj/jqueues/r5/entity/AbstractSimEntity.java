@@ -292,6 +292,28 @@ implements SimEntity<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // UNKNOWN OPERATION POLICY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private UnknownOperationPolicy unknownOperationPolicy = UnknownOperationPolicy.ERROR;
+  
+  @Override
+  public final UnknownOperationPolicy getUnknownOperationPolicy ()
+  {
+    return this.unknownOperationPolicy;
+  }
+  
+  @Override
+  public final void setUnknownOperationPolicy (final UnknownOperationPolicy unknownOperationPolicy)
+  {
+    if (unknownOperationPolicy == null)
+      throw new IllegalArgumentException ();
+    this.unknownOperationPolicy = unknownOperationPolicy;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // DO OPERATION
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -309,7 +331,28 @@ implements SimEntity<J, Q>
       && time < getLastUpdateTime ())
       throw new IllegalArgumentException ();
     if (! this.registeredOperations.contains (request.getOperation ()))
-      throw new IllegalArgumentException ();
+      switch (this.unknownOperationPolicy)
+      {
+        case ERROR:
+          throw new IllegalArgumentException ();
+        case REPORT:
+          System.err.println ("Unknown operation on " + this + ": " + request.getOperation () + "!");
+          break;
+        case LOG_WARNING:
+          LOGGER.log (Level.WARNING, "Unknown operation on {0}: {1}!", new Object[]{this, request.getOperation ()});
+          break;
+        case LOG_INFO:
+          LOGGER.log (Level.INFO, "Unknown operation on {0}: {1}!", new Object[]{this, request.getOperation ()});
+          break;
+        case LOG_FINE:
+          LOGGER.log (Level.FINE, "Unknown operation on {0}: {1}!", new Object[]{this, request.getOperation ()});
+          break;
+        case IGNORE:
+          // Special indication that the request has been ignored.
+          return null;
+        default:
+          throw new RuntimeException ();
+      }
     if (this.delegatedOperations.containsKey (request.getOperation ()))
       return (Rep) this.delegatedOperations.get (request.getOperation ()).doOperation (time, this, request);
     else

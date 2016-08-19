@@ -153,11 +153,77 @@ extends SimEventListResetListener, SimQoS<J, Q>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // UNKNOWN OPERATION POLICY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Possible courses of action when an unknown operation is offered to {@link #doOperation}.
+   * 
+   * @see #getUnknownOperationPolicy
+   * @see #setUnknownOperationPolicy
+   * 
+   */
+  public enum UnknownOperationPolicy
+  {
+    /** Request for unknown operations lead to an error (exception).
+     * 
+     * <p>
+     * This is the default on any {@link SimEntity}, unless specified otherwise.
+     * 
+     */
+    ERROR,
+    /** Requests for unknown operations are reported (to System.err).
+     * 
+     */
+    REPORT,
+    /** Requests for unknown operations are logged as warning.
+     * 
+     */
+    LOG_WARNING,
+    /** Requests for unknown operations are logged as info.
+     * 
+     */
+    LOG_INFO,
+    /** Requests for unknown operations are logged as 'FINE'.
+     * 
+     */
+    LOG_FINE,
+    /** Requests for unknown operations are silently ignored.
+     * 
+     */    
+    IGNORE
+  }
+  
+  /** Returns the policy for unknown operations.
+   * 
+   * @return The policy for unknown operations, non-{@code null}.
+   * 
+   * @see #doOperation
+   * 
+   */
+  UnknownOperationPolicy getUnknownOperationPolicy ();
+  
+  /** Sets the policy for unknown operations.
+   * 
+   * @param unknownOperationPolicy The new policy for unknown operations, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the argument is {@code null}.
+   * 
+   * @see #doOperation
+   * 
+   */
+  void setUnknownOperationPolicy (UnknownOperationPolicy unknownOperationPolicy);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // DO OPERATION
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /** Performs the given operation, identified by an operation request, at this entity at given time.
+   * 
+   * <p>
+   * If the operation is unknown, the course of action is as determined by {@link #getUnknownOperationPolicy}.
    * 
    * @param <O>   The operation type.
    * @param <Req> The request type (corresponding to the operation type).
@@ -166,12 +232,15 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * @param time    The time at which to perform the operation.
    * @param request The operation request (holds operation type as well).
    * 
-   * @return The operation reply, non-{@code null}.
+   * @return The operation reply, non-{@code null} unless the request was unknown and ignored.
    * 
    * @throws IllegalArgumentException If time is in the past
    *                                  and the operation is not a {@link SimEntityOperationUtils.ResetOperation},
    *                                  or if the request is {@code null}, illegally structured, or contains illegal arguments,
-   *                                  or if the corresponding operation is not registered.
+   *                                  or if the corresponding operation is not registered and the policy is not to accept that.
+   * 
+   * @see UnknownOperationPolicy
+   * @see #getUnknownOperationPolicy
    * 
    */
   <O extends SimEntityOperation, Req extends SimEntityOperation.Request, Rep extends SimEntityOperation.Reply>
