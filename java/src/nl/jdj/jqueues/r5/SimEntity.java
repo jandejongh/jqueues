@@ -18,7 +18,7 @@ import nl.jdj.jsimulation.r5.SimEventListResetListener;
  * 
  * <p>
  * A {@link SimEntity} is the common part of queues and jobs.
- * What they share in common is the event list they are attached to, the fact that they have a name,
+ * What they have in common is the event list they are attached to, the fact that they have a name,
  * and their obligation to propagate state changes (including the currently visited queue of a job, and
  * the jobs currently visiting a queue).
  * 
@@ -140,6 +140,45 @@ extends SimEventListResetListener, SimQoS<J, Q>
  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // OPERATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Gets the registered operations of this entity.
+   * 
+   * @return The registered operations of this entity (in registration order).
+   * 
+   */
+  Set<SimEntityOperation> getRegisteredOperations ();
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DO OPERATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Performs the given operation, identified by an operation request, at this entity at given time.
+   * 
+   * @param <O>   The operation type.
+   * @param <Req> The request type (corresponding to the operation type).
+   * @param <Rep> The reply type (corresponding to the operation type).
+   * 
+   * @param time    The time at which to perform the operation.
+   * @param request The operation request (holds operation type as well).
+   * 
+   * @return The operation reply, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If time is in the past
+   *                                  and the operation is not a {@link SimEntityOperationUtils.ResetOperation},
+   *                                  or if the request is {@code null}, illegally structured, or contains illegal arguments,
+   *                                  or if the corresponding operation is not registered.
+   * 
+   */
+  <O extends SimEntityOperation, Req extends SimEntityOperation.Request, Rep extends SimEntityOperation.Reply>
+  Rep doOperation (double time, Req request);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // RESET
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,23 +200,6 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * 
    */
   void resetEntity ();
-  
-  /** Gets the time of the last update of this entity.
-   * 
-   * <p>
-   * Upon construction, the last-update time must be set to minus infinity, mimicking the behavior of {@link SimEventList}.
-   * Upon an explicit reset of this entity, the last-update time is to be copied from the event list, if available
-   * (or reset to {@link Double#NEGATIVE_INFINITY} otherwise).
-   * In all other cases, the time returned corresponds to the time argument of the last update of the entity,
-   * see {@link SimEntityListener#notifyUpdate} for more details.
-   * 
-   * @return The time of the last update of this entity.
-   * 
-   * @see AbstractSimEntity#update
-   * @see SimEntityListener#notifyUpdate
-   * 
-   */
-  double getLastUpdateTime ();
   
   /** Returns whether this entity ignores event-list resets.
    * 
@@ -209,6 +231,44 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * 
    */
   void setIgnoreEventListReset (boolean ignoreEventListReset);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // UPDATE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Gets the time of the last update of this entity.
+   * 
+   * <p>
+   * Upon construction, the last-update time must be set to minus infinity, mimicking the behavior of {@link SimEventList}.
+   * Upon an explicit reset of this entity, the last-update time is to be copied from the event list, if available
+   * (or reset to {@link Double#NEGATIVE_INFINITY} otherwise).
+   * In all other cases, the time returned corresponds to the time argument of the last update of the entity,
+   * see {@link SimEntityListener#notifyUpdate} for more details.
+   * 
+   * @return The time of the last update of this entity.
+   * 
+   * @see AbstractSimEntity#update
+   * @see SimEntityListener#notifyUpdate
+   * 
+   */
+  double getLastUpdateTime ();
+  
+  /** Updates this entity.
+   * 
+   * <p>
+   * For a precise definition of an update of an entity, refer to {@link SimEntityListener#notifyUpdate}.
+   * 
+   * @param time The time of the update (the new time on the entity).
+   * 
+   * @throws IllegalStateException If time is in the past.
+   * 
+   * @see #getLastUpdateTime
+   * @see SimEntityListener#notifyUpdate
+   * 
+   */
+  void update (double time);
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //

@@ -12,6 +12,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.jdj.jqueues.r5.SimEntity;
 import nl.jdj.jqueues.r5.SimEntityListener;
+import nl.jdj.jqueues.r5.SimEntityOperation;
+import nl.jdj.jqueues.r5.SimEntityOperationUtils;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
@@ -75,6 +77,8 @@ implements SimEntity<J, Q>
   {
     this.eventList = eventList;
     setName (name);
+    registerOperation (SimEntityOperationUtils.ResetOperation.getInstance ());
+    registerOperation (SimEntityOperationUtils.UpdateOperation.getInstance ());
     registerNotificationType (SimEntitySimpleEventType.RESET, this::fireReset);
     registerNotificationType (SimEntitySimpleEventType.ARRIVAL, this::fireArrival);
     registerNotificationType (SimEntitySimpleEventType.START, this::fireStart);
@@ -206,6 +210,57 @@ implements SimEntity<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // OPERATIONS REGISTRATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final Set<SimEntityOperation> registeredOperations = new LinkedHashSet<> ();
+  
+  @Override
+  public final Set<SimEntityOperation> getRegisteredOperations ()
+  {
+    return Collections.unmodifiableSet (this.registeredOperations);
+  }
+
+  /** Registers a {@link SimEntityOperation} at this entity.
+   * 
+   * @param operation The operation, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the operation is {@code null} or already registered.
+   * 
+   */
+  protected final void registerOperation (final SimEntityOperation operation)
+  {
+    if (operation == null || this.registeredOperations.contains (operation))
+      throw new IllegalArgumentException ();
+    this.registeredOperations.add (operation);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DO OPERATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  @Override
+  public final
+  <O   extends SimEntityOperation,
+   Req extends SimEntityOperation.Request,
+   Rep extends SimEntityOperation.Reply>
+  Rep doOperation (double time, Req request)
+  {
+    if (request == null)
+      throw new IllegalArgumentException ();
+    if (request.getOperation () != SimEntityOperationUtils.ResetOperation.getInstance ()
+      && time < getLastUpdateTime ())
+      throw new IllegalArgumentException ();
+    if (! this.registeredOperations.contains (request.getOperation ()))
+      throw new IllegalArgumentException ();
+    return (Rep) request.getOperation ().doOperation (time, this, request);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // RESET ENTITY
   // SimEventListResetListener
   //
@@ -317,23 +372,12 @@ implements SimEntity<J, Q>
     return this.lastUpdateTime;
   }
   
-  /** Updates this entity (for internal use).
-   * 
-   * <p>
-   * For a precise definition of an update of an entity, refer to {@link SimEntityListener#notifyUpdate}.
-   * 
-   * <p>
-   * This method should <i>not</i> be called from user code, as it <i>must</i> be immediately followed by an imminent state change
-   * of this entity.
+  /** Updates this entity.
    * 
    * <p>
    * This final implementation invokes the pre-event hooks (always),
    * and, if needed (i.e., we have a <i>true</i> update), invokes the pre-update hooks,
    * notifies the entity listeners, and updates its internal time (in that order!).
-   * 
-   * @param time The time of the update (i.c., the current time).
-   * 
-   * @throws IllegalStateException If time is in the past.
    * 
    * @see #getLastUpdateTime
    * @see #registerPreEventHook
@@ -342,7 +386,8 @@ implements SimEntity<J, Q>
    * @see #fireUpdate
    * 
    */
-  protected final void update (final double time)
+  @Override
+  public final void update (final double time)
   {
     if (time < this.lastUpdateTime)
     {

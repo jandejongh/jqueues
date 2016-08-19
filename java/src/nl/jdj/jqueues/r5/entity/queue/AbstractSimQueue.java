@@ -12,6 +12,7 @@ import nl.jdj.jqueues.r5.SimEntityListener;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.SimQueueListener;
+import nl.jdj.jqueues.r5.SimQueueOperationUtils;
 import nl.jdj.jqueues.r5.entity.AbstractSimEntity;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r5.event.SimQueueJobDepartureEvent;
@@ -49,6 +50,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   protected AbstractSimQueue (final SimEventList eventList)
   {
     super (eventList);
+    registerOperation (SimQueueOperationUtils.QueueAccessVacationOperation.getInstance ());
+    registerOperation (SimQueueOperationUtils.ArrivalOperation.getInstance ());
+    registerOperation (SimQueueOperationUtils.RevocationOperation.getInstance ());
+    registerOperation (SimQueueOperationUtils.ServerAccessCreditsOperation.getInstance ());
     registerPreEventHook (this::setInitStartArmed);
     registerPreNotificationHook (this::serverAccessCreditsPreNotificationHook);
     registerPreNotificationHook (this::startArmedPreNotificationHook);
