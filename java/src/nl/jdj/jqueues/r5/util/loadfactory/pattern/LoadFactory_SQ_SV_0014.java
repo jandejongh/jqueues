@@ -30,6 +30,32 @@ public class LoadFactory_SQ_SV_0014<J extends SimJob, Q extends SimQueue>
 extends LoadFactory_SQ_SV_0010<J, Q>
 {
 
+  /** A load-factory hint that forces gate-passage credits events
+   *  (irrespective of the auto-detection of the queue's capabilities).
+   * 
+   */
+  public static final LoadFactoryHint FORCE_GPC = new LoadFactoryHint ()
+  {
+    @Override
+    public final String toString ()
+    {
+      return "FORCE_GPC";
+    }
+  };
+  
+  /** A load-factory hint that disables gate-passage credits events
+   *  (irrespective of the auto-detection of the queue's capabilities).
+   * 
+   */
+  public static final LoadFactoryHint DISABLE_GPC = new LoadFactoryHint ()
+  {
+    @Override
+    public final String toString ()
+    {
+      return "DISABLE_GPC";
+    }
+  };
+  
   /** Generates the load.
    * 
    * <p>
@@ -70,8 +96,15 @@ extends LoadFactory_SQ_SV_0010<J, Q>
   {
     final Set<J> jobs = super.generate (eventList, attachSimJobsToEventList,
       queue, jobFactory, numberOfJobs, reset, resetTime, hints, queueExternalEvents);
-    if ((queue instanceof SimQueueWithGate)
-      || queue.getRegisteredOperations ().contains (SimQueueWithGateOperationUtils.GatePassageCreditsOperation.getInstance ()))
+    final boolean forceGpc = (hints != null && hints.contains (LoadFactory_SQ_SV_0014.FORCE_GPC));
+    final boolean disableGpc = (hints != null && hints.contains (LoadFactory_SQ_SV_0014.DISABLE_GPC));
+    if (forceGpc && disableGpc)
+      // Conflicting hints...
+      throw new IllegalArgumentException ();
+    if ((! disableGpc) &&
+      (forceGpc
+       || (queue instanceof SimQueueWithGate)
+       || queue.getRegisteredOperations ().contains (SimQueueWithGateOperationUtils.GatePassageCreditsOperation.getInstance ())))
     {
       final NavigableMap<Double, Set<SimEntityEvent>> realQueueExternalEvents =
         ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
