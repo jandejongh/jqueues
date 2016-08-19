@@ -216,6 +216,8 @@ implements SimEntity<J, Q>
   
   private final Set<SimEntityOperation> registeredOperations = new LinkedHashSet<> ();
   
+  private final Map<SimEntityOperation, SimEntityOperation> delegatedOperations = new LinkedHashMap<> ();
+  
   @Override
   public final Set<SimEntityOperation> getRegisteredOperations ()
   {
@@ -234,6 +236,58 @@ implements SimEntity<J, Q>
     if (operation == null || this.registeredOperations.contains (operation))
       throw new IllegalArgumentException ();
     this.registeredOperations.add (operation);
+  }
+  
+  /** Registers a {@link SimEntityOperation} at this entity, but delegate it to another operation.
+   * 
+   * @param operation         The operation, non-{@code null}.
+   * @param delegateOperation The delegate operation, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the operation is {@code null} or already registered,
+   *                                  or if the delegate operation is {@code null}.
+   * 
+   */
+  protected final void registerDelegatedOperation (final SimEntityOperation operation, final SimEntityOperation delegateOperation)
+  {
+    if (operation == null || this.registeredOperations.contains (operation) || delegateOperation == null)
+      throw new IllegalArgumentException ();
+    if (this.delegatedOperations.containsKey (operation))
+      throw new IllegalStateException ();
+    this.registeredOperations.add (operation);
+    this.delegatedOperations.put (operation, delegateOperation);
+  }
+  
+  /** Delegates a registered {@link SimEntityOperation} at this entity to another operation.
+   * 
+   * @param operation         The operation, non-{@code null}.
+   * @param delegateOperation The delegate operation, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the operation is {@code null} or not registered,
+   *                                  or if the delegate operation is {@code null}.
+   * 
+   */
+  protected final void delegateOperation (final SimEntityOperation operation, final SimEntityOperation delegateOperation)
+  {
+    if (operation == null || (! this.registeredOperations.contains (operation)) || delegateOperation == null)
+      throw new IllegalArgumentException ();
+    this.delegatedOperations.put (operation, delegateOperation);    
+  }
+  
+  /** Removes the delegation for given {@link SimEntityOperation}, but keeps the operation registered
+   *  (falling back onto its native behavior}.
+   * 
+   * @param operation The operation, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the operation is {@code null} or not registered or not delegated.
+   * 
+   */
+  protected final void removeDelegationForOperation (final SimEntityOperation operation)
+  {
+    if (operation == null
+      || (! this.registeredOperations.contains (operation))
+      || (! this.delegatedOperations.containsKey (operation)))
+      throw new IllegalArgumentException ();
+    this.delegatedOperations.remove (operation);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -256,7 +310,10 @@ implements SimEntity<J, Q>
       throw new IllegalArgumentException ();
     if (! this.registeredOperations.contains (request.getOperation ()))
       throw new IllegalArgumentException ();
-    return (Rep) request.getOperation ().doOperation (time, this, request);
+    if (this.delegatedOperations.containsKey (request.getOperation ()))
+      return (Rep) this.delegatedOperations.get (request.getOperation ()).doOperation (time, this, request);
+    else
+      return (Rep) request.getOperation ().doOperation (time, this, request);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

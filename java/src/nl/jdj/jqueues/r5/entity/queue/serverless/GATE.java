@@ -9,6 +9,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGate;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGateListener;
+import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGateOperationUtils;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGateSimpleEventType;
 import nl.jdj.jsimulation.r5.SimEventList;
 
@@ -53,6 +54,7 @@ implements SimQueueWithGate<J, Q>
   public GATE (final SimEventList eventList)
   {
     super (eventList, Integer.MAX_VALUE);
+    registerOperation (SimQueueWithGateOperationUtils.GatePassageCreditsOperation.getInstance ());
     registerNotificationType (SimQueueWithGateSimpleEventType.GATE_CLOSED, this::fireGateClosed);
     registerNotificationType (SimQueueWithGateSimpleEventType.GATE_OPEN, this::fireGateOpen);
     registerPreNotificationHook (this::gatePassageCreditsPreNotificationHook);
