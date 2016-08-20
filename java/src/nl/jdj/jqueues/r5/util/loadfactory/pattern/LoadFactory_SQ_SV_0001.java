@@ -48,6 +48,8 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
   {
     if (eventList == null || queue == null || jobFactory == null)
       throw new IllegalArgumentException ();
+    // Even though there is nothing to schedule, make sure we obey the reset-related arguments.
+    SimEntityEventScheduler.schedule (eventList, reset, resetTime, Collections.EMPTY_SET);
     return Collections.EMPTY_SET;
   }
   
