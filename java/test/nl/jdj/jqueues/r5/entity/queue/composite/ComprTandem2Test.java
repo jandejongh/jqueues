@@ -77,7 +77,9 @@ public class ComprTandem2Test
    final boolean silent,
    final boolean deadSilent,
    final double accuracy,
-   final Set<KnownLoadFactory_SQ_SV> omit)
+   final Set<KnownLoadFactory_SQ_SV> omit,
+   final Set<KnownLoadFactory_SQ_SV> restrict,
+   final String message)    
    throws SimQueuePredictionException
   {
     final BlackCompressedTandem2SimQueue ctandem2 =
@@ -85,7 +87,7 @@ public class ComprTandem2Test
     final SimQueuePredictor_ComprTandem2 predictor_ctandem2 =
       new SimQueuePredictor_ComprTandem2 (waitQueuePredictor, serveQueuePredictor);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (ctandem2, predictor_ctandem2, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
+      (ctandem2, predictor_ctandem2, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message);
   }
   
   public void testComprTandem2Aux
@@ -97,13 +99,15 @@ public class ComprTandem2Test
    final boolean silent,
    final boolean deadSilent,
    final double accuracy,
-   final Set<KnownLoadFactory_SQ_SV> omit)
+   final Set<KnownLoadFactory_SQ_SV> omit,
+   final Set<KnownLoadFactory_SQ_SV> restrict,
+   final String message)    
    throws SimQueuePredictionException
   {
     final BlackCompressedTandem2SimQueue ctandem2 =
       new BlackCompressedTandem2SimQueue (waitQueue.getEventList (), waitQueue, serveQueue, null);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (ctandem2, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
+      (ctandem2, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message);
   }
   
   /**
@@ -124,84 +128,84 @@ public class ComprTandem2Test
     testComprTandem2Aux
     ( new FCFS (eventList), new FCFS (eventList),
       new SimQueuePredictor_FCFS (), new SimQueuePredictor_FCFS (),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[LCFS, FCFS]
     //
     testComprTandem2Aux
     ( new LCFS (eventList), new FCFS (eventList),
       new SimQueuePredictor_LCFS (), new SimQueuePredictor_FCFS (),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[DROP, FCFS]
     //
     testComprTandem2Aux
     ( new DROP (eventList), new FCFS (eventList),
       new SimQueuePredictor_DROP (), new SimQueuePredictor_FCFS (),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[FCFS, DROP]
     //
     testComprTandem2Aux
     ( new FCFS (eventList), new DROP (eventList),
       new SimQueuePredictor_FCFS (), new SimQueuePredictor_DROP (),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[SINK, FCFS]
     //
     testComprTandem2Aux
     ( new SINK (eventList), new FCFS (eventList),
       new SimQueuePredictor_SINK (), new SimQueuePredictor_FCFS (),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[FCFS, SINK]
     //
     testComprTandem2Aux
     ( new FCFS (eventList),new SINK (eventList),
       new SimQueuePredictor_FCFS (), new SimQueuePredictor_SINK (),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[ZERO, FCFS]
     //
     testComprTandem2Aux
     ( new ZERO (eventList), new FCFS (eventList),
        new SimQueuePredictor_ZERO (), new SimQueuePredictor_FCFS (),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[FCFS, ZERO]
     //
     testComprTandem2Aux
     ( new FCFS (eventList), new ZERO (eventList),
       new SimQueuePredictor_FCFS (), new SimQueuePredictor_ZERO (),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[ZERO, ZERO]
     //
     testComprTandem2Aux
     ( new ZERO (eventList), new ZERO (eventList),
       new SimQueuePredictor_ZERO (), new SimQueuePredictor_ZERO (),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[LeakyBucket[0.5], ZERO]
     //
     testComprTandem2Aux
     ( new LeakyBucket (eventList, 0.5), new ZERO (eventList),
       new SimQueuePredictor_LeakyBucket (), new SimQueuePredictor_ZERO (),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[LeakyBucket[0.5], LeakyBucket[0.1]]
     //
     testComprTandem2Aux
     ( new LeakyBucket (eventList, 0.5), new LeakyBucket (eventList, 0.1),
       new SimQueuePredictor_LeakyBucket (), new SimQueuePredictor_LeakyBucket (),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[FCFS_B[0],FCFS_2] == NoBuffer_2
     //
     testComprTandem2Aux
     ( new FCFS_B (eventList, 0), new FCFS_c (eventList, 2),
       new NoBuffer_c (eventList, 2),
-      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[FCFS_B, FCFS_c] == FCFS_B_c
     //
@@ -213,7 +217,7 @@ public class ComprTandem2Test
         testComprTandem2Aux
         ( new FCFS_B (eventList, B), new FCFS_c (eventList, c),
           new FCFS_B_c (eventList, B, c),
-          numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+          numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
       }
   }
 

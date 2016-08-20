@@ -63,7 +63,7 @@ public class SJFTest
     final boolean silent = true;
     final boolean deadSilent = true;
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (queue, predictor, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+      (queue, predictor, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
   }
 
 }

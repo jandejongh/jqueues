@@ -60,7 +60,8 @@ public class IS_CSTTest
     {
       final IS_CST queue = new IS_CST (eventList, serviceTime);
       final SimQueuePredictor predictor = new SimQueuePredictor_IS_CST (serviceTime);
-      DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-6, null);      
+      DefaultSimQueueTests.doSimQueueTests_SQ_SV
+        (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-6, null, null, null);      
     }
   }
 

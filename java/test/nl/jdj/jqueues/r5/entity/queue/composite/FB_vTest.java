@@ -72,7 +72,9 @@ public class FB_vTest
    final boolean silent,
    final boolean deadSilent,
    final double accuracy,
-   final Set<KnownLoadFactory_SQ_SV> omit)
+   final Set<KnownLoadFactory_SQ_SV> omit,
+   final Set<KnownLoadFactory_SQ_SV> restrict,
+   final String message)    
    throws SimQueuePredictionException
   {
     final BlackNumVisitsFeedbackSimQueue fb_v =
@@ -80,7 +82,7 @@ public class FB_vTest
     final SimQueuePredictor_FB_v predictor_fb_v =
       new SimQueuePredictor_FB_v (encQueuePredictor);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (fb_v, predictor_fb_v, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
+      (fb_v, predictor_fb_v, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message);
   }
   
   /**
@@ -105,7 +107,7 @@ public class FB_vTest
       ( new DROP (eventList),
         numVisits,
         new SimQueuePredictor_DROP (),
-        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
       //
       // FB_numVisits[ZERO]
       //
@@ -113,7 +115,7 @@ public class FB_vTest
       ( new ZERO (eventList),
         numVisits,
         new SimQueuePredictor_ZERO (),
-        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
       //
       // FB_numVisits[SINK]
       //
@@ -121,7 +123,7 @@ public class FB_vTest
       ( new SINK (eventList),
         numVisits,
         new SimQueuePredictor_SINK (),
-        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
       //
       // FB_numVisits[FCFS]
       //
@@ -129,7 +131,7 @@ public class FB_vTest
       ( new FCFS (eventList),
         numVisits,
         new SimQueuePredictor_FCFS (),
-        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
       //
       // FB_numVisits[DELAY[3.3]]
       //
@@ -137,7 +139,7 @@ public class FB_vTest
       ( new DELAY (eventList, 3.3),
         numVisits,
         new SimQueuePredictor_DELAY (),
-        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
       //
       // FB_numVisits[LeakyBucket[0.1]]
       //
@@ -145,7 +147,7 @@ public class FB_vTest
       ( new LeakyBucket (eventList, 0.1),
         numVisits,
         new SimQueuePredictor_LeakyBucket (),
-        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+        numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     }
   }
 

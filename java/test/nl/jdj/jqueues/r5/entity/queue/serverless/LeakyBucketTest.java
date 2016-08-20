@@ -60,16 +60,19 @@ public class LeakyBucketTest
     {
       final LeakyBucket queue = new LeakyBucket (eventList, rateLimit);
       final SimQueuePredictor predictor = new SimQueuePredictor_LeakyBucket ();
-      DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+      DefaultSimQueueTests.doSimQueueTests_SQ_SV
+        (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
     }
     // LeakyBucket[0.0] == SINK
     final LeakyBucket lb_zero = new LeakyBucket<> (eventList, 0);
     final SINK sink = new SINK<> (eventList);
-    DefaultSimQueueTests.doSimQueueTests_SQ_SV (lb_zero, null, sink, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (lb_zero, null, sink, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
     // LeakyBucket[infinity] == ZERO
     final LeakyBucket lb_inf = new LeakyBucket<> (eventList, Double.POSITIVE_INFINITY);
     final ZERO zero = new ZERO<> (eventList);
-    DefaultSimQueueTests.doSimQueueTests_SQ_SV (lb_inf, null, zero, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (lb_inf, null, zero, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
   }
 
 }

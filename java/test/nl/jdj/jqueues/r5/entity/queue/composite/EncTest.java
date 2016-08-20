@@ -93,7 +93,9 @@ public class EncTest
    final boolean silent,
    final boolean deadSilent,
    final double accuracy,
-   final Set<KnownLoadFactory_SQ_SV> omit)
+   final Set<KnownLoadFactory_SQ_SV> omit,
+   final Set<KnownLoadFactory_SQ_SV> restrict,
+   final String message)    
    throws SimQueuePredictionException
   {
     final SimQueue cQueue;
@@ -111,7 +113,7 @@ public class EncTest
     encQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     cQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (cQueue, cQueuePredictor, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
+      (cQueue, cQueuePredictor, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message);
   }
   
   public void testEncAux
@@ -123,7 +125,9 @@ public class EncTest
    final boolean silent,
    final boolean deadSilent,
    final double accuracy,
-   final Set<KnownLoadFactory_SQ_SV> omit)
+   final Set<KnownLoadFactory_SQ_SV> omit,
+   final Set<KnownLoadFactory_SQ_SV> restrict,
+   final String message)    
    throws SimQueuePredictionException
   {
     final SimQueue cQueue;
@@ -135,7 +139,7 @@ public class EncTest
     cQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     predictorQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (cQueue, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
+      (cQueue, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message);
   }
   
   public void testEncAux (final boolean hideStart) throws SimQueuePredictionException
@@ -160,6 +164,8 @@ public class EncTest
         silent,
         deadSilent,
         1.0e-12,
+        null,
+        null,
         null);
       testEncAux (hideStart,
         new DELAY (eventList, waitingTime),
@@ -169,6 +175,8 @@ public class EncTest
         silent,
         deadSilent,
         1.0e-12,
+        null,
+        null,
         null);
     }
     // Enc[DROP]
@@ -181,6 +189,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-12,
+      null,
+      null,
       null);
     // Enc[SINK]
     // EncHS[SINK]
@@ -192,6 +202,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-12,
+      null,
+      null,
       null);
     // Enc[ZERO]
     // EncHS[ZERO]
@@ -203,6 +215,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-12,
+      null,
+      null,
       null);
     // Enc[FCFS]
     // EncHS[FCFS]
@@ -214,6 +228,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-12,
+      null,
+      null,
       null);
     // Enc[FCFS_B]
     // EncHS[FCFS_B]
@@ -228,6 +244,8 @@ public class EncTest
         silent,
         deadSilent,
         1.0e-12,
+        null,
+        null,
         null);
     }
     // Enc[LCFS]
@@ -240,6 +258,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-12,
+      null,
+      null,
       null);
     // Enc[P_LCFS]
     // EncHS[P_LCFS]
@@ -251,6 +271,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-12,
+      null,
+      null,
       null);
     // Enc[PS]
     // EncHS[PS]
@@ -262,6 +284,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-9,
+      null,
+      null,
       null);
     // Enc[CUPS]
     // EncHS[CUPS]
@@ -273,6 +297,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-9,
+      null,
+      null,
       null);
     // Enc[Enc[FCFS]]
     // EncHS[Enc[FCFS]]
@@ -284,6 +310,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-12,
+      null,
+      null,
       null);
     if (hideStart)
       // EncHS[Enc[FCFS]] == Enc[EncHS[FCFS]]
@@ -297,6 +325,8 @@ public class EncTest
         silent,
         deadSilent,
         1.0e-12,
+        null,
+        null,
         null);
     else
       // Enc[EncHS[FCFS]] == EncHS[Enc[FCFS]]
@@ -310,7 +340,9 @@ public class EncTest
         silent,
         deadSilent,
         1.0e-12,
-        null);      
+        null,
+        null,
+        null);
     // Enc[Enc[Enc[P_LCFS]]]
     // EncHS[Enc[Enc[P_LCFS]]]
     testEncAux (hideStart,
@@ -323,6 +355,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-12,
+      null,
+      null,
       null);
     // Enc[LeakyBucket[0.1]]
     // EncHS[LeakyBucket[0.1]]
@@ -334,6 +368,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-9,
+      null,
+      null,
       null);
     // Enc[WUR]
     // EncHS[WUR]
@@ -345,6 +381,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-12,
+      null,
+      null,
       null);
     // Enc[SUR]
     // EncHS[SUR]
@@ -356,6 +394,8 @@ public class EncTest
       silent,
       deadSilent,
       1.0e-12,
+      null,
+      null,
       null);
     if (hideStart)
       // EncHS[SUR] == WUR
@@ -367,6 +407,8 @@ public class EncTest
         silent,
         deadSilent,
         1.0e-12,
+        null,
+        null,
         null);
     else
       // Enc[SUR] == SUR
@@ -378,7 +420,9 @@ public class EncTest
         silent,
         deadSilent,
         1.0e-12,
-        null);      
+        null,
+        null,
+        null);
     if (hideStart)
       // EncHS[IS_CST[0.0]] == ZERO
       testEncAux (hideStart,
@@ -389,6 +433,8 @@ public class EncTest
         silent,
         deadSilent,
         1.0e-12,
+        null,
+        null,
         null);
     else
       // EncHS[IS_CST[0.0]] == IS_CST[0.0]
@@ -400,6 +446,8 @@ public class EncTest
         silent,
         deadSilent,
         1.0e-12,
+        null,
+        null,
         null);
     for (final double waitingTime : waitingTimeValues)
       if (hideStart)
@@ -412,6 +460,8 @@ public class EncTest
           silent,
           deadSilent,
           1.0e-12,
+          null,
+          null,
           null);
       else
         // Enc[IS_CST[x]] == IS_CST[x]
@@ -423,6 +473,8 @@ public class EncTest
           silent,
           deadSilent,
           1.0e-12,
+          null,
+          null,
           null);
     if (hideStart)
       // EncHS[GATE] == GATE
@@ -434,6 +486,8 @@ public class EncTest
         silent,
         deadSilent,
         1.0e-12,
+        null,
+        null,
         null);
     else
       // Enc[GATE] == GATE
@@ -445,6 +499,8 @@ public class EncTest
         silent,
         deadSilent,
         1.0e-12,
+        null,
+        null,
         null);
   }
 

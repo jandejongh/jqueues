@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r5.entity.queue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -46,7 +47,9 @@ public class DefaultSimQueueTests
      final boolean silent,
      final boolean deadSilent,
      final double accuracy,
-     final Set<KnownLoadFactory_SQ_SV> omit)
+     final Set<KnownLoadFactory_SQ_SV> omit,
+     final Set<KnownLoadFactory_SQ_SV> restrict,
+     final String message)
   throws SimQueuePredictionException
   {
     if (queue == null
@@ -54,20 +57,26 @@ public class DefaultSimQueueTests
     || numberOfJobs < 0
     || queue.getEventList () == null
     || (predictorQueue != null && predictorQueue.getEventList () != queue.getEventList ())
-    || accuracy < 0)
+    || accuracy < 0
+    || (omit != null && restrict != null && ! Collections.disjoint (omit, restrict)))
       throw new IllegalArgumentException ();
     if (predictor != null && predictorQueue != null)
     {
       return
-        doSimQueueTests_SQ_SV (queue, predictor, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit)
-     && doSimQueueTests_SQ_SV (queue, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit);
+        doSimQueueTests_SQ_SV
+          (queue, predictor, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message)
+     && doSimQueueTests_SQ_SV
+          (queue, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message);
     }
-    System.out.println ("========== SimQueue Tests [SQ/SV] ==============================================");
+    System.out.print ("SimQueue Test [SQ/SV]: ");
     if (predictorQueue == null)
-      System.out.println (queue);
+      System.out.print (queue + " == " + predictor);
     else
-      System.out.println (queue + " == " + predictorQueue);
-    System.out.println ("================================================================================");
+      System.out.print (queue + " == " + predictorQueue);
+    if (message != null)
+      System.out.println (" [" + message + "]");
+    else
+      System.out.println ();
     final SimEventList<SimEvent> el = queue.getEventList ();
     // If requested, register some listeners that will generate some output...
     if (! (silent || deadSilent))
@@ -102,7 +111,8 @@ public class DefaultSimQueueTests
     }
     // Loop over (1) the known load factories and (2) the consequetive passes.
     for (final KnownLoadFactory_SQ_SV klf : KnownLoadFactory_SQ_SV.values ())
-      if (omit == null || ! omit.contains (klf))
+      if ((omit == null || ! omit.contains (klf))
+       && (restrict == null || restrict.contains (klf)))
         for (int pass = 1; pass <= NUMBER_OF_PASSES; pass++)
         {
           if (! deadSilent)

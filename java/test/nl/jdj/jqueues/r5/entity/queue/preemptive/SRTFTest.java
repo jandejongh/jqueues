@@ -60,7 +60,8 @@ public class SRTFTest
       {
         final SRTF queue = new SRTF (eventList, preemptionStrategy);
         final SimQueuePredictor predictor = new SimQueuePredictor_SRTF ();
-        DefaultSimQueueTests.doSimQueueTests_SQ_SV (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-9, null);
+        DefaultSimQueueTests.doSimQueueTests_SQ_SV
+          (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-9, null, null, null);
         eventList.reset ();
       }
   }

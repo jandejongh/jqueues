@@ -58,7 +58,7 @@ public class ICTest
     final IC queue = new IC (eventList);
     final SimQueuePredictor predictor = new SimQueuePredictor_IC ();
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null);      
+      (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);      
   }
 
 }

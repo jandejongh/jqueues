@@ -66,7 +66,7 @@ public class P_LCFSTest
         final P_LCFS queue = new P_LCFS (eventList, preemptionStrategy);
         final SimQueuePredictor predictor = new SimQueuePredictor_P_LCFS ();
         DefaultSimQueueTests.doSimQueueTests_SQ_SV
-          (queue, predictor, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null);
+          (queue, predictor, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
         eventList.reset ();
       }
   }
