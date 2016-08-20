@@ -16,6 +16,7 @@ public enum KnownLoadFactory_SQ_SV
 
   KLF_0001 (new LoadFactory_SQ_SV_0001 ()),
   KLF_0002 (new LoadFactory_SQ_SV_0002 ()),
+  KLF_0003 (new LoadFactory_SQ_SV_0003 ()),
   KLF_0005 (new LoadFactory_SQ_SV_0005 ()),
   KLF_0010 (new LoadFactory_SQ_SV_0010 ()),
   KLF_0011 (new LoadFactory_SQ_SV_0011 ()),
