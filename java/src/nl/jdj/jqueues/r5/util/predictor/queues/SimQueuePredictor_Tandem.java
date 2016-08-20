@@ -28,6 +28,12 @@ implements SimQueuePredictor<Q>
   }
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[Tandem[?]]";
+  }
+
+  @Override
   public boolean isStartArmed (final Q queue, final SimQueueState<SimJob, Q> queueState)
   {
     if (queue == null || queueState == null)

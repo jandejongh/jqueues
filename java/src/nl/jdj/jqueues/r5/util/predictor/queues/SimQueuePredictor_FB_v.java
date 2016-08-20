@@ -48,6 +48,12 @@ implements SimQueuePredictor<BlackNumVisitsFeedbackSimQueue>
   }
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[FB_?[?]]";
+  }
+
+  @Override
   public boolean isStartArmed
   (final BlackNumVisitsFeedbackSimQueue queue, final SimQueueState<SimJob, BlackNumVisitsFeedbackSimQueue> queueState)
   {

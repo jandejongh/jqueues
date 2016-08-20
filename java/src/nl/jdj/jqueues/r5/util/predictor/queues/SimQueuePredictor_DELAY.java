@@ -23,6 +23,12 @@ extends AbstractSimQueuePredictor<DELAY>
 {
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[DELAY[?]]";
+  }
+
+  @Override
   public boolean isStartArmed (final DELAY queue, final SimQueueState<SimJob, DELAY> queueState)
   {
     if (queue == null || queueState == null)

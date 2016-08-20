@@ -15,4 +15,10 @@ extends SimQueuePredictor_FCFS
     super (true, B, true, 1);
   }
 
+  @Override
+  public String toString ()
+  {
+    return "Predictor[FCFS_B[" + this.B + "]]";
+  }
+
 }

@@ -55,6 +55,12 @@ extends AbstractSimQueuePredictor<SimQueue>
   }
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[FCFS]";
+  }
+
+  @Override
   public boolean isStartArmed (final SimQueue queue, final SimQueueState<SimJob, SimQueue> queueState)
   {
     if (queue == null || queueState == null)

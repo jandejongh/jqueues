@@ -28,6 +28,12 @@ extends SimQueuePredictor_Preemptive<SRTF>
 {
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[SRTF[?]]";
+  }
+
+  @Override
   public boolean isStartArmed (final SRTF queue, final SimQueueState<SimJob, SRTF> queueState)
   {
     if (queue == null || queueState == null)

@@ -23,6 +23,12 @@ extends AbstractSimQueuePredictor<DROP>
 {
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[DROP]";
+  }
+
+  @Override
   public boolean isStartArmed (final DROP queue, final SimQueueState<SimJob, DROP> queueState)
   {
     if (queue == null || queueState == null)

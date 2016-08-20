@@ -23,6 +23,12 @@ extends AbstractSimQueuePredictor<SINK>
 {
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[SINK]";
+  }
+
+  @Override
   public boolean isStartArmed (final SINK queue, final SimQueueState<SimJob, SINK> queueState)
   {
     if (queue == null || queueState == null)

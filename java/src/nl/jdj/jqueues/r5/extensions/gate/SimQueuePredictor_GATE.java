@@ -29,6 +29,12 @@ extends AbstractSimQueuePredictor<GATE>
 {
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[GATE]";
+  }
+
+  @Override
   public boolean isStartArmed (final GATE queue, final SimQueueState<SimJob, GATE> queueState)
   {
     return false;

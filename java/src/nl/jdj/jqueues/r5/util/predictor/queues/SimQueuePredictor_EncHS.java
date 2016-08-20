@@ -50,6 +50,12 @@ implements SimQueuePredictor<BlackEncapsulatorHideStartSimQueue>
   }
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[EncHS[?]]";
+  }
+
+  @Override
   public SimQueueState<SimJob, BlackEncapsulatorHideStartSimQueue> createQueueState
   (final BlackEncapsulatorHideStartSimQueue queue,
    final boolean isROEL)

@@ -58,6 +58,12 @@ extends AbstractSimQueuePredictor_Composite<Q>
     this.serveQueuePredictor = serveQueuePredictor;
   }
 
+  @Override
+  public String toString ()
+  {
+    return "Predictor[ComprTandem2[?]]";
+  }
+
   private SimQueue getWaitQueue (final Q queue)
   {
     if (queue == null)

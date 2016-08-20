@@ -29,6 +29,12 @@ extends SimQueuePredictor_Preemptive<P_LCFS>
 {
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[P_LCFS[?]]";
+  }
+
+  @Override
   public boolean isStartArmed (final P_LCFS queue, final SimQueueState<SimJob, P_LCFS> queueState)
   {
     if (queue == null || queueState == null)

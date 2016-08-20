@@ -27,4 +27,10 @@ extends SimQueuePredictor_FCFS
     super ();
   }
 
+  @Override
+  public String toString ()
+  {
+    return "Predictor[LCFS]";
+  }
+
 }

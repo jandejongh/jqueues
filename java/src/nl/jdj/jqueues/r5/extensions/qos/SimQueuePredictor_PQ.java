@@ -33,6 +33,12 @@ extends SimQueuePredictor_Preemptive<Q>
 {
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[PQ[?]]";
+  }
+
+  @Override
   public boolean isStartArmed (final Q queue, final SimQueueState<SimJob, Q> queueState)
   {
     if (queue == null || queueState == null)

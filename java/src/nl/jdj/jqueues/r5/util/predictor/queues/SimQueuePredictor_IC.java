@@ -15,4 +15,10 @@ extends SimQueuePredictor_IS
     super (true, 0.0);
   }
   
+  @Override
+  public String toString ()
+  {
+    return "Predictor[IC]";
+  }
+
 }

@@ -37,6 +37,12 @@ extends AbstractSimQueuePredictor<LeakyBucket>
   }
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[LeakyBucket[?]]";
+  }
+
+  @Override
   public boolean isStartArmed (final LeakyBucket queue, final SimQueueState<SimJob, LeakyBucket> queueState)
   {
     return false;

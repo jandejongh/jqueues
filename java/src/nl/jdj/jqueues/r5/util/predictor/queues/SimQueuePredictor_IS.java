@@ -40,6 +40,12 @@ extends SimQueuePredictor_FCFS
     this (false, Double.NaN);
   }
   
+  @Override
+  public String toString ()
+  {
+    return "Predictor[IS]";
+  }
+
   private final ToDoubleBiFunction<SimQueue, SimJob> serviceTimeProvider =
     (final SimQueue queue, final SimJob job) -> SimQueuePredictor_IS.this.serviceTime;
   

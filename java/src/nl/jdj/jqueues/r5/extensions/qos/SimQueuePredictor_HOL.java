@@ -26,6 +26,12 @@ public class SimQueuePredictor_HOL<J extends SimJob, Q extends HOL, P extends Co
 extends SimQueuePredictor_FCFS
 {
   
+  @Override
+  public String toString ()
+  {
+    return "Predictor[HOL]";
+  }
+
   /** Registers a new {@link SimQueueQoSStateHandler} at the object created by super method.
    *
    * @return The object created by the super method with a new registered {@link SimQueueQoSStateHandler}.

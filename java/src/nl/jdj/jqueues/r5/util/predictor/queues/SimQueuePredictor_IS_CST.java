@@ -15,4 +15,10 @@ extends SimQueuePredictor_IS
     super (true, serviceTime);
   }
   
+  @Override
+  public String toString ()
+  {
+    return "Predictor[IS_CST[" + this.serviceTime + "]]";
+  }
+
 }

@@ -49,6 +49,12 @@ implements SimQueuePredictor<BlackEncapsulatorSimQueue>
   }
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[Enc[?]]";
+  }
+
+  @Override
   public SimQueueState<SimJob, BlackEncapsulatorSimQueue> createQueueState
   (final BlackEncapsulatorSimQueue queue,
    final boolean isROEL)

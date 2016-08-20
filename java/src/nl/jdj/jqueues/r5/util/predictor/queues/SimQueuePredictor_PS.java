@@ -28,6 +28,12 @@ extends AbstractSimQueuePredictor<PS>
 {
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[PS]";
+  }
+
+  @Override
   public boolean isStartArmed (final PS queue, final SimQueueState<SimJob, PS> queueState)
   {
     if (queue == null || queueState == null)

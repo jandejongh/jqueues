@@ -43,6 +43,12 @@ extends AbstractSimQueuePredictor<HOL_PS>
   }
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[HOL-PS]";
+  }
+
+  @Override
   public boolean isStartArmed (final HOL_PS queue, final SimQueueState<SimJob, HOL_PS> queueState)
   {
     if (queue == null || queueState == null)

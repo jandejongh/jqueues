@@ -18,6 +18,12 @@ extends SimQueuePredictor_FCFS
 {
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[SJF]";
+  }
+
+  @Override
   protected SimJob getJobToStart (final SimQueue queue, final SimQueueState<SimJob, SimQueue> queueState)
   throws SimQueuePredictionException
   {

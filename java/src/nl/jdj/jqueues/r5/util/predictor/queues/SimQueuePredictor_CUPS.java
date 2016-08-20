@@ -34,6 +34,12 @@ public class SimQueuePredictor_CUPS
 extends AbstractSimQueuePredictor<CUPS>
 {
 
+  @Override
+  public String toString ()
+  {
+    return "Predictor[CUPS]";
+  }
+
   /** Registers a new {@link SimQueueOSTStateHandler} at the object created by super method.
    *
    * @return The object created by the super method with a new registered {@link SimQueueOSTStateHandler}.

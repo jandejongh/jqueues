@@ -23,6 +23,12 @@ extends AbstractSimQueuePredictor<ZERO>
 {
 
   @Override
+  public String toString ()
+  {
+    return "Predictor[ZERO]";
+  }
+
+  @Override
   public boolean isStartArmed (final ZERO queue, final SimQueueState<SimJob, ZERO> queueState)
   {
     if (queue == null || queueState == null)
