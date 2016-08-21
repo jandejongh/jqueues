@@ -343,8 +343,27 @@ implements SimQueueQoS<J, Q, P>
     this.jobsInServiceArea.add (job);
   }
 
-  /** Reschedules due to the start of a job, making it depart immediately if its requested service time is zero,
-   *  or rescheduling the (single) departure event of this queue otherwise.
+  /** Depending on the job's requested service time, makes it depart immediately, or schedules a suitable departure event.
+   * 
+   * <p>
+   * Performs sanity checks on the fly (job present; job not yet started; requested service time zero or positive).
+   * The time argument must match the result from {@link #getLastUpdateTime} (and is thus only present for sanity checking).
+   * 
+   * <p>
+   * If a job has infinite requested service time, it will start but never depart,
+   * even if the start is scheduled at positive or negative infinity.
+   * 
+   * <p>
+   * With zero requested service time, a job departs immediately.
+   * This is also the case if the start is at positive or negative infinity
+   * AND the job has finite requested service time.
+   * 
+   * <p>
+   * In all other cases, a suitable departure event is scheduled through {@link #rescheduleDepartureEvent}.
+   * 
+   * <p>
+   * Caveat: the specification above implies that NOT all jobs in the service area will have a departure event
+   * scheduled for them!
    * 
    * @see #getServiceTimeForJob
    * @see #rescheduleDepartureEvent
@@ -361,10 +380,16 @@ implements SimQueueQoS<J, Q, P>
     final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
-    if (jobServiceTime > 0)
-      rescheduleDepartureEvent ();
+    if (Double.isFinite (jobServiceTime))
+    {
+      if (jobServiceTime == 0 || ! Double.isFinite (time))
+        depart (time, job);
+      else
+        rescheduleDepartureEvent ();
+    }
     else
-      depart (time, job);
+      // Jobs with infinite requested service time never depart.
+      ;
   }
     
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -446,13 +471,29 @@ implements SimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Reschedules the single departure event for this queue, departing a job immediately if its required service time is zero.
+  /** Reschedules the single departure event for this queue.
+   * 
+   * <p>
+   * Cancels a pending departure event and schedules the first job in the service area for departure (if ever).
+   * 
+   * <p>
+   * If the job has infinite requested service time, this method does nothing,
+   * even if the start is scheduled at positive or negative infinity.
+   * 
+   * <p>
+   * With zero requested service time, the job departs immediately.
+   * This is also the case if time ({@link #getLastUpdateTime}) is at positive or negative infinity
+   * AND the job has finite requested service time.
+   * 
+   * <p>
+   * In all other cases, a suitable departure event is scheduled through {@link #rescheduleDepartureEvent}.
    * 
    * @see #getDepartureEvents
    * @see #cancelDepartureEvent
    * @see #jobsInServiceArea
    * @see #getFirstJobInServiceArea
    * @see #getServiceTimeForJob
+   * @see #getLastUpdateTime
    * @see #scheduleDepartureEvent
    * @see #depart
    * @see #getLastUpdateTime
@@ -472,13 +513,18 @@ implements SimQueueQoS<J, Q, P>
     if (getNumberOfJobsInServiceArea () == 1)
     {
       final J job = getFirstJobInServiceArea ();
+      final double time = getLastUpdateTime ();
       final double jobServiceTime = getServiceTimeForJob (job);
-      if (jobServiceTime < 0)
-        throw new RuntimeException ();
-      if (jobServiceTime > 0)
-        scheduleDepartureEvent (getLastUpdateTime () + jobServiceTime, job);
+      if (Double.isFinite (jobServiceTime))
+      {
+        if (jobServiceTime == 0 || Double.isInfinite (time))
+          depart (time, job);
+        else
+          scheduleDepartureEvent (time + jobServiceTime, job);
+      }
       else
-        depart (getLastUpdateTime (), job);
+        // Jobs with infinite requested service time never depart.
+        ;
     }
   }
   

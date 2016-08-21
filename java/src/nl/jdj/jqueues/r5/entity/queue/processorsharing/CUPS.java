@@ -2,9 +2,7 @@ package nl.jdj.jqueues.r5.entity.queue.processorsharing;
 
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Set;
@@ -127,12 +125,10 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // INTERNAL (STATE) ADMINISTRATION
-  // - requiredServiceTime
   // - obtainedServiceTimeMap
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private final Map<J, Double> requiredServiceTime = new LinkedHashMap<> ();
   private final NavigableMap<Double, Set<J>> obtainedServiceTimeMap = new TreeMap<> ();
 
   /** Gets the jobs currently in execution.
@@ -189,7 +185,6 @@ extends AbstractProcessorSharingSimQueue<J, Q>
     if (job == null)
       throw new IllegalArgumentException ();
     sanityInternalAdministration ();
-    this.requiredServiceTime.remove (job);
     if (! getJobsInServiceArea ().contains (job))
       return;
     final Iterator<Entry<Double, Set<J>>> ost_i = this.obtainedServiceTimeMap.entrySet ().iterator ();
@@ -256,8 +251,6 @@ extends AbstractProcessorSharingSimQueue<J, Q>
       this.obtainedServiceTimeMap});
     if (this.obtainedServiceTimeMap == null)
       throw new IllegalStateException ();
-    if (this.requiredServiceTime.size () != getNumberOfJobsInServiceArea ())
-      throw new IllegalStateException ();
     int numberOfJobsInObtainedServiceTimeMap = 0;
     for (final Set<J> jobs : this.obtainedServiceTimeMap.values ())
       numberOfJobsInObtainedServiceTimeMap += jobs.size ();
@@ -278,7 +271,6 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
-    this.requiredServiceTime.clear ();
     this.obtainedServiceTimeMap.clear ();
     this.lastCatchUpTime = Double.NaN;
     // Note that we use eventsScheduled in order to automatically have departure and catch-up events cancelled.
@@ -506,10 +498,10 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job, after sanity checks, in the service area and administers its required and initial obtained service times.
+  /** Inserts the job, after sanity checks, in the service area and administers its initial obtained service time.
    * 
+   * @see #jobsInServiceArea
    * @see #getServiceTimeForJob
-   * @see #requiredServiceTime
    * @see #obtainedServiceTimeMap
    * 
    */
@@ -518,24 +510,24 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   {
     if (job == null
     || (! getJobs ().contains (job))
-    || getJobsInServiceArea ().contains (job)
-    || this.requiredServiceTime.containsKey (job))
+    || getJobsInServiceArea ().contains (job))
       throw new IllegalArgumentException ();
     sanityInternalAdministration ();
     this.jobsInServiceArea.add (job);
     final double jobRequiredServiceTime = getServiceTimeForJob (job);
     if (jobRequiredServiceTime < 0)
       throw new RuntimeException ();
-    this.requiredServiceTime.put (job, jobRequiredServiceTime);
     if (! this.obtainedServiceTimeMap.containsKey (0.0))
       this.obtainedServiceTimeMap.put (0.0, new LinkedHashSet<> ());
     this.obtainedServiceTimeMap.get (0.0).add (job);
   }
 
-  /** Reschedules due to the start of a job, making it depart immediately if its requested service time is zero,
+  /** Reschedules due to the start of a job,
+   *  making it depart immediately if its requested service time is zero
+   *  (or finite and time itself is infinite),
    *  or rescheduling through {@link #rescheduleDepartureEvent} and {@link #rescheduleCatchUpEvent} otherwise.
    * 
-   * @see #requiredServiceTime
+   * @see #getServiceTimeForJob
    * @see #rescheduleDepartureEvent
    * @see #rescheduleCatchUpEvent
    * @see #depart
@@ -546,19 +538,19 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   {
     if (job == null
     || (! getJobs ().contains (job))
-    || (! getJobsInServiceArea ().contains (job))
-    || ! this.requiredServiceTime.containsKey (job))
+    || (! getJobsInServiceArea ().contains (job)))
       throw new IllegalArgumentException ();
-    final double jobServiceTime = this.requiredServiceTime.get (job);
+    final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
-    if (jobServiceTime > 0)
+    if (jobServiceTime == 0
+    || (Double.isFinite (jobServiceTime) && Double.isInfinite (time)))
+      depart (time, job);
+    else
     {
       rescheduleDepartureEvent ();
       rescheduleCatchUpEvent ();
     }
-    else
-      depart (time, job);
     sanityInternalAdministration ();
   }
     
@@ -677,9 +669,14 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   
   /** Reschedules the single departure event for this queue.
    * 
+   * <p>
+   * Refuses to schedule departure events at positive or negative infinity.
+   * 
    * @see #getDepartureEvents
    * @see #cancelDepartureEvent
    * @see #jobsInServiceArea
+   * @see #getServiceTimeForJob
+   * @see #getMinimumObtainedServiceTime
    * @see #scheduleDepartureEvent
    * 
    */
@@ -698,29 +695,54 @@ extends AbstractProcessorSharingSimQueue<J, Q>
       final Set<J> jobsExecuting = getJobsExecuting ();
       if (jobsExecuting.isEmpty ())
         throw new IllegalStateException ();
-      boolean first = true;
-      J leaver = null;
-      double rst_leaver = Double.POSITIVE_INFINITY;
-      for (final J job : jobsExecuting)
-        if (first)
+      if (Double.isInfinite (getLastUpdateTime ()))
+      {
+        // If time is either positive of negative infinity,
+        // all jobs in the service area must have infinite service-time requirement,
+        // because if finite, they should gave departed upon start already.
+        // Other than that, there is nothing to do at positive or negative infinity,
+        // because jobs with infinite service-time requirement never depart.
+        for (final J job : getJobsInServiceArea ())
+          if (Double.isFinite (getServiceTimeForJob (job)))
+            throw new IllegalStateException ();
+      }
+      else
+      {
+        // The current time is finite.
+        // Find the job among those executing that is first to leave.
+        // In fact, given the CUPS scheduling, that is always the candidate job with the minimum REQUIRED service time.
+        // (Since all jobs executing have identical obtained service times.)
+        boolean first = true;
+        J leaver = null;
+        double rst_leaver = Double.POSITIVE_INFINITY;
+        for (final J job : jobsExecuting)
+          if (first)
+          {
+            first = false;
+            leaver = job;
+            rst_leaver = getServiceTimeForJob (job); 
+          }
+          else
+          {
+            final double rst_job = getServiceTimeForJob (job);
+            if (rst_job < rst_leaver)
+            {
+              leaver = job;
+              rst_leaver = rst_job;
+            }
+          }
+        if (Double.isFinite (rst_leaver))
         {
-          first = false;
-          leaver = job;
-          rst_leaver = this.requiredServiceTime.get (job); 
+          final int numberOfJobsExecuting = jobsExecuting.size ();
+          final double ost = getMinimumObtainedServiceTime ();
+          final double timeToDeparture = Math.max (rst_leaver - ost, 0.0) * numberOfJobsExecuting;
+          scheduleDepartureEvent (getLastUpdateTime () + timeToDeparture, leaver);
         }
         else
-        {
-          final double rst_job = this.requiredServiceTime.get (job);
-          if (rst_job < rst_leaver)
-          {
-            leaver = job;
-            rst_leaver = rst_job;
-          }
-        }
-      final int numberOfJobsExecuting = jobsExecuting.size ();
-      final double ost = getMinimumObtainedServiceTime ();
-      final double timeToDeparture = Math.max (rst_leaver - ost, 0.0) * numberOfJobsExecuting;
-      scheduleDepartureEvent (getLastUpdateTime () + timeToDeparture, leaver);
+          // Our earliest departer has infinite requested service time.
+          // Nothing to do here, because such jobs never depart.
+          ;
+      }
     }
   }
   
@@ -786,6 +808,9 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   
   /** Reschedules a catch-up event.
    * 
+   * <p>
+   * Refuses to schedule catch-up events at positive or negative infinity.
+   * 
    * @see #cancelCatchUpEvent
    * @see #getTimeToCatchUp
    * @see CatchUpEvent
@@ -797,8 +822,13 @@ extends AbstractProcessorSharingSimQueue<J, Q>
     cancelCatchUpEvent ();
     if (this.obtainedServiceTimeMap.size () >= 2)
     {
-      getEventList ().schedule (getLastUpdateTime () + getTimeToCatchUp (), this.catchUpEvent);
-      this.eventsScheduled.add (this.catchUpEvent);
+      final double time = getLastUpdateTime ();
+      final double timeToCatchUp = getTimeToCatchUp ();
+      if (Double.isFinite (time) && Double.isFinite (timeToCatchUp))
+      {
+        getEventList ().schedule (time + timeToCatchUp, this.catchUpEvent);
+        this.eventsScheduled.add (this.catchUpEvent);
+      }
     }
   }
     

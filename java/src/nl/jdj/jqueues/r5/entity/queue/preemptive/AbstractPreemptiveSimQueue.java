@@ -11,6 +11,13 @@ import nl.jdj.jsimulation.r5.SimEventList;
 
 /** An abstract base class for preemptive queueing disciplines.
  *
+ * <p>
+ * Implementations allow (through inheritance) the job requested service time to be (positive) infinite.
+ * Jobs with that feature will never depart through internal scheduling
+ * (can only depart due to preemption and the proper preemption strategy),
+ * even if time itself is positive or negative infinity.
+ * If time is infinite, jobs with finite service time requirement will always start and depart immediately upon arrival.
+ * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
@@ -261,10 +268,12 @@ public abstract class AbstractPreemptiveSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Starts execution of a job in {@link #getJobsInServiceArea}, until it departs or until it is preempted.
+  /** Starts execution of a job in {@link #getJobsInServiceArea}, until it departs (if at all) or until it is preempted.
    * 
    * <p>
-   * The job to execute departs immediately if its remaining service time is zero.
+   * The job to execute departs immediately if its remaining service time is zero;
+   * or is finite and time itself is at positive or negative infinity.
+   * No departure event is scheduled if the job has infinite required service time.
    * 
    * @param time The (current) time.
    * @param job  The job to start executing.
@@ -286,10 +295,17 @@ public abstract class AbstractPreemptiveSimQueue
       throw new IllegalStateException ();
     this.jobsBeingServed.put (job, time);
     final double rs_job = this.remainingServiceTime.get (job);
-    if (rs_job > 0 + AbstractPreemptiveSimQueue.TOLERANCE_RST)
-      scheduleDepartureEvent (time + rs_job, job);
+    if (Double.isFinite (rs_job))
+    {
+      if (Double.isFinite (time) && rs_job > 0 + AbstractPreemptiveSimQueue.TOLERANCE_RST)
+        scheduleDepartureEvent (time + rs_job, job);
+      else
+        depart (time, job);
+    }
     else
-      depart (time, job);
+      // Jobs with infinite requested service time never depart through internal event-list scheduling.
+      // (Note that they may still depart through preemption and PreemptionStrategy.DEPART.)
+      ;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

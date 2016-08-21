@@ -35,6 +35,11 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * The requirement of work-conservation should therefore be annotated with "given sufficient server-access credits".
  * 
  * <p>
+ * Implementations allow (through inheritance) the job requested service time to be (positive) infinite.
+ * Jobs with that feature will never depart (through internal scheduling), even if time itself is positive or negative infinity.
+ * If time is infinite, jobs with finite service time requirement will always start and depart immediately upon arrival.
+ * 
+ * <p>
  * Despite the constraints and conditions outlined above, many classical non-preemptive queueing systems
  * like {@link FCFS}, {@link FCFS_B_c}, {@link SJF} and {@link IS} are in fact work-conserving.
  * 
@@ -304,10 +309,28 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
     this.jobsInServiceArea.add (job);
   }
 
-  /** Depending on the job's requested service time, makes it depart immediately, or schedules a suitable departure event.
+  /** Depending on the job's requested service time, makes it depart immediately, schedules a suitable departure event,
+   *  or does nothing if the job requires infinite service time.
    * 
    * <p>
    * Performs sanity checks on the fly (job present; job not yet started; requested service time zero or positive).
+   * The time argument must match the result from {@link #getLastUpdateTime} (and is thus only present for sanity checking).
+   * 
+   * <p>
+   * If a job has infinite requested service time, it will start but never depart,
+   * even if the start is scheduled at positive or negative infinity.
+   * 
+   * <p>
+   * With zero requested service time, a job departs immediately.
+   * This is also the case if the start is at positive or negative infinity
+   * AND the job has finite requested service time.
+   * 
+   * <p>
+   * In all other cases, a suitable departure event is scheduled through {@link #scheduleDepartureEvent}.
+   * 
+   * <p>
+   * Caveat: the specification above implies that NOT all jobs in the service area will have a departure event
+   * scheduled for them!
    * 
    * @see #getServiceTimeForJob
    * @see #scheduleDepartureEvent
@@ -317,15 +340,24 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   @Override
   protected final void rescheduleAfterStart (final J job, final double time)
   {
-    if (job == null || (! getJobs ().contains (job)) || (! getJobsInServiceArea ().contains (job)))
+    if (job == null
+    || (! getJobs ().contains (job))
+    || (! getJobsInServiceArea ().contains (job))
+    || time != getLastUpdateTime ())
       throw new IllegalArgumentException ();
     final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
-    if (jobServiceTime > 0)
-      scheduleDepartureEvent (time + jobServiceTime, job);
+    if (Double.isFinite (jobServiceTime))
+    {
+      if (jobServiceTime == 0 || ! Double.isFinite (time))
+        depart (time, job);
+      else
+        scheduleDepartureEvent (time + jobServiceTime, job);
+    }
     else
-      depart (time, job);
+      // Jobs with infinite requested service time never depart.
+      ;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

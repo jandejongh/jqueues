@@ -108,8 +108,13 @@ extends AbstractSimQueuePredictor<CUPS>
         eventType = SimQueueCatchUpSimpleEventType.CATCH_UP;
       }
     }
-    queueEventTypes.add (eventType);
-    return time + dT;
+    if (Double.isFinite (dT))
+    {
+      queueEventTypes.add (eventType);
+      return time + dT;
+    }
+    else
+      return Double.NaN;
   }
 
   @Override

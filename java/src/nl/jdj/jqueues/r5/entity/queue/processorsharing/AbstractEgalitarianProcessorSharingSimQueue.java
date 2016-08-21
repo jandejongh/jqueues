@@ -188,10 +188,19 @@ public abstract class AbstractEgalitarianProcessorSharingSimQueue
     this.virtualDepartureTime.put (job, jobVirtualDepartureTime);
   }
 
-  /** Reschedules due to the start of a job, making it depart immediately if its requested service time is zero,
-   *  or rescheduling the (single) departure event of this queue otherwise.
+  /** Reschedules due to the start of a job.
+   * 
+   * <ul>
+   * <li>If the requested service time of the job is zero, the job departs immediately.
+   * <li>If the requested service time of the job is finite and the current time is positive of negative infinity,
+   *       the job departs immediately.
+   * <li>Otherwise, if the requested service time is finite,
+   *       a single departure event for the job is scheduled.
+   * <li>(If the required service time is infinite, this method does nothing.)
+   * </ul>
    * 
    * @see #virtualDepartureTime
+   * @see #getServiceTimeForJob
    * @see #rescheduleDepartureEvent
    * @see #depart
    * 
@@ -204,13 +213,14 @@ public abstract class AbstractEgalitarianProcessorSharingSimQueue
     || (! getJobsInServiceArea ().contains (job))
     || ! this.virtualDepartureTime.containsKey (job))
       throw new IllegalArgumentException ();
-    final double jobServiceTime = this.virtualDepartureTime.get (job);
+    final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
-    if (jobServiceTime > 0)
-      rescheduleDepartureEvent ();
-    else
+    if (jobServiceTime == 0
+    || (Double.isFinite (jobServiceTime) && Double.isInfinite (time)))
       depart (time, job);
+    else
+      rescheduleDepartureEvent ();
   }
     
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -277,9 +287,18 @@ public abstract class AbstractEgalitarianProcessorSharingSimQueue
    * <p>
    * First, cancels a pending departure event.
    * Then, determines which job in the service area (if any) is to depart first through {@link #virtualDepartureTime},
-   * and schedules a departure event for it (or makes the job depart immediately through {@link #depart} if its
-   * remaining service time is zero.
+   * and what its remaining service time is.
    * 
+   * <ul>
+   * <li>If the remaining service time of the job is zero, the job departs immediately.
+   * <li>If the remaining service time of the job is finite and the current time is positive of negative infinity,
+   *       the job departs immediately.
+   * <li>Otherwise, if the remaining service time is finite,
+   *       a single departure event for the job is scheduled.
+   * <li>(If the remaining service time is infinite, this method does nothing.)
+   * </ul>
+   * 
+   * @see #getLastUpdateTime
    * @see #getDepartureEvents
    * @see #cancelDepartureEvent
    * @see #jobsInServiceArea
@@ -302,17 +321,37 @@ public abstract class AbstractEgalitarianProcessorSharingSimQueue
     {
       if (getNumberOfJobsInServiceArea () == 0)
         throw new IllegalStateException ();
-      final double scheduleVirtualTime = this.virtualDepartureTime.firstValue ();
-      final double deltaVirtualTime = scheduleVirtualTime - getVirtualTime ();
-      if (deltaVirtualTime < 0)
-        throw new IllegalStateException ();
-      final J job = this.virtualDepartureTime.getPreImageForValue (scheduleVirtualTime).iterator ().next ();
-      if (deltaVirtualTime == 0)
-        depart (getLastUpdateTime (), job);
+      if (Double.isInfinite (getLastUpdateTime ()))
+      {
+        // If time is either positive of negative infinity,
+        // all jobs in the service area must have infinite service-time requirement,
+        // because if finite, they should gave departed upon start already.
+        // Other than that, there is nothing to do at positive or negative infinity,
+        // because jobs with infinite service-time requirement never depart.
+        for (final J job : getJobsInServiceArea ())
+          if (Double.isFinite (getServiceTimeForJob (job)))
+            throw new IllegalStateException ();
+      }
       else
       {
-        final double deltaTime = deltaVirtualTime * getNumberOfJobsInServiceArea ();
-        scheduleDepartureEvent (getLastUpdateTime () + deltaTime, job);
+        // The current time is finite, schedule for departure the job with the earliest virtual departure time, unless finite.
+        final double scheduleVirtualTime = this.virtualDepartureTime.firstValue ();
+        final double deltaVirtualTime = scheduleVirtualTime - getVirtualTime ();
+        if (deltaVirtualTime < 0)
+          // XXX There is no protection in updating the virtual time, so at some point, we will hit a rounding error here...
+          throw new IllegalStateException ();
+        final J job = this.virtualDepartureTime.getPreImageForValue (scheduleVirtualTime).iterator ().next ();
+        if (deltaVirtualTime == 0)
+          depart (getLastUpdateTime (), job);
+        else if (Double.isFinite (deltaVirtualTime))
+        {
+          final double deltaTime = deltaVirtualTime * getNumberOfJobsInServiceArea ();
+          scheduleDepartureEvent (getLastUpdateTime () + deltaTime, job);
+        }
+        else
+          // Our earliest departer (and thus all jobs in the service area) has infinite requested service time.
+          // Nothing to do here, because such jobs never depart.
+          ;
       }
     }
   }

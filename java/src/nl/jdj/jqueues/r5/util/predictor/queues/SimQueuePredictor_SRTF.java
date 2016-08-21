@@ -60,8 +60,13 @@ extends SimQueuePredictor_Preemptive<SRTF>
     final double smallestRs = queueState.getRemainingServiceMap ().firstKey ();
     if (smallestRs < 0)
       throw new RuntimeException ();
-    queueEventTypes.add (SimEntitySimpleEventType.DEPARTURE);
-    return time + smallestRs;
+    if (Double.isFinite (smallestRs))
+    {
+      queueEventTypes.add (SimEntitySimpleEventType.DEPARTURE);
+      return time + smallestRs;
+    }
+    else
+      return Double.NaN;
   }
 
   @Override

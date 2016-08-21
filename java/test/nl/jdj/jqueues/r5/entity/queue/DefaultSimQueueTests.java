@@ -153,6 +153,9 @@ public class DefaultSimQueueTests
             // Run the simulation with queue.
             el.run ();
             assert el.isEmpty ();
+            // Note: We reset at a finite time, and workloads should not and queues MUST NEVER schedule at +/- infinity.
+            // [This holds even in the presence of jobs with infinite service-time requirement.]
+            assert Double.isFinite (el.getTime ());
             // Gather the (actual) logs.
             for (final SimJob j : jobs) 
               actualJobQueueVisitLogs.put (j, ((DefaultVisitsLoggingSimJob) j).getVisitLogs ());
@@ -174,6 +177,9 @@ public class DefaultSimQueueTests
             // Run the simulation with queue.
             el.run ();
             assert el.isEmpty ();
+            // Note: We reset at a finite time, and workloads should not and queues MUST NEVER schedule at +/- infinity.
+            // [This holds even in the presence of jobs with infinite service-time requirement.]
+            assert Double.isFinite (el.getTime ());
             // Store the visit logs and reset the visit-logging on all jobs (in preparation of another simulation).
             for (final SimJob j : jobs)
             {

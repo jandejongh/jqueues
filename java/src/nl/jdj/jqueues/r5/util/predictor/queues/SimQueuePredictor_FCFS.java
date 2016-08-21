@@ -99,13 +99,17 @@ extends AbstractSimQueuePredictor<SimQueue>
     {
       final SimJob jobInServiceArea = jobInServiceAreaEntry.getKey ();
       final double remainingServiceTime = queueState.getJobRemainingServiceTimeMap ().get (jobInServiceArea);
-      final double departureTime = time + remainingServiceTime;
-      if (departureTime < time)
-        throw new RuntimeException ();
-      if (Double.isNaN (minDepartureTime) || departureTime < minDepartureTime)
-        minDepartureTime = departureTime;
+      if (Double.isFinite (remainingServiceTime))
+      {
+        final double departureTime = time + remainingServiceTime;
+        if (departureTime < time)
+          throw new RuntimeException ();
+        if (Double.isNaN (minDepartureTime) || departureTime < minDepartureTime)
+          minDepartureTime = departureTime;
+      }
     }
-    queueEventTypes.add (SimEntitySimpleEventType.DEPARTURE);
+    if (! Double.isNaN (minDepartureTime))
+      queueEventTypes.add (SimEntitySimpleEventType.DEPARTURE);
     return minDepartureTime;
   }
 

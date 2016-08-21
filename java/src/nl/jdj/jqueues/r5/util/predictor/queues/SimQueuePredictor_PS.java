@@ -61,8 +61,13 @@ extends AbstractSimQueuePredictor<PS>
     final double smallestRs = queueState.getRemainingServiceMap ().firstKey ();
     if (smallestRs < 0)
       throw new RuntimeException ();
-    queueEventTypes.add (SimEntitySimpleEventType.DEPARTURE);
-    return time + (smallestRs * numberOfJobsExecuting);
+    if (Double.isFinite (smallestRs))
+    {
+      queueEventTypes.add (SimEntitySimpleEventType.DEPARTURE);
+      return time + (smallestRs * numberOfJobsExecuting);
+    }
+    else
+      return Double.NaN;
   }
 
   @Override

@@ -164,8 +164,13 @@ extends SimQueuePredictor_Preemptive<Q>
     final double rs = queueState.getJobRemainingServiceTimeMap ().get (executingJob);
     if (rs < 0)
       throw new RuntimeException ();
-    queueEventTypes.add (SimEntitySimpleEventType.DEPARTURE);
-    return time + rs;
+    if (Double.isFinite (rs))
+    {
+      queueEventTypes.add (SimEntitySimpleEventType.DEPARTURE);
+      return time + rs;
+    }
+    else
+      return Double.NaN;
   }
 
   @Override

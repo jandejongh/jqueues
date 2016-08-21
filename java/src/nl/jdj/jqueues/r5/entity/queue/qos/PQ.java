@@ -229,12 +229,10 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
     this.remainingServiceTime.put (job, jobServiceTime);
   }
 
-  /** Assesses the remaining service time of the job, invokes {@link #reschedule} if it it strictly positive,
-   *  and makes the job depart immediately if the remaining service time is zero.
+  /** Invokes {@link #reschedule}.
    * 
    * @see #remainingServiceTime
    * @see #reschedule
-   * @see #depart
    * 
    */
   @Override
@@ -248,12 +246,7 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
     final double jobServiceTime = this.remainingServiceTime.get (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
-    if (jobServiceTime > 0)
-      reschedule ();
-    else
-      // XXX We immediately depart if service time is zero.
-      // This is ambiguous: aren't we supposed to preempt (and thus, possibly, DROP/DEPART) the job in execution?
-      depart (time, job);
+    reschedule ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
