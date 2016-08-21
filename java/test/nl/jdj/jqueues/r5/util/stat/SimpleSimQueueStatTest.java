@@ -1,30 +1,26 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package nl.jdj.jqueues.r5.util.stat;
 
+import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RANDOM;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RandomTest;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEvent;
+import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author jan
  */
 public class SimpleSimQueueStatTest
 {
@@ -53,6 +49,20 @@ public class SimpleSimQueueStatTest
   {
   }
 
+  private static void scheduleJobArrivals
+  (final boolean reported, final int n, final SimEventList eventList, final SimQueue queue)
+  {
+    for (int i = 1; i <= n; i++)
+    {
+      final SimJob job = new DefaultSimJob (eventList, Integer.toString (i), i);
+      final double arrTime = i;
+      eventList.add (new DefaultSimEvent ("ARRIVAL_" + i, arrTime, null, (SimEventAction) (final SimEvent event) ->
+      {
+        queue.arrive (event.getTime (), job);
+      }));
+    }
+  }
+  
   /**
    * Test of getQueue/setQueue methods, of class SimpleSimQueueStat.
    */
@@ -112,7 +122,7 @@ public class SimpleSimQueueStatTest
     Double expResult = -10.0;
     Double result = instance.getLastUpdateTime ();
     assertEquals (expResult, result, 0.0);
-    RandomTest.scheduleJobArrivals (false, 10, eventList, lifo);
+    scheduleJobArrivals (false, 10, eventList, lifo);
     eventList.run ();
     expResult = eventList.getTime ();
     result = instance.getLastUpdateTime ();
@@ -137,7 +147,7 @@ public class SimpleSimQueueStatTest
     // Average expected: 0.5.
     // Minimum expected: 0.0.
     // Maximum expected: 1.0;
-    RandomTest.scheduleJobArrivals (false, 1, eventList, queue);
+    scheduleJobArrivals (false, 1, eventList, queue);
     eventList.run ();
     Double expResult;
     Double result;
@@ -159,7 +169,7 @@ public class SimpleSimQueueStatTest
     eventList.reset (-2.0);
     queue = new FCFS<> (eventList);
     instance = new SimpleSimQueueStat (queue);
-    RandomTest.scheduleJobArrivals (false, 1, eventList, queue);
+    scheduleJobArrivals (false, 1, eventList, queue);
     eventList.run ();
     expResult = 0.25;
     result = instance.getAvgNrOfJobs ();
@@ -194,7 +204,7 @@ public class SimpleSimQueueStatTest
     eventList.reset (0.0);
     queue = new FCFS<> (eventList);
     instance = new SimpleSimQueueStat (queue);
-    RandomTest.scheduleJobArrivals (false, 4, eventList, queue);
+    scheduleJobArrivals (false, 4, eventList, queue);
     eventList.run ();
     expResult = 14.0/11.0;
     result = instance.getAvgNrOfJobs ();
@@ -231,7 +241,7 @@ public class SimpleSimQueueStatTest
     eventList.reset (0.0);
     queue = new IS<> (eventList);
     instance = new SimpleSimQueueStat (queue);
-    RandomTest.scheduleJobArrivals (false, 4, eventList, queue);
+    scheduleJobArrivals (false, 4, eventList, queue);
     eventList.run ();
     expResult = 10.0/8.0;
     result = instance.getAvgNrOfJobs ();
