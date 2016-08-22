@@ -1738,9 +1738,80 @@ We want to stress that jobs do not necessarily
   or even immediately upon arrival
   (in which case we formally do not speak of a visit).
 
-\subsubsection{The NoWaitArmed Property of a SimQueue}
+\subsubsection{The StartArmed Property of a SimQueue}
+
+Every \lstinline|SimQueue| (implementation) supports the notion of the
+  \lstinline|StartArmed| property.
+The property is a but difficult to grasp at first sight
+  and has little use in simulations,
+  but it is essential in so-called {\em compressed tandem queues},
+  see {\bf XXX}.
+Nonetheless, since it is part of the \lstinline-SimQueue- interface,
+  we state its formal definition:
+A \lstinline-SimQueue- is in \lstinline-StartArmed- state,
+  if and only if any (hypothetical) arriving job {\em would\/} start service immediately
+  (i.e., enter the service area upon arrival immediately),
+  {\em if\/} the following conditions {\em would\/} hold:
+\begin{itemize}
+\item the absence of a queue access vacation,
+\item at least one server-access credit, and
+\item an empty waiting area. 
+\end{itemize}
+The actual values of these three state properties is irrelevant,
+  which, admittedly, makes the definition quite hard to understand.
+If a \lstinline-SimQueue- is in \lstinline-StartArmed- state,
+  changing its state such that it meets the three conditions above,
+  would lead to the immediate start of a hypothetical arriving job
+  (irrespective of the type and properties of that job).
+
+As an example, consider an instance of the
+  (single-server) \lstinline-FCFS- queueing system
+  which has no queue-access vacation,
+  and suppose that it is out of server-access credits,
+  has a single job in the waiting area
+  and no jobs in the service area.
+In this case, \lstinline-StartArmed == true- because
+  an arriving job would be taken into service
+  if we apply the state transformation rules:
+  (1) remove any queue-access vacation (check),
+  (2) give it a single (or more) server-access credit,
+  and (3) remove the job from the waiting area.
+This leaves a \lstinline-FCFS- queueing system without
+  queue-access-vacation, no jobs in the waiting area,
+  and at least one server-access credits,
+  and surely, such a queue would immediately start an arriving job.
+If initially, however, a job would be in service at the queue,
+  we have \lstinline-StartArmed == false-,
+  because the transformed state of the queueing system has
+  a job in service,
+  and \lstinline-FCFS- cannot guarantee at all that
+  an arriving job would be taken into service.
+If on he other side, in the latter case
+  the queue is of type \lstinline-PS-,
+  we would have \lstinline-StartArmed == true-,
+  because the presence of jobs in the service area in \lstinline-PS-,
+  does not inhibit it from immediately starting newly arrived jobs.
+ 
+Informally, the \lstinline-StartArmed- state of a queue
+  reflects the fact {\em as far as the service area is concerned},
+  at least one more job can be added to it.
+
+\begin{tabular}{|l|l|}
+  \hline
+  {\bf Method} & {\bf Description} \\
+  \hline
+  \lstinline[basicstyle=\footnotesize]!boolean!
+    & Gets the \lstinline!StartArmed! property value.
+    \\
+  \lstinline[basicstyle=\footnotesize]!isStartArmed ()!
+    &
+    \\ \hline
+\end{tabular}
 
 \subsubsection{Copying a SimQueue}
+
+Every \lstinline|SimQueue| (implementation) supports the creation of a copy
+  of itself.
 
 \section{The SimJob Interface}
 
@@ -1968,6 +2039,99 @@ For \lstinline|SimQueue|s, one can ontain additional information by registering 
   \\
   \hline
 \end{tabular}
+
+\section{Formal Treatment of Simulation Entities}
+
+Whereas the previous sections introduced \lstinline-SimEntity-, \lstinline-SimQueue-,
+  and \lstinline-SimJob- objects from a use-case perspective,
+  the current section tightens the rope a bit,
+  and treats these objects more formally.
+
+\subsection{Properties of an Entity}
+
+\subsubsection{Operational Properties}
+
+An {\em operational\/} property of an entity is a property that can be changed at any time
+  by the user without effects on the entity's behavior in a simulation.
+In addition, these properties are never affected by a simulation
+  (i.e., by {\em operations\/} on the entity).
+Examples include:
+\begin{itemize}
+\item The {\em name\/} of an entity;
+\item The {\em listeners\/} to the entity.
+\end{itemize}
+
+\subsubsection{Essential Properties}
+
+An {\em essential\/} property of an entity is a property
+  that can be only be changed before and after a simulation
+  (i.e., immediately after a \lstinline-reset- or construction,
+  but before the start of the simulation).
+Like operational properties, however, essential properties are never affected
+  by operations on the entity.
+Essential properties impact the behavior of the queueing system during simulations,
+  but should remain constant while simulating.
+Examples include:
+\begin{itemize}
+\item The {\em buffer size\/} of a \lstinline-FCFS_B- queue;
+\item The {\em number of servers\/} of a \lstinline-FCFS_c- queue;
+\item The {\em waiting time\/} of a \lstinline-DELAY- queue.
+\end{itemize}
+
+\subsubsection{State Properties}
+
+Unlike operational and essential properties,
+  {\em state\/} properties cannot be directly set by the user;
+  they can only be read.
+State properties are those properties that change
+  as a result of a simulation running,
+  and the entity being subject to scheduled operations from the event list.
+State properties can be further subdivided into
+\begin{itemize}
+\item {\em\bf Event\/} properties: State properties that can only change due
+                                     to an operation (either internal or external)
+                                     on the entity.
+\item {\em\bf Continuous\/} properties: State properties that (potentially) change
+                                          continuously over time,
+                                          even in the absence of operations on the entity.
+\end{itemize}
+Some examples of event properties:
+\begin{itemize}
+\item The {\em set of jobs (in the waiting/service) area)\/} present at a \lstinline-SimQueue-;
+\item The queue-access vacation state of a \lstinline-SimQueue-;
+\item The \lstinline-StartArmed- state of a \lstinline-SimQueue-.
+\end{itemize}
+Some examples of continuous properties:
+\begin{itemize}
+\item The {\em remaining service time\/} of the job in the service area in \lstinline-PS- queue;
+\item The {\em total remaining work\/} in a \lstinline-FCFS- queue;
+\item The {\em elapsed time since the start of the current busy period\/} for a \lstinline-SimQueue-.
+\end{itemize}
+Note that changes to event properties are always reported to listeners of the entity;
+  whereas changes to continuous properties are {\em never\/} reported.
+
+Orthogonal to distinction between state and continuous properties,
+  a state property may be
+\begin{itemize}
+  \item {\em\bf Exposed\/}: The property value is accessible to callers.
+  \item {\em\bf Hidden\/}:  The property value is hidden from callers.
+\end{itemize}
+
+\subsection{The State of a Simulation Entity}
+
+\subsection{External Operations on a Simulation Entity}
+
+\subsection{Internal Operations on a Simulation Entity}
+
+\subsection{Notifications of a Simulation Entity}
+
+\subsection{Extensions}
+
+\subsubsection{State Extensions}
+
+\subsubsection{Operation Extensions}
+
+\subsubsection{Notification Extensions}
 
 \chapter{Fundamental Queues}
 
