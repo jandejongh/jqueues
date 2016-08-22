@@ -8,6 +8,7 @@ import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.entity.queue.processorsharing.CUPS;
 import nl.jdj.jqueues.r5.entity.queue.processorsharing.PS;
+import nl.jdj.jqueues.r5.entity.queue.processorsharing.SocPS;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -81,6 +82,19 @@ public final class ProcessorSharingExample
       final SimJob j = jobList.get (i);
       final double arrTime = i + RNG.nextDouble ();
       cupsQueue.scheduleJobArrival (arrTime, j);
+    }
+    System.out.println ("-> Executing event list...");
+    el.run ();
+    System.out.println ("-> Resetting event list...");
+    el.reset ();
+    System.out.println ("-> Creating SocPS queue...");
+    final AbstractSimQueue socpsQueue = new SocPS (el);
+    System.out.println ("-> Submitting jobs to SocPS queue...");
+    for (int i = 0; i < jobList.size (); i++)
+    {
+      final SimJob j = jobList.get (i);
+      final double arrTime = 0.5 * i;
+      socpsQueue.scheduleJobArrival (arrTime, j);
     }
     System.out.println ("-> Executing event list...");
     el.run ();
