@@ -81,10 +81,10 @@ implements SimEntity<J, Q>
     registerOperation (SimEntityOperationUtils.UpdateOperation.getInstance ());
     registerNotificationType (SimEntitySimpleEventType.RESET, this::fireReset);
     registerNotificationType (SimEntitySimpleEventType.ARRIVAL, this::fireArrival);
-    registerNotificationType (SimEntitySimpleEventType.START, this::fireStart);
     registerNotificationType (SimEntitySimpleEventType.DROP, this::fireDrop);
     registerNotificationType (SimEntitySimpleEventType.REVOCATION, this::fireRevocation);
     registerNotificationType (SimEntitySimpleEventType.AUTO_REVOCATION, this::fireAutoRevocation);
+    registerNotificationType (SimEntitySimpleEventType.START, this::fireStart);
     registerNotificationType (SimEntitySimpleEventType.DEPARTURE, this::fireDeparture);
     if (this.eventList != null)
       this.eventList.addListener (this);
@@ -632,31 +632,6 @@ implements SimEntity<J, Q>
         l.notifyArrival (time, job, queue);
   }
   
-  /** Notifies all listeners of a job starting at a queue.
-   *
-   * <p>
-   * A {@link SimQueue} will automatically propagate notifications to the listeners on the {@link SimJob} as well.
-   * 
-   * @param job The job.
-   * 
-   * @see SimEntityListener#notifyStart
-   * 
-   */
-  private void fireStart (final J job)
-  {
-    final double time = getLastUpdateTime ();
-    final Q queue;
-    if (this instanceof SimQueue)
-      queue = (Q) this;
-    else
-      queue = (Q) job.getQueue ();
-    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
-      l.notifyStart (time, job, queue);
-    if ((this instanceof SimQueue) && (job != null))
-      for (SimEntityListener<J, Q> l : ((SimJob<J, Q>) job).getSimEntityListeners ())
-        l.notifyStart (time, job, queue);
-  }
-  
   /** Notifies all listeners of a job drop at a queue.
    *
    * <p>
@@ -730,6 +705,31 @@ implements SimEntity<J, Q>
     if ((this instanceof SimQueue) && (job != null))
       for (SimEntityListener<J, Q> l : ((SimJob<J, Q>) job).getSimEntityListeners ())
         l.notifyAutoRevocation (time, job, queue);
+  }
+  
+  /** Notifies all listeners of a job starting at a queue.
+   *
+   * <p>
+   * A {@link SimQueue} will automatically propagate notifications to the listeners on the {@link SimJob} as well.
+   * 
+   * @param job The job.
+   * 
+   * @see SimEntityListener#notifyStart
+   * 
+   */
+  private void fireStart (final J job)
+  {
+    final double time = getLastUpdateTime ();
+    final Q queue;
+    if (this instanceof SimQueue)
+      queue = (Q) this;
+    else
+      queue = (Q) job.getQueue ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      l.notifyStart (time, job, queue);
+    if ((this instanceof SimQueue) && (job != null))
+      for (SimEntityListener<J, Q> l : ((SimJob<J, Q>) job).getSimEntityListeners ())
+        l.notifyStart (time, job, queue);
   }
   
   /** Notifies all listeners of a job departure at a queue.
