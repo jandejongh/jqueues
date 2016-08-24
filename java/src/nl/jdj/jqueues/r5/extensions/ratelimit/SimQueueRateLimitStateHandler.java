@@ -1,11 +1,15 @@
 package nl.jdj.jqueues.r5.extensions.ratelimit;
 
+import nl.jdj.jqueues.r5.entity.queue.serverless.ALIMIT;
+import nl.jdj.jqueues.r5.entity.queue.serverless.DLIMIT;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LeakyBucket;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueStateHandler;
 
-/** A {@link SimQueueStateHandler} for simple (departure) rate limitation.
+/** A {@link SimQueueStateHandler} for simple (arrival/departure) rate limitation.
  *
+ * @see DLIMIT
+ * @see ALIMIT
  * @see SimQueuePredictor_LeakyBucket
  * 
  */
@@ -38,6 +42,8 @@ implements SimQueueStateHandler
     if (this.queueState != null)
       throw new IllegalStateException ();
     this.queueState = queueState;
+    this.lastArrTimeSet = false;
+    this.lastArrTime = Double.NEGATIVE_INFINITY;
     this.lastDepTimeSet = false;
     this.lastDepTime = Double.NEGATIVE_INFINITY;
     this.isRateLimited = false;
@@ -48,6 +54,8 @@ implements SimQueueStateHandler
   {
     if (queueState == null || queueState != this.queueState)
       throw new IllegalArgumentException ();
+    this.lastArrTimeSet = false;
+    this.lastArrTime = Double.NEGATIVE_INFINITY;
     this.lastDepTimeSet = false;
     this.lastDepTime = Double.NEGATIVE_INFINITY;
     this.isRateLimited = false;
@@ -60,6 +68,62 @@ implements SimQueueStateHandler
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   private DefaultSimQueueState queueState = null;
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // LAST ARRIVAL TIME
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private boolean lastArrTimeSet = false;
+  
+  private double lastArrTime = Double.NEGATIVE_INFINITY;
+
+  /** Returns whether the last arrival time was set since construction or last reset.
+   * 
+   * @return Whether the last arrival time was set since construction or last reset.
+   * 
+   * @see #resetHandler
+   * @see #getLastArrTime
+   * 
+   */
+  public final boolean isLastArrTimeSet ()
+  {
+    return this.lastArrTimeSet;
+  }
+  
+  /** Gets the last arrival time.
+   * 
+   * <p>
+   * Does not check whether the time was set since construction or last reset.
+   * If not, the default {@link Double#NEGATIVE_INFINITY} is returned.
+   * 
+   * @return The last arrival time (set), or {@link Double#NEGATIVE_INFINITY}
+   *         if no arrival time was set since construction or last reset.
+   * 
+   * @see #resetHandler
+   * @see #setLastArrTime
+   * 
+   */
+  public final double getLastArrTime ()
+  {
+    return this.lastArrTime;
+  }
+  
+  /** Sets the last arrival time (without error checking) and flags the value has been set.
+   * 
+   * @param lastArrTime The (new) last arrival time (unchecked).
+   * 
+   * @see #resetHandler
+   * @see #getLastArrTime
+   * @see #isLastArrTimeSet
+   * 
+   */
+  public final void setLastArrTime (final double lastArrTime)
+  {
+    this.lastArrTime = lastArrTime;
+    this.lastArrTimeSet = true;
+  }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -102,7 +166,7 @@ implements SimQueueStateHandler
     return this.lastDepTime;
   }
   
-  /** Sets the last departure time (without error checking) and flag the value has been set.
+  /** Sets the last departure time (without error checking) and flags the value has been set.
    * 
    * @param lastDepTime The (new) last departure time (unchecked).
    * 
@@ -125,9 +189,9 @@ implements SimQueueStateHandler
   
   private boolean isRateLimited = false;
   
-  /** Returns whether the (departure) rate is currently limited.
+  /** Returns whether the (arrival/departure) rate is currently limited.
    * 
-   * @return Whether the (departure) rate is currently limited.
+   * @return Whether the (arrival/departure) rate is currently limited.
    * 
    * @see #setRateLimited
    * 
@@ -137,9 +201,9 @@ implements SimQueueStateHandler
     return this.isRateLimited;
   }
   
-  /** Sets whether the (departure) rate is currently limited.
+  /** Sets whether the (arrival/departure) rate is currently limited.
    * 
-   * @param isRateLimited The new value whether the (departure) rate is currently limited.
+   * @param isRateLimited The new value whether the (arrival/departure) rate is currently limited.
    * 
    * @see #isRateLimited
    * 
