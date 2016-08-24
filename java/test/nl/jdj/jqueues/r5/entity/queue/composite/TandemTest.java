@@ -13,7 +13,7 @@ import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IC;
 import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
-import nl.jdj.jqueues.r5.entity.queue.serverless.LeakyBucket;
+import nl.jdj.jqueues.r5.entity.queue.serverless.LIMIT;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
@@ -24,7 +24,7 @@ import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DELAY;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DROP;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_IC;
-import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LeakyBucket;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LIMIT;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_P_LCFS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_SINK;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_Tandem;
@@ -186,34 +186,35 @@ public class TandemTest
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (tandem_delay1_delay2, predictor_tandem_delay1_delay2, null,
        numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
-    // Tandem[LeakyBucket[0.12]]
-    final LeakyBucket lb1 = new LeakyBucket (eventList, 0.12);
-    final SimQueuePredictor predictor_lb1 = new SimQueuePredictor_LeakyBucket ();
-    final Set<SimQueue> lb1_set = new LinkedHashSet<> ();
-    lb1_set.add (lb1);
-    final BlackTandemSimQueue tandem_lb1 = new BlackTandemSimQueue (eventList, lb1_set, null);
-    final List<SimQueuePredictor> predictor_tandem_lb1_set = new ArrayList ();
-    predictor_tandem_lb1_set.add (predictor_lb1);
-    final SimQueuePredictor_Tandem predictor_tandem_lb1 =
-      new SimQueuePredictor_Tandem (predictor_tandem_lb1_set);
+    // Tandem[LIMIT[0.12]]
+    final LIMIT limit1 = new LIMIT (eventList, 0.12);
+    final SimQueuePredictor predictor_limit1 = new SimQueuePredictor_LIMIT ();
+    final Set<SimQueue> limit1_set = new LinkedHashSet<> ();
+    limit1_set.add (limit1);
+    final BlackTandemSimQueue tandem_limit1 = new BlackTandemSimQueue (eventList, limit1_set, null);
+    final List<SimQueuePredictor> predictor_tandem_limit1_set = new ArrayList ();
+    predictor_tandem_limit1_set.add (predictor_limit1);
+    final SimQueuePredictor_Tandem predictor_tandem_limit1 =
+      new SimQueuePredictor_Tandem (predictor_tandem_limit1_set);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_lb1, predictor_tandem_lb1, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
-    // Tandem[LeakyBucket[0.33], LeakyBucket[0.1]]
-    final LeakyBucket lb2 = new LeakyBucket (eventList, 0.33);
-    final SimQueuePredictor predictor_lb2 = new SimQueuePredictor_LeakyBucket ();
-    final LeakyBucket lb3 = new LeakyBucket (eventList, 0.1);
-    final SimQueuePredictor predictor_lb3 = new SimQueuePredictor_LeakyBucket ();
-    final Set<SimQueue> lb2_lb3_set = new LinkedHashSet<> ();
-    lb2_lb3_set.add (lb2);
-    lb2_lb3_set.add (lb3);
-    final BlackTandemSimQueue tandem_lb2_lb3 = new BlackTandemSimQueue (eventList, lb2_lb3_set, null);
-    final List<SimQueuePredictor> predictor_tandem_lb2_lb3_set = new ArrayList ();
-    predictor_tandem_lb2_lb3_set.add (predictor_lb2);
-    predictor_tandem_lb2_lb3_set.add (predictor_lb3);
-    final SimQueuePredictor_Tandem predictor_tandem_lb2_lb3 =
-      new SimQueuePredictor_Tandem (predictor_tandem_lb2_lb3_set);
+      (tandem_limit1, predictor_tandem_limit1, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
+    // Tandem[LIMIT[0.33], LIMIT[0.1]]
+    final LIMIT limit2 = new LIMIT (eventList, 0.33);
+    final SimQueuePredictor predictor_limit2 = new SimQueuePredictor_LIMIT ();
+    final LIMIT limit3 = new LIMIT (eventList, 0.1);
+    final SimQueuePredictor predictor_limit3 = new SimQueuePredictor_LIMIT ();
+    final Set<SimQueue> limit2_limit3_set = new LinkedHashSet<> ();
+    limit2_limit3_set.add (limit2);
+    limit2_limit3_set.add (limit3);
+    final BlackTandemSimQueue tandem_limit2_limit3 = new BlackTandemSimQueue (eventList, limit2_limit3_set, null);
+    final List<SimQueuePredictor> predictor_tandem_limit2_limit3_set = new ArrayList ();
+    predictor_tandem_limit2_limit3_set.add (predictor_limit2);
+    predictor_tandem_limit2_limit3_set.add (predictor_limit3);
+    final SimQueuePredictor_Tandem predictor_tandem_limit2_limit3 =
+      new SimQueuePredictor_Tandem (predictor_tandem_limit2_limit3_set);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (tandem_lb2_lb3, predictor_tandem_lb2_lb3, null, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
+      (tandem_limit2_limit3, predictor_tandem_limit2_limit3, null,
+       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
   }
 
 }

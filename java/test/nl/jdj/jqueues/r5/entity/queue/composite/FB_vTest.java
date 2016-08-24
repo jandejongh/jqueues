@@ -8,7 +8,7 @@ import nl.jdj.jqueues.r5.entity.queue.composite.single.feedback.BlackNumVisitsFe
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
-import nl.jdj.jqueues.r5.entity.queue.serverless.LeakyBucket;
+import nl.jdj.jqueues.r5.entity.queue.serverless.LIMIT;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
@@ -20,7 +20,7 @@ import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DELAY;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DROP;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FB_v;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS;
-import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LeakyBucket;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LIMIT;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_SINK;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_ZERO;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
@@ -141,12 +141,12 @@ public class FB_vTest
         new SimQueuePredictor_DELAY (),
         numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
       //
-      // FB_numVisits[LeakyBucket[0.1]]
+      // FB_numVisits[LIMIT[0.1]]
       //
       testFB_vAux
-      ( new LeakyBucket (eventList, 0.1),
+      ( new LIMIT (eventList, 0.1),
         numVisits,
-        new SimQueuePredictor_LeakyBucket (),
+        new SimQueuePredictor_LIMIT (),
         numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     }
   }

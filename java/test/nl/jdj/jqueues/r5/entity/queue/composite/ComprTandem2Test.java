@@ -12,7 +12,7 @@ import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_c;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
-import nl.jdj.jqueues.r5.entity.queue.serverless.LeakyBucket;
+import nl.jdj.jqueues.r5.entity.queue.serverless.LIMIT;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
@@ -24,7 +24,7 @@ import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_ComprTandem2;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DROP;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LCFS;
-import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LeakyBucket;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LIMIT;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_SINK;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_ZERO;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
@@ -186,18 +186,18 @@ public class ComprTandem2Test
       new SimQueuePredictor_ZERO (), new SimQueuePredictor_ZERO (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[LeakyBucket[0.5], ZERO]
+    // ComprTandem2[LIMIT[0.5], ZERO]
     //
     testComprTandem2Aux
-    ( new LeakyBucket (eventList, 0.5), new ZERO (eventList),
-      new SimQueuePredictor_LeakyBucket (), new SimQueuePredictor_ZERO (),
+    ( new LIMIT (eventList, 0.5), new ZERO (eventList),
+      new SimQueuePredictor_LIMIT (), new SimQueuePredictor_ZERO (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[LeakyBucket[0.5], LeakyBucket[0.1]]
+    // ComprTandem2[LIMIT[0.5], LIMIT[0.1]]
     //
     testComprTandem2Aux
-    ( new LeakyBucket (eventList, 0.5), new LeakyBucket (eventList, 0.1),
-      new SimQueuePredictor_LeakyBucket (), new SimQueuePredictor_LeakyBucket (),
+    ( new LIMIT (eventList, 0.5), new LIMIT (eventList, 0.1),
+      new SimQueuePredictor_LIMIT (), new SimQueuePredictor_LIMIT (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
     // ComprTandem2[FCFS_B[0],FCFS_2] == NoBuffer_2
