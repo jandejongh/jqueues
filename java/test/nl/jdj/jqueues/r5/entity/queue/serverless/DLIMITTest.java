@@ -64,15 +64,15 @@ public class DLIMITTest
         (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
     }
     // DLIMIT[0.0] == SINK
-    final DLIMIT limit_zero = new DLIMIT<> (eventList, 0);
+    final DLIMIT dlimit_zero = new DLIMIT<> (eventList, 0);
     final SINK sink = new SINK<> (eventList);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (limit_zero, null, sink, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
-    // LeakyBucket[infinity] == ZERO
-    final DLIMIT limit_inf = new DLIMIT<> (eventList, Double.POSITIVE_INFINITY);
+      (dlimit_zero, null, sink, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
+    // DLIMIT[infinity] == ZERO
+    final DLIMIT dlimit_inf = new DLIMIT<> (eventList, Double.POSITIVE_INFINITY);
     final ZERO zero = new ZERO<> (eventList);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
-      (limit_inf, null, zero, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
+      (dlimit_inf, null, zero, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
   }
 
 }
