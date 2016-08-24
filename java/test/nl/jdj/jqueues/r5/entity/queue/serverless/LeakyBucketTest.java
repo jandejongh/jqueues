@@ -61,7 +61,7 @@ public class LeakyBucketTest
     final boolean silent = true;
     final boolean deadSilent = true;
     final int[] bValues = { 0, 1, 2, 100 };
-    // Be careful with the rate-limits, as somw workloads schedule arrivals at exactly one-second intervals,
+    // Be careful with the rate-limits, as some workloads schedule arrivals at exactly one-second intervals,
     // which can lead to ambiguity with the expiration of the rate-limitation period.
     final double[] rateLimitValues = { 0.0, 0.0011, 0.11, 0.51, 2.01, 10.01, Double.POSITIVE_INFINITY };
     for (final int B : bValues)
