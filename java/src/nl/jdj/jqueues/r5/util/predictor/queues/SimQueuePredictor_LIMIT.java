@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.serverless.LeakyBucket;
+import nl.jdj.jqueues.r5.entity.queue.serverless.LIMIT;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.extensions.ratelimit.RateLimitSimpleEventType;
@@ -19,15 +19,15 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
-/** A {@link SimQueuePredictor} for {@link LeakyBucket}.
+/** A {@link SimQueuePredictor} for {@link LIMIT}.
  *
  */
-public class SimQueuePredictor_LeakyBucket
-extends AbstractSimQueuePredictor<LeakyBucket>
+public class SimQueuePredictor_LIMIT
+extends AbstractSimQueuePredictor<LIMIT>
 {
 
   @Override
-  public SimQueueState<SimJob, LeakyBucket> createQueueState (final LeakyBucket queue, final boolean isROEL)
+  public SimQueueState<SimJob, LIMIT> createQueueState (final LIMIT queue, final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
     final SimQueueRateLimitStateHandler queueStateHandler = new SimQueueRateLimitStateHandler ();
@@ -39,19 +39,19 @@ extends AbstractSimQueuePredictor<LeakyBucket>
   @Override
   public String toString ()
   {
-    return "Predictor[LeakyBucket[?]]";
+    return "Predictor[LIMIT[?]]";
   }
 
   @Override
-  public boolean isStartArmed (final LeakyBucket queue, final SimQueueState<SimJob, LeakyBucket> queueState)
+  public boolean isStartArmed (final LIMIT queue, final SimQueueState<SimJob, LIMIT> queueState)
   {
     return false;
   }
   
   @Override
   public double getNextQueueEventTimeBeyond
-  (final LeakyBucket queue,
-   final SimQueueState<SimJob, LeakyBucket> queueState,
+  (final LIMIT queue,
+   final SimQueueState<SimJob, LIMIT> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
     if ( queue == null
@@ -70,11 +70,11 @@ extends AbstractSimQueuePredictor<LeakyBucket>
 
   @Override
   public void doWorkloadEvents_SQ_SV_ROEL_U
-  (final LeakyBucket queue,
+  (final LIMIT queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
-   final SimQueueState<SimJob, LeakyBucket> queueState,
+   final SimQueueState<SimJob, LIMIT> queueState,
    final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
-   final Set<JobQueueVisitLog<SimJob, LeakyBucket>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, LIMIT>> visitLogsSet)
    throws SimQueuePredictionException, WorkloadScheduleException
   {
     if ( queue == null
@@ -119,13 +119,9 @@ extends AbstractSimQueuePredictor<LeakyBucket>
         if (Double.isFinite (queue.getRateLimit ()))
           queueStateHandler.setRateLimited (true);
       }
-      else if (queue.getBufferSize () == Integer.MAX_VALUE
-            || queueState.getJobsInWaitingArea ().size () < queue.getBufferSize ())
+      else
         // Arrivals.
         queueState.doArrivals (time, arrivals, visitLogsSet);
-      else
-        // Drops.
-        queueState.doExits (time, arrivals, null, null, null, visitLogsSet);
     }
     else if (eventType == SimEntitySimpleEventType.REVOCATION)
     {
@@ -152,10 +148,10 @@ extends AbstractSimQueuePredictor<LeakyBucket>
 
   @Override
   public void doQueueEvents_SQ_SV_ROEL_U
-  (final LeakyBucket queue,
-   final SimQueueState<SimJob, LeakyBucket> queueState,
+  (final LIMIT queue,
+   final SimQueueState<SimJob, LIMIT> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
-   final Set<JobQueueVisitLog<SimJob, LeakyBucket>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, LIMIT>> visitLogsSet)
    throws SimQueuePredictionException    
   {
     if ( queue == null
@@ -198,7 +194,7 @@ extends AbstractSimQueuePredictor<LeakyBucket>
   }
   
   @Override
-  public void updateToTime (final LeakyBucket queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final LIMIT queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
