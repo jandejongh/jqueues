@@ -329,7 +329,7 @@ extends AbstractServerlessSimQueue<J, Q>
   extends SimEntityEvent<SimJob, Q>
   {
     
-    /** *  Creates the actions that invokes {@link DLIMIT#rateLimitExpiration} on the queue,
+    /** Creates the actions that invokes {@link DLIMIT#rateLimitExpiration} on the queue,
      *  and invokes the super method.
      * 
      * @param expirationTime The scheduled expiration time.
