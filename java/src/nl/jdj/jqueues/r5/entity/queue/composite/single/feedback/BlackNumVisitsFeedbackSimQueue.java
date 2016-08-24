@@ -68,7 +68,7 @@ public class BlackNumVisitsFeedbackSimQueue
    *  the same number of visits required, and the same delegate-job factory.
    * 
    * @return A new {@link BlackNumVisitsFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
-   *  the same number of visits required, and the same delegate-job factory.
+   *         the same number of visits required, and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
    * 
