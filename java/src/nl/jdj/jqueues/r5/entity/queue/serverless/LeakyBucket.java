@@ -14,17 +14,17 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * <p>
  * Apart from having a potentially finite-sized (fixed) waiting area defined by the property {@code bufferSize},
- * {@link LeakyBucket} is equal to {@link LIMIT}.
- * If the buffer size is infinite ({@link Integer#MAX_VALUE}), this queueing system is equivalent to {@link LIMIT}.
+ * {@link LeakyBucket} is equal to {@link DLIMIT}.
+ * If the buffer size is infinite ({@link Integer#MAX_VALUE}), this queueing system is equivalent to {@link DLIMIT}.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
- * @see LIMIT
+ * @see DLIMIT
  * 
  */
 public class LeakyBucket<J extends SimJob, Q extends LeakyBucket>
-extends LIMIT<J, Q>
+extends DLIMIT<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

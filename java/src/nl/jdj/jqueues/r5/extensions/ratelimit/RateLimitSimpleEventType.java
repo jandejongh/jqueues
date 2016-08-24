@@ -1,16 +1,16 @@
 package nl.jdj.jqueues.r5.extensions.ratelimit;
 
-import nl.jdj.jqueues.r5.entity.queue.serverless.LIMIT;
+import nl.jdj.jqueues.r5.entity.queue.serverless.DLIMIT;
 import nl.jdj.jqueues.r5.entity.queue.serverless.LeakyBucket;
 import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
-import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LIMIT;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DLIMIT;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LeakyBucket;
 
-/** A simple representation of a {@link SimEntityEvent} specific to {@link LIMIT} and {@link LeakyBucket}.
+/** A simple representation of a {@link SimEntityEvent} specific to {@link DLIMIT} and {@link LeakyBucket}.
  * 
- * @see LIMIT
- * @see SimQueuePredictor_LIMIT
+ * @see DLIMIT
+ * @see SimQueuePredictor_DLIMIT
  * @see LeakyBucket
  * @see SimQueuePredictor_LeakyBucket
  * 

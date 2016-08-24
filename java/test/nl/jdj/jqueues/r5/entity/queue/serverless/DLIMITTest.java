@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.entity.queue.serverless;
 import nl.jdj.jqueues.r5.entity.queue.DefaultSimQueueTests;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
-import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LIMIT;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DLIMIT;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -17,10 +17,10 @@ import org.junit.Test;
  *
  *
  */
-public class LIMITTest
+public class DLIMITTest
 {
   
-  public LIMITTest ()
+  public DLIMITTest ()
   {
   }
   
@@ -45,11 +45,11 @@ public class LIMITTest
   }
 
   /**
-   * Test of LIMIT.
+   * Test of DLIMIT.
    * 
    */
   @Test
-  public void testLIMIT () throws SimQueuePredictionException
+  public void testDLIMIT () throws SimQueuePredictionException
   {
     final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     final int numberOfJobs = 50;
@@ -58,18 +58,18 @@ public class LIMITTest
     final double[] rateLimitValues = { 0.0, 0.001, 0.1, 0.5, 2.0, 10.0, Double.POSITIVE_INFINITY };
     for (final double rateLimit : rateLimitValues)
     {
-      final LIMIT queue = new LIMIT (eventList, rateLimit);
-      final SimQueuePredictor predictor = new SimQueuePredictor_LIMIT ();
+      final DLIMIT queue = new DLIMIT (eventList, rateLimit);
+      final SimQueuePredictor predictor = new SimQueuePredictor_DLIMIT ();
       DefaultSimQueueTests.doSimQueueTests_SQ_SV
         (queue, predictor, null, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
     }
-    // LIMIT[0.0] == SINK
-    final LIMIT limit_zero = new LIMIT<> (eventList, 0);
+    // DLIMIT[0.0] == SINK
+    final DLIMIT limit_zero = new DLIMIT<> (eventList, 0);
     final SINK sink = new SINK<> (eventList);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (limit_zero, null, sink, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
     // LeakyBucket[infinity] == ZERO
-    final LIMIT limit_inf = new LIMIT<> (eventList, Double.POSITIVE_INFINITY);
+    final DLIMIT limit_inf = new DLIMIT<> (eventList, Double.POSITIVE_INFINITY);
     final ZERO zero = new ZERO<> (eventList);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (limit_inf, null, zero, numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);

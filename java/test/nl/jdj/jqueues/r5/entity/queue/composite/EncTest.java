@@ -19,7 +19,7 @@ import nl.jdj.jqueues.r5.entity.queue.processorsharing.PS;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
 import nl.jdj.jqueues.r5.entity.queue.serverless.GATE;
-import nl.jdj.jqueues.r5.entity.queue.serverless.LIMIT;
+import nl.jdj.jqueues.r5.entity.queue.serverless.DLIMIT;
 import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.entity.queue.serverless.WUR;
 import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
@@ -37,7 +37,7 @@ import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_EncHS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS_B;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LCFS;
-import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LIMIT;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DLIMIT;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_PS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_P_LCFS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_SINK;
@@ -358,11 +358,11 @@ public class EncTest
       null,
       null,
       null);
-    // Enc[LIMIT[0.1]]
-    // EncHS[LIMIT[0.1]]
+    // Enc[DLIMIT[0.1]]
+    // EncHS[DLIMIT[0.1]]
     testEncAux (hideStart,
-      new LIMIT (eventList, 0.1),
-      new SimQueuePredictor_LIMIT (),
+      new DLIMIT (eventList, 0.1),
+      new SimQueuePredictor_DLIMIT (),
       numberOfJobs,
       jitterHint,
       silent,

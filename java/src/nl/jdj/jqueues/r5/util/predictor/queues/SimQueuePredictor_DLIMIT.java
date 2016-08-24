@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.serverless.LIMIT;
+import nl.jdj.jqueues.r5.entity.queue.serverless.DLIMIT;
 import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.extensions.ratelimit.RateLimitSimpleEventType;
@@ -19,15 +19,15 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
-/** A {@link SimQueuePredictor} for {@link LIMIT}.
+/** *  A {@link SimQueuePredictor} for {@link DLIMIT}.
  *
  */
-public class SimQueuePredictor_LIMIT
-extends AbstractSimQueuePredictor<LIMIT>
+public class SimQueuePredictor_DLIMIT
+extends AbstractSimQueuePredictor<DLIMIT>
 {
 
   @Override
-  public SimQueueState<SimJob, LIMIT> createQueueState (final LIMIT queue, final boolean isROEL)
+  public SimQueueState<SimJob, DLIMIT> createQueueState (final DLIMIT queue, final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
     final SimQueueRateLimitStateHandler queueStateHandler = new SimQueueRateLimitStateHandler ();
@@ -39,19 +39,19 @@ extends AbstractSimQueuePredictor<LIMIT>
   @Override
   public String toString ()
   {
-    return "Predictor[LIMIT[?]]";
+    return "Predictor[DLIMIT[?]]";
   }
 
   @Override
-  public boolean isStartArmed (final LIMIT queue, final SimQueueState<SimJob, LIMIT> queueState)
+  public boolean isStartArmed (final DLIMIT queue, final SimQueueState<SimJob, DLIMIT> queueState)
   {
     return false;
   }
   
   @Override
   public double getNextQueueEventTimeBeyond
-  (final LIMIT queue,
-   final SimQueueState<SimJob, LIMIT> queueState,
+  (final DLIMIT queue,
+   final SimQueueState<SimJob, DLIMIT> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   {
     if ( queue == null
@@ -70,11 +70,11 @@ extends AbstractSimQueuePredictor<LIMIT>
 
   @Override
   public void doWorkloadEvents_SQ_SV_ROEL_U
-  (final LIMIT queue,
+  (final DLIMIT queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
-   final SimQueueState<SimJob, LIMIT> queueState,
+   final SimQueueState<SimJob, DLIMIT> queueState,
    final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
-   final Set<JobQueueVisitLog<SimJob, LIMIT>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, DLIMIT>> visitLogsSet)
    throws SimQueuePredictionException, WorkloadScheduleException
   {
     if ( queue == null
@@ -148,10 +148,10 @@ extends AbstractSimQueuePredictor<LIMIT>
 
   @Override
   public void doQueueEvents_SQ_SV_ROEL_U
-  (final LIMIT queue,
-   final SimQueueState<SimJob, LIMIT> queueState,
+  (final DLIMIT queue,
+   final SimQueueState<SimJob, DLIMIT> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
-   final Set<JobQueueVisitLog<SimJob, LIMIT>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, DLIMIT>> visitLogsSet)
    throws SimQueuePredictionException    
   {
     if ( queue == null
@@ -194,7 +194,7 @@ extends AbstractSimQueuePredictor<LIMIT>
   }
   
   @Override
-  public void updateToTime (final LIMIT queue, final SimQueueState queueState, final double newTime)
+  public void updateToTime (final DLIMIT queue, final SimQueueState queueState, final double newTime)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();

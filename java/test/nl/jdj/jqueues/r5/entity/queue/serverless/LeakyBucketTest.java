@@ -74,9 +74,9 @@ public class LeakyBucketTest
       }
     for (final double rateLimit : rateLimitValues)
     {
-      // LeakyBucket[infinity,rateLimit] == LIMIT[rateLimit]
+      // LeakyBucket[infinity,rateLimit] == DLIMIT[rateLimit]
       final LeakyBucket queue = new LeakyBucket (eventList, Integer.MAX_VALUE, rateLimit);
-      final LIMIT limit = new LIMIT<> (eventList, rateLimit);
+      final DLIMIT limit = new DLIMIT<> (eventList, rateLimit);
       DefaultSimQueueTests.doSimQueueTests_SQ_SV
         (queue, null, limit, numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     }

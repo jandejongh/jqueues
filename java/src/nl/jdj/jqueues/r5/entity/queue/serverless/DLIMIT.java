@@ -9,7 +9,7 @@ import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** In the {@link LIMIT} queue jobs depart without service in arrival order,
+/** In the {@link DLIMIT} queue jobs depart without service in arrival order,
  *  but not at a higher rate than a given limit, at the expense of waiting.
  * 
  * <p>
@@ -20,7 +20,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * It must be non-negative and is set upon construction; and cannot be changed afterwards.
  * If set to zero, this queue behaves as {@link SINK}.
  * If so to positive infinite, this queue behaves as {@link ZERO}.
- * The {@link LIMIT} queueing discipline is equivalent to {@link LeakyBucket} with infinite buffer size.
+ * The {@link DLIMIT} queueing discipline is equivalent to {@link LeakyBucket} with infinite buffer size.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -31,7 +31,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see LeakyBucket
  * 
  */
-public class LIMIT<J extends SimJob, Q extends LIMIT>
+public class DLIMIT<J extends SimJob, Q extends DLIMIT>
 extends AbstractServerlessSimQueue<J, Q>
 {
 
@@ -41,7 +41,7 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a {@link LIMIT} queue with infinite buffer size given an event list and (departure) rate limit.
+  /** Creates a {@link DLIMIT} queue with infinite buffer size given an event list and (departure) rate limit.
    *
    * @param eventList The event list to use.
    * @param rateLimit The (departure) rate limit, non-negative.
@@ -49,12 +49,12 @@ extends AbstractServerlessSimQueue<J, Q>
    * @throws IllegalArgumentException If the rate limit is strictly negative.
    * 
    */
-  public LIMIT (final SimEventList eventList, final double rateLimit)
+  public DLIMIT (final SimEventList eventList, final double rateLimit)
   {
     this (eventList, Integer.MAX_VALUE, rateLimit);
   }
   
-  /** Creates a {@link LIMIT} queue with infinite buffer size given an event list and (departure) rate limit.
+  /** Creates a {@link DLIMIT} queue with infinite buffer size given an event list and (departure) rate limit.
    *
    * <p>
    * This method is package private for use by {@link LeakyBucket}.
@@ -66,7 +66,7 @@ extends AbstractServerlessSimQueue<J, Q>
    * @throws IllegalArgumentException If the rate limit is strictly negative.
    * 
    */
-  LIMIT (final SimEventList eventList, final int bufferSize, final double rateLimit)
+  DLIMIT (final SimEventList eventList, final int bufferSize, final double rateLimit)
   {
     super (eventList, bufferSize);
     if (rateLimit < 0)
@@ -75,18 +75,18 @@ extends AbstractServerlessSimQueue<J, Q>
     this.isRateLimited = (this.rateLimit == 0.0);    
   }
   
-  /** Returns a new {@link LIMIT} object on the same {@link SimEventList} with the same (departure) rate limit.
+  /** Returns a new {@link DLIMIT} object on the same {@link SimEventList} with the same (departure) rate limit.
    * 
-   * @return A new {@link LIMIT} object on the same {@link SimEventList} with the same (departure) rate limit.
+   * @return A new {@link DLIMIT} object on the same {@link SimEventList} with the same (departure) rate limit.
    * 
    * @see #getEventList
    * @see #getRateLimit
    * 
    */
   @Override
-  public LIMIT<J, Q> getCopySimQueue ()
+  public DLIMIT<J, Q> getCopySimQueue ()
   {
-    return new LIMIT<> (getEventList (), getRateLimit ());
+    return new DLIMIT<> (getEventList (), getRateLimit ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,20 +95,20 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "LIMIT[rateLimit]".
+  /** Returns "DLIMIT[rateLimit]".
    * 
-   * @return "LIMIT[rateLimit]".
+   * @return "DLIMIT[rateLimit]".
    * 
    */
   @Override
   public String toStringDefault ()
   {
-    return "LIMIT[" + getRateLimit () + "]";
+    return "DLIMIT[" + getRateLimit () + "]";
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // RATE LIMIT
+  // RATE DLIMIT
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -185,7 +185,7 @@ extends AbstractServerlessSimQueue<J, Q>
    * or from notifications from elsewhere.
    * 
    * <p>
-   * The check for full occupation of the waiting area is not needed for the native {@link LIMIT} queueing system,
+   * The check for full occupation of the waiting area is not needed for the native {@link DLIMIT} queueing system,
    * but added as a courtesy for sub-classes that (potentially) use a finite buffer size, see, for instance, {@link LeakyBucket}.
    * 
    * @see #isRateLimited
@@ -325,11 +325,11 @@ extends AbstractServerlessSimQueue<J, Q>
    * @param <Q> The type of {@link SimQueue}s supported.
    * 
    */
-  protected final static class RateLimitExpirationEvent<Q extends LIMIT>
+  protected final static class RateLimitExpirationEvent<Q extends DLIMIT>
   extends SimEntityEvent<SimJob, Q>
   {
     
-    /** Creates the actions that invokes {@link LIMIT#rateLimitExpiration} on the queue,
+    /** *  Creates the actions that invokes {@link DLIMIT#rateLimitExpiration} on the queue,
      *  and invokes the super method.
      * 
      * @param expirationTime The scheduled expiration time.
