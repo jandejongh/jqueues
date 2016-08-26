@@ -2678,202 +2678,218 @@ Note that just because the serverless queues have no service area
 
 \subsection{The \lstinline{FCFS} \lstinline{SimQueue}}
 
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{FCFS}} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{FCFS}} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Serves jobs in arrival order with a single server.} \\
+\multicolumn{4}{|l|}{\em Serves jobs in arrival order until completion with a single server} \\
+\multicolumn{4}{|l|}{\em and infinite buffer size.} \\
+\multicolumn{4}{|l|}{\em The server can serve at most one job at a time.} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-NoWaitArmed & No Jobs & Since non-dropped arriving jobs are taken into \\
-            &         & service immediately if no other jobs are present. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Waiting Area & Present & Infinite waiting area, arrival order. \\
+\lstinline|BufferSize|      & F & \lstinline|Integer.MAX_VALUE|
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
-    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\lstinline|NumberOfServers| & F & $1$
+                            & The number of servers. \\
 \hline
-Service Area & Present & Holds the job currently in service (if any). \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $= ($\lstinline|JobsInServiceArea| $= \emptyset$).} \\
+\multicolumn{4}{|l|}{$|$\lstinline|JobsInServiceArea|$|$ $\leq 1$.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0$, \lstinline|JobsInWaitingArea| $\neq \emptyset
+                     \Rightarrow$ \lstinline|JobsInServiceArea| $\neq \emptyset$.} \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Arrival & Yes & The queue accepts arrivals. \\
-\hline
-Drop & Yes & Drops arriving jobs during QAVs. \\
-\hline
-Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
-\hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
-        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
-\hline
-Start & Yes & Starts jobs if there are SACs and the server is idle. \\
-\hline
-Departure & Yes & Started and non-revoked jobs depart. \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State  Invariants} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\multicolumn{3}{|l|}{At most one job is present in the service area.} \\
-\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "FCFS"; non-\lstinline|null|; RW.} \\
-\hline
-\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "FCFS".} \\
 \hline
 \end{tabular}
 
 \subsection{The \lstinline{FCFS_B} \lstinline{SimQueue}}
 
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{FCFS_B}} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{FCFS_B}} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Serves jobs in arrival order with a single server} \\
-            & \multicolumn{2}{|l|}{but has limited capacity for waing jobs.} \\
+\multicolumn{4}{|l|}{\em Serves jobs in arrival order until completion with a single server} \\
+\multicolumn{4}{|l|}{{\em and given (possibly finite) buffer size\/} (\lstinline|BufferSize|).} \\
+\multicolumn{4}{|l|}{\em The server can serve at most one job at a time.} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-NoWaitArmed & No Jobs & Since arriving jobs are dropped or taken into \\
-            &         & service immediately if no other jobs are present. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Waiting Area & Present & Finite waiting area of size \lstinline|BufferSize|, arrival order. \\
+\lstinline|BufferSize|      & C & \lstinline|int| $\geq 0$
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
-    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\lstinline|NumberOfServers| & F & $1$
+                            & The number of servers. \\
 \hline
-Service Area & Present & Holds the job currently in service (if any). \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $= ($\lstinline|JobsInServiceArea| $= \emptyset$).} \\
+\multicolumn{4}{|l|}{$|$\lstinline|JobsInWaitingArea|$|$ $\leq$ \lstinline|BufferSize|.} \\
+\multicolumn{4}{|l|}{$|$\lstinline|JobsInServiceArea|$|$ $\leq 1$.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0$, \lstinline|JobsInWaitingArea| $\neq \emptyset
+                     \Rightarrow$ \lstinline|JobsInServiceArea| $\neq \emptyset$.} \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Arrival & Yes & The queue accepts arrivals. \\
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "FCFS\_B[\lstinline|BufferSize|]".} \\
 \hline
-Drop & Yes & Drops arriving jobs during QAVs \\
-     &     & and while there are \lstinline|BufferSize| waiting jobs. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Equivalences} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
-\hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
-        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
-\hline
-Start & Yes & Starts jobs if there are SACs and the server is idle. \\
-\hline
-Departure & Yes & Started and non-revoked jobs depart. \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State  Invariants} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\multicolumn{3}{|l|}{At most one job is present in the service area.} \\
-\multicolumn{3}{|l|}{At most \lstinline|BufferSize| jobs are present in the waiting area.} \\
-\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "FCFS\_B[\lstinline|BufferSize|]";
-                                                   non-\lstinline|null|; RW.} \\
-\hline
-\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
-\hline
-\lstinline|BufferSize|      & \multicolumn{2}{|l|}{The buffer size; non-negative; RO.} \\
-                            & \multicolumn{2}{|l|}{\lstinline|Integer.MAX_VALUE| is treated as $+\infty$.} \\
+\multicolumn{4}{|l|}{\lstinline|FCFS_B|[\lstinline|Integer.MAX_VALUE|] $=$ \lstinline|FCFS|.} \\
 \hline
 \end{tabular}
 
 \subsection{The \lstinline{FCFS_c} \lstinline{SimQueue}}
 
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{FCFS_c}} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{FCFS_c}} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Serves jobs in arrival order with multiple ($c$) servers.} \\
+\multicolumn{4}{|l|}{\em Serves jobs in arrival order until completion\/} \\
+\multicolumn{4}{|l|}{{\em with a given number\/} (\lstinline|NumberOfServers|)
+                     {\em of equal servers and infinite buffer size.}} \\
+\multicolumn{4}{|l|}{\em Each server can serve at most one job at a time.} \\
+\multicolumn{4}{|l|}{\em Jobs do not prefer one server over another; there are no server affinities.} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-NoWaitArmed & \lstinline|NumberOfJobs| & Since non-dropped arriving jobs are taken into \\
-            & $< c$                    & service immediately if at least one server is idle. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Waiting Area & Present & Infinite waiting area, arrival order. \\
+\lstinline|BufferSize|      & F & \lstinline|Integer.MAX_VALUE|
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
-    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\lstinline|NumberOfServers| & C & \lstinline|int| $\geq 0$
+                            & The number of servers; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-Service Area & Present & Holds the jobs (upto $c$) currently in service (if any). \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $=$ ($|$\lstinline|JobsInServiceArea|$|$ $<$ \lstinline|NumberOfServers|).} \\
+\multicolumn{4}{|l|}{$|$\lstinline|JobsInServiceArea|$| \leq$ \lstinline|NumberOfServers|.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0$, \lstinline|JobsInWaitingArea| $\neq \emptyset$} \\
+    \multicolumn{1}{|l}{}
+  & \multicolumn{3}{l|}{$\Rightarrow |$\lstinline|JobsInServiceArea|$| =$ \lstinline|NumberOfServers|.} \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Arrival & Yes & The queue accepts arrivals. \\
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "FCFS\_\lstinline{NumberOfServers}".} \\
 \hline
-Drop & Yes & Drops arriving jobs during QAVs. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Equivalences} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
+\multicolumn{4}{|l|}{\lstinline|FCFS_0| $=$ \lstinline|DROP|.} \\
+\multicolumn{4}{|l|}{\lstinline|FCFS_1| $=$ \lstinline|FCFS|.} \\
 \hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
-        &                       & Starts waiting job(s) if SAC $> 0$ and it least one server is idle. \\
+\end{tabular}
+
+\subsection{The \lstinline{FCFS_B_c} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|l|}
 \hline
-Start & Yes & Starts jobs if there are SACs and at least one server is idle. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{FCFS_B_c}} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Departure & Yes & Started and non-revoked jobs depart. \\
+\multicolumn{4}{|l|}{\em Serves jobs in arrival order until completion\/} \\
+\multicolumn{4}{|l|}{{\em with a given number\/} (\lstinline|NumberOfServers|) {\em of equal servers}} \\
+\multicolumn{4}{|l|}{{\em and given (possibly finite) buffer size\/} (\lstinline|BufferSize|).} \\
+\multicolumn{4}{|l|}{\em Each server can serve at most one job at a time.} \\
+\multicolumn{4}{|l|}{\em Jobs do not prefer one server over another; there are no server affinities.} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State  Invariants} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|l|}{At most $c$ jobs are present in the service area.} \\
-\multicolumn{3}{|l|}{If SAC $> 0$, a server cannot be idle in the presence of waiting jobs.} \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\lstinline|BufferSize|      & C & \lstinline|int| $\geq 0$
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "FCFS\_\lstinline{NumberOfServers}";
-                                                   non-\lstinline|null|; RW.} \\
+\lstinline|NumberOfServers| & C & \lstinline|int| $\geq 0$
+                            & The number of servers; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number $c$ of servers; non-negative; RO.} \\
-                            & \multicolumn{2}{|l|}{\lstinline|Integer.MAX_VALUE| is treated as $+\infty$.} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $=$ ($|$\lstinline|JobsInServiceArea|$|$ $<$ \lstinline|NumberOfServers|).} \\
+\multicolumn{4}{|l|}{$|$\lstinline|JobsInWaitingArea|$| \leq$ \lstinline|BufferSize|.} \\
+\multicolumn{4}{|l|}{$|$\lstinline|JobsInServiceArea|$| \leq$ \lstinline|NumberOfServers|.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0$, \lstinline|JobsInWaitingArea| $\neq \emptyset$} \\
+    \multicolumn{1}{|l}{}
+  & \multicolumn{3}{l|}{$\Rightarrow |$\lstinline|JobsInServiceArea|$| =$ \lstinline|NumberOfServers|.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "FCFS\_\lstinline{NumberOfServers}[\lstinline|BufferSize|]".} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Equivalences} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\lstinline|FCFS_1[Integer.MAX_VALUE]| $=$ \lstinline|FCFS|.} \\
+\multicolumn{4}{|l|}{\lstinline|FCFS_1[B]| $=$ \lstinline|FCFS_B[B]|.} \\
+\multicolumn{4}{|l|}{\lstinline|FCFS_c[Integer.MAX_VALUE]| $=$ \lstinline|FCFS_c|.} \\
+\multicolumn{4}{|l|}{\lstinline|FCFS_0[0]| $=$ \lstinline|DROP|.} \\
+\multicolumn{4}{|l|}{\lstinline|FCFS_0[Integer.MAX_VALUE]| $=$ \lstinline|SINK|.} \\
 \hline
 \end{tabular}
 
