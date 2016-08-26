@@ -2140,6 +2140,167 @@ In this chapter we describe implementations of \lstinline|SimQueue| correspondin
 
 \section{Introduction}
 
+\section{The Generic \lstinline{SimQueue}}
+\label{simqueue-generic}
+
+\subsection{Introduction}
+
+\subsection{Essential Properties}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{SimQueue}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Essential Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|EventList| & \lstinline|SimEventList| & The event list; non-\lstinline|null|. \\
+\hline
+\lstinline|AutoRevocationPolicy| & \lstinline|AutoRevocationPolicy| & The auto-revocation policy. \\
+\hline
+\lstinline|RegisteredOperations| & \lstinline|Set<SimEntityOperation>| & The registered operations. \\
+\hline
+\lstinline|RegisteredNotificationTypes| & \lstinline|Set<Member>| & The registered notification types. \\
+\hline
+\end{tabular}
+
+\subsection{State Properties}
+
+\begin{tabular}{|l|l|l|l|}
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{SimQueue}} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+LastUpdateTime & EE & \lstinline|double| & Last update (or reset) time. \\
+\hline
+QueueAccessVacation & EE & \lstinline|boolean| & Queue-Access Vacation state. \\
+\hline
+StartArmed & EE & \lstinline|boolean| & The \lstinline|StartArmed| state. \\
+\hline
+Jobs & EE & \lstinline|Set<J>| & Jobs present. \\
+\hline
+JobsInWaitingArea & EE & \lstinline|Set<J>| & Jobs waiting. \\
+\hline
+JobsInServiceArea & EE & \lstinline|Set<J>| & Jobs in service. \\
+\hline
+ServerAccessCredits & EE & \lstinline|int| $\geq 0$ & Number of server-access credits. \\
+\hline
+\end{tabular}
+
+\subsection{Operations}
+
+\begin{tabular}{|l|l|l|l|}
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{SimQueue}} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operations} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+Update & E & \lstinline|double| & Update at time.\\
+\hline
+DoOperation & E & \lstinline|double|, \lstinline|Request| & Perform operation at time. \\
+\hline
+SetQueueAccessVacation & E & double, \lstinline|boolean| & Starts/ends a QAV at time. \\
+\hline
+Arrive & E & \lstinline|J| & Arrival of job at time. \\
+\hline
+Drop & I & \lstinline|J| & Drop of job at time. \\
+\hline
+Revoke & E & \lstinline|J|, \lstinline|boolean| & Revocation attempt of job at time. \\
+\hline
+SetServerAccessCredits & E & \lstinline|int| $\geq 0$ & Set the SACs at time. \\
+\hline
+Start & I & \lstinline|J|, \lstinline|double| & Starts job at time. \\
+\hline
+Depart & I & \lstinline|J| & Lets job depart at time. \\
+\hline
+\end{tabular}
+
+\subsection{State Invariants}
+
+\begin{tabular}{|l|}
+\hline
+\multicolumn{1}{|c|}{} \\
+\multicolumn{1}{|c|}{\lstinline[basicstyle=\large]{SimQueue}} \\
+\multicolumn{1}{|c|}{} \\
+\hline
+\multicolumn{1}{|c|}{} \\
+\multicolumn{1}{|c|}{\bf State  Invariants} \\
+\multicolumn{1}{|c|}{} \\
+\hline
+\lstinline|JobsInWaitingArea| $\cap$ \lstinline|JobsInServiceArea| $= \emptyset$. \\
+\lstinline|Jobs| $=$ \lstinline|JobsInWaitingArea| $\cup$ \lstinline|JobsInServiceArea|. \\
+\hline
+\end{tabular}
+
+\subsection{Notification Types}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{SimQueue}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Notification Types} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|RESET| & \lstinline|double| & Reset notification with new time. \\
+\hline
+\lstinline|UPDATE| & \lstinline|double| & Update notification with new time. \\
+\hline
+\lstinline|STATE_CHANGED| & \lstinline|double|, \lstinline|Set<Notification>|
+                          & State-changed notification \\
+                        & & with new time and sub-notifications. \\
+\hline
+\end{tabular}
+
+\subsection{Internal Schedulable Events}
+
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{|c|}{} \\
+\multicolumn{2}{|c|}{\lstinline[basicstyle=\large]{SimQueue}} \\
+\multicolumn{2}{|c|}{} \\
+\hline
+\multicolumn{2}{|c|}{} \\
+\multicolumn{2}{|c|}{\bf Internal Schedulable Events} \\
+\multicolumn{2}{|c|}{} \\
+\hline
+\lstinline|DepartureEvent| & The scheduled departure of a job. \\
+\hline
+\end{tabular}
+
+\subsection{Operational Properties}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{SimQueue}} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Operational Properties} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|Name|               & \lstinline|String| & The name, \\
+                               &                    & default depends on sub-class. \\
+\hline
+\lstinline|SimEntityListeners| & \lstinline|Set<SimEntityListener>| & The registered listeners. \\
+\hline
+\end{tabular}
+
 \section{Serverless Queues}
 
 The {\em serverless\/} queueing systems in \lstinline|jqueues| 
@@ -2158,55 +2319,26 @@ Note that just because the serverless queues have no service area
 \multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{DROP}} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Drops jobs immediately upon arrival.} \\
+\multicolumn{3}{|l|}{\em Drops jobs immediately upon arrival.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{\bf Super} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & QAVs have no effect. \\
-\hline
-NoWaitArmed & \lstinline|true| & Since jobs are immediately dropped. \\
-\hline
-Waiting Area & Absent & There is no waiting area. \\
-\hline
-SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
-\hline
-Service Area & Absent & There is no service area. \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-Set QAV & \lstinline|false|/\lstinline|true| & Has no effect. \\
-\hline
-Arrival & Yes & The queue accepts arrivals. \\
-        &     & (But jobs are dropped immediately.) \\
-\hline
-Drop & Yes & All jobs are dropped upon arrival. \\
-\hline
-Revocation & No & Jobs cannot be revoked \\
-           &    & since there are never jobs present. \\
-\hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
-\hline
-Start & No & Jobs cannot start. \\
-\hline
-Departure & No & Jobs cannot depart. \\
+\lstinline|SimQueue| & \multicolumn{2}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
 \multicolumn{3}{|c|}{\bf State  Invariants} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-\multicolumn{3}{|l|}{The set of jobs present is empty.} \\
+\multicolumn{3}{|l|}{\lstinline|StartArmed| $=$ \lstinline|false|.} \\
+\multicolumn{3}{|l|}{\lstinline|Jobs| $= \emptyset$.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{\bf Operational Properties} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-\lstinline|EventList| & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "DROP"; non-\lstinline|null|; RW.} \\
+\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "DROP".} \\
 \hline
 \end{tabular}
 
@@ -2218,54 +2350,26 @@ Departure & No & Jobs cannot depart. \\
 \multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{SINK}} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Lets jobs wait indefinitely.} \\
+\multicolumn{3}{|l|}{\em Lets jobs wait indefinitely.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{\bf Super} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
-\hline
-NoWaitArmed & \lstinline|false| & Since non-dropped jobs must wait. \\
-\hline
-Waiting Area & Present & Infinite waiting area, non-ordered. \\
-\hline
-SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
-\hline
-Service Area & Absent & There is no service area. \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
-\hline
-Arrival & Yes & The queue accepts arrivals. \\
-\hline
-Drop & Yes & Drops arriving jobs during QAVs. \\
-\hline
-Revocation & Yes & Jobs can be revoked from the waiting area. \\
-\hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
-\hline
-Start & No & Jobs cannot start. \\
-\hline
-Departure & No & Jobs cannot depart. \\
+\lstinline|SimQueue| & \multicolumn{2}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
 \multicolumn{3}{|c|}{\bf State  Invariants} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-\multicolumn{3}{|l|}{The set of jobs present in the service area is empty.} \\
-\multicolumn{3}{|l|}{All jobs present are in the waiting area.} \\
+\multicolumn{3}{|l|}{\lstinline|StartArmed| $=$ \lstinline|false|.} \\
+\multicolumn{3}{|l|}{\lstinline|Jobs| $=$ \lstinline|JobInWaitingArea|.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{\bf Operational Properties} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-\lstinline|EventList| & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "SINK"; non-\lstinline|null|; RW.} \\
+\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "SINK".} \\
 \hline
 \end{tabular}
 
@@ -2277,55 +2381,26 @@ Departure & No & Jobs cannot depart. \\
 \multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{ZERO}} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Lets jobs depart immediately upon arrival.} \\
+\multicolumn{3}{|l|}{\em Lets jobs depart immediately upon arrival.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{\bf Super} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
-\hline
-NoWaitArmed & \lstinline|true| & Since non-dropped jobs depart immediately. \\
-\hline
-Waiting Area & Absent & There is no waiting area. \\
-\hline
-SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
-\hline
-Service Area & Absent & There is no service area. \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
-\hline
-Arrival & Yes & The queue accepts arrivals. \\
-        &     & (But jobs depart immediately.) \\
-\hline
-Drop & Yes & Drops arriving jobs during QAVs. \\
-\hline
-Revocation & No & Jobs cannot be revoked \\
-           &    & since there are never jobs present. \\
-\hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
-\hline
-Start & No & Jobs cannot start. \\
-\hline
-Departure & Yes & Non-dropped jobs depart upon arrival. \\
+\lstinline|SimQueue| & \multicolumn{2}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
 \multicolumn{3}{|c|}{\bf State  Invariants} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-\multicolumn{3}{|l|}{The set of jobs present is empty.} \\
+\multicolumn{3}{|l|}{\lstinline|StartArmed| $=$ \lstinline|false|.} \\
+\multicolumn{3}{|l|}{\lstinline|Jobs| $= \emptyset$.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{\bf Operational Properties} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-\lstinline|EventList| & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "ZERO"; non-\lstinline|null|; RW.} \\
+\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "ZERO".} \\
 \hline
 \end{tabular}
 
@@ -2337,129 +2412,265 @@ Departure & Yes & Non-dropped jobs depart upon arrival. \\
 \multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{DELAY}} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Lets jobs depart after a fixed wait time.} \\
+\multicolumn{3}{|l|}{\em Lets jobs depart after a fixed wait time.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
+\multicolumn{3}{|c|}{\bf Super} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
-\hline
-NoWaitArmed & WaitTime & Since non-dropped jobs depart immediately \\
-            & == 0     & when the wait time is zero. \\
-\hline
-Waiting Area & Present & Infinite waiting area, non-ordered. \\
-\hline
-SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
-\hline
-Service Area & Absent & There is no service area. \\
+\lstinline|SimQueue| & \multicolumn{2}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
+\multicolumn{3}{|c|}{\bf Essential Properties} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
-\hline
-Arrival & Yes & The queue accepts arrivals. \\
-        &     & (Immediate departure if WaitTime == 0.) \\
-\hline
-Drop & Yes & Drops arriving jobs during QAVs. \\
-\hline
-Revocation & Yes & Jobs can be revoked while waiting. \\
-\hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
-\hline
-Start & No & Jobs cannot start. \\
-\hline
-Departure & Yes & Non-dropped/revoked jobs depart \\
-          &     & WaitTime after arrival. \\
+\lstinline|WaitTime|  & \multicolumn{2}{|l|}{The wait time, non-negative.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
 \multicolumn{3}{|c|}{\bf State  Invariants} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-\multicolumn{3}{|l|}{The set of jobs present in the service area is empty.} \\
-\multicolumn{3}{|l|}{All jobs present are in the waiting area.} \\
+\multicolumn{3}{|l|}{\lstinline|StartArmed| $=$ \lstinline|false|.} \\
+\multicolumn{3}{|l|}{\lstinline|Jobs| $=$ \lstinline|JobsInWaitingArea|.} \\
+\multicolumn{3}{|l|}{\lstinline|WaitTime| $= 0 \Rightarrow$ \lstinline|Jobs| $= \emptyset$.} \\
 \hline
 \multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
+\multicolumn{3}{|c|}{\bf Operational Properties} \\
 \multicolumn{3}{|c|}{} \\
 \hline
-\lstinline|EventList| & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\lstinline|Name| & \multicolumn{2}{|l|}{The name, default "DELAY[\lstinline|WaitTime|]".} \\
 \hline
-\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "DELAY[\lstinline|WaitTime|]";
-                                             non-\lstinline|null|; RW.} \\
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\bf Equivalences} \\
+\multicolumn{3}{|c|}{} \\
 \hline
-\lstinline|WaitTime|  & \multicolumn{2}{|l|}{The wait time, zero or positive; RO.} \\
+\multicolumn{3}{|l|}{\lstinline|DELAY|[$0$] $=$ \lstinline|ZERO|.} \\
+\multicolumn{3}{|l|}{\lstinline|DELAY|[$\infty$] $=$ \lstinline|SINK|.} \\
 \hline
 \end{tabular}
 
 \subsection{The \lstinline{GATE} \lstinline{SimQueue}}
 
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{GATE}} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{GATE}} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Depending on the state of its "gate", let jobs} \\
-            & \multicolumn{2}{|l|}{depart immediately or puts them into the waiting area.} \\
+\multicolumn{4}{|l|}{\em Lets jobs depart in arrival order while its "gate" is open; lets jobs wait otherwise.} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-NoWaitArmed & GPC $> 0$ & Since non-dropped jobs depart immediately upon arrival \\
-            &           & provided that there are gate-passage credits (GPCs). \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Waiting Area & Present & Infinite waiting area, arrival order. \\
+\lstinline|GatePassageCredits| & EE & \lstinline|int| $\geq 0$ & Remaining allowed departures. \\
 \hline
-SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operations} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Service Area & Absent & There is no service area. \\
+\lstinline|SetGatePassageCredits| & E & \lstinline|int| $\geq 0$ & Sets the remaining number of GPCs. \\
+                                  &   &                          & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-GPC & $\{0, 1, 2, \ldots\}$ & Number of jobs to depart immediately upon arrival. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $=$ \lstinline|false|.} \\
+\multicolumn{4}{|l|}{\lstinline|GatePassageCredits| $> 0 \Rightarrow$ \lstinline|Jobs| $= \emptyset$.} \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Arrival & Yes & The queue accepts arrivals. \\
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "GATE".} \\
 \hline
-Drop & Yes & Drops arriving jobs during QAVs. \\
+\end{tabular}
+
+\subsection{The \lstinline{ALIMIT} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|l|}
 \hline
-Revocation & Yes & Jobs can be revoked while waiting. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{ALIMIT}} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & SACs have no effect. \\
+\multicolumn{4}{|l|}{\em Lets jobs depart immediately but drops jobs whose arrival exceeds a given arrival-rate limit.} \\
 \hline
-Start & No & Jobs cannot start. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Departure & Yes & Non-dropped/revoked jobs depart upon arrival \\
-          &     & or if (sufficient) GPCs become available. \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-Set GPC & $\{0, 1, 2, \ldots\}$ & Overwrites the remaining number of GPCs. \\
-        &                       & (Letting jobs depart if waiting and GPC $ > 0$). \\
-        &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State  Invariants} \\
-\multicolumn{3}{|c|}{} \\
+\lstinline|RateLimit| & \lstinline|double| & \multicolumn{2}{|l|}{The rate limit, $>= 0$; $\leq +\infty$.} \\
 \hline
-\multicolumn{3}{|l|}{The set of jobs present in the service area is empty.} \\
-\multicolumn{3}{|l|}{All jobs present are in the waiting area.} \\
-\multicolumn{3}{|l|}{If GPC $> 0$, the set of jobs present is empty.} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
-\multicolumn{3}{|c|}{} \\
+\lstinline|RateLimited| & HE & \lstinline|boolean| & Whether currently (arrival) rate-limited. \\
 \hline
-\lstinline|EventList| & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Internal Schedulable Events} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\lstinline|Name|      & \multicolumn{2}{|l|}{The name, default "GATE"; non-\lstinline|null|; RW.} \\
+\multicolumn{3}{|l|}{\lstinline|RateLimitExpirationEvent|} & The expiration of the rate-limit period. \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{\lstinline|Name|} & The name, default "ALIMIT[RateLimit]". \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Equivalences} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\lstinline|ALIMIT|[$0$] $=$ \lstinline|DROP|.} \\
+\multicolumn{4}{|l|}{\lstinline|ALIMIT|[$\infty$] $=$ \lstinline|ZERO|.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{DLIMIT} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|l|}
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{DLIMIT}} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\em Lets jobs depart immediately but respects a given departure-rate limit.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|RateLimit| & \lstinline|double| & \multicolumn{2}{|l|}{The rate limit, $>= 0$; $\leq +\infty$.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|RateLimited| & HE & \lstinline|boolean| & Whether currently (departure) rate-limited. \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Internal Schedulable Events} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{\lstinline|RateLimitExpirationEvent|} & The expiration of the rate-limit period. \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{\lstinline|Name|} & The name, default "DLIMIT[RateLimit]". \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Equivalences} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\lstinline|DLIMIT|[$0$] $=$ \lstinline|SINK|.} \\
+\multicolumn{4}{|l|}{\lstinline|DLIMIT|[$\infty$] $=$ \lstinline|ZERO|.} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{LeakyBucket} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|l|}
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{LeakyBucket}} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\em Lets jobs depart immediately but respects a given departure-rate limit,} \\
+\multicolumn{4}{|l|}{\em and drops arriving jobs that need to wait but find the waiting area full.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|BufferSize| & \lstinline|int| $\geq 0$
+                       & \multicolumn{2}{|l|}{The buffer size; \lstinline|Integer.MAX_VALUE| is treated as $+\infty$.} \\
+\hline
+\lstinline|RateLimit|  & \lstinline|double| & \multicolumn{2}{|l|}{The rate limit, $>= 0$; $\leq +\infty$.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|RateLimited| & HE & \lstinline|boolean| & Whether currently (departure) rate-limited. \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Internal Schedulable Events} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{\lstinline|RateLimitExpirationEvent|} & The expiration of the rate-limit period. \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{\lstinline|Name|} & The name, default "LeakyBucket[BufferSize,RateLimit]". \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Equivalences} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\lstinline|LeakyBucket|[$\infty, L$] $=$ \lstinline|DLIMIT|[$L$].} \\
+\multicolumn{4}{|l|}{\lstinline|LeakyBucket|[$0, L$] $=$ \lstinline|ALIMIT|[$L$].} \\
+\hline
+\end{tabular}
+
+\subsection{The \lstinline{WUR} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|l|}
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{WUR}} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\em Lets arriving jobs wait for their departure until the next arrival.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{$|$\lstinline|Jobs|$|$ $=$ $0$ or $1$.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{3}{|l|}{\lstinline|Name|} & The name, default "WUR". \\
 \hline
 \end{tabular}
 
