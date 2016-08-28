@@ -2185,11 +2185,11 @@ QueueAccessVacation & EE & \lstinline|boolean| & Queue-Access Vacation state. \\
 \hline
 StartArmed & EE & \lstinline|boolean| & The \lstinline|StartArmed| state. \\
 \hline
-Jobs & EE & \lstinline|Set<J>| & Jobs present. \\
+Jobs & EE & \lstinline|Set<J>| & Jobs present (default: arrival order). \\
 \hline
-JobsInWaitingArea & EE & \lstinline|Set<J>| & Jobs waiting. \\
+JobsInWaitingArea & EE & \lstinline|Set<J>| & Jobs waiting (default: arrival order). \\
 \hline
-JobsInServiceArea & EE & \lstinline|Set<J>| & Jobs in service. \\
+JobsInServiceArea & EE & \lstinline|Set<J>| & Jobs in service (default: start order). \\
 \hline
 ServerAccessCredits & EE & \lstinline|int| $\geq 0$ & Number of server-access credits. \\
 \hline
@@ -2500,6 +2500,8 @@ Note that just because the serverless queues have no service area
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{ALIMIT}} \\
 \multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Arrival-Rate Limiter} \\
+\multicolumn{4}{|c|}{} \\
 \hline
 \multicolumn{4}{|l|}{\em Lets jobs depart immediately but drops jobs whose arrival exceeds a given arrival-rate limit.} \\
 \hline
@@ -2548,6 +2550,8 @@ Note that just because the serverless queues have no service area
 \hline
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{DLIMIT}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Departure-Rate Limiter} \\
 \multicolumn{4}{|c|}{} \\
 \hline
 \multicolumn{4}{|l|}{\em Lets jobs depart immediately but respects a given departure-rate limit.} \\
@@ -2651,6 +2655,8 @@ Note that just because the serverless queues have no service area
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{WUR}} \\
 \multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Wait Until Relieved} \\
+\multicolumn{4}{|c|}{} \\
 \hline
 \multicolumn{4}{|l|}{\em Lets arriving jobs wait for their departure until the next arrival.} \\
 \hline
@@ -2682,6 +2688,8 @@ Note that just because the serverless queues have no service area
 \hline
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{FCFS}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{First-Come First-Served} \\
 \multicolumn{4}{|c|}{} \\
 \hline
 \multicolumn{4}{|l|}{\em Serves jobs in arrival order until completion with a single server} \\
@@ -2728,6 +2736,8 @@ Note that just because the serverless queues have no service area
 \hline
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{FCFS_B}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{First-Come First-Served with given buffer size} \\
 \multicolumn{4}{|c|}{} \\
 \hline
 \multicolumn{4}{|l|}{\em Serves jobs in arrival order until completion with a single server} \\
@@ -2781,6 +2791,8 @@ Note that just because the serverless queues have no service area
 \hline
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{FCFS_c}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{First-Come First-Served with given number of servers} \\
 \multicolumn{4}{|c|}{} \\
 \hline
 \multicolumn{4}{|l|}{\em Serves jobs in arrival order until completion\/} \\
@@ -2838,6 +2850,8 @@ Note that just because the serverless queues have no service area
 \hline
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{FCFS_B_c}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{First-Come First-Served with given buffer size and number of servers} \\
 \multicolumn{4}{|c|}{} \\
 \hline
 \multicolumn{4}{|l|}{\em Serves jobs in arrival order until completion\/} \\
@@ -2900,6 +2914,8 @@ Note that just because the serverless queues have no service area
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{IS}} \\
 \multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Infinite Servers} \\
+\multicolumn{4}{|c|}{} \\
 \hline
 \multicolumn{4}{|l|}{\em Serves jobs in arrival order until completion with an infinite number of servers} \\
 \multicolumn{4}{|l|}{\em and infinite buffer size.} \\
@@ -2953,6 +2969,8 @@ Note that just because the serverless queues have no service area
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{IS_CST}} \\
 \multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Infinite Servers with Constant Service Time} \\
+\multicolumn{4}{|c|}{} \\
 \hline
 \multicolumn{4}{|l|}{\em Serves jobs in arrival order until completion with an infinite number of servers} \\
 \multicolumn{4}{|l|}{\em and infinite buffer size.} \\
@@ -3003,6 +3021,8 @@ Note that just because the serverless queues have no service area
 \hline
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{IC}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Infinite Capacity} \\
 \multicolumn{4}{|c|}{} \\
 \hline
 \multicolumn{4}{|l|}{\em Serves jobs in arrival order until completion} \\
@@ -3113,6 +3133,8 @@ Note that just because the serverless queues have no service area
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{LCFS}} \\
 \multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Last-Come First-Served} \\
+\multicolumn{4}{|c|}{} \\
 \hline
 \multicolumn{4}{|l|}{\em Serves jobs in reverse arrival order until completion with a single server} \\
 \multicolumn{4}{|l|}{\em and infinite buffer size.} \\
@@ -3136,6 +3158,13 @@ Note that just because the serverless queues have no service area
                             & The number of servers. \\
 \hline
 \multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|JobsInWaitingArea| & EE & \lstinline|Set<J>| & Jobs waiting \\
+                              &    &                    & in {\em reverse-arrival\/} order. \\
+\hline
+\multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\bf State  Invariants} \\
 \multicolumn{4}{|c|}{} \\
 \hline
@@ -3154,197 +3183,213 @@ Note that just because the serverless queues have no service area
 
 \subsection{The \lstinline{SJF} \lstinline{SimQueue}}
 
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{SJF}} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{SJF}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Shortest-Job First} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Serves jobs in increasing service-time order with a single server.} \\
+\multicolumn{4}{|l|}{\em Serves jobs in increasing service-time order until completion} \\
+\multicolumn{4}{|l|}{\em with a single server and infinite buffer size.} \\
+\multicolumn{4}{|l|}{\em The server can serve at most one job at a time.} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-NoWaitArmed & No Jobs & Since non-dropped arriving jobs are taken into \\
-            &         & service immediately if no other jobs are present. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Waiting Area & Present & Infinite waiting area, ordered increasing in service time. \\
+\lstinline|BufferSize|      & F & \lstinline|Integer.MAX_VALUE|
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
-    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\lstinline|NumberOfServers| & F & $1$
+                            & The number of servers. \\
 \hline
-Service Area & Present & Holds the job currently in service (if any). \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
+\lstinline|JobsInWaitingArea| & EE & \lstinline|Set<J>| & Jobs waiting \\
+                              &    &                    & in {\em increasing service-time\/} order. \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Arrival & Yes & The queue accepts arrivals. \\
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $= ($\lstinline|JobsInServiceArea| $= \emptyset$).} \\
+\multicolumn{4}{|l|}{$|$\lstinline|JobsInServiceArea|$|$ $\leq 1$.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0$, \lstinline|JobsInWaitingArea| $\neq \emptyset
+                     \Rightarrow$ \lstinline|JobsInServiceArea| $\neq \emptyset$.} \\
 \hline
-Drop & Yes & Drops arriving jobs during QAVs. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
-\hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
-        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
-\hline
-Start & Yes & Starts jobs if there are SACs and the server is idle. \\
-\hline
-Departure & Yes & Started and non-revoked jobs depart. \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State  Invariants} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\multicolumn{3}{|l|}{At most one job is present in the service area.} \\
-\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "SJF"; non-\lstinline|null|; RW.} \\
-\hline
-\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "SJF".} \\
 \hline
 \end{tabular}
 
 \subsection{The \lstinline{LJF} \lstinline{SimQueue}}
  
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{LJF}} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{LJF}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Longest-Job First} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Serves jobs in decreasing service-time order with a single server.} \\
+\multicolumn{4}{|l|}{\em Serves jobs in decreasing service-time order until completion} \\
+\multicolumn{4}{|l|}{\em with a single server and infinite buffer size.} \\
+\multicolumn{4}{|l|}{\em The server can serve at most one job at a time.} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-NoWaitArmed & No Jobs & Since non-dropped arriving jobs are taken into \\
-            &         & service immediately if no other jobs are present. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Waiting Area & Present & Infinite waiting area, ordered decreasing in service time. \\
+\lstinline|BufferSize|      & F & \lstinline|Integer.MAX_VALUE|
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
-    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\lstinline|NumberOfServers| & F & $1$
+                            & The number of servers. \\
 \hline
-Service Area & Present & Holds the job currently in service (if any). \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
+\lstinline|JobsInWaitingArea| & EE & \lstinline|Set<J>| & Jobs waiting \\
+                              &    &                    & in {\em decreasing service-time\/} order. \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Arrival & Yes & The queue accepts arrivals. \\
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $= ($\lstinline|JobsInServiceArea| $= \emptyset$).} \\
+\multicolumn{4}{|l|}{$|$\lstinline|JobsInServiceArea|$|$ $\leq 1$.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0$, \lstinline|JobsInWaitingArea| $\neq \emptyset
+                     \Rightarrow$ \lstinline|JobsInServiceArea| $\neq \emptyset$.} \\
 \hline
-Drop & Yes & Drops arriving jobs during QAVs. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
-\hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
-        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
-\hline
-Start & Yes & Starts jobs if there are SACs and the server is idle. \\
-\hline
-Departure & Yes & Started and non-revoked jobs depart. \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State  Invariants} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\multicolumn{3}{|l|}{At most one job is present in the service area.} \\
-\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "LJF"; non-\lstinline|null|; RW.} \\
-\hline
-\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "LJF".} \\
 \hline
 \end{tabular}
 
 \subsection{The \lstinline{RANDOM} \lstinline{SimQueue}}
 
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{RANDOM}} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{RANDOM}} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l|}{Serves jobs in random order with a single server.} \\
+\multicolumn{4}{|l|}{\em Serves jobs in random order until completion} \\
+\multicolumn{4}{|l|}{\em with a single server and infinite buffer size.} \\
+\multicolumn{4}{|l|}{\em The server can serve at most one job at a time.} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-NoWaitArmed & No Jobs & Since non-dropped arriving jobs are taken into \\
-            &         & service immediately if no other jobs are present. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Waiting Area & Present & Infinite waiting area, random order with equal probabilities. \\
+\lstinline|BufferSize|      & F & \lstinline|Integer.MAX_VALUE|
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
-    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\lstinline|NumberOfServers| & F & $1$
+                            & The number of servers. \\
 \hline
-Service Area & Present & Holds the job currently in service (if any). \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
+\lstinline|JobsInWaitingArea| & EE & \lstinline|Set<J>| & Jobs waiting \\
+                              &    &                    & in {\em random\/} order. \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Arrival & Yes & The queue accepts arrivals. \\
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $= ($\lstinline|JobsInServiceArea| $= \emptyset$).} \\
+\multicolumn{4}{|l|}{$|$\lstinline|JobsInServiceArea|$|$ $\leq 1$.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0$, \lstinline|JobsInWaitingArea| $\neq \emptyset
+                     \Rightarrow$ \lstinline|JobsInServiceArea| $\neq \emptyset$.} \\
 \hline
-Drop & Yes & Drops arriving jobs during QAVs. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Revocation & Yes & Jobs can be revoked while waiting and while being served. \\
-\hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
-        &                       & Starts waiting job if SAC $> 0$ and server idle. \\
-\hline
-Start & Yes & Starts jobs if there are SACs and the server is idle. \\
-\hline
-Departure & Yes & Started and non-revoked jobs depart. \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State  Invariants} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\multicolumn{3}{|l|}{At most one job is present in the service area.} \\
-\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of waiting jobs.} \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "RANDOM"; non-\lstinline|null|; RW.} \\
-\hline
-\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "RANDOM".} \\
 \hline
 \end{tabular}
 
 \subsection{The \lstinline{SUR} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|l|}
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{SUR}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Serve Until Relieved} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\em Serves jobs in arrival order until the start of the next job} \\
+\multicolumn{4}{|l|}{\em with a single server and infinite buffer size.} \\
+\multicolumn{4}{|l|}{\em The server can serve at most one job at a time.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|BufferSize|      & F & \lstinline|Integer.MAX_VALUE|
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+\lstinline|NumberOfServers| & F & $1$
+                            & The number of servers. \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $=$ \lstinline|true|.} \\
+\multicolumn{4}{|l|}{$|$\lstinline|JobsInServiceArea|$|$ $\leq 1$.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0 \Rightarrow$ \lstinline|JobsInWaitingArea| $= \emptyset$.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "SUR".} \\
+\hline
+\end{tabular}
 
 \section{Preemptive Queues}
 
@@ -3385,189 +3430,134 @@ If you pass an unsupported preemption strategy,
 
 \subsection{The \lstinline{P_LCFS} \lstinline{SimQueue}}
 
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{P_LCFS}} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{P_LCFS}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Preemptive Last-Come First-Served} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{l|}{Serves jobs in reverse arrival order with a single server,} \\
-            & \multicolumn{2}{l|}{preempting the current job in service, if any, upon an arrival.} \\
+\multicolumn{4}{|l|}{\em Serves jobs in reverse arrival order until completion or preemption} \\
+\multicolumn{4}{|l|}{\em with a single server and infinite buffer size.} \\
+\multicolumn{4}{|l|}{\em A job in service is preempted upon the start of a new job.} \\
+\multicolumn{4}{|l|}{\em The server can execute at most one job at a time,} \\
+\multicolumn{4}{|l|}{\em but an arbitrary number of jobs may be in service.} \\
 \hline
-Preemption  & \multicolumn{2}{l|}{\lstinline|DROP|, \lstinline|RESUME|, \lstinline|RESTART|, \lstinline|DEPART|} \\
-Strategies  & \multicolumn{2}{l|}{ } \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
-\multicolumn{3}{|c|}{} \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs are taken into \\
-            &                  & service immediately. \\
+\lstinline|BufferSize|      & F & \lstinline|Integer.MAX_VALUE|
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-Waiting Area & Present & Infinite waiting area, only used for SAC, LIFO. \\
+\lstinline|NumberOfServers|    & F & $1$
+                               & The number of servers. \\
 \hline
-SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
-    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\lstinline|PreemptionStrategy| & C & \lstinline|PreemptionStrategy| & The preemption strategy. \\
 \hline
-Service Area & Present & Holds the job currently in service (if any), \\
-             &         & and (\lstinline|RESUME|, \lstinline|RESTART| only) \\
-             &         & all {\em preempted\/} jobs \\
-             &         & that have not departed yet (if any). \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
+\lstinline|JobsInWaitingArea| & EE & \lstinline|Set<J>| & Jobs waiting \\
+                              &    &                    & in {\em reverse-arrival\/} order. \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operations} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Arrival & Yes & The queue accepts arrivals, \\
-        &     & preempting the job currently in service (if any). \\
+\lstinline|Preempt| & I & \lstinline|double, J| & Job preemption at time.\\
 \hline
-Drop & Yes & Drops arriving jobs during QAVs and preempted jobs \\
-     &     & with \lstinline|DROP| preemption strategy. \\
+\lstinline|StartServiceChunk| & I & \lstinline|double, J| & Start service chunk for job at time.\\
 \hline
-Revocation & Yes & Jobs present can be revoked anytime. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
-        &                       & Starts waiting job(s) if SAC $> 0$. \\
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $=$ \lstinline|true|.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0 \Rightarrow$ \lstinline|JobsInWaitingArea| $= \emptyset$.} \\
 \hline
-Start & Yes & Starts jobs in waiting area if there are SACs. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Preemption & Yes & Upon a new arrival (in absence of a QAV) \\
-           &     & and if SACs are/become available. \\
-\hline
-Departure & Yes & Started and non-revoked jobs depart; \\
-          &     & with \lstinline|DROP|, only if not preempted after start. \\
-\hline
-\end{tabular}
-
-\begin{tabular}{|l|l|l|}
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{P_LCFS} (continued)} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State  Invariants} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\multicolumn{3}{|l|}{If SAC $> 0$, the waiting area is empty.} \\
-\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of jobs.} \\
-\multicolumn{3}{|l|}{The server cannot be idle in the presence of preempted jobs in the service area.} \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\lstinline|EventList|          & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|               & \multicolumn{2}{|l|}{The name, default "P\_LCFS[\lstinline|PreemptionStrategy|]";} \\
-                               & \multicolumn{2}{|l|}{non-\lstinline|null|; RW.} \\
-\hline
-\lstinline|PreemptionStrategy| & \multicolumn{2}{|l|}{The preemption strategy, default \lstinline|RESUME|;
-                                                      non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|NumberOfServers|    & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "P\_LCFS[\lstinline|PreemptionStrategy|]".} \\
 \hline
 \end{tabular}
 
 \subsection{The \lstinline{SRTF} \lstinline{SimQueue}}
 
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{SRTF}} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{SRTF}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Shortest Remaining-Time First} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{l|}{Serves jobs in reverse order of remaining service time,} \\
-            & \multicolumn{2}{l|}{preempting the current job in service, if any,} \\
-            & \multicolumn{2}{l|}{upon an arrival of another job with required service time} \\
-            & \multicolumn{2}{l|}{strictly smaller than the remaining service time of the job in service.} \\
+\multicolumn{4}{|l|}{\em Serves jobs in reverse order of remaining service time until completion or preemption} \\
+\multicolumn{4}{|l|}{\em with a single server and infinite buffer size.} \\
+\multicolumn{4}{|l|}{\em A job in service is preempted upon the start of a new job} \\
+\multicolumn{4}{|l|}{\em with a strictly smaller remaining service time.} \\
+\multicolumn{4}{|l|}{\em Jobs are started in reverse required service-time order} \\
+\multicolumn{4}{|l|}{\em at the earliest opportunity (i.e., independent of the state of the service area).} \\
+\multicolumn{4}{|l|}{\em The server can execute at most one job at a time,} \\
+\multicolumn{4}{|l|}{\em but an arbitrary number of jobs may be in service.} \\
 \hline
-Preemption  & \multicolumn{2}{l|}{\lstinline|DROP|, \lstinline|RESUME|, \lstinline|RESTART|, \lstinline|DEPART|} \\
-Strategies  & \multicolumn{2}{l|}{ } \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
-\multicolumn{3}{|c|}{} \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs are taken into \\
-            &                  & service immediately. \\
+\lstinline|BufferSize|      & F & \lstinline|Integer.MAX_VALUE|
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-Waiting Area & Present & Infinite waiting area; only used for SAC. \\
-             &         & Ordered increasing in required service time. \\
-             &         & (Arrival order in case of a tie.) \\
+\lstinline|NumberOfServers|    & F & $1$
+                               & The number of servers. \\
 \hline
-SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
-    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\lstinline|PreemptionStrategy| & C & \lstinline|PreemptionStrategy| & The preemption strategy. \\
 \hline
-Service Area & Present & Holds the job currently in service (if any), \\
-             &         & and (\lstinline|RESUME|, \lstinline|RESTART| only) \\
-             &         & all {\em preempted\/} jobs \\
-             &         & that have not departed yet (if any). \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
+\lstinline|JobsInWaitingArea| & EE & \lstinline|Set<J>| & Jobs waiting in (1) {\em service-time\/} \\
+                              &    &                    & and (2) {\em arrival\/} order. \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operations} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Arrival & Yes & The queue accepts arrivals, \\
-        &     & preempting the job currently in service \\
-        &     & if the newly started job has required service time \\
-        &     & strictly smaller than the remaining service time \\
-        &     & of the job currently in service. \\
+\lstinline|Preempt| & I & \lstinline|double, J| & Job preemption at time.\\
 \hline
-Drop & Yes & Drops arriving jobs during QAVs and preempted jobs \\
-     &     & with \lstinline|DROP| preemption strategy. \\
+\lstinline|StartServiceChunk| & I & \lstinline|double, J| & Start service chunk for job at time.\\
 \hline
-Revocation & Yes & Jobs present can be revoked anytime. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
-        &                       & Starts waiting job(s) if SAC $> 0$. \\
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $=$ \lstinline|true|.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0 \Rightarrow$ \lstinline|JobsInWaitingArea| $= \emptyset$.} \\
 \hline
-Start & Yes & Starts jobs in waiting area if there are SACs. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Preemption & Yes & Job in service is preempted upon a new (non-dropped) arrival \\
-           & Yes & of a job with sufficiently small required service time. \\
-\hline
-Departure & Yes & Started and non-revoked jobs depart. \\
-          &     & Jobs with \lstinline|DROP| preemption strategy only \\
-          &     & depart if not preempted after start. \\
-\hline
-\end{tabular}
-
-\begin{tabular}{|l|l|l|}
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{SRTF} (continued)} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State  Invariants} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\multicolumn{3}{|l|}{If SAC $> 0$, the waiting area is empty.} \\
-\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of jobs.} \\
-\multicolumn{3}{|l|}{The server cannot be idle in the presence of preempted jobs in the service area.} \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\lstinline|EventList|          & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|               & \multicolumn{2}{|l|}{The name, default "SRTF[\lstinline|PreemptionStrategy|]";} \\
-                               & \multicolumn{2}{|l|}{non-\lstinline|null|; RW.} \\
-\hline
-\lstinline|PreemptionStrategy| & \multicolumn{2}{|l|}{The preemption strategy, default \lstinline|RESUME|;
-                                                      non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|NumberOfServers|    & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "SRTF[\lstinline|PreemptionStrategy|]".} \\
 \hline
 \end{tabular}
 
@@ -3580,138 +3570,162 @@ In Processor-Sharing (PS) queues,
   
 \subsection{The \lstinline{PS} \lstinline{SimQueue}}
 
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{PS}} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{PS}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Processor Sharing} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{|l}{The single-server processor-sharing (PS) queue.} \\
-            & \multicolumn{2}{l|}{Distributes its capacity equally among started jobs.} \\
+\multicolumn{4}{|l|}{\em Serves all started jobs simultaneously at equal rates until completion} \\
+\multicolumn{4}{|l|}{\em with a single server and infinite buffer size.} \\
+\multicolumn{4}{|l|}{\em Jobs are started in arrival order at the earliest opportunity.} \\
+\multicolumn{4}{|l|}{\em The server can execute an arbitrary number of jobs simultaneously.} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs are taken into \\
-            &                  & service immediately. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Waiting Area & Present & Infinite waiting area, only used for SAC, FIFO. \\
+\lstinline|BufferSize|      & F & \lstinline|Integer.MAX_VALUE|
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
-    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\lstinline|NumberOfServers|    & F & $1$
+                               & The number of servers. \\
 \hline
-Service Area & Present & Holds the job currently in service (if any). \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $=$ \lstinline|true|.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0 \Rightarrow$ \lstinline|JobsInWaitingArea| $= \emptyset$.} \\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Arrival & Yes & The queue accepts arrivals. \\
-\hline
-Drop & Yes & Drops arriving jobs during QAVs. \\
-\hline
-Revocation & Yes & Jobs present can be revoked anytime. \\
-\hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
-        &                       & Starts waiting job(s) if SAC $> 0$. \\
-\hline
-Start & Yes & Starts jobs in waiting area if there are SACs. \\
-\hline
-Departure & Yes & Started and non-revoked jobs depart. \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State  Invariants} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\multicolumn{3}{|l|}{If SAC $> 0$, the waiting area is empty.} \\
-\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of jobs.} \\
-\multicolumn{3}{|l|}{The server cannot be idle in the presence jobs in the service area.} \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "PS"; non-\lstinline|null|; RW.} \\
-\hline
-\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "PS".} \\
 \hline
 \end{tabular}
 
 \subsection{The \lstinline{CUPS} \lstinline{SimQueue}}
 
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\lstinline[basicstyle=\large]{CUPS}} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{CUPS}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Catch-Up Processor-Sharing} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Description & \multicolumn{2}{l|}{The single-server "catch-up" processor-sharing queue.} \\
-            & \multicolumn{2}{l|}{Distributes its capacity equally among started jobs} \\
-            & \multicolumn{2}{l|}{with the least obtained service times.} \\
+\multicolumn{4}{|l|}{\em Serves all started jobs with least obtained service times simultaneously} \\
+\multicolumn{4}{|l|}{\em at equal rates until (1) completion, or (2) another job starts or} \\
+\multicolumn{4}{|l|}{\em (3) the jobs in execution "catch-up"} \\
+\multicolumn{4}{|l|}{\em in terms of obtained service time with another set of jobs in service,} \\
+\multicolumn{4}{|l|}{\em with a single server and infinite buffer size.} \\
+\multicolumn{4}{|l|}{\em Jobs are started in arrival order at the earliest opportunity.} \\
+\multicolumn{4}{|l|}{\em The server can execute an arbitrary number of jobs simultaneously.} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State} \\
-\multicolumn{3}{|c|}{} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-QAV & \lstinline|false|/\lstinline|true| & Drops arriving jobs during QAVs. \\
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
 \hline
-NoWaitArmed & \lstinline|true| & Since non-dropped arriving jobs are taken into \\
-            &                  & service immediately. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Waiting Area & Present & Infinite waiting area, only used for SAC, FIFO. \\
+\lstinline|BufferSize|      & F & \lstinline|Integer.MAX_VALUE|
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
 \hline
-SAC & $\{0, 1, 2, \ldots\}$ & The remaining number of jobs that can start. \\
-    &                       & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\lstinline|NumberOfServers|    & F & $1$
+                               & The number of servers. \\
 \hline
-Service Area & Present & Holds the job currently in service (if any). \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operations} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State Operations} \\
-\multicolumn{3}{|c|}{} \\
+\lstinline|CatchUp| & I & \lstinline|double| & Catch-up at time.\\
 \hline
-Set QAV & \lstinline|false|/\lstinline|true| & Ends/starts a QAV. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Arrival & Yes & The queue accepts arrivals. \\
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $=$ \lstinline|true|.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0 \Rightarrow$ \lstinline|JobsInWaitingArea| $= \emptyset$.} \\
 \hline
-Drop & Yes & Drops arriving jobs during QAVs. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Internal Schedulable Events} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Revocation & Yes & Jobs present can be revoked anytime. \\
+\lstinline|CatchUpEvent| & \multicolumn{3}{|l|}{A "catch-up" event.} \\
 \hline
-Set SAC & $\{0, 1, 2, \ldots\}$ & Sets/overwrites SAC; \lstinline|Integer.MAX_VALUE| $== +\infty$. \\
-        &                       & Starts waiting job(s) if SAC $> 0$. \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
 \hline
-Start & Yes & Starts jobs in waiting area if there are SACs. \\
-\hline
-Departure & Yes & Started and non-revoked jobs depart. \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf State  Invariants} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\multicolumn{3}{|l|}{If SAC $> 0$, the waiting area is empty.} \\
-\multicolumn{3}{|l|}{If SAC $> 0$, the server cannot be idle in the presence of jobs.} \\
-\multicolumn{3}{|l|}{The server cannot be idle in the presence jobs in the service area.} \\
-\hline
-\multicolumn{3}{|c|}{} \\
-\multicolumn{3}{|c|}{\bf Properties} \\
-\multicolumn{3}{|c|}{} \\
-\hline
-\lstinline|EventList|       & \multicolumn{2}{|l|}{The event list; non-\lstinline|null|; RO.} \\
-\hline
-\lstinline|Name|            & \multicolumn{2}{|l|}{The name, default "CUPS"; non-\lstinline|null|; RW.} \\
-\hline
-\lstinline|NumberOfServers| & \multicolumn{2}{|l|}{The number of servers; always $1$; RO.} \\
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "CUPS".} \\
 \hline
 \end{tabular}
 
-\subsection{The \lstinline{SoPS} \lstinline{SimQueue}}
+\subsection{The \lstinline{SocPS} \lstinline{SimQueue}}
+
+\begin{tabular}{|l|l|l|l|}
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\lstinline[basicstyle=\large]{SocPS}} \\
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{Social Processor-Sharing} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\em Serves all started jobs simultaneously such that their departures times are equal,} \\
+\multicolumn{4}{|l|}{\em distributing its service capacity among those job to that effect,} \\
+\multicolumn{4}{|l|}{\em with a single server and infinite buffer size.} \\
+\multicolumn{4}{|l|}{\em The service rate of a job in the service area} \\
+\multicolumn{4}{|l|}{\em is linearly proportional to its remaining service time.} \\
+\multicolumn{4}{|l|}{\em Jobs are started in arrival order at the earliest opportunity.} \\
+\multicolumn{4}{|l|}{\em The server can execute an arbitrary number of jobs simultaneously.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Super} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|SimQueue| & \multicolumn{3}{|l|}{See Section \ref{simqueue-generic}.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Essential Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|BufferSize|      & F & \lstinline|Integer.MAX_VALUE|
+                            & The buffer size; \\
+                        & & & \lstinline|Integer.MAX_VALUE| is treated as $+\infty$. \\
+\hline
+\lstinline|NumberOfServers|    & F & $1$
+                               & The number of servers. \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf State  Invariants} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\multicolumn{4}{|l|}{\lstinline|StartArmed| $=$ \lstinline|true|.} \\
+\multicolumn{4}{|l|}{\lstinline|ServerAccessCredits| $> 0 \Rightarrow$ \lstinline|JobsInWaitingArea| $= \emptyset$.} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\bf Operational Properties} \\
+\multicolumn{4}{|c|}{} \\
+\hline
+\lstinline|Name| & \multicolumn{3}{|l|}{The name, default "SocPS".} \\
+\hline
+\end{tabular}
 
 \chapter{Multiclass Queues and Jobs}
 
@@ -3754,7 +3768,7 @@ Using the previous chapters,
 The output of the program is shown in Listing \ref{compExampleTandem1_out}.
 
 \begin{lstlisting}[
-% XXX Do now know how to use \lstinline inside the caption...
+% XXX Do not know how to use \lstinline inside the caption...
 caption={A tandem queue consisting of two P\_LCFS queues (using SimJob).},
 label=compExampleTandem1_main,
 basicstyle=\tiny
@@ -3807,7 +3821,6 @@ public static void main (final String[] args)
 \end{lstlisting}
 
 \begin{lstlisting}[
-% XXX Do now know how to use \lstinline inside the caption...
 caption={Output of the program in Listing \ref{compExampleTandem1_main}.},
 label=compExampleTandem1_out,
 basicstyle=\tiny
@@ -3898,7 +3911,7 @@ All we have to do is listen to departure events
   on \lstinline|Q1| and then schedule an arrival event at \lstinline|Q2|.
 
 \begin{lstlisting}[
-% XXX Do now know how to use \lstinline inside the caption...
+% XXX Do not know how to use \lstinline inside the caption...
 caption={A tandem queue consisting of two P\_LCFS queues (using SimQueue).},
 label=compExampleTandem2_main,
 basicstyle=\tiny
@@ -3954,7 +3967,7 @@ In Listing \ref{compExampleTandem3_main} we show this
   with its output in \ref{compExampleTandem3_out}.
 
 \begin{lstlisting}[
-% XXX Do now know how to use \lstinline inside the caption...
+% XXX Do not know how to use \lstinline inside the caption...
 caption={A tandem queue consisting of two P\_LCFS queues (using BlackTandemSimQueue).},
 label=compExampleTandem3_main,
 basicstyle=\tiny
@@ -3982,7 +3995,6 @@ public static void main (final String[] args)
 \end{lstlisting}
 
 \begin{lstlisting}[
-% XXX Do now know how to use \lstinline inside the caption...
 caption={Output of the program in Listing \ref{compExampleTandem3_main}.},
 label=compExampleTandem3_out,
 basicstyle=\tiny
@@ -4239,7 +4251,7 @@ In addition, we left out some sanity checking,
   (should not be in the past).
 
 \begin{lstlisting}[
-% XXX Do now know how to use \lstinline inside the caption...
+% XXX Do not know how to use \lstinline inside the caption...
 caption={Simple listener for maintaining and calculating
   the average number of jobs at a SimQueue.},
 label=statAvgJ_listener,
@@ -4479,7 +4491,7 @@ To illustrate its use,
   now using \lstinline|AbstractSimQueueStat|.
 
 \begin{lstlisting}[
-% XXX Do now know how to use \lstinline inside the caption...
+% XXX Do not know how to use \lstinline inside the caption...
 caption={Using AbstractSimQueueStat for a listener for maintaining and calculating
   the average number of jobs at a SimQueue.},
 label=statAbstractSimQueueStat_listener,
@@ -4636,7 +4648,7 @@ Note that the number of updates is also available from \lstinline-SimpleSimQueue
   which is very handy for detailed update-related debugging on \lstinline-SimQueue- implementations.
 
 \begin{lstlisting}[
-% XXX Do now know how to use \lstinline inside the caption...
+% XXX Do not know how to use \lstinline inside the caption...
 caption=Example program for obtaing basic statistics using SimpleSimQueueStat.,
 label=statSimpleSimQueueStat_main,
 basicstyle=\tiny
@@ -4764,7 +4776,7 @@ Note that only double values (or values that can be cast to double)
   are supported.
 
 \begin{lstlisting}[
-% XXX Do now know how to use \lstinline inside the caption...
+% XXX Do not know how to use \lstinline inside the caption...
 caption=The SimQueueProbe interface.,
 label=statAutoSimQueueStat_SimQueueProbe,
 basicstyle=\tiny
@@ -4801,7 +4813,7 @@ Finally, note that \lstinline|AutoSimQueueStat| features a method \lstinline|rep
   for quickly reporting the calculated statistics for all registered probes.
 
 \begin{lstlisting}[
-% XXX Do now know how to use \lstinline inside the caption...
+% XXX Do not know how to use \lstinline inside the caption...
 caption=Example program for obtaing statistics using AutoSimQueueStat.,
 label=statAutoSimQueueStat_main,
 basicstyle=\tiny
@@ -4894,7 +4906,7 @@ In Listing \ref{statSimpleSimQueueVisitsStat_main} below we provide an example o
   \ref{statSimpleSimQueueVisitsStat_out}.
 
 \begin{lstlisting}[
-% XXX Do now know how to use \lstinline inside the caption...
+% XXX Do not know how to use \lstinline inside the caption...
 caption=Example program for obtaing basic statistics using SimpleSimQueueVisitsStat.,
 label=statSimpleSimQueueVisitsStat_main,
 basicstyle=\tiny
