@@ -87,7 +87,10 @@ implements SimEntity<J, Q>
     registerNotificationType (SimEntitySimpleEventType.START, this::fireStart);
     registerNotificationType (SimEntitySimpleEventType.DEPARTURE, this::fireDeparture);
     if (this.eventList != null)
+    {
+      this.lastUpdateTime = this.eventList.getTime ();
       this.eventList.addListener (this);
+    }
     if ((this instanceof SimQueue) && (this instanceof SimJob))
       throw new IllegalArgumentException ("Trying to instantiate a SimEntity that is both a SimJob and a SimQueue!");
   }
