@@ -216,12 +216,12 @@ extends DefaultSimQueueListener<J, Q>
     final SimEntity entity,
     final List<Map<SimEntitySimpleEventType.Member, J>> notifications)
   {
-    if (entity == null
-      || (! (entity instanceof SimQueue))
-      || (! this.queues.contains ((Q) entity))
-      || notifications == null
-      || notifications.isEmpty ())
-      throw new IllegalArgumentException ();
+    if (entity == null || ! (entity instanceof SimQueue))
+      throw new IllegalArgumentException ("Null entity or entity that is not a queue: " + entity + ".");
+    if (! this.queues.contains ((Q) entity))
+      throw new IllegalArgumentException ("Queue supplied is not a sub-queue: " + entity + ".");
+    if (notifications == null || notifications.isEmpty ())
+      throw new IllegalArgumentException ("Null or empty notifications: " + notifications + ".");
     for (final Map<SimEntitySimpleEventType.Member, J> notification : notifications)
       if (notification == null || notification.size () != 1 || notification.containsKey (null))
         throw new IllegalArgumentException ();
