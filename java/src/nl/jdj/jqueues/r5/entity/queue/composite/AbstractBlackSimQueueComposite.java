@@ -289,7 +289,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * 
    * @param delegateJob The delegate job.
    * @param queue       The queue at which the delegate job currently resides,
-   *                    {@code null} if it is supposed to reside on <i>none</i> of the )sub-)queues..
+   *                    {@code null} if it is supposed to reside on <i>none</i> of the (sub-)queues..
    * 
    * @return The real job.
    * 
