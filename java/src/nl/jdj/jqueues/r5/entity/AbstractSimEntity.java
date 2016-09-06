@@ -1071,8 +1071,11 @@ implements SimEntity<J, Q>
   /** Fires and locks the pending notifications to listeners.
    * 
    * <p>
-   * Fires, if present, pre-notification hooks and post-notification actions.
+   * Fires, if present, pre-notification hooks and post-notification actions, even if the set of pending notifications is empty.
    * The post-notification actions are cleared.
+   * 
+   * <p>
+   * Note that listeners are <i>not</i> notified with empty notification sets!
    * 
    * @throws IllegalStateException If the time of pending notifications is not equal to {@link #getLastUpdateTime},
    *                               if this entity is currently firing notifications (already).
@@ -1094,55 +1097,58 @@ implements SimEntity<J, Q>
     if (! isResetNotification)
       for (final PreNotificationHook preNotificationHook : this.preNotificationHooks)
         preNotificationHook.hook (this.pendingNotifications);
-    final double time = getLastUpdateTime ();
-    // Respect policy for unknown notification types.
-    for (final Map<SimEntitySimpleEventType.Member, J> notification : this.pendingNotifications)
+    if (! this.pendingNotifications.isEmpty ())
     {
-      final SimEntitySimpleEventType.Member notificationType = notification.keySet ().iterator ().next ();
-      if (! this.notificationMap.containsKey (notificationType))
-        switch (this.unknownNotificationTypePolicy)
-        {
-          case FIRE_AND_WARN:
-            LOGGER.log (Level.WARNING, "Unknown notification type {0}.", notificationType);
-            break;
-          case FIRE_SILENTLY:
-            break;
-          case ERROR:
-            throw new IllegalArgumentException ();
-          default:
-            throw new RuntimeException ();
-        }
-    }    
-    for (SimEntityListener l : this.simEntityListeners)
-      l.notifyStateChanged (time, this, this.pendingNotifications);
-    for (final Map<SimEntitySimpleEventType.Member, J> notification : this.pendingNotifications)
-    {
-      final SimEntitySimpleEventType.Member notificationType = notification.keySet ().iterator ().next ();
-      final J job = notification.values ().iterator ().next ();
-      if (this.notificationMap.containsKey (notificationType)
-      &&  this.notificationMap.get (notificationType) != null)
-        this.notificationMap.get (notificationType).fire (job);
-    }
-    if (this instanceof SimQueue)
-    {
-      final Map<J, List<Map<SimEntitySimpleEventType.Member, J>>> jobNotifications = new LinkedHashMap<> ();
+      final double time = getLastUpdateTime ();
+      // Respect policy for unknown notification types.
       for (final Map<SimEntitySimpleEventType.Member, J> notification : this.pendingNotifications)
       {
-        final J job = notification.values ().iterator ().next ();
-        if (job != null && (job instanceof AbstractSimEntity))
-        {
-          if (! jobNotifications.containsKey (job))
-            jobNotifications.put (job, new ArrayList<> ());
-          jobNotifications.get (job).add (notification);
-        }
-      }
-      for (final Map.Entry<J, List<Map<SimEntitySimpleEventType.Member, J>>> entry : jobNotifications.entrySet ())
+        final SimEntitySimpleEventType.Member notificationType = notification.keySet ().iterator ().next ();
+        if (! this.notificationMap.containsKey (notificationType))
+          switch (this.unknownNotificationTypePolicy)
+          {
+            case FIRE_AND_WARN:
+              LOGGER.log (Level.WARNING, "Unknown notification type {0}.", notificationType);
+              break;
+            case FIRE_SILENTLY:
+              break;
+            case ERROR:
+              throw new IllegalArgumentException ();
+            default:
+              throw new RuntimeException ();
+          }
+      }    
+      for (SimEntityListener l : this.simEntityListeners)
+        l.notifyStateChanged (time, this, this.pendingNotifications);
+      for (final Map<SimEntitySimpleEventType.Member, J> notification : this.pendingNotifications)
       {
-        final J job = entry.getKey ();
-        final List<Map<SimEntitySimpleEventType.Member, J>> notifications = entry.getValue ();
-        final Set<SimEntityListener> listeners = job.getSimEntityListeners ();
-        for (final SimEntityListener l : listeners)
-          l.notifyStateChanged (time, job, notifications);
+        final SimEntitySimpleEventType.Member notificationType = notification.keySet ().iterator ().next ();
+        final J job = notification.values ().iterator ().next ();
+        if (this.notificationMap.containsKey (notificationType)
+        &&  this.notificationMap.get (notificationType) != null)
+          this.notificationMap.get (notificationType).fire (job);
+      }
+      if (this instanceof SimQueue)
+      {
+        final Map<J, List<Map<SimEntitySimpleEventType.Member, J>>> jobNotifications = new LinkedHashMap<> ();
+        for (final Map<SimEntitySimpleEventType.Member, J> notification : this.pendingNotifications)
+        {
+          final J job = notification.values ().iterator ().next ();
+          if (job != null && (job instanceof AbstractSimEntity))
+          {
+            if (! jobNotifications.containsKey (job))
+              jobNotifications.put (job, new ArrayList<> ());
+            jobNotifications.get (job).add (notification);
+          }
+        }
+        for (final Map.Entry<J, List<Map<SimEntitySimpleEventType.Member, J>>> entry : jobNotifications.entrySet ())
+        {
+          final J job = entry.getKey ();
+          final List<Map<SimEntitySimpleEventType.Member, J>> notifications = entry.getValue ();
+          final Set<SimEntityListener> listeners = job.getSimEntityListeners ();
+          for (final SimEntityListener l : listeners)
+            l.notifyStateChanged (time, job, notifications);
+        }
       }
     }
     this.firingPendingNotifications = false;
