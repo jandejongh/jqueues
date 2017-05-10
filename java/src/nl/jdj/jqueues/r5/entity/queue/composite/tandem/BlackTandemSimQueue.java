@@ -15,7 +15,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * In a tandem queue, a (delegate) job visits all sub-queues once in a predetermined sequence.
  * 
  * <p>
- * Under the hood, a delegate job for each {@link SimJob} visits each of the
+ * In a <i>black</i> tandem queue,
+ * under the hood, a delegate job for each {@link SimJob} visits each of the
  * embedded {@link SimQueue}s in a predetermined sequence, as controlled
  * by a the queues' order in the set in which they are offered upon construction
  * of a {@link BlackTandemSimQueue}.

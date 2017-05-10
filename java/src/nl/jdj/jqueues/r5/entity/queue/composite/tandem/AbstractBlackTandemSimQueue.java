@@ -11,13 +11,14 @@ import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A partial implementation of a tandem (serial) queue.
+/** A partial implementation of a black tandem (serial) queue.
  * 
  * <p>
  * In a tandem queue, a (delegate) job visits all sub-queues once in a predetermined sequence.
  * 
  * <p>
- * Under the hood, a delegate job for each {@link SimJob} visits each of the
+ * In a <i>black</i> tandem queue,
+ * under the hood, a delegate job for each {@link SimJob} visits each of the
  * embedded {@link SimQueue}s in a predetermined sequence, as controlled
  * by the (deterministic) iteration order in the set offered upon construction.
  * 
