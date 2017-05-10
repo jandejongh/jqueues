@@ -32,7 +32,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * The major functional "degrees of freedom" of an {@link AbstractBlackSimQueueComposite} are
  * (apart from other super-class aspects like naming and delegate-job creation)
  * the {@link SimQueueSelector} passed upon construction,
- * its {@link StartModel} (the default is {@link StartModel#LOCAL},
+ * its {@link StartModel} (the default is {@link StartModel#LOCAL}),
  * and its drop-destination queue, as given by {@link #getDropDestinationQueue}.
  * 
  * <p>
