@@ -8,6 +8,7 @@ import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
+import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueComposite;
 import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
 import nl.jdj.jqueues.r5.entity.queue.composite.jackson.BlackJacksonSimQueueNetwork;
 import nl.jdj.jqueues.r5.entity.queue.composite.parallel.BlackParallelSimQueues;
@@ -24,16 +25,16 @@ import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** Example code for <code>nl.jdj.jqueues.composite</code>.
+/** Example code for <code>nl.jdj.jqueues.composite</code> for black {@link SimQueueComposite}s.
  * 
  */
-public final class CompositeExample
+public final class BlackCompositeSimQueueExample
 {
   
   /** Prevents instantiation.
    * 
    */
-  private CompositeExample ()
+  private BlackCompositeSimQueueExample ()
   {
   }
   
@@ -79,7 +80,7 @@ public final class CompositeExample
    */
   public static void main (String[] args)
   {
-    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.composite PACKAGE ===");
+    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.composite (for black composite queues) PACKAGE ===");
     System.out.println ("-> Creating jobs...");
     final List<DefaultExampleSimJob> jobList = new ArrayList<>  ();
     for (int n = 1; n <= 10; n++)
@@ -92,7 +93,7 @@ public final class CompositeExample
     System.out.println ("-> Creating LCFS queue...");
     final SimQueue lcfsQueue = new LCFS (el);
     lcfsQueue.registerSimEntityListener (new StdOutSimQueueListener ());
-    System.out.println ("-> Creating Tandem queue...");
+    System.out.println ("-> Creating (black) Tandem queue...");
     final Set<SimQueue> set = new LinkedHashSet<> ();
     set.add (fcfsQueue);
     set.add (lcfsQueue);
@@ -107,7 +108,7 @@ public final class CompositeExample
       };
     final SimQueue tandemQueue = new BlackTandemSimQueue (el, set, delegateSimJobFactory);
     tandemQueue.registerSimEntityListener (new StdOutSimQueueListener ());
-    System.out.println ("-> Submitting jobs to Tandem queue...");
+    System.out.println ("-> Submitting jobs to (black) Tandem queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
       final SimJob j = jobList.get (i);
@@ -131,7 +132,7 @@ public final class CompositeExample
     System.out.println ("-> Creating LCFS queue...");
     final SimQueue lcfsQueue2 = new LCFS (el);
     lcfsQueue2.registerSimEntityListener (new StdOutSimQueueListener ());
-    System.out.println ("-> Creating Parallel queue...");
+    System.out.println ("-> Creating (black) Parallel queue...");
     final Set<SimQueue> set2 = new LinkedHashSet<> ();
     set2.add (fcfsQueue2);
     set2.add (lcfsQueue2);
@@ -158,7 +159,7 @@ public final class CompositeExample
         }
       }, delegateSimJobFactory);
     parallelQueue.registerSimEntityListener (new StdOutSimQueueListener ());
-    System.out.println ("-> Submitting jobs to Parallel queue...");
+    System.out.println ("-> Submitting jobs to (black) Parallel queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
       final SimJob j = jobList.get (i);
@@ -179,10 +180,10 @@ public final class CompositeExample
     System.out.println ("-> Creating FCFS queue...");
     final SimQueue fcfsQueue3 = new FCFS (el);
     fcfsQueue3.registerSimEntityListener (new StdOutSimQueueListener ());
-    System.out.println ("-> Creating NumVisits feedback queue (5 visits)...");
+    System.out.println ("-> Creating (black) NumVisits feedback queue (5 visits)...");
     final SimQueue numVisitsFBQueue = new BlackNumVisitsFeedbackSimQueue (el, fcfsQueue3, 5, delegateSimJobFactory);
     numVisitsFBQueue.registerSimEntityListener (new StdOutSimQueueListener ());
-    System.out.println ("-> Submitting jobs to NumVisitsFB queue...");
+    System.out.println ("-> Submitting jobs to (black) NumVisitsFB queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
       final SimJob j = jobList.get (i);
@@ -203,7 +204,7 @@ public final class CompositeExample
     System.out.println ("-> Creating RANDOM queue...");
     final SimQueue randomQueue = new RANDOM (el);
     randomQueue.registerSimEntityListener (new StdOutSimQueueListener ());
-    System.out.println ("-> Creating probabilistic feedback queue (p=50%)...");
+    System.out.println ("-> Creating (black) probabilistic feedback queue (p=50%)...");
     final SimQueue pFBQueue = new BlackProbabilisticFeedbackSimQueue (el, randomQueue, 0.5, null, delegateSimJobFactory);
     pFBQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to probabilistic feedback queue...");
@@ -248,11 +249,11 @@ public final class CompositeExample
                                                       { 0.2, 0.2, 0.2, 0.2 },
                                                       { 0.0, 0.0, 0.4, 0.4 },
                                                       { 0.0, 0.0, 0.4, 0.4 }};
-    System.out.println ("-> Creating Jackson queueing network...");
+    System.out.println ("-> Creating (black) Jackson queueing network...");
     final SimQueue jacksonQueue =
       new BlackJacksonSimQueueNetwork (el, jacksonQueues, pdfArrival, pdfTransition, null, delegateSimJobFactory);
     jacksonQueue.registerSimEntityListener (new StdOutSimQueueListener ());
-    System.out.println ("-> Submitting jobs to Jackson queueing network...");
+    System.out.println ("-> Submitting jobs to (black) Jackson queueing network...");
     for (int i = 0; i < jobList.size (); i++)
     {
       final SimJob j = jobList.get (i);
