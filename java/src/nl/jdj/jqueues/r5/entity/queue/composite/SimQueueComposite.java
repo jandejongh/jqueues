@@ -22,7 +22,7 @@ import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackTandemSimQueue;
  *     to represent visiting jobs; see {@link BlackSimQueueComposite}.
  * <li>A <i>gray</i> composite queue lets jobs visit the sub-queues directly, but adds zero-time visits to itself
  *     at the start and the end of a job visit; see {@link GraySimQueueComposite}.
- * <li>A <i>white</i> composite queue immediately redirects a visiting job to the first sub-queue to visit;
+ * <li>A <i>white</i> composite queue immediately drops and redirects a visiting job to the first sub-queue to visit;
  *     jobs never actually visit a white composite queue; {@link WhiteSimQueueComposite}.
  * </ul>
  * 
