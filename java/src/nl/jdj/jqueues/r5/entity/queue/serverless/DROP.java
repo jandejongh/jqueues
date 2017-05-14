@@ -116,8 +116,6 @@ extends AbstractServerlessSimQueue<J, Q>
   
   /** Removes the job from the {@link #jobQueue}.
    * 
-   * @throws IllegalStateException Always, as this method is not expected to be invoked.
-   * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
