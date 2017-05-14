@@ -182,6 +182,8 @@ implements GraySimQueueComposite<DQ, J, Q>
 
   /** Returns {@code false} since a gray composite queue is server-less.
    * 
+   * @return {@code false}.
+   * 
    * @see SimQueue#isStartArmed
    * 
    */
@@ -417,9 +419,6 @@ implements GraySimQueueComposite<DQ, J, Q>
   /** Processes the pending atomic notifications from the sub-queues, one at a time (core sub-queue notification processor).
    * 
    * <p>
-   * XXX FIX THIS COMMENT!
-   * 
-   * <p>
    * Core method for reacting to {@link SimEntityListener#notifyStateChanged} notifications from all sub-queues.
    * This method is registered as the processor for an anonymous {@link MultiSimQueueNotificationProcessor}
    * (for all sub-queues) created upon construction,
@@ -475,7 +474,6 @@ implements GraySimQueueComposite<DQ, J, Q>
    * @see MultiSimQueueNotificationProcessor
    * @see MultiSimQueueNotificationProcessor.Processor
    * @see MultiSimQueueNotificationProcessor#setProcessor
-   * @see #sanitySubQueueNotification
    * @see SimEntitySimpleEventType#RESET
    * @see SimEntitySimpleEventType#QAV_START
    * @see SimEntitySimpleEventType#QAV_END
@@ -487,7 +485,6 @@ implements GraySimQueueComposite<DQ, J, Q>
    * @see SimEntitySimpleEventType#DEPARTURE
    * @see #addPendingNotification
    * @see SimQueue#arrive
-   * @see #start
    * @see #selectNextQueue
    * @see #depart
    * @see #clearAndUnlockPendingNotificationsIfLocked
@@ -550,10 +547,10 @@ implements GraySimQueueComposite<DQ, J, Q>
         else if (notificationType == SimEntitySimpleEventType.DEPARTURE)
         {
           final SimQueue<J, DQ> nextQueue = selectNextQueue (notificationTime, job, subQueue);
-          if (nextQueue == null)
-            AbstractGraySimQueueComposite.this.arrive (notificationTime, job);
-          else
+          if (nextQueue != null)
             nextQueue.arrive (notificationTime, job);
+          else
+            AbstractGraySimQueueComposite.this.arrive (notificationTime, job);
         }
       }
     }
