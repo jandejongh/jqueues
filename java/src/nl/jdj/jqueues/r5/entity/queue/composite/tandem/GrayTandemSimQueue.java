@@ -3,37 +3,28 @@ package nl.jdj.jqueues.r5.entity.queue.composite.tandem;
 import java.util.Set;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
-import nl.jdj.jqueues.r5.entity.queue.composite.DefaultDelegateSimJobFactory;
-import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
+import nl.jdj.jqueues.r5.entity.queue.composite.GraySimQueueComposite;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** Black tandem (serial) queue.
+/** Gray tandem (serial) queue.
  * 
  * <p>
  * In a tandem queue, a (delegate) job visits all sub-queues once in a predetermined sequence.
  * 
  * <p>
- * In a <i>black</i> tandem queue,
- * under the hood, a so-called <i>delegate job</i> for each {@link SimJob} visits each of the
- * embedded {@link SimQueue}s in a predetermined sequence, as controlled
- * by the (deterministic) iteration order in the set offered upon construction
- * of a {@link BlackTandemSimQueue}.
- * 
- * <p>
- * After the delegate job departs from the last queue, the "real" job departs
- * from the {@link BlackTandemSimQueue}.
+ * In a <i>gray</i> tandem queue,
+ * jobs first visit the composite gray {@link SimQueue}, then each of the
+ * embedded {@link SimQueue}s in a predetermined sequence, and, finally,
+ * the composite queue again.
  *
- * @param <DJ> The delegate-job type.
- * @param <DQ> The queue-type for delegate jobs.
+ * @param <DQ> The (base) type for sub-queues.
  * @param <J>  The job type.
  * @param <Q>  The queue type for jobs.
  * 
  */
-public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends BlackTandemSimQueue>
-  extends AbstractBlackTandemSimQueue<DJ, DQ, J, Q>
-  implements BlackSimQueueComposite<DJ, DQ, J, Q>
+public class GrayTandemSimQueue<DQ extends SimQueue, J extends SimJob, Q extends GrayTandemSimQueue>
+  extends AbstractGrayTandemSimQueue<DQ, J, Q>
+  implements GraySimQueueComposite<DQ, J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,45 +33,35 @@ public class BlackTandemSimQueue<DJ extends AbstractSimJob, DQ extends SimQueue,
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a black tandem queue given an event list and a list of queues to put in sequence.
+  /** Creates a gray tandem queue given an event list and a list of queues to put in sequence.
    *
    * @param eventList The event list to use.
    * @param queues    The queues, an iteration over the set must return (deterministically) the non-<code>null</code> queues
    *                  in intended order of visit.
-   * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
    *
    * @throws IllegalArgumentException If the event list is <code>null</code>,
    *                                  the <code>queues</code> argument is <code>null</code>,
    *                                  or if it contains a <code>null</code> entry.
    * 
-   * @see DelegateSimJobFactory
-   * @see DefaultDelegateSimJobFactory
-   * 
    */
-  public BlackTandemSimQueue
-  (final SimEventList eventList, final Set<DQ> queues, final DelegateSimJobFactory delegateSimJobFactory)
+  public GrayTandemSimQueue
+  (final SimEventList eventList, final Set<DQ> queues)
   {
-    super (eventList, queues, delegateSimJobFactory);
+    super (eventList, queues);
   }
 
-  /** Returns a new {@link BlackTandemSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
-   *  and the same delegate-job factory.
+  /** Returns a new {@link GrayTandemSimQueue} object on the same {@link SimEventList} with the same sub-queues.
    * 
-   * @return A new {@link BlackTandemSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
-   *           and the same delegate-job factory.
-   * 
-   * @throws UnsupportedOperationException If the encapsulated queues could not be copied through {@link SimQueue#getCopySimQueue}.
+   * @return A new {@link GrayTandemSimQueue} object on the same {@link SimEventList} with the same sub-queues.
    * 
    * @see #getEventList
-   * @see #getCopySubSimQueues
-   * @see #getDelegateSimJobFactory
+   * @see #getQueues
    * 
    */
   @Override
-  public BlackTandemSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  public GrayTandemSimQueue<DQ, J, Q> getCopySimQueue ()
   {
-    final Set<DQ> queuesCopy = getCopySubSimQueues ();
-    return new BlackTandemSimQueue<> (getEventList (), queuesCopy, getDelegateSimJobFactory ());
+    return new GrayTandemSimQueue<> (getEventList (), getQueues ());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

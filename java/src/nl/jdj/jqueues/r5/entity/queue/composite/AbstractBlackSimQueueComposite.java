@@ -109,6 +109,51 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // COLOR
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Returns {@link Color#BLACK}.
+   * 
+   * @return {@link Color#BLACK}.
+   * 
+   */
+  @Override
+  public final Color getColor ()
+  {
+    return Color.BLACK;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // MANAGED JOBS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Returns {@link #getJobs}.
+   * 
+   * @return {@link #getJobs}.
+   * 
+   */
+  @Override
+  public final Set<J> getManagedJobs ()
+  {
+    return getJobs ();
+  }
+
+  /** Returns {@link #getNumberOfJobs}.
+   * 
+   * @return {@link #getNumberOfJobs}.
+   * 
+   */
+  @Override
+  public final int getNumberOfManagedJobs ()
+  {
+    return getNumberOfJobs ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // START MODEL
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,7 +341,7 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * @throws IllegalStateException If sanity checks fail, including the case where a corresponding real job could not be found,
    *                               or where assumption on the delegate-job whereabout proves to be wrong.
    * 
-   * @see #getRealJob(nl.jdj.jqueues.r5.SimJob)
+   * @see #getRealJob(SimJob)
    * 
    */
   protected final J getRealJob (final DJ delegateJob, final DQ queue)
@@ -374,7 +419,6 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
     this.delegateSimJobMap.put (realJob, delegateSimJob);
     this.realSimJobMap.put (delegateSimJob, realJob);
     this.jobQueue.add (realJob);
-    
   }
 
   /** Removes a real job and a delegate job from the internal data structures.
@@ -1023,10 +1067,11 @@ implements BlackSimQueueComposite<DJ, DQ, J, Q>
    * While processing, new notifications may be added to the list; the list is processed until it is empty.
    * 
    * <p>
-   * However, before processing any event it checks for {@link SimEntitySimpleEventType#RESET}
+   * However, before processing any event, it checks for {@link SimEntitySimpleEventType#RESET}
    * (sub-)notifications. If it finds <i>any</i>, the notifications list is cleared and immediate return from this method follows.
    * 
-   * Otherwise, this method processes the notifications are described;
+   * <p>
+   * Otherwise, this method processes the notifications as described below;
    * the remainder of the method is encapsulated in a
    * {@link #clearAndUnlockPendingNotificationsIfLocked} and {@link #fireAndLockPendingNotifications} pair,
    * to make sure we create atomic notifications in case of a top-level event.

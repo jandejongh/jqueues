@@ -18,7 +18,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * <p>
  * In a <i>black</i> tandem queue,
- * under the hood, a delegate job for each {@link SimJob} visits each of the
+ * under the hood, a so-called <i>delegate job</i> for each {@link SimJob} visits each of the
  * embedded {@link SimQueue}s in a predetermined sequence, as controlled
  * by the (deterministic) iteration order in the set offered upon construction.
  * 

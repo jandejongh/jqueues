@@ -23,18 +23,23 @@ import nl.jdj.jqueues.r5.SimQueue;
  * <li>a special notification to registered {@link SimQueueCompositeListener}s
  *     to distinguish between the two departure events.
  * </ul>
+ *
+ * <p>
+ * Note that a gray composite queue is "server-less", i.e.,
+ * it has no service area.
  * 
  * <p>
  * Another distinction with black composite queues is that
  * gray queues allow other job to pass through its sub-queues;
  * in that sense, a gray composite queue does not "own" its sub-queues.
  * 
+ * @param <DQ> The (base) type for sub-queues.
  * @param <J>  The job type.
  * @param <Q>  The queue type for jobs.
  * 
  */
-public interface GraySimQueueComposite<J extends SimJob, Q extends SimQueue>
-extends SimQueueComposite<J, Q, J, Q>
+public interface GraySimQueueComposite<DQ extends SimQueue, J extends SimJob, Q extends GraySimQueueComposite>
+extends SimQueueComposite<J, DQ, J, Q>
 {
   
 }

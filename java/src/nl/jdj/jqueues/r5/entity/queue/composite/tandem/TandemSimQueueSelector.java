@@ -49,7 +49,7 @@ implements SimQueueSelector<J, DQ>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns the first {@link SimQueue} to visit by a delegate {@link SimJob}.
+  /** Returns the first {@link SimQueue} to visit by a (delegate) {@link SimJob}.
    * 
    * @return The first {@link SimQueue} returned by an iterator over the queue set,
    *         or <code>null</code> if that set is {@code null} or empty.
