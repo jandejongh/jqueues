@@ -3,10 +3,12 @@ package nl.jdj.jqueues.r5.entity.queue.composite;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import nl.jdj.jqueues.r5.SimEntityListener;
 import nl.jdj.jqueues.r5.SimJob;
 import nl.jdj.jqueues.r5.SimQueue;
 import nl.jdj.jqueues.r5.SimQueueListener;
 import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.extensions.composite.SimQueueCompositeSimpleEventType;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A partial implementation of a {@link SimQueueComposite}.
@@ -49,6 +51,12 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
       throw new IllegalArgumentException ();
     this.queues = queues;
     this.simQueueSelector = simQueueSelector;
+    registerNotificationType (SimQueueCompositeSimpleEventType.PSEUDO_ARRIVAL, this::firePseudoArrival);
+    registerNotificationType (SimQueueCompositeSimpleEventType.PSEUDO_DROP, this::firePseudoDrop);
+    registerNotificationType (SimQueueCompositeSimpleEventType.PSEUDO_REVOCATION, this::firePseudoRevocation);
+    registerNotificationType (SimQueueCompositeSimpleEventType.PSEUDO_AUTO_REVOCATION, this::firePseudoAutoRevocation);
+    registerNotificationType (SimQueueCompositeSimpleEventType.PSEUDO_START, this::firePseudoStart);
+    registerNotificationType (SimQueueCompositeSimpleEventType.PSEUDO_DEPARTURE, this::firePseudoDeparture);
     for (DQ queue : this.queues)
       queue.registerSimEntityListener (this);
   }
@@ -242,6 +250,90 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
       return this.simQueueSelector.selectNextQueue (time, job, previousQueue);
     else
       return null;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NOTIFICATIONS (PRIVATE)
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Notifies all queue listeners of a pseudo-arrival at this composite queue.
+   * 
+   * @param job The job.
+   * 
+   */
+  private void firePseudoArrival (final J job)
+  {
+    final double time = getLastUpdateTime ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueCompositeListener)
+        ((SimQueueCompositeListener) l).notifyPseudoArrival (time, job, this);
+  }
+  
+  /** Notifies all queue listeners of a pseudo-drop at this composite queue.
+   * 
+   * @param job The job.
+   * 
+   */
+  private void firePseudoDrop (final J job)
+  {
+    final double time = getLastUpdateTime ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueCompositeListener)
+        ((SimQueueCompositeListener) l).notifyPseudoDrop (time, job, this);
+  }
+  
+  /** Notifies all queue listeners of a pseudo-revocation at this composite queue.
+   * 
+   * @param job The job.
+   * 
+   */
+  private void firePseudoRevocation (final J job)
+  {
+    final double time = getLastUpdateTime ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueCompositeListener)
+        ((SimQueueCompositeListener) l).notifyPseudoRevocation (time, job, this);
+  }
+  
+  /** Notifies all queue listeners of a pseudo-auto-revocation at this composite queue.
+   * 
+   * @param job The job.
+   * 
+   */
+  private void firePseudoAutoRevocation (final J job)
+  {
+    final double time = getLastUpdateTime ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueCompositeListener)
+        ((SimQueueCompositeListener) l).notifyPseudoAutoRevocation (time, job, this);
+  }
+  
+  /** Notifies all queue listeners of a pseudo-start at this composite queue.
+   * 
+   * @param job The job.
+   * 
+   */
+  private void firePseudoStart (final J job)
+  {
+    final double time = getLastUpdateTime ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueCompositeListener)
+        ((SimQueueCompositeListener) l).notifyPseudoStart (time, job, this);
+  }
+  
+  /** Notifies all queue listeners of a pseudo-departure at this composite queue.
+   * 
+   * @param job The job.
+   * 
+   */
+  private void firePseudoDeparture (final J job)
+  {
+    final double time = getLastUpdateTime ();
+    for (SimEntityListener<J, Q> l : getSimEntityListeners ())
+      if (l instanceof SimQueueCompositeListener)
+        ((SimQueueCompositeListener) l).notifyPseudoDeparture (time, job, this);
   }
   
 }
