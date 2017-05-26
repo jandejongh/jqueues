@@ -25,7 +25,7 @@ import nl.jdj.jsimulation.r5.SimEventListResetListener;
  * <ul>
  * <li>holding the underlying event list ({@link SimEventList}), which may be <code>null</code>,
  * <li>registering as a {@link SimEventListResetListener} to a non-<code>null</code> {@link SimEventList},
- *     obeying resets on the {@link SimEnventList},
+ *     obeying resets on the {@link SimEventList},
  *     and propagating reset events on the {@link SimEventList} to {@link SimEntityListener}s through {@link #resetEntity}
  *     (which, effectively, describes the {@code RESET} operation),
  * <li>naming, through {@link #setName} and {@link #toStringDefault},
