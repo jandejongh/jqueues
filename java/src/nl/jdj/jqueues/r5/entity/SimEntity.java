@@ -1,54 +1,68 @@
-package nl.jdj.jqueues.r5;
+package nl.jdj.jqueues.r5.entity;
 
 import java.util.Set;
 import java.util.logging.Level;
-import nl.jdj.jqueues.r5.entity.AbstractSimEntity;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.extensions.qos.SimQoS;
+import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType.Member;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
 import nl.jdj.jsimulation.r5.SimEventListResetListener;
 
-/** The interface common to both {@link SimJob}s and {@link SimQueue}s.
+/** A simulation entity like {@link SimJob} or {@link SimQueue}.
  *
  * <p>
  * A {@link SimEntity} is an entity relevant to event-list scheduling in a queueing system simulation.
- * Presently, it is either a queue ({@link SimQueue}) or a job ({@link SimJob}).
- * A queue is an object capable of holding jobs <i>visiting</i>,
- * providing (generic) service to the visiting jobs, and deciding when (or if) they will leave the
- * queue, and end the visit.
- * For more details, see {@link SimQueue} and {@link SimJob}.
+ * Usually, it is either a queue ({@link SimQueue}) or a job ({@link SimJob}).
+ * However, the interface does not a priori assume this.
+ * What {@link SimEntity}s have in common is the event list they are attached to,
+ * the fact that they have a name, that they support operations,
+ * and their obligation to propagate state changes
+ * (notifications) to (registered) listeners.
  * 
  * <p>
- * A {@link SimEntity} is the common part of queues and jobs.
- * What they have in common is the event list they are attached to, the fact that they have a name,
- * and their obligation to propagate state changes (including the currently visited queue of a job, and
- * the jobs currently visiting a queue).
- * 
- * <p>
- * Objects implementing this interface take care of
+ * Objects implementing this interface take care of (at the very least)
  * <ul>
- * <li>holding the underlying event list ({@link SimEventList}), which may be <code>null</code> on non-{@link SimQueue}s,
+ * <li>holding the underlying event list ({@link SimEventList}), which may be <code>null</code>,
  * <li>registering as a {@link SimEventListResetListener} to a non-<code>null</code> {@link SimEventList},
- * <li>naming,
- * <li>maintaining listeners ({@link SimEntityListener}),
- * <li>propagating reset events on the {@link SimEventList} to {@link SimEntityListener}s through {@link #resetEntity},
- * <li>maintaining the time of the last update with {@link #getLastUpdateTime},
+ *     obeying resets on the {@link SimEnventList},
+ *     and propagating reset events on the {@link SimEventList} to {@link SimEntityListener}s through {@link #resetEntity}
+ *     (which, effectively, describes the {@code RESET} operation),
+ * <li>naming, through {@link #setName} and {@link #toStringDefault},
+ * <li>registration and maintenance of {@link SimEntityOperation}s, and supporting them through {@link #doOperation}
+ *     with flexible error handling for unknown operations,
+ * <li>registration, maintenance and error handling of (types of) notifications implemented as {@link Member},
+ * <li>maintaining listeners ({@link SimEntityListener}) to notifications,
+ * <li>notifying listeners upon <i>updates</i> and <i>state changes</i>,
+ *     see {@link SimEntityListener#notifyUpdate} and {@link SimEntityListener#notifyStateChanged}, respectively,
  * <li>supporting (deferred) actions to take immediately after notifying listeners
  *     (supported because, as by contract of {@link SimEntity} and {@link SimEntityListener},
- *     listeners are not allowed to initiate queue operations).
+ *     listeners are not allowed to initiate state-changing operations on the entity),
+ * <li>implementing updates and maintaining the time of the last update with {@link #getLastUpdateTime}
+ *     (effectively, the UPDATE notification).
  * </ul>
  * 
- * @param <J> The type of {@link SimJob}s supported.
- * @param <Q> The type of {@link SimQueue}s supported.
+ * <p>
+ * Note that the contracts of
+ * {@link SimEntityOperation},
+ * {@link SimEntitySimpleEventType},
+ * {@link SimEntityEvent}
+ * and {@link SimEntityListener} are part of the formal interface of a {@link SimEntity}.
  * 
- * @see AbstractSimEntity
+ * <p>
+ * For an implementation starting point, see {@link AbstractSimEntity}.
+ * 
+ * @see SimEntityOperation
+ * @see SimEntitySimpleEventType
+ * @see SimEntityEvent
  * @see SimEntityListener
  * @see SimJob
  * @see SimQueue
+ * @see AbstractSimEntity
  *
  */
-public interface SimEntity<J extends SimJob, Q extends SimQueue>
-extends SimEventListResetListener, SimQoS<J, Q>
+public interface SimEntity
+extends SimEventListResetListener
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,10 +75,10 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * 
    * <p>
    * The event list is passed upon construction of the object, and cannot be changed afterwards.
-   * It may be <code>null</code>, however, for {@link SimQueue}s the underlying event list must be non-<code>null</code>.
+   * It may be <code>null</code>.
    * 
    * <p>
-   * If non-<code>null</code>, implementations must register as a {@link SimEventListResetListener},
+   * If the event list is non-<code>null</code>, implementations must register at it as a {@link SimEventListResetListener},
    * and propagate any reset of the event list through {@link #resetEntity}.
    * 
    * @return The underlying event list of this {@link SimEntity}.
@@ -74,66 +88,66 @@ extends SimEventListResetListener, SimQoS<J, Q>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // LISTENERS
+  // NAME
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Registers a listener to events related to this entity.
-   * 
-   * @param listener The listener; ignored if already registered or <code>null</code>.
-   * 
-   * @see #unregisterSimEntityListener
-   * 
-   */
-  void registerSimEntityListener (SimEntityListener<J, Q> listener);
-  
-  /** Unregisters a listener to events related to this entity.
-   * 
-   * @param listener The listener; ignored if not registered or <code>null</code>.
-   * 
-   * @see #registerSimEntityListener
-   * 
-   */
-  void unregisterSimEntityListener (SimEntityListener<J, Q> listener);
-
-  /** Gets the listeners to this entity.
-   * 
-   * Callers must <i>not</i> attempt to change the returned set.
-   * Implementations are encouraged to return read-only views.
-   * 
-   * @return The listeners to this entity.
-   * 
-   */
-  Set<SimEntityListener<J, Q>> getSimEntityListeners ();
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // NAME/toString
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns a default, type-specific name for this {@link SimEntity}.
+  /** Returns a default name for this {@link SimEntity}.
    * 
    * <p>
-   * The string is used as a fallback return value for <code>Object.toString ()</code>
+   * The naming framework of an entity is as follows:
+   * <ul>
+   * <li>
+   * The name of an entity never affects its functional behavior, nor that of other entities,
+   * apart from generated output for diagnostics, presentation or debugging.
+   * <li>
+   * It is recommended to <i>not</i> make {@code Object.toString ()} implementations {@code final};
+   * users should always have the option to give useful (to them) names to entities
+   * by using the conventional approach of overriding {@code Object.toString ()}.
+   * <li>
+   * Implementations should use {@code Object.toString ()} for String representations of an entity
+   * (following Java conventions).
+   * <li>
+   * It is <i>recommended</i> that default implementations
+   * (see, for instance,{@link AbstractSimEntity#toString})
+   * of {@code Object.toString} return
+   * <ul>
+   * <li>the String set by {@link #setName}, or, if not set,
+   * <li>the String returned by {@link #toStringDefault} as set (and often made {@code final}
+   *       by the implementation class(es), or, if not set,
+   * <li>the String returned by {@link Object#toString}.
+   * </ul>
+   * <li>
+   * This approach ensures that users of an entity can easily set the name of an individual entity
+   * through {@link #setName} or by overriding (if still possible) {@link Object#toString}.
+   * At the same time, if a user chooses to not care about naming, a type-specific (typically "short") meaningful
+   * description String of the entity is used.
+   * </ul>
+   * 
+   * <p>
+   * In other words, the string is to be returned by (concrete) implementations of {@link #toStringDefault} acts
+   * as a fallback return value for <code>Object.toString ()</code>
    * in case the user did not set an instance-specific name
    * through {@link #setName}.
    * 
    * <p>
-   * Implementation classes are recommended to <i>not</i> make this method final
+   * Implementations are recommended to <i>not</i> make this method {@code final}
    * unless the class itself is final.
+   * The recommendation same holds for {@code Object.toString ()}.
    * 
-   * @return A default, type-specific name for this {@link SimEntity}.
+   * @return A default name for this {@link SimEntity}.
    * 
    * @see #setName
+   * @see Object#toString
    * 
    */
   String toStringDefault ();
   
   /** Sets the name of this {@link SimEntity}, to be returned by subsequent calls to <code>Object.toString ()</code>.
    * 
-   * @param name The new name of this job or queue; if non-<code>null</code>, the string will be supplied by subsequent calls
-   *               to <code>Object.toString ()</code>; otherwise, the type-specific default will be used for that.
+   * @param name The new name of this job or queue; if non-<code>null</code>, the string will be returned by subsequent calls
+   *               to <code>Object.toString ()</code> (recommended implementation!);
+   *               otherwise, the type-specific default {@link #toStringDefault} will be used for that.
    * 
    * @see #toStringDefault
    * 
@@ -142,25 +156,23 @@ extends SimEventListResetListener, SimQoS<J, Q>
  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // REGISTERED OPERATIONS
+  // OPERATIONS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /** Gets the registered operations of this entity.
    * 
-   * @return The registered operations of this entity (in registration order).
+   * @return The registered operations at this entity (in registration-time order).
+   * 
+   * @see SimEntityOperation
    * 
    */
   Set<SimEntityOperation> getRegisteredOperations ();
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // UNKNOWN OPERATION POLICY
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
   /** Possible courses of action when an unknown operation is offered to {@link #doOperation}.
    * 
+   * @see SimEntityOperation
+   * @see #doOperation
    * @see #getUnknownOperationPolicy
    * @see #setUnknownOperationPolicy
    * 
@@ -200,6 +212,7 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * 
    * @return The policy for unknown operations, non-{@code null}.
    * 
+   * @see SimEntityOperation
    * @see #doOperation
    * 
    */
@@ -211,17 +224,12 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * 
    * @throws IllegalArgumentException If the argument is {@code null}.
    * 
+   * @see SimEntityOperation
    * @see #doOperation
    * 
    */
   void setUnknownOperationPolicy (UnknownOperationPolicy unknownOperationPolicy);
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // DO OPERATION
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
   /** Performs the given operation, identified by an operation request, at this entity at given time.
    * 
    * <p>
@@ -250,10 +258,39 @@ extends SimEventListResetListener, SimQoS<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // UNKNOWN NOTIFICATION-TYPE POLICY
+  // NOTIFICATIONS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /** Gets the registered notification types of this entity.
+   * 
+   * @return The registered notifications types of this entity (in registration order).
+   * 
+   */
+  Set<SimEntitySimpleEventType.Member> getRegisteredNotificationTypes ();
+
+  /** An action for use in {@link #doAfterNotifications}.
+   * 
+   */
+  @FunctionalInterface
+  interface Action
+  {
+    /** Performs the action.
+     * 
+     */
+    public void execute ();
+  }
+  
+  /** Registers an {@link Action} to be taken once this entity has finished issuing notifications,
+   *  or takes the action immediately if this entity is not notifying listeners.
+   * 
+   * @param action The action to take, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the action is {@code null}.
+   * 
+   */
+  void doAfterNotifications (Action action);
+  
   /** Possible courses of action when an unknown notification is to be published.
    * 
    * @see #getUnknownNotificationTypePolicy
@@ -297,43 +334,55 @@ extends SimEventListResetListener, SimQoS<J, Q>
    */
   void setUnknownNotificationTypePolicy (UnknownNotificationTypePolicy unknownNotificationTypePolicy);
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // REGISTERED NOTIFICATION TYPES
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Gets the registered notification types of this entity.
-   * 
-   * @return The registered notifications types of this entity (in registration order).
-   * 
-   */
-  Set<SimEntitySimpleEventType.Member> getRegisteredNotificationTypes ();
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // RESET
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Puts the entity into its "known" initial state.
-   *
-   * <p>
-   * This method is used in order to restart a simulation.
-   * By contract, a {@link SimEntity} must reset if its underlying {@link SimEventList} resets.
-   * However, a {@link SimEntity} can also be reset independently from the event list.
-   * In the latter case, it takes its current time from the event list, if available,
-   * or to {@link Double#NEGATIVE_INFINITY} otherwise.
+  /** Registers a listener to event notifications related to this entity.
    * 
    * <p>
-   * Implementations must ensure that only a single {@link SimEntityListener#notifyResetEntity} is invoked <i>after</i>
-   * the entity is in the new (valid) state.
+   * Implementations are encouraged to consider the use of weak/soft references to registered listeners.
    * 
-   * @see SimEventListResetListener#notifyEventListReset
+   * @param listener The listener; ignored if already registered or <code>null</code>.
+   * 
+   * @see SimEntityListener
+   * @see #unregisterSimEntityListener
+   * @see #getSimEntityListeners
    * 
    */
-  void resetEntity ();
+  void registerSimEntityListener (SimEntityListener listener);
   
+  /** Unregisters a listener to event notifications related to this entity.
+   * 
+   * @param listener The listener; ignored if not registered or <code>null</code>.
+   * 
+   * @see SimEntityListener
+   * @see #registerSimEntityListener
+   * @see #getSimEntityListeners
+   * 
+   */
+  void unregisterSimEntityListener (SimEntityListener listener);
+
+  /** Gets the listeners to this entity.
+   * 
+   * <p>
+   * Callers must <i>not</i> attempt to change the returned set.
+   * 
+   * <p>
+   * Implementations are encouraged to return read-only views.
+   * 
+   * @return A read-only set holding listeners to this entity.
+   * 
+   * @see SimEntityListener
+   * @see #registerSimEntityListener
+   * @see #unregisterSimEntityListener
+   * @see #getSimEntityListeners
+   * 
+   */
+  Set<SimEntityListener> getSimEntityListeners ();
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET [OPERATION]
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   /** Returns whether this entity ignores event-list resets.
    * 
    * @return Whether this entity ignores event-list resets.
@@ -365,9 +414,27 @@ extends SimEventListResetListener, SimQoS<J, Q>
    */
   void setIgnoreEventListReset (boolean ignoreEventListReset);
   
+  /** Puts the entity into its "known" initial state.
+   *
+   * <p>
+   * This method is used in order to restart a simulation.
+   * By contract, a {@link SimEntity} must reset if its underlying {@link SimEventList} resets.
+   * However, a {@link SimEntity} can also be reset independently from the event list.
+   * In the latter case, it takes its current time from the event list, if available,
+   * or to {@link Double#NEGATIVE_INFINITY} otherwise.
+   * 
+   * <p>
+   * Implementations must ensure that only a single {@link SimEntityListener#notifyResetEntity} is invoked <i>after</i>
+   * the entity is in the new (valid) state.
+   * 
+   * @see SimEventListResetListener#notifyEventListReset
+   * 
+   */
+  void resetEntity ();
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // UPDATE
+  // UPDATE [NOTIFICATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -402,33 +469,5 @@ extends SimEventListResetListener, SimQoS<J, Q>
    * 
    */
   void update (double time);
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // ACTION (AFTER NOTIFICATIONS)
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** An action for use in {@link #doAfterNotifications}.
-   * 
-   */
-  @FunctionalInterface
-  interface Action
-  {
-    /** Performs the action.
-     * 
-     */
-    public void execute ();
-  }
-  
-  /** Registers an {@link Action} to be taken once this entity has finished issuing notifications,
-   *  or takes the action immediately if this entity is not notifying listeners.
-   * 
-   * @param action The action to take, non-{@code null}.
-   * 
-   * @throws IllegalArgumentException If the action is {@code null}.
-   * 
-   */
-  void doAfterNotifications (Action action);
   
 }
