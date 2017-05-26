@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.jdj.jqueues.r5.entity.SimEntityOperation.Reset;
 import nl.jdj.jqueues.r5.entity.SimEntityOperation.Update;
-import nl.jdj.jqueues.r5.entity.jq.AbstractSimQueueOrJob;
+import nl.jdj.jqueues.r5.entity.jq.AbstractSimJQ;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -24,9 +24,9 @@ import nl.jdj.jsimulation.r5.SimEventListResetListener;
  * See {@link SimEntity} and the constructor documentation for more details.
  * 
  * <p>
- * For a more complete (though still partial) implementations of jobs and queues, see {@link AbstractSimQueueOrJob}.
+ * For a more complete (though still partial) implementations of jobs and queues, see {@link AbstractSimJQ}.
  * 
- * @see AbstractSimQueueOrJob
+ * @see AbstractSimJQ
  * @see SimQueue
  * @see SimJob
  * 
