@@ -10,14 +10,11 @@ import java.util.Set;
 import java.util.function.DoubleConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.jdj.jqueues.r5.entity.jq.SimQueueOrJobListener;
-import nl.jdj.jqueues.r5.entity.SimEntityOperationUtils.ResetOperation;
-import nl.jdj.jqueues.r5.entity.SimEntityOperationUtils.UpdateOperation;
+import nl.jdj.jqueues.r5.entity.SimEntityOperation.Reset;
+import nl.jdj.jqueues.r5.entity.SimEntityOperation.Update;
 import nl.jdj.jqueues.r5.entity.jq.AbstractSimQueueOrJob;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jqueues.r5.event.SimEntityResetEvent;
 import nl.jdj.jsimulation.r5.SimEventList;
 import nl.jdj.jsimulation.r5.SimEventListResetListener;
 
@@ -32,6 +29,14 @@ import nl.jdj.jsimulation.r5.SimEventListResetListener;
  * @see AbstractSimQueueOrJob
  * @see SimQueue
  * @see SimJob
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public abstract class AbstractSimEntity
@@ -68,8 +73,8 @@ implements SimEntity
    * @see #toStringDefault
    * @see #setName
    * @see #registerOperation
-   * @see ResetOperation
-   * @see UpdateOperation
+   * @see Reset
+   * @see Update
    * @see SimEntitySimpleEventType#RESET
    * @see #getLastUpdateTime
    * @see SimEventList#addListener
@@ -80,8 +85,8 @@ implements SimEntity
   {
     this.eventList = eventList;
     setName (name);
-    registerOperation (SimEntityOperationUtils.ResetOperation.getInstance ());
-    registerOperation (SimEntityOperationUtils.UpdateOperation.getInstance ());
+    registerOperation (SimEntityOperation.Reset.getInstance ());
+    registerOperation (SimEntityOperation.Update.getInstance ());
     registerNotificationType (SimEntitySimpleEventType.RESET, this::fireReset);
     if (this.eventList != null)
     {
@@ -121,37 +126,7 @@ implements SimEntity
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // LISTENERS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** *  The {@link SimQueueOrJobListener}s of this simulation entity.
-   * 
-   */
-  private final Set<SimEntityListener> simEntityListeners = new LinkedHashSet<>();
-
-  @Override
-  public final void registerSimEntityListener (final SimEntityListener listener)
-  {
-    if (listener != null)
-      this.simEntityListeners.add (listener);
-  }
-
-  @Override
-  public final void unregisterSimEntityListener (final SimEntityListener listener)
-  {
-    this.simEntityListeners.remove (listener);
-  }  
-
-  @Override
-  public final Set<SimEntityListener> getSimEntityListeners ()
-  {
-    return Collections.unmodifiableSet (this.simEntityListeners);
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // NAME, toString
+  // NAME
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -183,7 +158,7 @@ implements SimEntity
    * 
    */
   @Override
-  public final String toString ()
+  public String toString ()
   {
     if (this.name != null)
       return this.name;
@@ -193,7 +168,7 @@ implements SimEntity
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // OPERATIONS REGISTRATION
+  // OPERATIONS: REGISTRATION
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -220,6 +195,12 @@ implements SimEntity
       throw new IllegalArgumentException ();
     this.registeredOperations.add (operation);
   }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // OPERATIONS: DELEGATE REGISTRATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Registers a {@link SimEntityOperation} at this entity, but delegate it to another operation.
    * 
@@ -275,7 +256,7 @@ implements SimEntity
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // UNKNOWN OPERATION POLICY
+  // OPERATIONS: UNKNOWN OPERATION POLICY
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -297,7 +278,7 @@ implements SimEntity
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // DO OPERATION
+  // OPERATIONS: DO OPERATION
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -310,7 +291,7 @@ implements SimEntity
   {
     if (request == null)
       throw new IllegalArgumentException ();
-    if (request.getOperation () != SimEntityOperationUtils.ResetOperation.getInstance ()
+    if (request.getOperation () != SimEntityOperation.Reset.getInstance ()
       && time < getLastUpdateTime ())
       throw new IllegalArgumentException ();
     if (! this.registeredOperations.contains (request.getOperation ()))
@@ -344,8 +325,415 @@ implements SimEntity
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // RESET ENTITY
-  // SimEventListResetListener
+  // NOTIFICATIONS: REGISTERED NOTIFICATION TYPES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** A functional interface for a notification handler.
+   * 
+   */
+  @FunctionalInterface
+  public interface Notifier
+  {
+    
+    /** Fires the notification to all relevant listeners.
+     * 
+     * @param event The relevant event, non-{@code null}.
+     * 
+     * @throws IllegalArgumentException If the argument is {@code null} or of illegal type.
+     * 
+     */
+    void fire (SimEntityEvent event);
+    
+  }
+  
+  /** The mapping between a notification type (reset, arrival, departures, etc.) and a {@link Notifier} for it.
+   * 
+   */
+  private final Map<SimEntitySimpleEventType.Member, Notifier> notificationMap = new LinkedHashMap<> ();
+  
+  /** Registers a mapping between a notification type (reset, arrival, departures, etc.) and a {@link Notifier} for it.
+   * 
+   * <p>
+   * The notifier may be {@code null}, meaning the notification type is (will be) known, and will be
+   * reported through {@link SimEntityListener#notifyStateChanged},
+   * but no additional actions/notifications (through a {@link Notifier}) will be taken on listeners.
+   * 
+   * @param notificationType The notification type; non-{@code null} and not yet registered.
+   * @param notifier         The {@link Notifier} for it, may be {@code null}.
+   * 
+   * @throws IllegalArgumentException If the notification type is {@code null} or already registered. 
+   * 
+   */
+  protected final void registerNotificationType
+  (final SimEntitySimpleEventType.Member notificationType, final Notifier notifier)
+  {
+    if (notificationType == null)
+      throw new IllegalArgumentException ();
+    if (this.notificationMap.containsKey (notificationType))
+      throw new IllegalArgumentException ();
+    this.notificationMap.put (notificationType, notifier);
+  }
+  
+  @Override
+  public final Set<SimEntitySimpleEventType.Member> getRegisteredNotificationTypes ()
+  {
+    return Collections.unmodifiableSet (new LinkedHashSet<> (this.notificationMap.keySet ()));
+  }
+ 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NOTIFICATIONS: UNKNOWN NOTIFICATION-TYPE POLICY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private UnknownNotificationTypePolicy unknownNotificationTypePolicy = UnknownNotificationTypePolicy.FIRE_AND_WARN;
+
+  @Override
+  public final UnknownNotificationTypePolicy getUnknownNotificationTypePolicy ()
+  {
+    return this.unknownNotificationTypePolicy;
+  }
+
+  @Override
+  public final void setUnknownNotificationTypePolicy (final UnknownNotificationTypePolicy unknownNotificationTypePolicy)
+  {
+    if (unknownNotificationTypePolicy == null)
+      throw new IllegalArgumentException ();
+    this.unknownNotificationTypePolicy = unknownNotificationTypePolicy;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NOTIFICATIONS: PRE-NOTIFICATION HOOKS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** A functional interface for a hook to be called before notifications are sent (i.e., before a state change is advertised).
+   * 
+   * <p>
+   * A pre-notification hook allows sub-classes to modify the pending notifications (for whatever reason),
+   * but it is typically used to automatically detect state-changes that are not explicitly dealt with otherwise.
+   * 
+   */
+  @FunctionalInterface
+  public interface PreNotificationHook
+  {
+
+    /** Invokes the hook.
+     * 
+     * @param pendingNotifications The pending notifications (may be changed).
+     * 
+     */
+    void hook (List<Map<SimEntitySimpleEventType.Member, SimEntityEvent>> pendingNotifications);
+
+  }
+  
+  /** The registered pre-notification hooks.
+   * 
+   */
+  private final Set<PreNotificationHook> preNotificationHooks = new LinkedHashSet<> ();
+
+  /** Registers a pre-notification hook.
+   * 
+   * @param preNotificationHook The hook, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the hook is {@code null} or already registered.
+   * 
+   */  
+  protected final void registerPreNotificationHook (final PreNotificationHook preNotificationHook)
+  {
+    if (preNotificationHook == null || this.preNotificationHooks.contains (preNotificationHook))
+      throw new IllegalArgumentException ();
+    this.preNotificationHooks.add (preNotificationHook);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NOTIFICATIONS: POST-NOTIFICATION ACTIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The actions to take immediately after firing pending notifications has ended.
+   * 
+   */
+  private final List<Action> postNotificationActions = new ArrayList<> ();
+  
+  /** Adds a (one-time) action to take immediately after firing pending notifications has ended.
+   * 
+   * <p>
+   * If this entity is not firing notifications, the action is invoked immediately.
+   * 
+   * @param action The action to take, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the action is {@code null}.
+   * 
+   * @see #fireAndLockPendingNotifications
+   * 
+   */
+  @Override
+  public final void doAfterNotifications (final Action action)
+  {
+    if (action == null)
+      throw new IllegalArgumentException ();
+    if (! this.firingPendingNotifications)
+      action.execute ();
+    else
+      this.postNotificationActions.add (action);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NOTIFICATIONS: PENDING NOTIFICATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The pending notifications for this entity, mapped onto the associated job (if applicable).
+   * 
+   */
+  private final List<Map<SimEntitySimpleEventType.Member, SimEntityEvent>> pendingNotifications = new ArrayList<> ();
+  
+  /** The time corresponding to the pending notifications (which all share the same time).
+   * 
+   */
+  private double pendingNotificationsTime = Double.NEGATIVE_INFINITY;
+  
+  /** Whether the pending notifications are locked (no longer mutable).
+   * 
+   * <p>
+   * Pending notifications are locked the moment they are being fired to listeners,
+   * and remain locked until a top-level entity event unlocks it.
+   * 
+   */
+  private boolean pendingNotificationsLocked = true;
+  
+  /** Whether this entity is firing notifications.
+   * 
+   * <p>
+   * A flag used to prevent modifications to the pending notifications from within listeners.
+   * 
+   * @see SimEntity#doAfterNotifications
+   * 
+   */
+  private boolean firingPendingNotifications = false;
+  
+  /** Adds a notification to the pending notifications.
+   * 
+   * @param notification The notification, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the notification is {@code null},
+   *                                  if the map is of illegal size (other than unity), or has a {@code null} key,
+   *                                  if the notification is already present
+   *                                  or has time different from the pending-notifications time,
+   *                                  if this entity is locked for pending notifications mutations,
+   *                                  or is currently firing notifications.
+   * 
+   */
+  protected final void addPendingNotification (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> notification)
+  {
+    if (notification == null
+    ||  notification.size () != 1
+    ||  notification.containsKey (null)
+    ||  notification.containsValue (null)
+    ||  this.pendingNotifications.contains (notification)
+    ||  ((! this.pendingNotifications.isEmpty ()) && getLastUpdateTime () != this.pendingNotificationsTime)
+    ||  this.pendingNotificationsLocked
+    ||  this.firingPendingNotifications)
+      throw new IllegalArgumentException ("notification: " + notification);
+    if (this.pendingNotifications.isEmpty ())
+      this.pendingNotificationsTime = getLastUpdateTime ();
+    if (containsPendingNotification (notification))
+      LOGGER.log (Level.WARNING, "Attempt to re-enter notification {0}@{1}!", new Object[]{notification, this});
+    else
+      this.pendingNotifications.add (notification);
+  }
+  
+  /** Adds a notification to the pending notifications.
+   * 
+   * <p>
+   * Convenience method to {@link #addPendingNotification(java.util.Map)} creating a singleton map from the arguments on the fly.
+   * 
+   * @param notificationType The notification type, non-{@code null}.
+   * @param notification     The notification event, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the notification type or event is {@code null} or if
+   *                                  {@link #addPendingNotification(java.util.Map)} encounters an error in the arguments.
+   * 
+   */
+  protected final void addPendingNotification
+  (final SimEntitySimpleEventType.Member notificationType, final SimEntityEvent notification)
+  {
+    if (notificationType == null || notification == null)
+      throw new IllegalArgumentException ();
+    addPendingNotification (Collections.singletonMap (notificationType, notification));
+  }
+  
+  /** Checks if a notification is already registered in the pending notifications.
+   * 
+   * @param notification The notification.
+   * 
+   * @return True if the notification is already pending.
+   * 
+   * @throws IllegalArgumentException If there is an error in the arguments.
+   * 
+   */
+  private boolean containsPendingNotification (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> notification)
+  {
+    if (notification == null
+    ||  notification.size () != 1
+    ||  notification.containsKey (null))
+      throw new IllegalArgumentException ();
+    final SimEntitySimpleEventType.Member eventType = notification.keySet ().iterator ().next ();
+    final SimEntityEvent event = notification.values ().iterator ().next ();
+    for (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> member : this.pendingNotifications)
+      if (member.keySet ().iterator ().next () == eventType
+      &&  member.values ().iterator ().next () == event)
+        return true;
+    return false;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NOTIFICATIONS: PENDING NOTIFICATIONS LOCK/UNLOCK/CLEAR/FIRE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Clears the pending notifications and unlocks them.
+   * 
+   * @throws IllegalStateException If this entity is currently firing notifications.
+   * 
+   * @see #firingPendingNotifications
+   * 
+   */
+  private void clearAndUnlockPendingNotifications ()
+  {
+    if (this.firingPendingNotifications)
+      throw new IllegalStateException ();
+    this.pendingNotifications.clear ();
+    this.pendingNotificationsLocked = false;
+  }
+  
+  /** Clears the pending notifications and unlocks them if needed (i.e., if currently locked).
+   * 
+   * <p>
+   * This method does nothing if the pending notifications are already locked.
+   * 
+   * @return True if the entity was locked beforehand.
+   * 
+   * @throws IllegalStateException If this entity is currently firing notifications.
+   * 
+   * @see #firingPendingNotifications
+   * 
+   */
+  protected final boolean clearAndUnlockPendingNotificationsIfLocked ()
+  {
+    if (this.firingPendingNotifications)
+      throw new IllegalStateException ();
+    final boolean isLocked = this.pendingNotificationsLocked;
+    if (isLocked)
+      clearAndUnlockPendingNotifications ();
+    return isLocked;
+  }
+  
+  /** Fires and locks the pending notifications to listeners.
+   * 
+   * <p>
+   * Fires, if present, pre-notification hooks and post-notification actions, even if the set of pending notifications is empty.
+   * The post-notification actions are cleared.
+   * 
+   * <p>
+   * Note that listeners are <i>not</i> notified with empty notification sets!
+   * 
+   * @throws IllegalStateException If the time of pending notifications is not equal to {@link #getLastUpdateTime},
+   *                               if this entity is currently firing notifications (already).
+   * 
+   * @see #registerPreNotificationHook
+   * @see #doAfterNotifications
+   * 
+   */
+  protected final void fireAndLockPendingNotifications ()
+  {
+    if ((! this.pendingNotifications.isEmpty ()) && this.pendingNotificationsTime != getLastUpdateTime ())
+      throw new IllegalStateException ();
+    if (this.firingPendingNotifications)
+      throw new IllegalStateException ();
+    this.pendingNotificationsLocked = true;
+    this.firingPendingNotifications = true;
+    final boolean isResetNotification = (this.pendingNotifications.size () == 1
+                                        && this.pendingNotifications.get (0).containsKey (SimEntitySimpleEventType.RESET));
+    if (! isResetNotification)
+      for (final PreNotificationHook preNotificationHook : this.preNotificationHooks)
+        preNotificationHook.hook (this.pendingNotifications);
+    if (! this.pendingNotifications.isEmpty ())
+    {
+      final double time = getLastUpdateTime ();
+      // Respect policy for unknown notification types.
+      for (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> notification : this.pendingNotifications)
+      {
+        final SimEntitySimpleEventType.Member notificationType = notification.keySet ().iterator ().next ();
+        if (! this.notificationMap.containsKey (notificationType))
+          switch (this.unknownNotificationTypePolicy)
+          {
+            case FIRE_AND_WARN:
+              LOGGER.log (Level.WARNING, "Unknown notification type {0}.", notificationType);
+              break;
+            case FIRE_SILENTLY:
+              break;
+            case ERROR:
+              throw new IllegalArgumentException ();
+            default:
+              throw new RuntimeException ();
+          }
+      }    
+      for (SimEntityListener l : this.simEntityListeners)
+        l.notifyStateChanged (time, this, this.pendingNotifications);
+      for (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> notification : this.pendingNotifications)
+      {
+        final SimEntitySimpleEventType.Member notificationType = notification.keySet ().iterator ().next ();
+        final SimEntityEvent notificationEvent = notification.values ().iterator ().next ();
+        if (this.notificationMap.containsKey (notificationType)
+        &&  this.notificationMap.get (notificationType) != null)
+          this.notificationMap.get (notificationType).fire (notificationEvent);
+      }
+    }
+    this.firingPendingNotifications = false;
+    while (! this.postNotificationActions.isEmpty ())
+      this.postNotificationActions.remove (0).execute ();
+  }
+    
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // NOTIFICATIONS: LISTENERS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The {@link SimEntityListener}s of this simulation entity.
+   * 
+   */
+  private final Set<SimEntityListener> simEntityListeners = new LinkedHashSet<>();
+
+  @Override
+  public final void registerSimEntityListener (final SimEntityListener listener)
+  {
+    if (listener != null)
+      this.simEntityListeners.add (listener);
+  }
+
+  @Override
+  public final void unregisterSimEntityListener (final SimEntityListener listener)
+  {
+    this.simEntityListeners.remove (listener);
+  }  
+
+  @Override
+  public final Set<SimEntityListener> getSimEntityListeners ()
+  {
+    return Collections.unmodifiableSet (this.simEntityListeners);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET [OPERATION/NOTIFICATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -404,7 +792,7 @@ implements SimEntity
     this.postNotificationActions.clear ();
     resetEntitySubClass ();
     clearAndUnlockPendingNotifications ();
-    addPendingNotification (SimEntitySimpleEventType.RESET, new SimEntityResetEvent (this, this.lastUpdateTime));
+    addPendingNotification (SimEntitySimpleEventType.RESET, new SimEntityEvent.Reset (this, this.lastUpdateTime));
     fireAndLockPendingNotifications ();
   }
   
@@ -438,9 +826,24 @@ implements SimEntity
       resetEntity ();
   }
 
+  /** Notifies all listeners of a reset of this {@link SimEntity}.
+   *
+   * @param job Unused.
+   *
+   * @see SimEntityListener#notifyResetEntity
+   * 
+   */
+  private void fireReset (final SimEntityEvent event)
+  {
+    if (event == null || ! (event instanceof SimEntityEvent.Reset))
+      throw new IllegalArgumentException ();
+    for (SimEntityListener l : this.simEntityListeners)
+      l.notifyResetEntity (this);
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // UPDATE
+  // UPDATE[OPERATION/NOTIFICATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
@@ -558,27 +961,6 @@ implements SimEntity
     this.preEventHooks.add (preEventHook);
   }
   
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // EVENT NOTIFICATIONS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Notifies all listeners of a reset of this {@link SimEntity}.
-   *
-   * @param job Unused.
-   *
-   * @see SimEntityListener#notifyResetEntity
-   * 
-   */
-  private void fireReset (final SimEntityEvent event)
-  {
-    if (event == null || ! (event instanceof SimEntityResetEvent))
-      throw new IllegalArgumentException ();
-    for (SimEntityListener l : this.simEntityListeners)
-      l.notifyResetEntity (this);
-  }
-  
   /** Notifies all listeners upon an immediate upcoming update at this entity.
    *
    * @param time The current time, which has not been set yet on this entity.
@@ -590,379 +972,6 @@ implements SimEntity
   {
     for (SimEntityListener l : getSimEntityListeners ())
       l.notifyUpdate (time, this);
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // UNKNOWN NOTIFICATION-TYPE POLICY
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  private UnknownNotificationTypePolicy unknownNotificationTypePolicy = UnknownNotificationTypePolicy.FIRE_AND_WARN;
-
-  @Override
-  public final UnknownNotificationTypePolicy getUnknownNotificationTypePolicy ()
-  {
-    return this.unknownNotificationTypePolicy;
-  }
-
-  @Override
-  public final void setUnknownNotificationTypePolicy (final UnknownNotificationTypePolicy unknownNotificationTypePolicy)
-  {
-    if (unknownNotificationTypePolicy == null)
-      throw new IllegalArgumentException ();
-    this.unknownNotificationTypePolicy = unknownNotificationTypePolicy;
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // NOTIFICATION MAP
-  // REGISTERED NOTIFICATION TYPES
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** A function interface for a notification handler.
-   * 
-   */
-  @FunctionalInterface
-  public interface Notifier
-  {
-    
-    /** Fires the notification to all relevant listeners.
-     * 
-     * @param event The relevant event, non-{@code null}.
-     * 
-     * @throws IllegalArgumentException If the argument is {@code null} or of illegal type.
-     * 
-     */
-    void fire (SimEntityEvent event);
-    
-  }
-  
-  /** The mapping between a notification type (reset, arrival, departures, etc.) and a {@link Notifier} for it.
-   * 
-   */
-  private final Map<SimEntitySimpleEventType.Member, Notifier> notificationMap = new LinkedHashMap<> ();
-  
-  /** Registers a mapping between a notification type (reset, arrival, departures, etc.) and a {@link Notifier} for it.
-   * 
-   * <p>
-   * The notifier may be {@code null}, meaning the notification type is (will be) known, and will be
-   * reported through {@link SimEntityListener#notifyStateChanged},
-   * but no additional actions/notifications (through a {@link Notifier}) will be taken on listeners.
-   * 
-   * @param notificationType The notification type; non-{@code null} and not yet registered.
-   * @param notifier         The {@link Notifier} for it, may be {@code null}.
-   * 
-   * @throws IllegalArgumentException If the notification type is {@code null} or already registered. 
-   * 
-   */
-  protected final void registerNotificationType
-  (final SimEntitySimpleEventType.Member notificationType, final Notifier notifier)
-  {
-    if (notificationType == null)
-      throw new IllegalArgumentException ();
-    if (this.notificationMap.containsKey (notificationType))
-      throw new IllegalArgumentException ();
-    this.notificationMap.put (notificationType, notifier);
-  }
-  
-  @Override
-  public final Set<SimEntitySimpleEventType.Member> getRegisteredNotificationTypes ()
-  {
-    return Collections.unmodifiableSet (new LinkedHashSet<> (this.notificationMap.keySet ()));
-  }
- 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // PRE-NOTIFICATION HOOKS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** A functional interface for a hook to be called before notifications are sent (i.e., before a state change is advertised).
-   * 
-   * <p>
-   * A pre-notification hook allows sub-classes to modify the pending notifications (for whatever reason),
-   * but it is typically used to automatically detect state-changes that are not explicitly dealt with otherwise.
-   * 
-   */
-  @FunctionalInterface
-  public interface PreNotificationHook
-  {
-
-    /** Invokes the hook.
-     * 
-     * @param pendingNotifications The pending notifications (may be changed).
-     * 
-     */
-    void hook (List<Map<SimEntitySimpleEventType.Member, SimEntityEvent>> pendingNotifications);
-
-  }
-  
-  /** The registered pre-notification hooks.
-   * 
-   */
-  private final Set<PreNotificationHook> preNotificationHooks = new LinkedHashSet<> ();
-
-  /** Registers a pre-notification hook.
-   * 
-   * @param preNotificationHook The hook, non-{@code null}.
-   * 
-   * @throws IllegalArgumentException If the hook is {@code null} or already registered.
-   * 
-   */  
-  protected final void registerPreNotificationHook (final PreNotificationHook preNotificationHook)
-  {
-    if (preNotificationHook == null || this.preNotificationHooks.contains (preNotificationHook))
-      throw new IllegalArgumentException ();
-    this.preNotificationHooks.add (preNotificationHook);
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // POST-NOTIFICATION ACTIONS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** The actions to take immediately after firing pending notifications has ended.
-   * 
-   */
-  private final List<Action> postNotificationActions = new ArrayList<> ();
-  
-  /** Adds a (one-time) action to take immediately after firing pending notifications has ended.
-   * 
-   * <p>
-   * If this entity is not firing notifications, the action is invoked immediately.
-   * 
-   * @param action The action to take, non-{@code null}.
-   * 
-   * @throws IllegalArgumentException If the action is {@code null}.
-   * 
-   * @see #fireAndLockPendingNotifications
-   * 
-   */
-  @Override
-  public final void doAfterNotifications (final Action action)
-  {
-    if (action == null)
-      throw new IllegalArgumentException ();
-    if (! this.firingPendingNotifications)
-      action.execute ();
-    else
-      this.postNotificationActions.add (action);
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // PENDING NOTIFICATIONS
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** The pending notifications for this entity, mapped onto the associated job (if applicable).
-   * 
-   */
-  private final List<Map<SimEntitySimpleEventType.Member, SimEntityEvent>> pendingNotifications = new ArrayList<> ();
-  
-  /** The time corresponding to the pending notifications (which all share the same time).
-   * 
-   */
-  private double pendingNotificationsTime = Double.NEGATIVE_INFINITY;
-  
-  /** Whether the pending notifications are locked (no longer mutable).
-   * 
-   * <p>
-   * Pending notifications are locked the moment they are being fired to listeners,
-   * and remain locked until a top-level entity event unlocks it.
-   * 
-   */
-  private boolean pendingNotificationsLocked = true;
-  
-  /** Whether this entity is firing notifications.
-   * 
-   * <p>
-   * A flag used to prevent modifications to the pending notifications from within listeners.
-   * 
-   * @see SimEntity#doAfterNotifications
-   * 
-   */
-  private boolean firingPendingNotifications = false;
-  
-  /** Adds a notification to the pending notifications.
-   * 
-   * @param notification The notification, non-{@code null}.
-   * 
-   * @throws IllegalArgumentException If the notification is {@code null},
-   *                                  if the map is of illegal size (other than unity), or has a {@code null} key,
-   *                                  if the notification is already present
-   *                                  or has time different from the pending-notifications time,
-   *                                  if this entity is locked for pending notifications mutations,
-   *                                  or is currently firing notifications.
-   * 
-   */
-  protected final void addPendingNotification (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> notification)
-  {
-    if (notification == null
-    ||  notification.size () != 1
-    ||  notification.containsKey (null)
-    ||  notification.containsValue (null)
-    ||  this.pendingNotifications.contains (notification)
-    ||  ((! this.pendingNotifications.isEmpty ()) && getLastUpdateTime () != this.pendingNotificationsTime)
-    ||  this.pendingNotificationsLocked
-    ||  this.firingPendingNotifications)
-      throw new IllegalArgumentException ("notification: " + notification);
-    if (this.pendingNotifications.isEmpty ())
-      this.pendingNotificationsTime = getLastUpdateTime ();
-    if (containsPendingNotification (notification))
-      LOGGER.log (Level.WARNING, "Attempt to re-enter notification {0}@{1}!", new Object[]{notification, this});
-    else
-      this.pendingNotifications.add (notification);
-  }
-  
-  /** Adds a notification to the pending notifications.
-   * 
-   * <p>
-   * Convenience method to {@link #addPendingNotification(java.util.Map)} creating a singleton map from the arguments on the fly.
-   * 
-   * @param notificationType The notification type, non-{@code null}.
-   * @param notification     The notification event, non-{@code null}.
-   * 
-   * @throws IllegalArgumentException If the notification type or event is {@code null} or if
-   *                                  {@link #addPendingNotification(java.util.Map)} encounters an error in the arguments.
-   * 
-   */
-  protected final void addPendingNotification
-  (final SimEntitySimpleEventType.Member notificationType, final SimEntityEvent notification)
-  {
-    if (notificationType == null || notification == null)
-      throw new IllegalArgumentException ();
-    addPendingNotification (Collections.singletonMap (notificationType, notification));
-  }
-  
-  /** Checks if a notification is already registered in the pending notifications.
-   * 
-   * @param notification The notification.
-   * 
-   * @return True if the notification is already pending.
-   * 
-   * @throws IllegalArgumentException If there is an error in the arguments.
-   * 
-   */
-  private boolean containsPendingNotification (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> notification)
-  {
-    if (notification == null
-    ||  notification.size () != 1
-    ||  notification.containsKey (null))
-      throw new IllegalArgumentException ();
-    final SimEntitySimpleEventType.Member eventType = notification.keySet ().iterator ().next ();
-    final SimEntityEvent event = notification.values ().iterator ().next ();
-    for (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> member : this.pendingNotifications)
-      if (member.keySet ().iterator ().next () == eventType
-      &&  member.values ().iterator ().next () == event)
-        return true;
-    return false;
-  }
-  
-  /** Clears the pending notifications and unlocks them.
-   * 
-   * @throws IllegalStateException If this entity is currently firing notifications.
-   * 
-   * @see #firingPendingNotifications
-   * 
-   */
-  private void clearAndUnlockPendingNotifications ()
-  {
-    if (this.firingPendingNotifications)
-      throw new IllegalStateException ();
-    this.pendingNotifications.clear ();
-    this.pendingNotificationsLocked = false;
-  }
-  
-  /** Clears the pending notifications and unlocks them if needed (i.e., if currently locked).
-   * 
-   * <p>
-   * This method does nothing if the pending notifications are already locked.
-   * 
-   * @return True if the entity was locked beforehand.
-   * 
-   * @throws IllegalStateException If this entity is currently firing notifications.
-   * 
-   * @see #firingPendingNotifications
-   * 
-   */
-  protected final boolean clearAndUnlockPendingNotificationsIfLocked ()
-  {
-    if (this.firingPendingNotifications)
-      throw new IllegalStateException ();
-    final boolean isLocked = this.pendingNotificationsLocked;
-    if (isLocked)
-      clearAndUnlockPendingNotifications ();
-    return isLocked;
-  }
-  
-  /** Fires and locks the pending notifications to listeners.
-   * 
-   * <p>
-   * Fires, if present, pre-notification hooks and post-notification actions, even if the set of pending notifications is empty.
-   * The post-notification actions are cleared.
-   * 
-   * <p>
-   * Note that listeners are <i>not</i> notified with empty notification sets!
-   * 
-   * @throws IllegalStateException If the time of pending notifications is not equal to {@link #getLastUpdateTime},
-   *                               if this entity is currently firing notifications (already).
-   * 
-   * @see #registerPreNotificationHook
-   * @see #doAfterNotifications
-   * 
-   */
-  protected final void fireAndLockPendingNotifications ()
-  {
-    if ((! this.pendingNotifications.isEmpty ()) && this.pendingNotificationsTime != getLastUpdateTime ())
-      throw new IllegalStateException ();
-    if (this.firingPendingNotifications)
-      throw new IllegalStateException ();
-    this.pendingNotificationsLocked = true;
-    this.firingPendingNotifications = true;
-    final boolean isResetNotification = (this.pendingNotifications.size () == 1
-                                        && this.pendingNotifications.get (0).containsKey (SimEntitySimpleEventType.RESET));
-    if (! isResetNotification)
-      for (final PreNotificationHook preNotificationHook : this.preNotificationHooks)
-        preNotificationHook.hook (this.pendingNotifications);
-    if (! this.pendingNotifications.isEmpty ())
-    {
-      final double time = getLastUpdateTime ();
-      // Respect policy for unknown notification types.
-      for (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> notification : this.pendingNotifications)
-      {
-        final SimEntitySimpleEventType.Member notificationType = notification.keySet ().iterator ().next ();
-        if (! this.notificationMap.containsKey (notificationType))
-          switch (this.unknownNotificationTypePolicy)
-          {
-            case FIRE_AND_WARN:
-              LOGGER.log (Level.WARNING, "Unknown notification type {0}.", notificationType);
-              break;
-            case FIRE_SILENTLY:
-              break;
-            case ERROR:
-              throw new IllegalArgumentException ();
-            default:
-              throw new RuntimeException ();
-          }
-      }    
-      for (SimEntityListener l : this.simEntityListeners)
-        l.notifyStateChanged (time, this, this.pendingNotifications);
-      for (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> notification : this.pendingNotifications)
-      {
-        final SimEntitySimpleEventType.Member notificationType = notification.keySet ().iterator ().next ();
-        final SimEntityEvent notificationEvent = notification.values ().iterator ().next ();
-        if (this.notificationMap.containsKey (notificationType)
-        &&  this.notificationMap.get (notificationType) != null)
-          this.notificationMap.get (notificationType).fire (notificationEvent);
-      }
-    }
-    this.firingPendingNotifications = false;
-    while (! this.postNotificationActions.isEmpty ())
-      this.postNotificationActions.remove (0).execute ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
