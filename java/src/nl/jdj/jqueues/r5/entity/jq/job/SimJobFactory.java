@@ -1,7 +1,8 @@
-package nl.jdj.jqueues.r5;
+package nl.jdj.jqueues.r5.entity.jq.job;
 
 import java.util.Map;
-import nl.jdj.jqueues.r5.entity.job.DefaultSimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJobFactory;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A factory for {@link SimJob}s.
@@ -11,10 +12,24 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * @see DefaultSimJobFactory
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 @FunctionalInterface
 public interface SimJobFactory<J extends SimJob, Q extends SimQueue>
 {
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Creates a new {@link SimJob} with given name and requested-service time map.
    * 
@@ -29,5 +44,11 @@ public interface SimJobFactory<J extends SimJob, Q extends SimQueue>
    * 
    */
   public J newInstance (SimEventList eventList, String name, Map<Q, Double> requestedServiceTimeMap);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
 }

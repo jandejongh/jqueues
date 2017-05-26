@@ -1,4 +1,8 @@
-package nl.jdj.jqueues.r5;
+package nl.jdj.jqueues.r5.entity.jq.job;
+
+import nl.jdj.jqueues.r5.entity.SimEntity;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimQoS;
 
 /** A {@link SimJob} represents an amount of work or a task to be carried out by one
  *  or more {@link SimQueue}s.
@@ -10,11 +14,25 @@ package nl.jdj.jqueues.r5;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public interface SimJob<J extends SimJob, Q extends SimQueue>
-extends SimEntity<J, Q>
+extends SimEntity, SimQoS<J, Q>
 {
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** The queue this job is currently visiting.
    *
    * @return The {@link SimQueue} this {@link SimJob} is currently visiting or
@@ -22,6 +40,30 @@ extends SimEntity<J, Q>
    */
   public Q getQueue ();
 
+  /** Set the queue being visited.
+   *
+   * <p>
+   * This method is for private use by {@link SimQueue}s and subclasses,
+   * and should not be used elsewhere.
+   * It is set by the {@link SimQueue} upon arrival of the {@link SimJob}.
+   *
+   * @param queue The queue being visited, may be null as a result of a departure event.
+   *
+   * @see SimQueue#arrive
+   *
+   * @throws IllegalStateException If the job is already visiting another {@link SimQueue},
+   *                               and the supplied argument is not {@code null}.
+   *
+   */
+  public void setQueue (Q queue)
+    throws IllegalStateException;
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** The requested service time at given queue.
    *
    * <p>
@@ -43,6 +85,7 @@ extends SimEntity<J, Q>
    * @param queue The {@link SimQueue} for which the service time is requested,
    *              if {@code null}, the service time at the current queue is used,
    *              or zero if the job is not currently visiting a queue.
+   * 
    * @return The service time at given queue.
    *
    * @throws IllegalArgumentException If the queue supplied cannot serve the job.
@@ -53,22 +96,10 @@ extends SimEntity<J, Q>
   public double getServiceTime (Q queue)
     throws IllegalArgumentException;
 
-  /** Set the queue being visited.
-   *
-   * <p>
-   * This method is for private use by {@link SimQueue}s and subclasses,
-   * and should not be used elsewhere.
-   * It is set by the {@link SimQueue} upon arrival of the {@link SimJob}.
-   *
-   * @param queue The queue being visited, may be null as a result of a departure event.
-   *
-   * @see SimQueue#arrive
-   *
-   * @throws IllegalStateException If the job is already visiting another {@link SimQueue},
-   *                               and the supplied argument is not {@code null}.
-   *
-   */
-  public void setQueue (Q queue)
-    throws IllegalStateException;
-
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
 }
