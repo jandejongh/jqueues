@@ -60,6 +60,14 @@ import nl.jdj.jsimulation.r5.SimEventListResetListener;
  * @see SimQueue
  * @see AbstractSimEntity
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public interface SimEntity
 extends SimEventListResetListener
