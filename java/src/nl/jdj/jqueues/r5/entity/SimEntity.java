@@ -2,7 +2,6 @@ package nl.jdj.jqueues.r5.entity;
 
 import java.util.Set;
 import java.util.logging.Level;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
 import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType.Member;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
@@ -252,11 +251,11 @@ extends SimEventListResetListener
    * 
    * @return The operation reply, non-{@code null} unless the request was unknown and ignored.
    * 
-   * @throws IllegalArgumentException If time is in the past
-   *                                  and the operation is not a {@link SimEntityOperationUtils.ResetOperation},
-   *                                  or if the request is {@code null}, illegally structured, or contains illegal arguments,
+   * @throws IllegalArgumentException If time is in the past,
+   *                                  if the request is {@code null}, illegally structured, or contains illegal arguments,
    *                                  or if the corresponding operation is not registered and the policy is not to accept that.
    * 
+   * @see #getRegisteredOperations
    * @see UnknownOperationPolicy
    * @see #getUnknownOperationPolicy
    * 
@@ -387,7 +386,7 @@ extends SimEventListResetListener
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // RESET [OPERATION]
+  // RESET [OPERATION/NOTIFICATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -442,7 +441,7 @@ extends SimEventListResetListener
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // UPDATE [NOTIFICATION]
+  // UPDATE [OPERATION/NOTIFICATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
