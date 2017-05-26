@@ -750,7 +750,13 @@ implements SimEntity
    * in order to ensure this.
    * This current method is intended to be used by subclasses to perform the reset.
    * 
+   * <p>
+   * The last-update time ({@link #getLastUpdateTime}) has already been set to the new value,
+   * but listeners have <i>not</i> been notified yet.
+   * 
    * @see SimEntity#resetEntity
+   * @see #update
+   * @see #getLastUpdateTime
    * 
    */
   protected void resetEntitySubClass ()
