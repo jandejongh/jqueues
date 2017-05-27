@@ -773,6 +773,7 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * 
    * <p>
    * Calls super method (not if called from constructor, for which a private variant for local resets is used),
+   * resets the sub-queue selector,
    * clears the pending revocation event for a sub-queue,
    * clears the internal mapping between real and delegate {@link SimJob}s (removing all real and delegate jobs),
    * and resets all sub-queues in the order in which they appear in {@link #getQueues}.
@@ -787,6 +788,7 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * @see #removeJobFromQueueUponRevokation
    * @see #rescheduleAfterRevokation
    * @see SimQueue#resetEntity
+   * @see SimQueueSelector#resetSimQueueSelector
    * @see #getStartModel
    * @see SimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE
    * @see SimQueue#setServerAccessCredits
@@ -805,6 +807,9 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
   
   private void resetEntitySubClassLocal ()
   {
+    //
+    // NOTE: This method is invoked from the constructor instead of resetEntitySubClass ().
+    //
     this.simQueueSelector.resetSimQueueSelector ();
     this.delegateSimJobMap.clear ();
     this.realSimJobMap.clear ();
