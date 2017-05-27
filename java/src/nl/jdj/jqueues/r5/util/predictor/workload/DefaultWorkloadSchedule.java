@@ -11,19 +11,28 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jqueues.r5.event.SimQueueAccessVacationEvent;
-import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
-import nl.jdj.jqueues.r5.event.SimQueueJobRevocationEvent;
-import nl.jdj.jqueues.r5.event.SimQueueServerAccessCreditsEvent;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.event.map.DefaultSimEntityEventMap;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent.Arrival;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent.Revocation;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent.QueueAccessVacation;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent.ServerAccessCredits;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 
 /** A default implementation of {@link WorkloadSchedule}.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class DefaultWorkloadSchedule
 extends DefaultSimEntityEventMap
@@ -37,7 +46,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Creates a new {@link DefaultWorkloadSchedule}, filling out all the internal sets and maps from scanning a set of
-   *  {@link SimEntityEvent}s.
+   *  {@link SimJQEvent}s.
    * 
    * @param <E>         The event type.
    * @param queues      The queues to consider; events related to other queues are ignored; if {@code null},
@@ -47,7 +56,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
    * @throws WorkloadScheduleException If the workload is invalid or ambiguous (for instance).
    * 
    */
-  public <E extends SimEntityEvent>
+  public <E extends SimJQEvent>
   DefaultWorkloadSchedule
   (final Set<? extends SimQueue> queues,
    final Set<E> queueEvents)
@@ -65,7 +74,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   }
   
   /** Creates a new {@link DefaultWorkloadSchedule}, filling out all the internal sets and maps from scanning a set of
-   *  {@link SimEntityEvent}s.
+   *  {@link SimJQEvent}s.
    * 
    * <p>
    * With this constructor, all queues found in the {@code queueEvent}s are considered.
@@ -79,7 +88,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
    * @throws WorkloadScheduleException If the workload is invalid or ambiguous (for instance).
    * 
    */
-  public <E extends SimEntityEvent>
+  public <E extends SimJQEvent>
   DefaultWorkloadSchedule
   (final Set<E> queueEvents)
   throws WorkloadScheduleException
@@ -88,7 +97,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   }
 
   /** Creates a new {@link DefaultWorkloadSchedule}, filling out all the internal sets and maps from scanning a map of
-   *  {@link SimEntityEvent}s.
+   *  {@link SimJQEvent}s.
    * 
    * @param <E>         The event type.
    * @param queues      The queues to consider; events related to other queues are ignored; if {@code null},
@@ -98,7 +107,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
    * @throws WorkloadScheduleException If the workload is invalid or ambiguous (for instance).
    * 
    */
-  public <E extends SimEntityEvent>
+  public <E extends SimJQEvent>
   DefaultWorkloadSchedule
   (final Set<? extends SimQueue> queues,
    final Map<Double, Set<E>> queueEvents)
@@ -117,7 +126,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   }
     
   /** Creates a new {@link DefaultWorkloadSchedule}, filling out all the internal sets and maps from scanning a map of
-   *  {@link SimEntityEvent}s.
+   *  {@link SimJQEvent}s.
    * 
    * <p>
    * With this constructor, all queues found in the {@code queueEvent}s are considered.
@@ -131,7 +140,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
    * @throws WorkloadScheduleException If the workload is invalid or ambiguous (for instance).
    * 
    */
-  public <E extends SimEntityEvent>
+  public <E extends SimJQEvent>
   DefaultWorkloadSchedule
   (final Map<Double, Set<E>> queueEvents)
   throws WorkloadScheduleException
@@ -157,17 +166,17 @@ implements WorkloadSchedule, WorkloadScheduleHandler
     if (queue == null || ! getQueues ().contains (queue))
       return Double.NaN;
     double nextEventTime = Double.NaN;
-    final NavigableMap<Double,Set<SimEntityEvent>> timeSimEntityMap = getSimQueueTimeSimEntityEventMap ().get (queue);
+    final NavigableMap<Double,Set<SimJQEvent>> timeSimEntityMap = getSimQueueTimeSimEntityEventMap ().get (queue);
     if (timeSimEntityMap != null)
     {
-      final Entry<Double, Set<SimEntityEvent>> nextEntry =
+      final Entry<Double, Set<SimJQEvent>> nextEntry =
         (Double.isNaN (time) ? timeSimEntityMap.firstEntry () : timeSimEntityMap.higherEntry (time));
       if (nextEntry != null)
       {
         nextEventTime = nextEntry.getKey ();
         if (eventTypes != null)
         {
-          for (final SimEntityEvent entityEvent : nextEntry.getValue ())
+          for (final SimJQEvent entityEvent : nextEntry.getValue ())
             if (entityEvent == null)
               throw new RuntimeException ();
             else if (! this.handlerEventMap.containsKey (entityEvent.getClass ()))
@@ -196,18 +205,18 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private final Map<Class<? extends SimEntityEvent>, WorkloadScheduleHandler> handlerEventMap = new HashMap<> ();
+  private final Map<Class<? extends SimJQEvent>, WorkloadScheduleHandler> handlerEventMap = new HashMap<> ();
   
   private final Map<String, WorkloadScheduleHandler> handlerNameMap = new HashMap<> ();
   
-  /** Registers a handler for {@link SimEntityEvent}s, and, upon request of the handler, passes control to it for scanning.
+  /** Registers a handler for {@link SimJQEvent}s, and, upon request of the handler, passes control to it for scanning.
    * 
    * @param handler The handler.
    * 
    * @throws IllegalArgumentException If the handler or its name are {@code null},
    *                                  if a handler with the same name has been registered already,
    *                                  if the handler's event map has a {@code null} key,
-   *                                  or if it tries to register {@link SimEntityEvent}s that are already registered
+   *                                  or if it tries to register {@link SimJQEvent}s that are already registered
    *                                  by other handlers.
    * 
    * @see WorkloadScheduleHandler
@@ -222,12 +231,12 @@ implements WorkloadSchedule, WorkloadScheduleHandler
       || handler.getHandlerName () == null
       || this.handlerNameMap.containsKey (handler.getHandlerName ()))
       throw new IllegalArgumentException ();
-    final Map<Class<? extends SimEntityEvent>, SimEntitySimpleEventType.Member> eventMap = handler.getEventMap ();
+    final Map<Class<? extends SimJQEvent>, SimEntitySimpleEventType.Member> eventMap = handler.getEventMap ();
     if (eventMap != null)
     {
       if (eventMap.containsKey (null))
         throw new IllegalArgumentException ();
-      for (Class<? extends SimEntityEvent> eventClass : eventMap.keySet ())
+      for (Class<? extends SimJQEvent> eventClass : eventMap.keySet ())
       {
         if (this.handlerEventMap.containsKey (eventClass))
           throw new IllegalArgumentException ();
@@ -237,9 +246,9 @@ implements WorkloadSchedule, WorkloadScheduleHandler
     this.handlerNameMap.put (handler.getHandlerName (), handler);
     if (handler.needsScan ())
     {
-      final Set<SimEntityEvent> handlerProcessedQueueEvents = handler.scan (this);
+      final Set<SimJQEvent> handlerProcessedQueueEvents = handler.scan (this);
       if (handlerProcessedQueueEvents != null)
-        for (final SimEntityEvent event : handlerProcessedQueueEvents)
+        for (final SimJQEvent event : handlerProcessedQueueEvents)
           if (event == null || this.processedQueueEvents.contains (event))
             throw new WorkloadScheduleInvalidException ();
       if (handlerProcessedQueueEvents != null)
@@ -265,10 +274,10 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private final Set<SimEntityEvent> queueEvents = new LinkedHashSet<> ();
+  private final Set<SimJQEvent> queueEvents = new LinkedHashSet<> ();
   
   @Override
-  public final Set<SimEntityEvent> getQueueEvents ()
+  public final Set<SimJQEvent> getQueueEvents ()
   {
     return Collections.unmodifiableSet (this.queueEvents);
   }
@@ -279,10 +288,10 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private final Set<SimEntityEvent> processedQueueEvents = new HashSet<> ();
+  private final Set<SimJQEvent> processedQueueEvents = new HashSet<> ();
   
   @Override
-  public final Set<SimEntityEvent> getProcessedQueueEvents ()
+  public final Set<SimJQEvent> getProcessedQueueEvents ()
   {
     return Collections.unmodifiableSet (this.processedQueueEvents);
   }
@@ -432,14 +441,14 @@ implements WorkloadSchedule, WorkloadScheduleHandler
     return "SimQueueHandler";
   }
 
-  private final static Map<Class<? extends SimEntityEvent>, SimEntitySimpleEventType.Member> EVENT_MAP = new HashMap<> ();
+  private final static Map<Class<? extends SimJQEvent>, SimEntitySimpleEventType.Member> EVENT_MAP = new HashMap<> ();
   
   static
   {
-    DefaultWorkloadSchedule.EVENT_MAP.put (SimQueueAccessVacationEvent.class,       SimQueueSimpleEventType.QUEUE_ACCESS_VACATION);
-    DefaultWorkloadSchedule.EVENT_MAP.put (SimQueueJobArrivalEvent.class,           SimQueueSimpleEventType.ARRIVAL);
-    DefaultWorkloadSchedule.EVENT_MAP.put (SimQueueJobRevocationEvent.class,        SimQueueSimpleEventType.REVOCATION);
-    DefaultWorkloadSchedule.EVENT_MAP.put (SimQueueServerAccessCreditsEvent.class,  SimQueueSimpleEventType.SERVER_ACCESS_CREDITS);
+    DefaultWorkloadSchedule.EVENT_MAP.put (SimQueueEvent.QueueAccessVacation.class, SimQueueSimpleEventType.QUEUE_ACCESS_VACATION);
+    DefaultWorkloadSchedule.EVENT_MAP.put (SimJQEvent.Arrival.class,                SimQueueSimpleEventType.ARRIVAL);
+    DefaultWorkloadSchedule.EVENT_MAP.put (SimJQEvent.Revocation.class,             SimQueueSimpleEventType.REVOCATION);
+    DefaultWorkloadSchedule.EVENT_MAP.put (SimQueueEvent.ServerAccessCredits.class, SimQueueSimpleEventType.SERVER_ACCESS_CREDITS);
   }
   
   /** Returns a appropriate event map for this handler
@@ -447,10 +456,10 @@ implements WorkloadSchedule, WorkloadScheduleHandler
    * 
    * @return An event map for queue-access vacations, arrivals, revocations and server-access credits.
    * 
-   * @see SimQueueAccessVacationEvent
-   * @see SimQueueJobArrivalEvent
-   * @see SimQueueJobRevocationEvent
-   * @see SimQueueServerAccessCreditsEvent
+   * @see QueueAccessVacation
+   * @see Arrival
+   * @see Revocation
+   * @see ServerAccessCredits
    * @see SimQueueSimpleEventType#QUEUE_ACCESS_VACATION
    * @see SimQueueSimpleEventType#ARRIVAL
    * @see SimQueueSimpleEventType#REVOCATION
@@ -458,7 +467,7 @@ implements WorkloadSchedule, WorkloadScheduleHandler
    * 
    */
   @Override
-  public final Map<Class<? extends SimEntityEvent>, SimEntitySimpleEventType.Member> getEventMap ()
+  public final Map<Class<? extends SimJQEvent>, SimEntitySimpleEventType.Member> getEventMap ()
   {
     return DefaultWorkloadSchedule.EVENT_MAP;
   }
@@ -475,11 +484,11 @@ implements WorkloadSchedule, WorkloadScheduleHandler
   }
 
   @Override
-  public final Set<SimEntityEvent> scan (final DefaultWorkloadSchedule workloadSchedule)
+  public final Set<SimJQEvent> scan (final DefaultWorkloadSchedule workloadSchedule)
   {
     if (workloadSchedule != this)
       throw new IllegalArgumentException ();
-    final Set<SimEntityEvent> handlerProcessedQueueEvents = new HashSet<> ();
+    final Set<SimJQEvent> handlerProcessedQueueEvents = new HashSet<> ();
     for (SimQueue q : this.queues)
     {
       this.qavTimesMap.put (q, new TreeMap<> ());
@@ -491,23 +500,23 @@ implements WorkloadSchedule, WorkloadScheduleHandler
     }
     if (this.queueEvents != null)
     {
-      for (final SimEntityEvent event : this.queueEvents)
+      for (final SimJQEvent event : this.queueEvents)
       {
         final double time = event.getTime ();
         final SimQueue queue = event.getQueue ();
         final SimJob job = event.getJob ();
         if (this.queues.contains (queue))
         {
-          if (event instanceof SimQueueAccessVacationEvent)
+          if (event instanceof SimQueueEvent.QueueAccessVacation)
           {
             handlerProcessedQueueEvents.add (event);
-            final boolean vacation = ((SimQueueAccessVacationEvent) event).getVacation ();
+            final boolean vacation = ((SimQueueEvent.QueueAccessVacation) event).getVacation ();
             final NavigableMap<Double, List<Boolean>> qavTimesMap_q = this.qavTimesMap.get (queue);
             if (! qavTimesMap_q.containsKey (time))
               qavTimesMap_q.put (time, new ArrayList<> ());
             qavTimesMap_q.get (time).add (vacation);
           }
-          else if (event instanceof SimQueueJobArrivalEvent)
+          else if (event instanceof SimJQEvent.Arrival)
           {
             handlerProcessedQueueEvents.add (event);
             this.jobs.add (job);
@@ -520,11 +529,11 @@ implements WorkloadSchedule, WorkloadScheduleHandler
               timeArrsMap_q.put (time, new ArrayList<> ());
             timeArrsMap_q.get (time).add (job);
           }
-          else if (event instanceof SimQueueJobRevocationEvent)
+          else if (event instanceof SimJQEvent.Revocation)
           {
             handlerProcessedQueueEvents.add (event);
             this.jobs.add (job);
-            final boolean interruptService = ((SimQueueJobRevocationEvent) event).isInterruptService ();
+            final boolean interruptService = ((SimJQEvent.Revocation) event).isInterruptService ();
             final  Map<SimJob, List<Map<Double, Boolean>>> revTimesMap_q = this.revTimesMap.get (queue);
             if (! revTimesMap_q.containsKey (job))
               revTimesMap_q.put (job, new ArrayList<> ());
@@ -538,10 +547,10 @@ implements WorkloadSchedule, WorkloadScheduleHandler
             jobIsMap.put (job, interruptService);
             timeRevsMap_q.get (time).add (jobIsMap);
           }
-          else if (event instanceof SimQueueServerAccessCreditsEvent)
+          else if (event instanceof SimQueueEvent.ServerAccessCredits)
           {
             handlerProcessedQueueEvents.add (event);
-            final int credits = ((SimQueueServerAccessCreditsEvent) event).getCredits ();
+            final int credits = ((SimQueueEvent.ServerAccessCredits) event).getCredits ();
             final NavigableMap<Double, List<Integer>> sacTimesMap_q = this.sacTimesMap.get (queue);
             if (! sacTimesMap_q.containsKey (time))
               sacTimesMap_q.put (time, new ArrayList<> ());

@@ -5,17 +5,24 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.event.map.SimEntityEventMap;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
 
 /** A representation of a schedule of workload and state-setting events for a set of {@link SimQueue}s.
  *
  * <p>
  * The set of {@link SimQueue}s to which the workload applies must be fixed upon construction.
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public interface WorkloadSchedule
@@ -37,7 +44,7 @@ extends SimEntityEventMap
    *         ordered as found in the source upon construction.
    * 
    */
-  public Set<SimEntityEvent> getQueueEvents ();
+  public Set<SimJQEvent> getQueueEvents ();
 
   /** Returns the time of the next event(s), and optionally their types,
    *  scheduled strictly beyond a given time at a specific queue.
@@ -97,7 +104,7 @@ extends SimEntityEventMap
    *         in no particular specified order.
    * 
    */
-  public Set<SimEntityEvent> getProcessedQueueEvents ();
+  public Set<SimJQEvent> getProcessedQueueEvents ();
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -335,8 +342,8 @@ extends SimEntityEventMap
   public default boolean isUnambiguous_ROEL ()
   throws WorkloadScheduleInvalidException
   {
-    for (final Map<SimQueue, Set<SimEntityEvent>> timeEvents : getTimeSimQueueSimEntityEventMap ().values ())
-      for (final Entry<SimQueue, Set<SimEntityEvent>> timeEventsQueueEntry : timeEvents.entrySet ())
+    for (final Map<SimQueue, Set<SimJQEvent>> timeEvents : getTimeSimQueueSimEntityEventMap ().values ())
+      for (final Entry<SimQueue, Set<SimJQEvent>> timeEventsQueueEntry : timeEvents.entrySet ())
         if (getQueues ().contains (timeEventsQueueEntry.getKey ()) && timeEventsQueueEntry.getValue ().size () > 1)
           return false;
     return true;

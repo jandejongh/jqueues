@@ -7,12 +7,20 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 
 /** A representation of an unambiguous (U) schedule of workload and state-setting events for a single {@link SimQueue}
  *  (SQ) with jobs visiting that queue exactly once (SV) and assuming an underlying Random-Order Event List (ROEL).
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public interface WorkloadSchedule_SQ_SV_ROEL_U
 extends WorkloadSchedule_SQ_SV

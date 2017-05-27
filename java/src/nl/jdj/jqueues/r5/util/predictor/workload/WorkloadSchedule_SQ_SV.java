@@ -5,14 +5,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 
 /** A representation of a schedule of workload and state-setting events for a single {@link SimQueue} (SQ) with jobs visiting that
  *  queue exactly once (SV).
  *
  * <p>
  * The {@link SimQueue} to which the workload applies must be fixed upon construction.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public interface WorkloadSchedule_SQ_SV
