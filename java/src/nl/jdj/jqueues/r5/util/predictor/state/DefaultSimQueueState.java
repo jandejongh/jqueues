@@ -11,15 +11,24 @@ import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.ToDoubleBiFunction;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue.AutoRevocationPolicy;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 
 /** A default implementation of {@link SimQueueState}.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public class DefaultSimQueueState<J extends SimJob, Q extends SimQueue>
@@ -496,7 +505,7 @@ implements SimQueueState<J, Q>
    * 
    * @param <J> The type of job supported.
    * 
-   * @see SimQueue.AutoRevocationPolicy#UPON_START
+   * @see AutoRevocationPolicy#UPON_START
    * 
    */
   @FunctionalInterface
@@ -529,7 +538,7 @@ implements SimQueueState<J, Q>
    * 
    * @throws IllegalArgumentException If the hook is {@code null} or already registered.
    * 
-   * @see SimQueue.AutoRevocationPolicy#UPON_START
+   * @see AutoRevocationPolicy#UPON_START
    * 
    */  
   public final void registerPostStartHook (final PostStartHook<J> postStartHook, final Object userData)
