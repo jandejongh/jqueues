@@ -1,9 +1,12 @@
-package nl.jdj.jqueues.r5;
+package nl.jdj.jqueues.r5.entity.jq.queue;
 
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.SimEntity;
+import nl.jdj.jqueues.r5.entity.SimEntityListener;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 
@@ -31,7 +34,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * or in the queue's <i>service area</i>,
  * in which the job <i>can</i> receive <i>service</i> from
  * the servers in the service area.
- * At the start of a visit, a job is either put
+ * At the beginning of a visit (the <i>arrival</i>), a job is either put
  * in the waiting area or directly into the service area
  * (or <i>dropped</i> immediately).
  * A job can move at most once from the waiting into the service area,
@@ -56,9 +59,12 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * <li>a <i>departure</i> (the visit ends normally),
  * <li>a <i>drop</i> (the queue cannot complete the visit, e.g., because of limited buffer space or vacation),
  * <li>a <i>revocation</i> (the job is removed upon external request, or because a user-specified state condition is met,
- *                                                                    so-called <i>auto-revocation</i>).
+ *                                                                    a so-called <i>auto-revocation</i>).
  * </ul>
- * If a visit ends, the job is said to <i>exit</i> (<i>depart from</i>; <i>be dropped at</i>; <i>be revoked at</i>) the queue.
+ * 
+ * <p>
+ * If a visit ends, the job is said to
+ * <i>exit</i> (<i>depart from</i>; <i>be dropped at</i>; <i>be (auto-)revoked at</i>) the queue.
  * Each way to exit the queue can be from the waiting area or from the service area
  * (but sub-classes may restrict the possibilities).
  * 
@@ -78,7 +84,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * <p>
  * Each {@link SimQueue} (and {@link SimJob} for that matter) must notify all state changes,
- * see {@link SimEntityListener} and its sub-interfaces.
+ * see {@link SimEntityListener}.
  * 
  * <p>
  * A partial implementation of {@link SimQueue} is available in {@link AbstractSimQueue}.
@@ -92,9 +98,17 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see SimQueueListener
  * @see AbstractSimQueue
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public interface SimQueue<J extends SimJob, Q extends SimQueue>
-extends SimEntity<J, Q>
+extends SimEntity, SimQoS<J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,64 +125,15 @@ extends SimEntity<J, Q>
    * 
    * <p>
    * Note that the semantics of this method are much less strict than the <code>Object.clone ()</code> method.
-   * Typically, concrete classes will implement this by returning a <code>new (...)</code> object.
+   * Typically, concrete classes will implement this by returning a new {@link SimQueue} object.
    * This way, we circumvent the problem of cloning objects with final (for good reasons) fields.
    * 
    * @return A functional copy of this {@link SimQueue}.
    * 
-   * @throws UnsupportedOperationException If the operation is not supported yet; this should be considered a software error.
+   * @throws UnsupportedOperationException If the operation is not supported (yet); this should be considered a software error.
    * 
    */
   public SimQueue<J, Q> getCopySimQueue () throws UnsupportedOperationException;
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // AutoRevocationPolicy
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** The auto-revocation policy.
-   * 
-   * <p>
-   * Auto-revocation refers to the revocation of jobs upon a specific user-specified state condition.
-   * It plays an essential role in composite queues, notably {@link BlackCompressedTandem2SimQueue}.
-   * 
-   */
-  public enum AutoRevocationPolicy
-  {
-    /** No auto-revocation (this is the mandatory default on each {@link SimQueue}.
-     * 
-     */
-    NONE,
-    /** Job auto-revocation upon start.
-     * 
-     */
-    UPON_START
-  }
-  
-  /** Gets the auto-revocation policy of this queue.
-   * 
-   * @return The auto-revocation policy of this queue.
-   * 
-   * @see AutoRevocationPolicy
-   * 
-   */
-  AutoRevocationPolicy getAutoRevocationPolicy ();
-  
-  /** Sets the auto-revocation policy of this queue.
-   * 
-   * <p>
-   * The auto-revocation policy on a queue should be set only once and before the queue's use.
-   * It must survive queue resets.
-   * 
-   * @param autoRevocationPolicy The new auto-revocation policy, non-{@code null}.
-   * 
-   * @throws IllegalArgumentException If the policy is {@code null}.
-   * 
-   * @see AutoRevocationPolicy
-   * 
-   */
-  void setAutoRevocationPolicy (final AutoRevocationPolicy autoRevocationPolicy);
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -350,7 +315,7 @@ extends SimEntity<J, Q>
   /** Revocation of a job at a queue.
    *
    * <p>
-   * Unlike {@link #revoke(double, nl.jdj.jqueues.r5.SimJob, boolean)}, this request can never fail
+   * Unlike {@link #revoke(double, nl.jdj.jqueues.r5.entity.jq.job.SimJob, boolean)}, this request can never fail
    * in the sense that upon return from this method, the job is no longer present in the queue.
    * This method does nothing if the job is not present a priori at the queue.
    * 
@@ -365,6 +330,55 @@ extends SimEntity<J, Q>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // AutoRevocationPolicy
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** The auto-revocation policy.
+   * 
+   * <p>
+   * Auto-revocation refers to the revocation of jobs upon a specific user-specified state condition.
+   * It plays an essential role in composite queues, notably {@link CompressedTandem2SimQueue}.
+   * 
+   */
+  public enum AutoRevocationPolicy
+  {
+    /** No auto-revocation (this is the mandatory default on each {@link SimQueue}).
+     * 
+     */
+    NONE,
+    /** Job auto-revocation upon start.
+     * 
+     */
+    UPON_START
+  }
+  
+  /** Gets the auto-revocation policy of this queue.
+   * 
+   * @return The auto-revocation policy of this queue.
+   * 
+   * @see AutoRevocationPolicy
+   * 
+   */
+  AutoRevocationPolicy getAutoRevocationPolicy ();
+  
+  /** Sets the auto-revocation policy of this queue.
+   * 
+   * <p>
+   * The auto-revocation policy on a queue should be set only once and before the queue's use.
+   * It must survive queue resets.
+   * 
+   * @param autoRevocationPolicy The new auto-revocation policy, non-{@code null}.
+   * 
+   * @throws IllegalArgumentException If the policy is {@code null}.
+   * 
+   * @see AutoRevocationPolicy
+   * 
+   */
+  void setAutoRevocationPolicy (final AutoRevocationPolicy autoRevocationPolicy);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // SERVER-ACCESS CREDITS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -373,7 +387,7 @@ extends SimEntity<J, Q>
    *
    * <p>
    * The number of server-access credits is the remaining number of jobs allowed to start.
-   * They play an essential role in composite queues, notably {@link BlackCompressedTandem2SimQueue}.
+   * They play an essential role in composite queues, notably {@link CompressedTandem2SimQueue}.
    * 
    * <p>
    * Upon reset, the initial value <i>must</i> be {@link Integer#MAX_VALUE},
@@ -417,6 +431,8 @@ extends SimEntity<J, Q>
    * <li>at least one server-access credit,
    * <li>an empty waiting area.
    * </ul>
+   * 
+   * <p>
    * Note that the actual values of the state properties above is irrelevant.
    * 
    * <p>
@@ -429,7 +445,7 @@ extends SimEntity<J, Q>
    * The {@code StartArmed} state of a queue is admittedly difficult to grasp and unlikely to find many uses in practice,
    * but it is essential for specific types of so-called <i>composite</i> queues,
    * i.e., queues that are composed of other queues.
-   * See, for instance, {@link BlackCompressedTandem2SimQueue}.
+   * See, for instance, {@link CompressedTandem2SimQueue}.
    * 
    * @return True if the queue is in {@code StartArmed} state.
    * 
@@ -437,5 +453,11 @@ extends SimEntity<J, Q>
    * 
    */
   public boolean isStartArmed ();
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
 }

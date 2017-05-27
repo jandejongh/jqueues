@@ -45,10 +45,9 @@ public interface SimEntityOperation
    */
   Class<Rep> getOperationReplyClass ();
     
-  /** Performs the operation on given entity at given time with given request.
+  /** Performs the operation at given time with given request.
    * 
    * @param time    The time at which to perform the request.
-   * @param entity  The entity, non-{@code null}.
    * @param request The request, non-{@code null}.
    * 
    * @return The result (reply) of the operation, non-{@code null}.
@@ -57,7 +56,13 @@ public interface SimEntityOperation
    *                                  the request is of illegal type, or its parameter values are illegal.
    * 
    */
-  Rep doOperation (double time, SimEntity entity, Req request);
+  Rep doOperation (double time, Req request);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // OPERATION REQUEST
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** A request for a {@link SimEntityOperation}.
    * 
@@ -77,6 +82,12 @@ public interface SimEntityOperation
       
   }
     
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // OPERATION REPLY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   /** A reply from a {@link SimEntityOperation}.
    * 
    * @param <O>   The operation type.
@@ -103,6 +114,50 @@ public interface SimEntityOperation
       
   }
     
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // OPERATION REQUEST WITH ENTITY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** A request for an operation that requires an entity argument.
+   * 
+   * @param <O>   The operation type.
+   * @param <Req> The request type (corresponding to the operation type).
+   * 
+   */
+  abstract static class RequestE<O extends SimEntityOperation, Req extends SimEntityOperation.Request>
+  implements SimEntityOperation.Request<O, Req>
+  {
+    
+    /** Creates the request.
+     * 
+     * @param entity The entity, non-{@code null}.
+     * 
+     * @throws IllegalArgumentException If the entity is {@code null}.
+     * 
+     */
+    public RequestE (final SimEntity entity)
+    {
+      if (entity == null)
+        throw new IllegalArgumentException ();
+      this.entity = entity;
+    }
+    
+    private final SimEntity entity;
+    
+    /** Returns the entity argument of this request.
+     * 
+     * @return The entity argument of this request, non-{@code null}.
+     * 
+     */
+    public final SimEntity getEntity ()
+    {
+      return this.entity;
+    }
+    
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // RESET [OPERATION]
@@ -196,13 +251,13 @@ public interface SimEntityOperation
      */
     @Override
     public final ResetReply doOperation
-    (final double time, final SimEntity entity, final ResetRequest request)
+    (final double time, final ResetRequest request)
     {
-      if (entity == null
-        || request == null
+      if (request == null
+        || request.getEntity () == null
         || request.getOperation () != getInstance ())
         throw new IllegalArgumentException ();
-      entity.resetEntity ();
+      request.getEntity ().resetEntity ();
       return new ResetReply (request);
     }
     
@@ -212,17 +267,20 @@ public interface SimEntityOperation
    * 
    */
   public final static class ResetRequest
-  implements SimEntityOperation.Request<Reset, ResetRequest>
+  extends SimEntityOperation.RequestE<Reset, ResetRequest>
   {
     
     /** Creates the request.
      * 
+     * @param entity The entity, non-{@code null}.
+     * 
      */
-    public ResetRequest ()
+    public ResetRequest (final SimEntity entity)
     {
+      super (entity);
     }
     
-    /** *  Returns the singleton instance of {@link Reset}.
+    /** Returns the singleton instance of {@link Reset}.
      * 
      * @return The singleton instance of {@link Reset}.
      * 
@@ -370,13 +428,13 @@ public interface SimEntityOperation
      */
     @Override
     public final UpdateReply doOperation
-    (final double time, final SimEntity entity, final UpdateRequest request)
+    (final double time, final UpdateRequest request)
     {
-      if (entity == null
-        || request == null
+      if (request == null
+        || request.getEntity () == null
         || request.getOperation () != getInstance ())
         throw new IllegalArgumentException ();
-      entity.update (time);
+      request.getEntity ().update (time);
       return new UpdateReply (request);
     }
     
@@ -386,14 +444,17 @@ public interface SimEntityOperation
    * 
    */
   public final static class UpdateRequest
-  implements SimEntityOperation.Request<Update, UpdateRequest>
+  extends SimEntityOperation.RequestE<Update, UpdateRequest>
   {
     
     /** Creates the request.
      * 
+     * @param entity The entity, non-{@code null}.
+     * 
      */
-    public UpdateRequest ()
+    public UpdateRequest (final SimEntity entity)
     {
+      super (entity);
     }
     
     /** Returns the singleton instance of {@link Update}.

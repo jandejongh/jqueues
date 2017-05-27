@@ -1,4 +1,7 @@
-package nl.jdj.jqueues.r5;
+package nl.jdj.jqueues.r5.entity.jq.queue;
+
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.SimJQListener;
 
 /** A listener to state changes of one or multiple {@link SimQueue}s.
  *
@@ -10,9 +13,17 @@ package nl.jdj.jqueues.r5;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public interface SimQueueListener<J extends SimJob, Q extends SimQueue>
-extends SimEntityListener<J, Q>
+extends SimJQListener<J, Q>
 {
  
   /** Notification of the start of a queue-access vacation.
@@ -63,5 +74,11 @@ extends SimEntityListener<J, Q>
    * 
    */
   public void notifyNewStartArmed (double time, Q queue, boolean startArmed);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
 }

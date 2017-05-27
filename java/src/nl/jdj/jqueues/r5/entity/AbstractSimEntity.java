@@ -317,10 +317,11 @@ implements SimEntity
         default:
           throw new RuntimeException ();
       }
+    // XXX NEED FURTHER CHECKING ON OPERATION (REQUEST) BY SUBCLASSES!!!
     if (this.delegatedOperations.containsKey (request.getOperation ()))
-      return (Rep) this.delegatedOperations.get (request.getOperation ()).doOperation (time, this, request);
+      return (Rep) this.delegatedOperations.get (request.getOperation ()).doOperation (time, request);
     else
-      return (Rep) request.getOperation ().doOperation (time, this, request);
+      return (Rep) request.getOperation ().doOperation (time, request);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
