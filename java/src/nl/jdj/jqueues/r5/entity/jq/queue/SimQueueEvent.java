@@ -3,6 +3,8 @@ package nl.jdj.jqueues.r5.entity.jq.queue;
 import nl.jdj.jqueues.r5.entity.jq.job.*;
 import nl.jdj.jqueues.r5.entity.jq.*;
 import nl.jdj.jqueues.r5.entity.SimEntity;
+import nl.jdj.jqueues.r5.entity.SimEntityOperation;
+import nl.jdj.jqueues.r5.entity.jq.SimJQOperation.Request;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 
@@ -52,6 +54,127 @@ extends SimJQEvent<J, Q>
     super (name, time, queue, null, action);
     if (queue == null)
       throw new IllegalArgumentException ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // OPERATION [EVENT]
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** A {@link SimEvent} requesting a {@link SimEntityOperation} at a specific {@link SimQueue}.
+   * 
+   * <p>
+   * The event always has a non-{@code null} {@link SimEventAction}, even if used as a notification.
+   * 
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
+   * 
+   */
+  public final static class Operation<J extends SimJob, Q extends SimQueue>
+  extends SimQueueEvent<J, Q>
+  {
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // CONSTRUCTOR(S) / FACTORY / CLONING
+    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static
+    <J extends SimJob, Q extends SimQueue>
+    SimEventAction<J>
+    createAction (final Q queue, SimEntityOperation.Request request)
+    {
+      if (queue == null || request == null)
+        throw new IllegalArgumentException ();
+      return (final SimEvent<J> event) ->
+      {
+        queue.doOperation (event.getTime (), request);
+      };
+    }
+
+    /** Creates an operation event at a specific queue.
+     * 
+     * <p>
+     * The event is provided with an appropriate non-{@code null} new {@link SimEventAction},
+     * invoking {@link SimQueue#doOperation}.
+     * 
+     * @param queue   The queue at which to perform the operation.
+     * @param time    The time at which to perform the operation.
+     * @param request The operation request for the queue.
+     * 
+     * @throws IllegalArgumentException If the queue or request is <code>null</code>.
+     * 
+     * @see SimQueue#doOperation
+     * 
+     */
+    public Operation
+    (final Q queue, final double time, SimEntityOperation.Request request)
+    {
+      super ("Op[" + request + "]@" + queue, time, queue, createAction (queue, request));
+      this.request = request;
+    }
+
+    /** Creates a new operation event at given queue (if non-{@code null}) with given new job (if non-{@code null}).
+     * 
+     * <p>
+     * Special care is taken of "migrating" the request to the new job and/or queue.
+     * However, a fool-proof approach is not yet within reach.
+     * The current implementation throws an {@link UnsupportedOperationException}
+     * for request that are not of type {@link Request}.
+     * 
+     * @return A new operation event at given queue (if non-{@code null}).
+     * 
+     * @throws IllegalArgumentException If the request is of unsupported type,
+     *                                  or if illegal arguments are provided for the specific operation.
+     * 
+     * @see #getRequest
+     * @see Request
+     * @see Request#forJob
+     * @see Request#forQueue
+     * @see Request#forJobAndQueue
+     * 
+     */
+    @Override
+    public Operation copyForQueueAndJob (final Q newQueue, final J newJob)
+    {
+      if (this.request == null)
+        throw new IllegalStateException ();    
+      if (! (this.request instanceof SimJQOperation.Request))
+        throw new UnsupportedOperationException ();
+      final SimJQOperation.Request rRequest = (SimJQOperation.Request) request;
+      final SimJQOperation.Request cRequest;
+      if (rRequest instanceof SimJQOperation.RequestJ)
+        cRequest = rRequest.forJob (newJob != null ? newJob : rRequest.getJob ());
+      else if (rRequest instanceof SimJQOperation.RequestQ)
+        cRequest = rRequest.forQueue (newQueue != null ? newQueue : rRequest.getQueue ());
+      else if (rRequest instanceof SimJQOperation.RequestJQ)
+        cRequest = rRequest.forJobAndQueue (newJob != null ? newJob : rRequest.getJob (),
+                                            newQueue != null ? newQueue : rRequest.getQueue ());
+      else
+        throw new UnsupportedOperationException ();
+      return new Operation (newQueue, getTime (), cRequest); 
+    }
+  
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // REQUEST
+    //  
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private final SimEntityOperation.Request request;
+
+    /** Returns the operation request of this event.
+     * 
+     * @return The operation request of this event, non-{@code null}.
+     * 
+     */
+    public final SimEntityOperation.Request getRequest ()
+    {
+      return this.request;
+    }
+
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
