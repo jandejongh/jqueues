@@ -5,6 +5,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** (General) Feedback queue.
