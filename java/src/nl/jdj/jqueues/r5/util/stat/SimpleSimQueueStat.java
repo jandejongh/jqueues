@@ -1,9 +1,9 @@
 package nl.jdj.jqueues.r5.util.stat;
 
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 
-/** An concrete class for gathering the most basic queue-related statistics on a {@link SimQueue}.
+/** A concrete class for gathering the most basic queue-related statistics on a {@link SimQueue}.
  *
  * <p>
  * We call a performance measure <i>queue</i>-related if its value depends only on the state of the queue.
@@ -14,6 +14,14 @@ import nl.jdj.jqueues.r5.SimQueue;
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public class SimpleSimQueueStat<J extends SimJob, Q extends SimQueue>

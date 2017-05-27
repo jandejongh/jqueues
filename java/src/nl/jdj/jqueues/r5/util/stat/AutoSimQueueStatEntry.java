@@ -2,11 +2,19 @@ package nl.jdj.jqueues.r5.util.stat;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 
 /** A description of an entry for automatic statistics management.
  * 
  * @param <Q> The type of {@link SimQueue}s supported.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public class AutoSimQueueStatEntry<Q extends SimQueue>
