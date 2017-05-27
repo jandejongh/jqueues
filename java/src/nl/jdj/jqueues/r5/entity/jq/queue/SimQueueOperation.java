@@ -184,6 +184,26 @@ public interface SimQueueOperation
       return this.start;
     }
     
+    @Override
+    public QueueAccessVacationRequest forJob (final SimJob job)
+    {
+      throw new UnsupportedOperationException ();
+    }
+
+    @Override
+    public QueueAccessVacationRequest forQueue (final SimQueue queue)
+    {
+      if (queue == null)
+        throw new IllegalArgumentException ();
+      return new QueueAccessVacationRequest (queue, isStart ());
+    }
+
+    @Override
+    public QueueAccessVacationRequest forJobAndQueue (final SimJob job, final SimQueue queue)
+    {
+      throw new UnsupportedOperationException ();
+    }
+    
   }
   
   /** A reply for the queue-access vacation operation {@link QueueAccessVacation}.
@@ -378,6 +398,26 @@ public interface SimQueueOperation
     public final int getCredits ()
     {
       return this.credits;
+    }
+    
+    @Override
+    public ServerAccessCreditsRequest forJob (final SimJob job)
+    {
+      throw new UnsupportedOperationException ();
+    }
+
+    @Override
+    public ServerAccessCreditsRequest forQueue (final SimQueue queue)
+    {
+      if (queue == null)
+        throw new IllegalArgumentException ();
+      return new ServerAccessCreditsRequest (queue, getCredits ());
+    }
+
+    @Override
+    public ServerAccessCreditsRequest forJobAndQueue (final SimJob job, final SimQueue queue)
+    {
+      throw new UnsupportedOperationException ();
     }
     
   }
