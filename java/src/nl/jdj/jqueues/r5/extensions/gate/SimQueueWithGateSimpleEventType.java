@@ -1,9 +1,17 @@
 package nl.jdj.jqueues.r5.extensions.gate;
 
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 
-/** A simple representation of a {@link SimEntityEvent} specific to {@link SimQueueWithGate}s.
+/** *  A simple representation of a {@link SimJQEvent} specific to {@link SimQueueWithGate}s.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public interface SimQueueWithGateSimpleEventType

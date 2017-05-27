@@ -1,8 +1,19 @@
 package nl.jdj.jqueues.r5.extensions.gate;
 
-import nl.jdj.jqueues.r5.*;
+import nl.jdj.jqueues.r5.entity.SimEntityOperation;
+import nl.jdj.jqueues.r5.entity.jq.SimJQOperation;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 
 /** Utility class defining {@link SimEntityOperation}s for a {@link SimQueueWithGate}.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public class SimQueueWithGateOperationUtils
@@ -28,7 +39,7 @@ public class SimQueueWithGateOperationUtils
    */
   public final static class GatePassageCreditsOperation
   implements
-    SimEntityOperation<SimJob, SimQueue, GatePassageCreditsOperation, GatePassageCreditsRequest, GatePassageCreditsReply>
+    SimEntityOperation<GatePassageCreditsOperation, GatePassageCreditsRequest, GatePassageCreditsReply>
   {
 
     /** Prevents instantiation.
@@ -109,29 +120,29 @@ public class SimQueueWithGateOperationUtils
      */
     @Override
     public final GatePassageCreditsReply doOperation
-    (final double time, final SimEntity<? extends SimJob, ? extends SimQueue> entity, final GatePassageCreditsRequest request)
+    (final double time, final GatePassageCreditsRequest request)
     {
-      if (entity == null
-        || request == null
-        || (! (request instanceof GatePassageCreditsRequest))
-        || request.getOperation () != getInstance ())
+      if (request == null
+      ||  request.getQueue () == null
+      ||  request.getOperation () != getInstance ())
         throw new IllegalArgumentException ();
-      if (entity instanceof SimQueueWithGate)
+      final SimQueue queue = request.getQueue ();
+      if (queue instanceof SimQueueWithGate)
       {
         // Our target entity has native support for gate-passage credits, hence we directly invoke the appropriate method.
-        ((SimQueueWithGate) entity).setGatePassageCredits (time, request.getCredits ());
+        ((SimQueueWithGate) queue).setGatePassageCredits (time, request.getCredits ());
         return new GatePassageCreditsReply (request);
       }
-      else if (entity.getRegisteredOperations ().contains
+      else if (queue.getRegisteredOperations ().contains
         (SimQueueWithGateOperationUtils.GatePassageCreditsOperation.getInstance ()))
         // Our target entity does NOT have native support for gate-passage credits.
         // We take the risk of directly issuing the request at the entity (XXX at the huge risk of infinite recursion!).
-        return entity.doOperation (time, request);
+        return queue.doOperation (time, request);
       else
         // Our target entity has no clue of gate-passage credits.
         // We can either throw an exception here, or put our hopes on the entity accepting unknown operations.
         // We put our stakes on the last option...
-        return entity.doOperation (time, request);
+        return queue.doOperation (time, request);
     }
     
   }
@@ -140,18 +151,20 @@ public class SimQueueWithGateOperationUtils
    * 
    */
   public final static class GatePassageCreditsRequest
-  implements SimEntityOperation.Request<GatePassageCreditsOperation, GatePassageCreditsRequest>
+  extends SimJQOperation.RequestQ<GatePassageCreditsOperation, GatePassageCreditsRequest>
   {
     
     /** Creates the request.
      * 
+     * @param queue   The queue, non-{@code null}.
      * @param credits The new remaining gate-passage credits, non-negative, with {@link Integer#MAX_VALUE} treated as infinity.
      * 
      * @throws IllegalArgumentException If credits is (strictly) negative.
      * 
      */
-    public GatePassageCreditsRequest (final int credits)
+    public GatePassageCreditsRequest (final SimQueue queue, final int credits)
     {
+      super (queue);
       if (credits < 0)
         throw new IllegalArgumentException ();
       this.credits = credits;
@@ -178,6 +191,26 @@ public class SimQueueWithGateOperationUtils
     public final int getCredits ()
     {
       return this.credits;
+    }
+    
+    @Override
+    public GatePassageCreditsRequest forJob (final SimJob job)
+    {
+      throw new UnsupportedOperationException ();
+    }
+
+    @Override
+    public GatePassageCreditsRequest forQueue (final SimQueue queue)
+    {
+      if (queue == null)
+        throw new IllegalArgumentException ();
+      return new GatePassageCreditsRequest (queue, getCredits ());
+    }
+
+    @Override
+    public GatePassageCreditsRequest forJobAndQueue (final SimJob job, final SimQueue queue)
+    {
+      throw new UnsupportedOperationException ();
     }
     
   }

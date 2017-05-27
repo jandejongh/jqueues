@@ -1,8 +1,8 @@
 package nl.jdj.jqueues.r5.extensions.gate;
 
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 
@@ -16,9 +16,17 @@ import nl.jdj.jsimulation.r5.SimEventAction;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class SimQueueGateEvent<J extends SimJob, Q extends SimQueue>
-extends SimEntityEvent<J, Q>
+extends SimJQEvent<J, Q>
 {
  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,11 +88,11 @@ extends SimEntityEvent<J, Q>
   }
   
   @Override
-  public SimEntityEvent<J, Q> copyForQueue (final Q destQueue)
+  public SimJQEvent copyForQueueAndJob (final Q newQueue, final J newJob)
   {
-    if (destQueue == null)
+    if (newJob != null)
       throw new IllegalArgumentException ();
-    return new SimQueueGateEvent<> (destQueue, getTime (), getGatePassageCredits ());
+    return new SimQueueGateEvent (newQueue != null ? newQueue : getQueue (), getTime (), getGatePassageCredits ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

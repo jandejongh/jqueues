@@ -9,9 +9,9 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.workload.DefaultWorkloadSchedule;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleHandler;
@@ -21,6 +21,14 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleHandler;
  * <p>
  * Scans for and takes responsibility for (all) {@link SimQueueGateEvent} type(s) at registration,
  * and registers the {@link SimQueueWithGateSimpleEventType} simple event type(s).
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public final class SimQueueWithGateWorkloadScheduleHandler
@@ -44,7 +52,7 @@ implements WorkloadScheduleHandler
     return "SimQueueWithGateHandler";
   }
 
-  private final static Map<Class<? extends SimEntityEvent>, SimEntitySimpleEventType.Member> EVENT_MAP = new HashMap<> ();
+  private final static Map<Class<? extends SimJQEvent>, SimEntitySimpleEventType.Member> EVENT_MAP = new HashMap<> ();
   
   static
   {
@@ -57,7 +65,7 @@ implements WorkloadScheduleHandler
    * 
    */
   @Override
-  public final Map<Class<? extends SimEntityEvent>, SimEntitySimpleEventType.Member> getEventMap ()
+  public final Map<Class<? extends SimJQEvent>, SimEntitySimpleEventType.Member> getEventMap ()
   {
     return SimQueueWithGateWorkloadScheduleHandler.EVENT_MAP;
   }
@@ -74,7 +82,7 @@ implements WorkloadScheduleHandler
   }
 
   @Override
-  public final Set<SimEntityEvent> scan (final DefaultWorkloadSchedule workloadSchedule)
+  public final Set<SimJQEvent> scan (final DefaultWorkloadSchedule workloadSchedule)
   throws WorkloadScheduleException
   {
     if (workloadSchedule == null)
@@ -82,12 +90,12 @@ implements WorkloadScheduleHandler
     if (this.workloadSchedule != null)
       throw new IllegalStateException ();
     this.workloadSchedule = workloadSchedule;
-    final Set<SimEntityEvent> processedQueueEvents = new HashSet<> ();
+    final Set<SimJQEvent> processedQueueEvents = new HashSet<> ();
     for (SimQueue q : workloadSchedule.getQueues ())
       this.gatePassageCreditsTimesMap.put (q, new TreeMap<> ());
     if (workloadSchedule.getQueueEvents () != null)
     {
-      for (final SimEntityEvent event : workloadSchedule.getQueueEvents ())
+      for (final SimJQEvent event : workloadSchedule.getQueueEvents ())
       {
         final double time = event.getTime ();
         final SimQueue queue = event.getQueue ();

@@ -9,7 +9,7 @@ import java.util.NavigableMap;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueStateHandler;
 
@@ -17,6 +17,14 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueStateHandler;
  *  group the jobs with identical (within a tolerance) service time,
  *  and index these groups increasing in their members obtained service times.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public final class SimQueueOSTStateHandler
 implements SimQueueStateHandler

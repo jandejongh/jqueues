@@ -2,11 +2,12 @@ package nl.jdj.jqueues.r5.extensions.qos;
 
 import java.util.NavigableMap;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.qos.HOL;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.queue.qos.HOL;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS;
@@ -20,6 +21,14 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * @param <P> The type used for QoS.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public class SimQueuePredictor_HOL<J extends SimJob, Q extends HOL, P extends Comparable>
@@ -79,7 +88,7 @@ extends SimQueuePredictor_FCFS
       ? null
       : workloadEventTypes.iterator ().next ());
     super.doWorkloadEvents_SQ_SV_ROEL_U (queue, workloadSchedule, queueState, workloadEventTypes, visitLogsSet);
-    if (eventType == SimEntitySimpleEventType.ARRIVAL || eventType == SimEntitySimpleEventType.REVOCATION)
+    if (eventType == SimQueueSimpleEventType.ARRIVAL || eventType == SimQueueSimpleEventType.REVOCATION)
     {
       final SimQueueQoSStateHandler<J, Q, P> queueStateHandler =
         (SimQueueQoSStateHandler)
@@ -100,7 +109,7 @@ extends SimQueuePredictor_FCFS
       ? null
       : queueEventTypes.iterator ().next ());
     super.doQueueEvents_SQ_SV_ROEL_U (queue, queueState, queueEventTypes, visitLogsSet);
-    if (eventType == SimEntitySimpleEventType.DEPARTURE)
+    if (eventType == SimQueueSimpleEventType.DEPARTURE)
     {
       final SimQueueQoSStateHandler<J, Q, P> queueStateHandler =
         (SimQueueQoSStateHandler)
