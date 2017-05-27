@@ -5,13 +5,21 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.composite.AbstractBlackSimQueueComposite;
-import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/**
- *
+/** Many known {@link SimQueue} implementations collected in an enum.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public enum KnownSimQueue
 {
@@ -23,113 +31,113 @@ public enum KnownSimQueue
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // serverless
-  DROP    ("DROP",  false, nl.jdj.jqueues.r5.entity.queue.serverless.DROP.class,  GeneratorProfile.SE,
+  DROP    ("DROP",  false, nl.jdj.jqueues.r5.entity.jq.queue.serverless.DROP.class,  GeneratorProfile.SE,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_IRRELEVANT,
            DoubleParameterProfile.DPP_IRRELEVANT),
-  SINK    ("SINK",  false, nl.jdj.jqueues.r5.entity.queue.serverless.SINK.class,  GeneratorProfile.SE,
+  SINK    ("SINK",  false, nl.jdj.jqueues.r5.entity.jq.queue.serverless.SINK.class,  GeneratorProfile.SE,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
            DoubleParameterProfile.DPP_IRRELEVANT),
-  DELAY   ("DELAY", false, nl.jdj.jqueues.r5.entity.queue.serverless.DELAY.class, GeneratorProfile.SE_WST,
+  DELAY   ("DELAY", false, nl.jdj.jqueues.r5.entity.jq.queue.serverless.DELAY.class, GeneratorProfile.SE_WST,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
            DoubleParameterProfile.DPP_POSITIVE),
-  ZERO    ("ZERO",  false, nl.jdj.jqueues.r5.entity.queue.serverless.ZERO.class,  GeneratorProfile.SE,
+  ZERO    ("ZERO",  false, nl.jdj.jqueues.r5.entity.jq.queue.serverless.ZERO.class,  GeneratorProfile.SE,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
            DoubleParameterProfile.DPP_IRRELEVANT),
-  GATE    ("GATE",  false, nl.jdj.jqueues.r5.entity.queue.serverless.GATE.class,   GeneratorProfile.SE,
+  GATE    ("GATE",  false, nl.jdj.jqueues.r5.entity.jq.queue.serverless.GATE.class,   GeneratorProfile.SE,
            IntegerParameterProfile.IPP_ALWAYS_ZERO, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
            DoubleParameterProfile.DPP_IRRELEVANT),
   
   // nonpreemptive
-  NO_BUFFER_c ("NoBuffer_c", false, nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c.class, GeneratorProfile.SE_c,
+  NO_BUFFER_c ("NoBuffer_c", false, nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.NoBuffer_c.class, GeneratorProfile.SE_c,
                IntegerParameterProfile.IPP_FINITE, IntegerParameterProfile.IPP_ALWAYS_ZERO,
                DoubleParameterProfile.DPP_IRRELEVANT),
-  FCFS        ("FCFS",       false, nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS.class,       GeneratorProfile.SE,
+  FCFS        ("FCFS",       false, nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS.class,       GeneratorProfile.SE,
                IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
-  FCFS_B      ("FCFS_B",     false, nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_B.class,     GeneratorProfile.SE_B,
+  FCFS_B      ("FCFS_B",     false, nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS_B.class,     GeneratorProfile.SE_B,
                IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_FINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
-  FCFS_c      ("FCFS_c",     false, nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_c.class,     GeneratorProfile.SE_c,
+  FCFS_c      ("FCFS_c",     false, nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS_c.class,     GeneratorProfile.SE_c,
                IntegerParameterProfile.IPP_FINITE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
-  LCFS        ("LCFS",       false, nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS.class,       GeneratorProfile.SE,
+  LCFS        ("LCFS",       false, nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LCFS.class,       GeneratorProfile.SE,
                IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
-  RANDOM      ("RANDOM",     false, nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RANDOM.class,     GeneratorProfile.SE,
+  RANDOM      ("RANDOM",     false, nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.RANDOM.class,     GeneratorProfile.SE,
                IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
-  SJF         ("SJF",        false, nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF.class,        GeneratorProfile.SE,
+  SJF         ("SJF",        false, nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.SJF.class,        GeneratorProfile.SE,
                IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
-  LJF         ("LJF",        false, nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LJF.class,        GeneratorProfile.SE,
+  LJF         ("LJF",        false, nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LJF.class,        GeneratorProfile.SE,
                IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
-  IS          ("IS",         false, nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IS.class,         GeneratorProfile.SE,
+  IS          ("IS",         false, nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IS.class,         GeneratorProfile.SE,
                IntegerParameterProfile.IPP_ALWAYS_INFINITE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
-  IS_CST      ("IS_CST",     false, nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IS_CST.class,     GeneratorProfile.SE_WST,
+  IS_CST      ("IS_CST",     false, nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IS_CST.class,     GeneratorProfile.SE_WST,
                IntegerParameterProfile.IPP_ALWAYS_INFINITE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_POSITIVE),
-  IC          ("IC",         false, nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IC.class,         GeneratorProfile.SE,
+  IC          ("IC",         false, nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IC.class,         GeneratorProfile.SE,
                IntegerParameterProfile.IPP_ALWAYS_INFINITE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
   
   // processorsharing
-  PS          ("PS", false, nl.jdj.jqueues.r5.entity.queue.processorsharing.PS.class, GeneratorProfile.SE,
+  PS          ("PS", false, nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.PS.class, GeneratorProfile.SE,
                IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
   
   // composite
   ENCAPSULATOR   ("Encapsulator", true,
-                  nl.jdj.jqueues.r5.entity.queue.composite.single.enc.BlackEncapsulatorSimQueue.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorSimQueue.class,
                   GeneratorProfile.SE_Q_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   DROP_COLLECTOR ("DropCollector", true,
-                  nl.jdj.jqueues.r5.entity.queue.composite.dual.collector.BlackDropCollectorSimQueue.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.collector.DropCollectorSimQueue.class,
                   GeneratorProfile.SE_Q1_Q2_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   TANDEM         ("Tandem", true,
-                  nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackTandemSimQueue.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.TandemSimQueue.class,
                   GeneratorProfile.SE_QSET_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   COMP_TANDEM_2  ("Comp_Tandem_2", true,
-                  nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue.class,
                   GeneratorProfile.SE_Q1_Q2_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   PARALLEL       ("Parallel", true,
-                  nl.jdj.jqueues.r5.entity.queue.composite.parallel.BlackParallelSimQueues.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.GeneralParallelSimQueues.class,
                   GeneratorProfile.UNKNOWN,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   JSQ            ("JSQ", true,
-                  nl.jdj.jqueues.r5.entity.queue.composite.parallel.BlackJoinShortestSimQueue.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.jsq.JoinShortestSimQueue.class,
                   GeneratorProfile.SE_QSET_DSJF_OWJ_RNG,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   FB_PROB        ("FB_Prob", true,
-                  nl.jdj.jqueues.r5.entity.queue.composite.single.feedback.BlackProbabilisticFeedbackSimQueue.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.ProbabilisticFeedbackSimQueue.class,
                   GeneratorProfile.SE_Q_PFB_RNG_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   FB_VISITS      ("FB_NumVisits", true,
-                  nl.jdj.jqueues.r5.entity.queue.composite.single.feedback.BlackNumVisitsFeedbackSimQueue.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.NumVisitsFeedbackSimQueue.class,
                   GeneratorProfile.SE_Q_NUMV_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   JACKSON        ("Jackson", true,
-                  nl.jdj.jqueues.r5.entity.queue.composite.jackson.BlackJacksonSimQueueNetwork.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.JacksonSimQueueNetwork.class,
                   GeneratorProfile.UNKNOWN,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
@@ -324,7 +332,7 @@ public enum KnownSimQueue
           System.err.println ("-> Maximum:  " + this.maxSubQueues + ".");
           System.err.println ("-> Supplied: " + parameters.queues.size () + ".");
         }
-        copiedQueues = AbstractBlackSimQueueComposite.getCopySimQueues (parameters.queues);
+        copiedQueues = AbstractSimQueueComposite.getCopySimQueues (parameters.queues);
       }
       else
         copiedQueues = null;

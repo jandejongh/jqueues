@@ -8,15 +8,23 @@ import java.awt.Graphics2D;
 import java.util.List;
 import java.util.Set;
 import javax.swing.JComponent;
-import nl.jdj.jqueues.r5.SimEntity;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.SimQueueListener;
-import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.SimEntity;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueListener;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/**
+/** A Swing component for a {@link SimQueue}.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class JSimQueue
 extends JComponent
@@ -35,9 +43,9 @@ implements SimQueueListener
     this.eventList = eventList;
     this.queue = queue;
     this.queue.registerSimEntityListener (this);
-    if (this.queue instanceof BlackSimQueueComposite)
+    if (this.queue instanceof SimQueueComposite)
     {
-      for (final SimQueue q : (Set<SimQueue>) ((BlackSimQueueComposite) this.queue).getQueues ())
+      for (final SimQueue q : (Set<SimQueue>) ((SimQueueComposite) this.queue).getQueues ())
         add (new JSimQueue (eventList, q));
     }
     else

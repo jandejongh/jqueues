@@ -31,12 +31,22 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.composite.BlackSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/**
+/** A Swing dialog component for creating a {@link SimQueue} (from a set of known types).
  *
+ * @see KnownSimQueue
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class JSimQueueCreationDialog
 extends JDialog
@@ -169,8 +179,8 @@ implements ItemListener
       // XXX What if we have a null queue?
       this.queueTypeComboBox.setSelectedItem (KnownSimQueue.valueOf (queue));
     this.parameters.queues = new LinkedHashSet<> ();
-    if (queue != null && (queue instanceof BlackSimQueueComposite))
-      this.parameters.queues.addAll (((BlackSimQueueComposite) queue).getQueues ());
+    if (queue != null && (queue instanceof SimQueueComposite))
+      this.parameters.queues.addAll (((SimQueueComposite) queue).getQueues ());
     getContentPane ().setLayout (new BoxLayout (getContentPane (), BoxLayout.PAGE_AXIS));
     add (Box.createRigidArea (new Dimension (0, 10)));
     this.queueTypeComboBox.setPreferredSize (new Dimension (200, 50));
