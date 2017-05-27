@@ -2,21 +2,21 @@ package nl.jdj.jqueues.r5.misc.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_B;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_c;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IC;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IS_CST;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LJF;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RANDOM;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SUR;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS_B;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS_c;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IC;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IS_CST;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LJF;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.NoBuffer_c;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.RANDOM;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.SJF;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.SUR;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
@@ -24,6 +24,14 @@ import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nonpreemptive</code> package.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public final class NonPreemptiveExample

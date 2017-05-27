@@ -2,15 +2,15 @@ package nl.jdj.jqueues.r5.misc.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.serverless.DELAY;
-import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
-import nl.jdj.jqueues.r5.entity.queue.serverless.GATE;
-import nl.jdj.jqueues.r5.entity.queue.serverless.SINK;
-import nl.jdj.jqueues.r5.entity.queue.serverless.WUR;
-import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DELAY;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DROP;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.GATE;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.SINK;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.WUR;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.ZERO;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
@@ -18,6 +18,14 @@ import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.serverless</code>.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public final class ServerlessExample

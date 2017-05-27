@@ -4,20 +4,20 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueComposite;
-import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueSelector;
-import nl.jdj.jqueues.r5.entity.queue.composite.jackson.BlackJacksonSimQueueNetwork;
-import nl.jdj.jqueues.r5.entity.queue.composite.parallel.BlackParallelSimQueues;
-import nl.jdj.jqueues.r5.entity.queue.composite.single.feedback.BlackNumVisitsFeedbackSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.composite.single.feedback.BlackProbabilisticFeedbackSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackTandemSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RANDOM;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.JacksonSimQueueNetwork;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.GeneralParallelSimQueues;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.NumVisitsFeedbackSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.ProbabilisticFeedbackSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.TandemSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.RANDOM;
 import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
@@ -27,14 +27,22 @@ import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.composite</code> for black {@link SimQueueComposite}s.
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
-public final class BlackCompositeSimQueueExample
+public final class CompositeSimQueueExample
 {
   
   /** Prevents instantiation.
    * 
    */
-  private BlackCompositeSimQueueExample ()
+  private CompositeSimQueueExample ()
   {
   }
   
@@ -106,7 +114,7 @@ public final class BlackCompositeSimQueueExample
           return new TestDelegateSimJob (job, true);
         }
       };
-    final SimQueue tandemQueue = new BlackTandemSimQueue (el, set, delegateSimJobFactory);
+    final SimQueue tandemQueue = new TandemSimQueue (el, set, delegateSimJobFactory);
     tandemQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to (black) Tandem queue...");
     for (int i = 0; i < jobList.size (); i++)
@@ -136,11 +144,15 @@ public final class BlackCompositeSimQueueExample
     final Set<SimQueue> set2 = new LinkedHashSet<> ();
     set2.add (fcfsQueue2);
     set2.add (lcfsQueue2);
-    final SimQueue parallelQueue = new BlackParallelSimQueues
+    final SimQueue parallelQueue = new GeneralParallelSimQueues
       (el, set2,
       new SimQueueSelector<SimJob, SimQueue> ()
       {
         boolean toSecond = false;
+        @Override
+        public void resetSimQueueSelector ()
+        {
+        }
         @Override
         public SimQueue selectFirstQueue (double time, SimJob job)
         {
@@ -181,7 +193,8 @@ public final class BlackCompositeSimQueueExample
     final SimQueue fcfsQueue3 = new FCFS (el);
     fcfsQueue3.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Creating (black) NumVisits feedback queue (5 visits)...");
-    final SimQueue numVisitsFBQueue = new BlackNumVisitsFeedbackSimQueue (el, fcfsQueue3, 5, delegateSimJobFactory);
+    final SimQueue numVisitsFBQueue =
+      new NumVisitsFeedbackSimQueue (el, fcfsQueue3, 5, delegateSimJobFactory);
     numVisitsFBQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to (black) NumVisitsFB queue...");
     for (int i = 0; i < jobList.size (); i++)
@@ -205,7 +218,8 @@ public final class BlackCompositeSimQueueExample
     final SimQueue randomQueue = new RANDOM (el);
     randomQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Creating (black) probabilistic feedback queue (p=50%)...");
-    final SimQueue pFBQueue = new BlackProbabilisticFeedbackSimQueue (el, randomQueue, 0.5, null, delegateSimJobFactory);
+    final SimQueue pFBQueue =
+      new ProbabilisticFeedbackSimQueue (el, randomQueue, 0.5, null, delegateSimJobFactory);
     pFBQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to probabilistic feedback queue...");
     for (int i = 0; i < jobList.size (); i++)
@@ -251,7 +265,8 @@ public final class BlackCompositeSimQueueExample
                                                       { 0.0, 0.0, 0.4, 0.4 }};
     System.out.println ("-> Creating (black) Jackson queueing network...");
     final SimQueue jacksonQueue =
-      new BlackJacksonSimQueueNetwork (el, jacksonQueues, pdfArrival, pdfTransition, null, delegateSimJobFactory);
+      new JacksonSimQueueNetwork
+        (el, jacksonQueues, pdfArrival, pdfTransition, null, delegateSimJobFactory);
     jacksonQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to (black) Jackson queueing network...");
     for (int i = 0; i < jobList.size (); i++)

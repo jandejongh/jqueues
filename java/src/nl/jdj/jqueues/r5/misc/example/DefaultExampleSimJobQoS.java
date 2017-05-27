@@ -1,9 +1,9 @@
 package nl.jdj.jqueues.r5.misc.example;
 
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
-import nl.jdj.jqueues.r5.entity.job.qos.DefaultSimJobQoS;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.qos.DefaultSimJobQoS;
 import nl.jdj.jqueues.r5.extensions.qos.SimJobQoS;
 import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -16,6 +16,14 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <J> The job type.
  * @param <Q> The queue type for jobs.
  * @param <P> The type used for QoS.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public class DefaultExampleSimJobQoS<J extends DefaultExampleSimJobQoS, Q extends SimQueue, P extends Comparable>

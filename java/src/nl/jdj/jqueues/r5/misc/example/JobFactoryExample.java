@@ -3,16 +3,16 @@ package nl.jdj.jqueues.r5.misc.example;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimJobFactory;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.selflistening.DefaultSelfListeningSimJob;
-import nl.jdj.jqueues.r5.entity.job.selflistening.DefaultSelfListeningSimJobFactory;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJobFactory;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.selflistening.DefaultSelfListeningSimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.selflistening.DefaultSelfListeningSimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.DefaultVisitsLoggingSimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.DefaultVisitsLoggingSimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.listener.StdOutSimJobListener;
 import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
@@ -22,6 +22,14 @@ import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.util.jobfactory</code>.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public final class JobFactoryExample

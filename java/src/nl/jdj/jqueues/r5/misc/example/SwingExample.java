@@ -11,10 +11,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.util.swing.JBlackSimQueueNetwork;
 import nl.jdj.jqueues.r5.util.swing.JSimQueueCreationDialog;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
@@ -25,8 +25,16 @@ import nl.jdj.jsimulation.r5.SimEventList;
 import nl.jdj.jsimulation.r5.SimEventListListener;
 import nl.jdj.jsimulation.r5.swing.JSimEventList;
 
-/**
+/** Example code for <code>util.swing</code>.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public final class SwingExample
 {
@@ -118,7 +126,7 @@ public final class SwingExample
           // set.add (fcfs1);
           // set.add (random1);
           // this.queue = new BlackTandemSimQueue (this.eventList, set, null);
-          this.queue = new BlackCompressedTandem2SimQueue (this.eventList, fcfs1, fcfs2, null);
+          this.queue = new CompressedTandem2SimQueue (this.eventList, fcfs1, fcfs2, null);
           this.jQueue = new JBlackSimQueueNetwork (this.eventList, this.queue);
           topPanel.add (Box.createRigidArea (new Dimension (0, 10)));
           topPanel.add (this.jQueue);

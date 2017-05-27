@@ -3,17 +3,25 @@ package nl.jdj.jqueues.r5.misc.example;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.AbstractSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.processorsharing.CUPS;
-import nl.jdj.jqueues.r5.entity.queue.processorsharing.PS;
-import nl.jdj.jqueues.r5.entity.queue.processorsharing.SocPS;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.AbstractSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.CUPS;
+import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.PS;
+import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.SocPS;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.processorsharing</code>.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public final class ProcessorSharingExample

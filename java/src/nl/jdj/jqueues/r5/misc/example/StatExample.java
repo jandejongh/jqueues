@@ -2,11 +2,11 @@ package nl.jdj.jqueues.r5.misc.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.util.stat.AutoSimQueueStat;
 import nl.jdj.jqueues.r5.util.stat.AutoSimQueueStatEntry;
 import nl.jdj.jqueues.r5.util.stat.SimQueueProbe;
@@ -18,6 +18,14 @@ import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Example code for <code>nl.jdj.jqueues.stat</code>.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public final class StatExample
