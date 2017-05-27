@@ -11,12 +11,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.processorsharing.CUPS;
-import nl.jdj.jqueues.r5.entity.queue.processorsharing.SimQueueCatchUpSimpleEventType;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.CUPS;
+import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.SimQueueCatchUpSimpleEventType;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.extensions.ost.SimQueueOSTStateHandler;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
@@ -28,6 +28,14 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link CUPS}.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public class SimQueuePredictor_CUPS
@@ -97,7 +105,7 @@ extends AbstractSimQueuePredictor<CUPS>
     final Set<SimJob> jobsMinOst = queueStateHandler.getJobsWithMinimumObtainedServiceTime ();
     final Map<SimJob, Double> firstDeparter = getFirstDeparter (queueState, queueStateHandler);
     double dT = firstDeparter.entrySet ().iterator ().next ().getValue () * jobsMinOst.size ();
-    SimEntitySimpleEventType.Member eventType = SimEntitySimpleEventType.DEPARTURE;
+    SimEntitySimpleEventType.Member eventType = SimQueueSimpleEventType.DEPARTURE;
     if (queueStateHandler.getNumberOfOstGroups () > 1)
     {
       final double minOstNext = queueStateHandler.getNextHigherThanMinimumObtainedServiceTime ();
@@ -152,7 +160,7 @@ extends AbstractSimQueuePredictor<CUPS>
       final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (time);
       queueState.setQueueAccessVacation (time, queueAccessVacation);
     }
-    else if (eventType == SimEntitySimpleEventType.ARRIVAL)
+    else if (eventType == SimQueueSimpleEventType.ARRIVAL)
     {
       final SimJob job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
       final Set<SimJob> arrivals = new HashSet<> ();
@@ -166,7 +174,7 @@ extends AbstractSimQueuePredictor<CUPS>
           queueStateHandler.addStartingJob (job);
       }
     }
-    else if (eventType == SimEntitySimpleEventType.REVOCATION)
+    else if (eventType == SimQueueSimpleEventType.REVOCATION)
     {
       final SimJob job =
         workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).entrySet ().iterator ().next ().getKey ();
@@ -249,7 +257,7 @@ extends AbstractSimQueuePredictor<CUPS>
     {
       /* NOTHING TO DO */
     }
-    else if (eventType == SimEntitySimpleEventType.DEPARTURE)
+    else if (eventType == SimQueueSimpleEventType.DEPARTURE)
     {
       final Set<SimJob> departures =
         Collections.singleton (getFirstDeparter (queueState, queueStateHandler).entrySet ().iterator ().next ().getKey ());

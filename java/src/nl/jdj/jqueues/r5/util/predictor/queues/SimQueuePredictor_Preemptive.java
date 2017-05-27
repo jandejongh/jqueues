@@ -6,16 +6,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.preemptive.AbstractPreemptiveSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.preemptive.PreemptionStrategy;
-import static nl.jdj.jqueues.r5.entity.queue.preemptive.PreemptionStrategy.CUSTOM;
-import static nl.jdj.jqueues.r5.entity.queue.preemptive.PreemptionStrategy.DEPART;
-import static nl.jdj.jqueues.r5.entity.queue.preemptive.PreemptionStrategy.REDRAW;
-import static nl.jdj.jqueues.r5.entity.queue.preemptive.PreemptionStrategy.RESTART;
-import static nl.jdj.jqueues.r5.entity.queue.preemptive.PreemptionStrategy.RESUME;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.AbstractPreemptiveSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.PreemptionStrategy;
+import static nl.jdj.jqueues.r5.entity.jq.queue.preemptive.PreemptionStrategy.CUSTOM;
+import static nl.jdj.jqueues.r5.entity.jq.queue.preemptive.PreemptionStrategy.DEPART;
+import static nl.jdj.jqueues.r5.entity.jq.queue.preemptive.PreemptionStrategy.REDRAW;
+import static nl.jdj.jqueues.r5.entity.jq.queue.preemptive.PreemptionStrategy.RESTART;
+import static nl.jdj.jqueues.r5.entity.jq.queue.preemptive.PreemptionStrategy.RESUME;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
@@ -25,6 +25,14 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 /** An abstract {@link SimQueuePredictor} for preemptive queues.
  * 
  * @param <Q> The type of {@link SimQueue}s supported.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public abstract class SimQueuePredictor_Preemptive<Q extends AbstractPreemptiveSimQueue>

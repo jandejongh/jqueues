@@ -7,17 +7,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
-import nl.jdj.jqueues.r5.event.SimQueueJobRevocationEvent;
-import nl.jdj.jqueues.r5.event.SimQueueServerAccessCreditsEvent;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
@@ -27,12 +25,20 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
-/** A {@link SimQueuePredictor} for {@link BlackCompressedTandem2SimQueue}.
+/** A {@link SimQueuePredictor} for {@link CompressedTandem2SimQueue}.
  *
  * @param <Q> The type of queue supported.
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
-public class SimQueuePredictor_ComprTandem2<Q extends  BlackCompressedTandem2SimQueue>
+public class SimQueuePredictor_ComprTandem2<Q extends CompressedTandem2SimQueue>
 extends AbstractSimQueuePredictor_Composite<Q>
 {
 
@@ -183,7 +189,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
       final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (time);
       queueState.setQueueAccessVacation (time, queueAccessVacation);
     }
-    else if (eventType == SimEntitySimpleEventType.ARRIVAL)
+    else if (eventType == SimQueueSimpleEventType.ARRIVAL)
     {
       final SimJob job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
       final Set<SimJob> arrivals = new HashSet<> ();
@@ -197,11 +203,11 @@ extends AbstractSimQueuePredictor_Composite<Q>
         final SimQueue waitQueue = getWaitQueue (queue);
         ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (waitQueue, job.getServiceTime (queue));
         final SubQueueSimpleEvent waitQueueEvent =
-          new SubQueueSimpleEvent (waitQueue, SimEntitySimpleEventType.ARRIVAL, null, job, null);
+          new SubQueueSimpleEvent (waitQueue, SimQueueSimpleEventType.ARRIVAL, null, job, null);
         doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (waitQueueEvent), visitLogsSet);
       }
     }
-    else if (eventType == SimEntitySimpleEventType.REVOCATION)
+    else if (eventType == SimQueueSimpleEventType.REVOCATION)
     {
       final SimJob job =
         workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).entrySet ().iterator ().next ().getKey ();
@@ -224,7 +230,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
             {
               final SimQueue subQueue = new ArrayList<SimQueue> (queue.getQueues ()).get (i);
               final SubQueueSimpleEvent subQueueEvent =
-                new SubQueueSimpleEvent (subQueue, SimEntitySimpleEventType.REVOCATION, null, job, null);
+                new SubQueueSimpleEvent (subQueue, SimQueueSimpleEventType.REVOCATION, null, job, null);
               doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (subQueueEvent), visitLogsSet);
               break;
             }
@@ -309,13 +315,13 @@ extends AbstractSimQueuePredictor_Composite<Q>
       {
         if (subQueueWorkloadEvent != null)
         {
-          final SimEntityEvent subQueueEvent;
-          if (subQueueWorkloadEvent == SimEntitySimpleEventType.ARRIVAL)
-            subQueueEvent = new SimQueueJobArrivalEvent (job, subQueue, time);
-          else if (subQueueWorkloadEvent == SimEntitySimpleEventType.REVOCATION)
-            subQueueEvent = new SimQueueJobRevocationEvent (job, subQueue, time, true);
+          final SimJQEvent subQueueEvent;
+          if (subQueueWorkloadEvent == SimQueueSimpleEventType.ARRIVAL)
+            subQueueEvent = new SimJQEvent.Arrival<> (job, subQueue, time);
+          else if (subQueueWorkloadEvent == SimQueueSimpleEventType.REVOCATION)
+            subQueueEvent = new SimJQEvent.Revocation<> (job, subQueue, time, true);
           else if (subQueueWorkloadEvent == SimQueueSimpleEventType.SERVER_ACCESS_CREDITS)
-            subQueueEvent = new SimQueueServerAccessCreditsEvent (subQueue, time, (Integer) argument);
+            subQueueEvent = new SimQueueEvent.ServerAccessCredits<> (subQueue, time, (Integer) argument);
           else
             throw new RuntimeException ();
           final WorkloadSchedule_SQ_SV_ROEL_U subQueueWorkloadSchedule =
@@ -394,7 +400,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
         throw new UnsupportedOperationException ();
       ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (serveQueue, job.getServiceTime (queue));
       final SubQueueSimpleEvent serveQueueEvent =
-        new SubQueueSimpleEvent (serveQueue, SimEntitySimpleEventType.ARRIVAL, null, job, null);
+        new SubQueueSimpleEvent (serveQueue, SimQueueSimpleEventType.ARRIVAL, null, job, null);
       doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (serveQueueEvent), this.cachedVisitLogsSet);
     }
   }

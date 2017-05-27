@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.qos.HOL_PS;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.queue.qos.HOL_PS;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.extensions.qos.SimQueueQoSStateHandler;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
@@ -23,6 +23,14 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link HOL_PS}.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public class SimQueuePredictor_HOL_PS<J extends SimJob, Q extends HOL_PS, P>
@@ -78,7 +86,7 @@ extends AbstractSimQueuePredictor<HOL_PS>
       throw new RuntimeException ();
     if (Double.isFinite (smallestRs))
     {
-      queueEventTypes.add (SimEntitySimpleEventType.DEPARTURE);
+      queueEventTypes.add (SimQueueSimpleEventType.DEPARTURE);
       return time + (smallestRs * numberOfJobsExecuting);
     }
     else
@@ -120,7 +128,7 @@ extends AbstractSimQueuePredictor<HOL_PS>
       final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (time);
       queueState.setQueueAccessVacation (time, queueAccessVacation);
     }
-    else if (eventType == SimEntitySimpleEventType.ARRIVAL)
+    else if (eventType == SimQueueSimpleEventType.ARRIVAL)
     {
       final SimJob job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
       final Set<SimJob> arrivals = new HashSet<> ();
@@ -148,7 +156,7 @@ extends AbstractSimQueuePredictor<HOL_PS>
         }
       }
     }
-    else if (eventType == SimEntitySimpleEventType.REVOCATION)
+    else if (eventType == SimQueueSimpleEventType.REVOCATION)
     {
       final SimJob job =
         workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).entrySet ().iterator ().next ().getKey ();
@@ -268,7 +276,7 @@ extends AbstractSimQueuePredictor<HOL_PS>
     {
       /* NOTHING (LEFT) TO DO */      
     }
-    else if (eventType == SimEntitySimpleEventType.DEPARTURE)
+    else if (eventType == SimQueueSimpleEventType.DEPARTURE)
     {
       final Set<SimJob> departures = new HashSet<> (queueState.getRemainingServiceMap ().firstEntry ().getValue ());
       queueState.doExits (time, null, null, departures, null, visitLogsSet);

@@ -2,11 +2,11 @@ package nl.jdj.jqueues.r5.util.predictor.queues;
 
 import java.util.HashSet;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.serverless.DROP;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DROP;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
@@ -16,6 +16,14 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link DROP}.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public class SimQueuePredictor_DROP
@@ -82,14 +90,14 @@ extends AbstractSimQueuePredictor<DROP>
       final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (time);
       queueState.setQueueAccessVacation (time, queueAccessVacation);
     }
-    else if (eventType == SimEntitySimpleEventType.ARRIVAL)
+    else if (eventType == SimQueueSimpleEventType.ARRIVAL)
     {
       final SimJob job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
       final Set<SimJob> drops = new HashSet<> ();
       drops.add (job);
       queueState.doExits (time, drops, null, null, null, visitLogsSet);
     }
-    else if (eventType == SimEntitySimpleEventType.REVOCATION)
+    else if (eventType == SimQueueSimpleEventType.REVOCATION)
     {
     }
     else if (eventType == SimQueueSimpleEventType.SERVER_ACCESS_CREDITS)

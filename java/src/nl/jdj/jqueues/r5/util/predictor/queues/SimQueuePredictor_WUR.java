@@ -3,11 +3,11 @@ package nl.jdj.jqueues.r5.util.predictor.queues;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.serverless.WUR;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.WUR;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
@@ -18,6 +18,14 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link WUR}.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class SimQueuePredictor_WUR
 extends AbstractSimQueuePredictor<WUR>
@@ -81,7 +89,7 @@ extends AbstractSimQueuePredictor<WUR>
       final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (time);
       queueState.setQueueAccessVacation (time, queueAccessVacation);
     }
-    else if (eventType == SimEntitySimpleEventType.ARRIVAL)
+    else if (eventType == SimQueueSimpleEventType.ARRIVAL)
     {
       final SimJob job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
       final Set<SimJob> arrivals = new HashSet<> ();
@@ -100,7 +108,7 @@ extends AbstractSimQueuePredictor<WUR>
         }
       }
     }
-    else if (eventType == SimEntitySimpleEventType.REVOCATION)
+    else if (eventType == SimQueueSimpleEventType.REVOCATION)
     {
       final SimJob job =
         workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).entrySet ().iterator ().next ().getKey ();
