@@ -1,12 +1,12 @@
 package nl.jdj.jqueues.r5.util.stat;
 
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.RANDOM;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.RANDOM;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
@@ -19,8 +19,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
-/**
+/** Tests for {@link SimpleSimQueueStat}.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class SimpleSimQueueStatTest
 {
