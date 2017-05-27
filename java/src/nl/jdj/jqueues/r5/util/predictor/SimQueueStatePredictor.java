@@ -1,7 +1,7 @@
 package nl.jdj.jqueues.r5.util.predictor;
 
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 
 /** An object capable of predicting aspects of the state of one or more {@link SimQueue}s.
@@ -9,6 +9,14 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
  * @see SimQueuePredictor
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public interface SimQueueStatePredictor<Q extends SimQueue>

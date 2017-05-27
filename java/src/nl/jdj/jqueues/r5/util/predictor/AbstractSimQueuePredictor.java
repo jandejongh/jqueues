@@ -8,18 +8,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS_B;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.LJF;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.NoBuffer_c;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.SJF;
-import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS_B;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LJF;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.NoBuffer_c;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.SJF;
+import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleAmbiguityException;
@@ -30,6 +30,14 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 /** Partial implementation of and utility methods for {@link SimQueuePredictor}.
  * 
  * @param <Q> The type of {@link SimQueue}s supported.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public abstract class AbstractSimQueuePredictor<Q extends SimQueue>
@@ -70,7 +78,7 @@ implements SimQueuePredictor<Q>
   public SimQueuePrediction_SQ_SV<Q>
   predict_SQ_SV_ROEL_U
   (final Q queue,
-   final Set<SimEntityEvent> workloadEvents)
+   final Set<SimJQEvent> workloadEvents)
   throws SimQueuePredictionException
   {
     if (queue == null)
@@ -239,8 +247,8 @@ implements SimQueuePredictor<Q>
   public SimQueuePrediction_SQ_SV<Q>
   predict_SQ_SV_IOEL_U
   (final Q queue,
-   final NavigableMap<Double, Set<SimEntityEvent>> workloadEventsMap,
-   final NavigableMap<Double, Set<SimEntityEvent>> processedEventsMap)
+   final NavigableMap<Double, Set<SimJQEvent>> workloadEventsMap,
+   final NavigableMap<Double, Set<SimJQEvent>> processedEventsMap)
   throws SimQueuePredictionException
   {
     if (queue == null)
@@ -408,14 +416,14 @@ implements SimQueuePredictor<Q>
       throw new IllegalArgumentException ();
     for (final SimEntitySimpleEventType.Member wEvent : workloadEventTypes)
       for (final SimEntitySimpleEventType.Member qEvent : queueEventTypes)
-        if (wEvent == SimEntitySimpleEventType.REVOCATION
-        &&  qEvent == SimEntitySimpleEventType.DEPARTURE)
+        if (wEvent == SimQueueSimpleEventType.REVOCATION
+        &&  qEvent == SimQueueSimpleEventType.DEPARTURE)
           return false;
         else if (wEvent == SimQueueSimpleEventType.SERVER_ACCESS_CREDITS
-             &&  (qEvent == SimEntitySimpleEventType.DEPARTURE || qEvent == SimEntitySimpleEventType.START))
+             &&  (qEvent == SimQueueSimpleEventType.DEPARTURE || qEvent == SimQueueSimpleEventType.START))
           return false;
         else if (wEvent == SimQueueSimpleEventType.ARRIVAL
-             &&  (qEvent == SimEntitySimpleEventType.DEPARTURE || qEvent == SimEntitySimpleEventType.START)
+             &&  (qEvent == SimQueueSimpleEventType.DEPARTURE || qEvent == SimQueueSimpleEventType.START)
              && ((queue instanceof FCFS_B) 
               || (queue instanceof LCFS)
               || (queue instanceof NoBuffer_c)
@@ -455,10 +463,10 @@ implements SimQueuePredictor<Q>
       || queueEventTypes.contains (null))
       throw new IllegalArgumentException ();
     final double time = queueState.getTime ();
-    final Set<SimEntityEvent> events = workloadSchedule.getSimQueueTimeSimEntityEventMap ().get (queue).get (time);
+    final Set<SimJQEvent> events = workloadSchedule.getSimQueueTimeSimEntityEventMap ().get (queue).get (time);
     try
     {
-      for (final SimEntityEvent event : events)
+      for (final SimJQEvent event : events)
       {
         final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule_SQ_SV_ROEL_U =
           createWorkloadSchedule_SQ_SV_ROEL_U (queue, Collections.singleton (event));

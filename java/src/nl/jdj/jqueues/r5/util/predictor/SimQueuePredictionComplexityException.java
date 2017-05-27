@@ -6,6 +6,14 @@ package nl.jdj.jqueues.r5.util.predictor;
  * <p>This implementation merely mimics the constructors from its superclass.
  * The constructors are therefore undocumented; see {@link Exception} for their semantics.
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class SimQueuePredictionComplexityException
 extends SimQueuePredictionException

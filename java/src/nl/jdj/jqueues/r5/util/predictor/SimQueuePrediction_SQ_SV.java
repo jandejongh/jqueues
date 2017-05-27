@@ -2,14 +2,22 @@ package nl.jdj.jqueues.r5.util.predictor;
 
 import java.util.List;
 import java.util.Map;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
 
 /** A prediction of the behavior of a single {@link SimQueue}
  *  under a (presumed) workload in which each {@link SimJob} visits the queue at most once.
  *
  * @param <Q> The type of {@link SimQueue}s supported.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public interface SimQueuePrediction_SQ_SV<Q extends SimQueue>

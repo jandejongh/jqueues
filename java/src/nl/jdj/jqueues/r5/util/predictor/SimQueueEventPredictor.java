@@ -4,12 +4,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.workload.DefaultWorkloadSchedule_SQ_SV;
@@ -24,6 +24,14 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
  * @see SimQueuePredictor
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public interface SimQueueEventPredictor<Q extends SimQueue>
@@ -52,7 +60,7 @@ public interface SimQueueEventPredictor<Q extends SimQueue>
   public default
   WorkloadSchedule_SQ_SV_ROEL_U
   createWorkloadSchedule_SQ_SV_ROEL_U
-  (final Q queue, final Set<SimEntityEvent> workloadEvents)
+  (final Q queue, final Set<SimJQEvent> workloadEvents)
   throws WorkloadScheduleException
   {
     return new DefaultWorkloadSchedule_SQ_SV_ROEL_U (queue, workloadEvents);
@@ -82,7 +90,7 @@ public interface SimQueueEventPredictor<Q extends SimQueue>
   WorkloadSchedule_SQ_SV
   createWorkloadSchedule_SQ_SV
   (final Q queue,
-   final Map<Double, Set<SimEntityEvent>> workloadEventsMap)
+   final Map<Double, Set<SimJQEvent>> workloadEventsMap)
   throws WorkloadScheduleException
   {
     return new DefaultWorkloadSchedule_SQ_SV (queue, workloadEventsMap);
@@ -247,8 +255,8 @@ public interface SimQueueEventPredictor<Q extends SimQueue>
     final double time = queueState.getTime ();
     if (Double.isNaN (time))
       throw new IllegalStateException ();
-    final Set<SimEntityEvent> events = workloadSchedule.getSimQueueTimeSimEntityEventMap ().get (queue).get (time);
-    for (final SimEntityEvent event : events)
+    final Set<SimJQEvent> events = workloadSchedule.getSimQueueTimeSimEntityEventMap ().get (queue).get (time);
+    for (final SimJQEvent event : events)
     {
       final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule_SQ_SV_ROEL_U =
         createWorkloadSchedule_SQ_SV_ROEL_U (queue, Collections.singleton (event));

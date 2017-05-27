@@ -7,16 +7,16 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackTandemSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.IC;
-import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
-import nl.jdj.jqueues.r5.entity.queue.processorsharing.CUPS;
-import nl.jdj.jqueues.r5.entity.queue.serverless.ZERO;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.TandemSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IC;
+import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.CUPS;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.ZERO;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList_IOEL;
 import nl.jdj.jsimulation.r5.DefaultSimEventList_ROEL;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -32,7 +32,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * <p>
  * The most important feature of a {@link SimQueuePredictor} is the prediction of job visits to a given (stateless!)
  * {@link SimQueue} under a given external workload (e.g., arrivals, revocations, setting server-access credits,
- * or queue-specific external operations). The workload consists of a collection of {@link SimEntityEvent}s, and this collection
+ * or queue-specific external operations). The workload consists of a collection of {@link SimJQEvent}s, and this collection
  * may contain events scheduled at the same time. Depending on the method invoked on the predictor,
  * such simultaneous events are to be interpreted as occurring in "random order"
  * (as if processed by a ROEL {@link SimEventList} like {@link DefaultSimEventList_ROEL})
@@ -59,7 +59,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * occurrence of a "catch-up" and a departure (both "internal events") in a {@link CUPS} queue.
  * Note that even with a ROEL {@link SimEventList}, certain {@link SimQueue} implementations
  * may process "simultaneous events" in a specific sequence, and heavily rely on their sequential execution.
- * For instance, the {@link BlackTandemSimQueue} lets (delegate) jobs arrive at their first sub-queue if
+ * For instance, the {@link TandemSimQueue} lets (delegate) jobs arrive at their first sub-queue if
  * server-access credits become available, yet it processes these arrivals in a specific order (the arrival order of the
  * corresponding "real" jobs) and it effectuates these arrivals immediately, without using the underlying event list.
  * 
@@ -68,6 +68,14 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * or throw an exception upon determining an ambiguity, see {@link SimQueuePredictionAmbiguityException}.
  * 
  * @param <Q> The type of {@link SimQueue}s supported.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public interface SimQueuePredictor<Q extends SimQueue>
@@ -101,7 +109,7 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
    */
   SimQueuePrediction_SQ_SV<Q>
   predict_SQ_SV_ROEL_U
-  (Q queue, Set<SimEntityEvent> workloadEvents)
+  (Q queue, Set<SimJQEvent> workloadEvents)
   throws SimQueuePredictionException;
     
   /** Creates the unique prediction, if possible,
@@ -136,8 +144,8 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
   SimQueuePrediction_SQ_SV<Q>
   predict_SQ_SV_IOEL_U
   (Q queue,
-   NavigableMap<Double, Set<SimEntityEvent>> workloadEventsMap,
-   NavigableMap<Double, Set<SimEntityEvent>> processedEventsMap)
+   NavigableMap<Double, Set<SimJQEvent>> workloadEventsMap,
+   NavigableMap<Double, Set<SimJQEvent>> processedEventsMap)
   throws SimQueuePredictionException;
   
   /** Compares two maps of predicted and actual {@link JobQueueVisitLog}s for equality, within given accuracy.
@@ -202,7 +210,7 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
                 stream.println ("[matchVisitLogs_SQ_SV:] Found multiple visits of job " + job + " to queue " + queue +".");
                 if (testString != null)
                 {
-                  stream.println ("  Test:");
+                  stream.println ("  Test: ");
                   stream.println (testString);
                 }
               }
@@ -225,7 +233,7 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
           stream.println ("[matchVisitLogs_SQ_SV] Absent predicted visit of job " + job + " to queue " + queue +":");
           if (testString != null)
           {
-            stream.println ("  Test:");
+            stream.println ("  Test: ");
             stream.println (testString);
           }
           stream.println ("Predicted visit log: ");
@@ -235,7 +243,7 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
           return false;        
       }
       final JobQueueVisitLog<SimJob, Q> actualVisitLog = actualAtQueue.get (job);
-      if (! actualVisitLog.equals (predictedVisitLog, accuracy))
+      if (actualVisitLog != null && ! actualVisitLog.equals (predictedVisitLog, accuracy))
       {
         success = false;
         if (stream != null)
@@ -243,7 +251,7 @@ extends SimQueueEventPredictor<Q>, SimQueueStatePredictor<Q>
           stream.println ("[matchVisitLogs_SQ_SV: Found mismatch for visit of job " + job + " to queue " + queue +":");
           if (testString != null)
           {
-            stream.println ("  Test:");
+            stream.println ("  Test: ");
             stream.println (testString);
           }
           stream.println ("Accuracy = " + accuracy + ".");
