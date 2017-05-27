@@ -36,6 +36,85 @@ extends SimEntityOperation<O, Req, Rep>
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // REQUEST
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** A request of an operation on a {@link SimQueue} and/or a {SimJob}.
+   * 
+ * @param <O>   The operation type.
+ * @param <Req> The request type (corresponding to the operation type).
+   * 
+   */
+  abstract static class Request<O extends SimEntityOperation, Req extends Request>
+  implements SimEntityOperation.Request<O, Req>
+  {
+    
+    /** Returns the job associated with this request.
+     * 
+     * The default implementation returns {@code null}.
+     * 
+     * @return The job associated with this request, may be {@code null}.
+     *
+     */
+    public SimJob getJob ()
+    {
+      return null;
+    }
+    
+    /** Returns the queue associated with this request.
+     * 
+     * The default implementation returns {@code null}.
+     * 
+     * @return The queue associated with this request, may be {@code null}.
+     *
+     */
+    public SimQueue getQueue ()
+    {
+      return null;
+    }
+    
+    /** Returns a copy of this request for another job.
+     * 
+     * @param job The new job, non-{@code null}.
+     * 
+     * @return A copy of this request for given job.
+     * 
+     * @throws IllegalArgumentException      If the job is {@code null}.
+     * @throws UnsupportedOperationException If this request does not support jobs.
+     * 
+     */
+    public abstract Req forJob (SimJob job);
+    
+    /** Returns a copy of this request for another queue.
+     * 
+     * @param queue The new queue, non-{@code null}.
+     * 
+     * @return A copy of this request for given queue.
+     * 
+     * @throws IllegalArgumentException      If the queue is {@code null}.
+     * @throws UnsupportedOperationException If this request does not support queues.
+     * 
+     */
+    public abstract Req forQueue (SimQueue queue);
+    
+    /** Returns a copy of this request for another job and another queue.
+     * 
+     * @param job   The new job, non-{@code null}.
+     * @param queue The new queue, non-{@code null}.
+     * 
+     * @return A copy of this request for given job and queue.
+     * 
+     * @throws IllegalArgumentException      If the job and/or queue  is {@code null}.
+     * @throws UnsupportedOperationException If this request does not support jobs or does not support queues.
+     * 
+     */
+    public abstract Req forJobAndQueue (SimJob job, SimQueue queue);
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // OPERATION REQUEST WITH JOB
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,8 +125,8 @@ extends SimEntityOperation<O, Req, Rep>
    * @param <Req> The request type (corresponding to the operation type).
    * 
    */
-  abstract static class RequestJ<O extends SimEntityOperation, Req extends SimEntityOperation.Request>
-  implements SimEntityOperation.Request<O, Req>
+  abstract static class RequestJ<O extends SimEntityOperation, Req extends RequestJ>
+  extends Request<O, Req>
   {
     
     /** Creates the request.
@@ -71,6 +150,7 @@ extends SimEntityOperation<O, Req, Rep>
      * @return The job argument of this request, non-{@code null}.
      * 
      */
+    @Override
     public final SimJob getJob ()
     {
       return this.job;
@@ -90,8 +170,8 @@ extends SimEntityOperation<O, Req, Rep>
    * @param <Req> The request type (corresponding to the operation type).
    * 
    */
-  abstract static class RequestQ<O extends SimEntityOperation, Req extends SimEntityOperation.Request>
-  implements SimEntityOperation.Request<O, Req>
+  abstract static class RequestQ<O extends SimEntityOperation, Req extends RequestQ>
+  extends Request<O, Req>
   {
     
     /** Creates the request.
@@ -115,6 +195,7 @@ extends SimEntityOperation<O, Req, Rep>
      * @return The queue argument of this request, non-{@code null}.
      * 
      */
+    @Override
     public final SimQueue getQueue ()
     {
       return this.queue;
@@ -134,8 +215,8 @@ extends SimEntityOperation<O, Req, Rep>
    * @param <Req> The request type (corresponding to the operation type).
    * 
    */
-  abstract static class RequestJQ<O extends SimEntityOperation, Req extends SimEntityOperation.Request>
-  implements SimEntityOperation.Request<O, Req>
+  abstract static class RequestJQ<O extends SimEntityOperation, Req extends RequestJQ>
+  extends Request<O, Req>
   {
     
     /** Creates the request.
@@ -161,6 +242,7 @@ extends SimEntityOperation<O, Req, Rep>
      * @return The job argument of this request, non-{@code null}.
      * 
      */
+    @Override
     public final SimJob getJob ()
     {
       return this.job;
@@ -173,6 +255,7 @@ extends SimEntityOperation<O, Req, Rep>
      * @return The queue argument of this request, non-{@code null}.
      * 
      */
+    @Override
     public final SimQueue getQueue ()
     {
       return this.queue;
@@ -316,6 +399,30 @@ extends SimEntityOperation<O, Req, Rep>
     public final Arrival getOperation ()
     {
       return Arrival.INSTANCE;
+    }
+
+    @Override
+    public ArrivalRequest forJob (final SimJob job)
+    {
+      if (job == null)
+        throw new IllegalArgumentException ();
+      return new ArrivalRequest (job, getQueue ());
+    }
+
+    @Override
+    public ArrivalRequest forQueue (final SimQueue queue)
+    {
+      if (queue == null)
+        throw new IllegalArgumentException ();
+      return new ArrivalRequest (getJob (), queue);
+    }
+
+    @Override
+    public ArrivalRequest forJobAndQueue (final SimJob job, final SimQueue queue)
+    {
+      if (job == null || queue == null)
+        throw new IllegalArgumentException ();
+      return new ArrivalRequest (job, queue);
     }
     
   }
@@ -512,6 +619,30 @@ extends SimEntityOperation<O, Req, Rep>
     public final Revocation getOperation ()
     {
       return Revocation.INSTANCE;
+    }
+    
+    @Override
+    public RevocationRequest forJob (final SimJob job)
+    {
+      if (job == null)
+        throw new IllegalArgumentException ();
+      return new RevocationRequest (job, getQueue (), isInterruptService ());
+    }
+
+    @Override
+    public RevocationRequest forQueue (final SimQueue queue)
+    {
+      if (queue == null)
+        throw new IllegalArgumentException ();
+      return new RevocationRequest (getJob (), queue, isInterruptService ());
+    }
+
+    @Override
+    public RevocationRequest forJobAndQueue (final SimJob job, final SimQueue queue)
+    {
+      if (job == null || queue == null)
+        throw new IllegalArgumentException ();
+      return new RevocationRequest (job, queue, isInterruptService ());
     }
     
   }
