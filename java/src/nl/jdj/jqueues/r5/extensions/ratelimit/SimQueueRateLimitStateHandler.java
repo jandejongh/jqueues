@@ -1,7 +1,7 @@
 package nl.jdj.jqueues.r5.extensions.ratelimit;
 
-import nl.jdj.jqueues.r5.entity.queue.serverless.ALIMIT;
-import nl.jdj.jqueues.r5.entity.queue.serverless.DLIMIT;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.ALIMIT;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DLIMIT;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LeakyBucket;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueStateHandler;
@@ -11,6 +11,14 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueStateHandler;
  * @see DLIMIT
  * @see ALIMIT
  * @see SimQueuePredictor_LeakyBucket
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public final class SimQueueRateLimitStateHandler
