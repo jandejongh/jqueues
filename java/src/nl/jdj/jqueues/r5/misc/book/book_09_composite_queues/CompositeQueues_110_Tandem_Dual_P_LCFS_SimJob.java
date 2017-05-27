@@ -2,9 +2,9 @@ package nl.jdj.jqueues.r5.misc.book.book_09_composite_queues;
 
 import java.util.ArrayList;
 import java.util.List;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.selflistening.DefaultSelfListeningSimJob;
-import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.selflistening.DefaultSelfListeningSimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
 import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;

@@ -2,11 +2,11 @@ package nl.jdj.jqueues.r5.misc.book.book_09_composite_queues;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
-import nl.jdj.jqueues.r5.entity.queue.composite.tandem.BlackTandemSimQueue;
-import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.TandemSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
 import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -25,7 +25,7 @@ final class CompositeQueues_130_Tandem_Dual_P_LCFS_CompositeSimQueue
     final Set<SimQueue> subQueues = new LinkedHashSet<>  ();
     subQueues.add (lcfs_1);
     subQueues.add (lcfs_2);
-    final BlackTandemSimQueue compositeQueue = new BlackTandemSimQueue (el, subQueues, null);
+    final TandemSimQueue compositeQueue = new TandemSimQueue (el, subQueues, null);
     for (int j = 1; j <= 5; j++)
     {
       final SimJob job = new DefaultSimJob (el, "J" + j, 10 * j);

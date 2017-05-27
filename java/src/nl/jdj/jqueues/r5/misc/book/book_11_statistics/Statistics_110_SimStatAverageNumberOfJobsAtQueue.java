@@ -1,10 +1,10 @@
 package nl.jdj.jqueues.r5.misc.book.book_11_statistics;
 
-import nl.jdj.jqueues.r5.SimEntity;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
-import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
+import nl.jdj.jqueues.r5.entity.SimEntity;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
 import nl.jdj.jqueues.r5.listener.DefaultSimEntityListener;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;

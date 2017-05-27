@@ -1,9 +1,9 @@
 package nl.jdj.jqueues.r5.misc.book.book_09_composite_queues;
 
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
-import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
 import nl.jdj.jqueues.r5.listener.DefaultSimEntityListener;
 import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;

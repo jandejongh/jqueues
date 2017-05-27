@@ -1,8 +1,8 @@
 package nl.jdj.jqueues.r5.misc.book.book_11_statistics;
 
-import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
-import nl.jdj.jqueues.r5.entity.queue.nonpreemptive.FCFS;
-import nl.jdj.jqueues.r5.entity.queue.preemptive.P_LCFS;
+import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
 import nl.jdj.jqueues.r5.util.stat.SimpleSimQueueStat;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
