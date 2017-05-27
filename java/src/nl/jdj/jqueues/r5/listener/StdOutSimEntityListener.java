@@ -2,20 +2,29 @@ package nl.jdj.jqueues.r5.listener;
 
 import java.util.List;
 import java.util.Map;
-import nl.jdj.jqueues.r5.SimEntity;
-import nl.jdj.jqueues.r5.SimEntityListener;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.SimEntity;
+import nl.jdj.jqueues.r5.entity.jq.SimJQListener;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
 
-/** A {@link SimEntityListener} logging events on <code>System.out</code>.
+/** A {@link SimJQListener} logging events on <code>System.out</code>.
  *
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class StdOutSimEntityListener<J extends SimJob, Q extends SimQueue>
-implements SimEntityListener<J, Q>
+implements SimJQListener<J, Q>
 {
 
   /** Returns the header used in the notifications.
@@ -75,7 +84,7 @@ implements SimEntityListener<J, Q>
 
   @Override
   public void notifyStateChanged
-  (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member, J>> notifications)
+  (final double time, final SimEntity entity, final List<Map<SimEntitySimpleEventType.Member, SimEntityEvent>> notifications)
   {
     System.out.print (getHeaderString () + " ");
     System.out.print ("t=" + time + ", entity=" + entity + ": STATE CHANGED:");
@@ -84,7 +93,7 @@ implements SimEntityListener<J, Q>
     else
     {
       System.out.println ("");
-      for (final Map<SimEntitySimpleEventType.Member, J> notification : notifications)
+      for (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> notification : notifications)
         if (notification == null)
           System.out.println ("  => null");
         else

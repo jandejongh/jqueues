@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import nl.jdj.jqueues.r5.SimEntity;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.SimQueueListener;
+import nl.jdj.jqueues.r5.entity.SimEntity;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueListener;
 
 /** A {@link SimQueueListener} that logs server-access-credits availability in between resets.
  * 
@@ -16,6 +16,14 @@ import nl.jdj.jqueues.r5.SimQueueListener;
  * @see SimQueueListener#notifyOutOfServerAccessCredits
  * @see SimQueueListener#notifyRegainedServerAccessCredits
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class SimQueueServerAccessCreditsAvailabilityLogger
 extends DefaultSimQueueListener

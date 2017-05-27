@@ -4,27 +4,34 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimEntity;
-import nl.jdj.jqueues.r5.SimEntityListener;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.SimQueueListener;
-import nl.jdj.jqueues.r5.entity.queue.composite.dual.ctandem2.BlackCompressedTandem2SimQueue;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.SimEntity;
+import nl.jdj.jqueues.r5.entity.jq.SimJQListener;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueListener;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType.Member;
 
 /** A {@link SimQueueListener} (of atomic events) to a fixed set of {@link SimQueue}s with features to
  *  operate on the target queues once they are finished with their listener notifications.
  * 
  * <p>
- * By contract of {@link SimEntity} and {@link SimEntityListener},
+ * By contract of {@link SimEntity} and {@link SimJQListener},
  * it is illegal to operate on an entity from within the context of a listener (notification).
- * However, in certain cases this feature is highly desired, like in {@link BlackCompressedTandem2SimQueue}.
+ * However, in certain cases this feature is highly desired, like in {@link CompressedTandem2SimQueue}.
+ * 
+ * <p>
  * In order to facilitate this to some extent,
  * objects of the current class listen to state-change and update notifications from a fixed set of queues,
  * and store (copies of) these notifications temporarily as {@link Notification} objects.
  * Through the use of {@link SimEntity#doAfterNotifications}, objects of this class then invoke a registered {@link Processor}
  * to act upon the stored notifications, and since the queue is no longer notifying listeners by then,
  * the processor can initiate operations on the entity.
+ * 
+ * <p>
  * If such operations backfire, and new notifications arrive (perhaps from other registered queues),
  * these are simple appended to the stored notifications
  * in the object of this class; the processor can simply proceed to "eat them" and do its thing
@@ -33,11 +40,19 @@ import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
  * 
  * <p>
  * This class was designed in order to meet some requirements highly specific to implementing,
- * e.g., {@link BlackCompressedTandem2SimQueue},
- * and not really for general-purpose use.
+ * e.g., {@link CompressedTandem2SimQueue},
+ * and not really meant for general-purpose use.
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
+ * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public final class MultiSimQueueNotificationProcessor<J extends SimJob, Q extends SimQueue>
@@ -105,14 +120,14 @@ extends DefaultSimQueueListener<J, Q>
      */
     private final String queueAnnotation;
     
-    private final List<Map<SimEntitySimpleEventType.Member, J>> subNotifications;
+    private final List<Map<SimEntitySimpleEventType.Member, SimJQEvent<J, Q>>> subNotifications;
     
     /** Gets the sub-notifications of which this (atomic) notification consists.
      * 
      * @return The sub-notifications of which this (atomic) notification consists.
      * 
      */
-    public final List<Map<SimEntitySimpleEventType.Member, J>> getSubNotifications ()
+    public final List<Map<SimEntitySimpleEventType.Member, SimJQEvent<J, Q>>> getSubNotifications ()
     {
       return this.subNotifications;
     }
@@ -129,7 +144,7 @@ extends DefaultSimQueueListener<J, Q>
     ( final double time,
       final Q queue,
       final String queueAnnotation,
-      final List<Map<SimEntitySimpleEventType.Member, J>> subNotifications)
+      final List<Map<SimEntitySimpleEventType.Member, SimJQEvent<J, Q>>> subNotifications)
     {
       if (queue == null || subNotifications == null)
         throw new IllegalArgumentException ();
@@ -214,7 +229,7 @@ extends DefaultSimQueueListener<J, Q>
   public final void notifyStateChanged
   ( final double time,
     final SimEntity entity,
-    final List<Map<SimEntitySimpleEventType.Member, J>> notifications)
+    final List<Map<SimEntitySimpleEventType.Member, SimEntityEvent>> notifications)
   {
     if (entity == null || ! (entity instanceof SimQueue))
       throw new IllegalArgumentException ("Null entity or entity that is not a queue: " + entity + ".");
@@ -222,7 +237,7 @@ extends DefaultSimQueueListener<J, Q>
       throw new IllegalArgumentException ("Queue supplied is not a sub-queue: " + entity + ".");
     if (notifications == null || notifications.isEmpty ())
       throw new IllegalArgumentException ("Null or empty notifications: " + notifications + ".");
-    for (final Map<SimEntitySimpleEventType.Member, J> notification : notifications)
+    for (final Map<SimEntitySimpleEventType.Member, SimEntityEvent> notification : notifications)
       if (notification == null || notification.size () != 1 || notification.containsKey (null))
         throw new IllegalArgumentException ();
     this.notifications.add
@@ -250,6 +265,36 @@ extends DefaultSimQueueListener<J, Q>
       this.notifications.clear ();
       this.processing = false;
     }
+  }
+ 
+  /** Checks for the presence of a specific {@link Member} in a list of {@link Notification}s.
+   * 
+   * <p>
+   * Convenience method.
+   * 
+   * @param notifications The notifications, if {@code null} or empty, {@code false} is returned.
+   * @param eventType     The event-type, must be non-{@code null}.
+   * 
+   * @return {@code True} if the (sub-)notifications contain at least one notification of given type, {@code false} otherwise.
+   * 
+   * @throws IllegalArgumentException If {@code eventType == null}.
+   * 
+   * @param <J> The type of {@link SimJob}s supported in the notifications.
+   * @param <Q> The type of {@link SimQueue}s supported in the notifications.
+   * 
+   */
+  public static <J extends SimJob, Q extends SimQueue>
+  boolean contains (final List<Notification<J, Q>> notifications, final SimEntitySimpleEventType.Member eventType)
+  {
+    if (eventType == null)
+      throw new IllegalArgumentException ();
+    if (notifications == null || notifications.isEmpty ())
+      return false;
+    for (final MultiSimQueueNotificationProcessor.Notification<J, Q> notification : notifications)
+      for (final Map<SimEntitySimpleEventType.Member, SimJQEvent<J, Q>> subNotification : notification.getSubNotifications ())
+        if (subNotification.keySet ().iterator ().next () == eventType)
+          return true;
+    return false;
   }
   
 }
