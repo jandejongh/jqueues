@@ -299,7 +299,7 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  public void resetSimQueueSelector ()
+  public final void resetSimQueueSelector ()
   {
   }
 
