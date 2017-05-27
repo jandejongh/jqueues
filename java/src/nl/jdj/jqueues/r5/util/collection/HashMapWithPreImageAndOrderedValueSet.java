@@ -13,6 +13,14 @@ import java.util.TreeMap;
  * <p>
  * Note that <code>null</code> values are not allowed in this implementation.
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class HashMapWithPreImageAndOrderedValueSet<K, V>
 extends HashMap<K, V>
