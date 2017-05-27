@@ -35,6 +35,9 @@ import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
  * @see SimJQEvent#getQueue
  * @see SimJQEvent#getJob
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
  * Copyright (C) 2005-2017 Jan de Jongh, TNO
  * 
  * <p>

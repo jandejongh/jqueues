@@ -12,6 +12,9 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueStateHandler;
  *
  * @see SimQueueComposite
  * 
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
  * Copyright (C) 2005-2017 Jan de Jongh, TNO
  * 
  * <p>

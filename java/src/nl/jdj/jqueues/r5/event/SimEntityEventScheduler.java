@@ -13,6 +13,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A utility class capable of scheduling {@link SimJQEvent}s on an event list.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
  * Copyright (C) 2005-2017 Jan de Jongh, TNO
  * 
  * <p>

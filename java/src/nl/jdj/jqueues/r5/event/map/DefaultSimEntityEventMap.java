@@ -39,6 +39,9 @@ import nl.jdj.jsimulation.r5.SimEvent;
  * @see SimJQEvent#getQueue
  * @see SimJQEvent#getJob
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
  * Copyright (C) 2005-2017 Jan de Jongh, TNO
  * 
  * <p>
