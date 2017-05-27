@@ -1,12 +1,24 @@
 package nl.jdj.jqueues.r5.event;
 
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent.Arrival;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent.Revocation;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent.QueueAccessVacation;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent.ServerAccessCredits;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** A utility class capable of scheduling {@link SimEntityEvent}s on an event list.
+/** A utility class capable of scheduling {@link SimJQEvent}s on an event list.
  *
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public abstract class SimEntityEventScheduler
 {
@@ -30,12 +42,12 @@ public abstract class SimEntityEventScheduler
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Schedules all {@link SimEntityEvent}s on the given {@link SimEventList}, optionally after resetting it to a specific time.
+  /** Schedules all {@link SimJQEvent}s on the given {@link SimEventList}, optionally after resetting it to a specific time.
    * 
    * @param eventList   The event list.
    * @param reset       Whether to reset the event list before scheduling.
    * @param resetTime   The new time to which to reset the event list (if requested so). 
-   * @param queueEvents The {@link SimEntityEvent}s to schedule.
+   * @param queueEvents The {@link SimJQEvent}s to schedule.
    * 
    * @param <J> The type of {@link SimJob}s supported.
    * @param <Q> The type of {@link SimQueue}s supported.
@@ -45,14 +57,14 @@ public abstract class SimEntityEventScheduler
    *                                  or if any of the events is to be scheduled in the past after the optional event-list reset
    *                                  (compared to the time on the event list),
    * 
-   * @see #schedule(SimEventList, SimEntityEvent) 
+   * @see #schedule(SimEventList, SimJQEvent) 
    * 
    */
   public static
   <J extends SimJob, Q extends SimQueue>
   void
   schedule
-  (final SimEventList eventList, final boolean reset, final double resetTime, final Set<SimEntityEvent<J, Q>> queueEvents)
+  (final SimEventList eventList, final boolean reset, final double resetTime, final Set<SimJQEvent<J, Q>> queueEvents)
   {
     if (eventList == null)
       throw new IllegalArgumentException ();
@@ -61,7 +73,7 @@ public abstract class SimEntityEventScheduler
     if (reset)
       eventList.reset (resetTime);
     if (queueEvents != null)
-      for (final SimEntityEvent<J, Q> event : queueEvents)
+      for (final SimJQEvent<J, Q> event : queueEvents)
         SimEntityEventScheduler.schedule (eventList, event);
   }
 
@@ -84,7 +96,7 @@ public abstract class SimEntityEventScheduler
   <J extends SimJob, Q extends SimQueue>
   void
   schedule
-  (final SimEventList eventList, final SimEntityEvent<J, Q> queueEvent)
+  (final SimEventList eventList, final SimJQEvent<J, Q> queueEvent)
   {
     if (eventList == null || queueEvent == null)
       throw new IllegalArgumentException ();
@@ -115,9 +127,9 @@ public abstract class SimEntityEventScheduler
    * @param <J> The type of {@link SimJob}s supported.
    * @param <Q> The type of {@link SimQueue}s supported.
    * 
-   * @see SimQueueAccessVacationEvent
+   * @see QueueAccessVacation
    * @see SimQueue#setQueueAccessVacation
-   * @see #schedule(SimEventList, SimEntityEvent) 
+   * @see #schedule(SimEventList, SimJQEvent) 
    * 
    */
   public static
@@ -129,7 +141,7 @@ public abstract class SimEntityEventScheduler
     if (queue == null || queue.getEventList () == null)
       throw new IllegalArgumentException ();
     SimEntityEventScheduler.schedule (queue.getEventList (),
-      new SimQueueAccessVacationEvent<> (queue, time, vacation));
+      new SimQueueEvent.QueueAccessVacation<> (queue, time, vacation));
   }
     
   /** Creates a (default) job-arrival event and schedules it.
@@ -147,9 +159,9 @@ public abstract class SimEntityEventScheduler
    * @param <J> The type of {@link SimJob}s supported.
    * @param <Q> The type of {@link SimQueue}s supported.
    * 
-   * @see SimQueueJobArrivalEvent
+   * @see Arrival
    * @see SimQueue#arrive
-   * @see #schedule(SimEventList, SimEntityEvent) 
+   * @see #schedule(SimEventList, SimJQEvent) 
    * 
    */
   public static
@@ -160,7 +172,7 @@ public abstract class SimEntityEventScheduler
   {
     if (job == null || queue == null || queue.getEventList () == null)
       throw new IllegalArgumentException ();
-    SimEntityEventScheduler.schedule (queue.getEventList (), new SimQueueJobArrivalEvent<> (job, queue, arrivalTime));
+    SimEntityEventScheduler.schedule (queue.getEventList (), new SimJQEvent.Arrival<> (job, queue, arrivalTime));
   }
     
   /** Creates a (default) job-revocation event and schedules it.
@@ -179,9 +191,9 @@ public abstract class SimEntityEventScheduler
    * @param <J> The type of {@link SimJob}s supported.
    * @param <Q> The type of {@link SimQueue}s supported.
    * 
-   * @see SimQueueJobRevocationEvent
+   * @see Revocation
    * @see SimQueue#revoke
-   * @see #schedule(SimEventList, SimEntityEvent) 
+   * @see #schedule(SimEventList, SimJQEvent) 
    * 
    */
   public static
@@ -193,7 +205,7 @@ public abstract class SimEntityEventScheduler
     if (job == null || queue == null || queue.getEventList () == null)
       throw new IllegalArgumentException ();
     SimEntityEventScheduler.schedule (queue.getEventList (),
-      new SimQueueJobRevocationEvent<> (job, queue, revocationTime, interruptService));
+      new SimJQEvent.Revocation<> (job, queue, revocationTime, interruptService));
   }
     
   /** Creates a (default) a server-access-credits event and schedules it.
@@ -211,9 +223,9 @@ public abstract class SimEntityEventScheduler
    * @param <J> The type of {@link SimJob}s supported.
    * @param <Q> The type of {@link SimQueue}s supported.
    * 
-   * @see SimQueueServerAccessCreditsEvent
+   * @see ServerAccessCredits
    * @see SimQueue#setServerAccessCredits
-   * @see #schedule(SimEventList, SimEntityEvent) 
+   * @see #schedule(SimEventList, SimJQEvent) 
    * 
    */
   public static
@@ -225,7 +237,13 @@ public abstract class SimEntityEventScheduler
     if (queue == null || queue.getEventList () == null || credits < 0)
       throw new IllegalArgumentException ();
     SimEntityEventScheduler.schedule (queue.getEventList (),
-      new SimQueueServerAccessCreditsEvent<> (queue, time, credits));
+      new SimQueueEvent.ServerAccessCredits<> (queue, time, credits));
   }
     
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
 }
