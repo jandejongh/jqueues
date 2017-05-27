@@ -3,37 +3,43 @@ package nl.jdj.jqueues.r5.event.map;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 
-/** A representation of a (possibly ordered) set of {@link SimEntityEvent}s with indexes in time and
+/** A representation of a (possibly ordered) set of {@link SimJQEvent}s with indexes in time and
  *  in {@link SimQueue} or {@link SimJob}.
  * 
  * <p>
- * This object holds a set of {@link SimEntityEvent}s, accessible with {@link #getEntityEvents},
+ * This object holds a set of {@link SimJQEvent}s, accessible with {@link #getEntityEvents},
  * and maintains different map view on that set.
  * The contents of the set may change, but the map views have to be kept consistent.
  * 
  * <p>
- * Each {@link SimEntityEvent} with non-{@code null} queue {@link SimEntityEvent#getQueue},
+ * Each {@link SimJQEvent} with non-{@code null} queue {@link SimJQEvent#getQueue},
  * must be in the {@link #getTimeSimQueueSimEntityEventMap} and {@link #getSimQueueTimeSimEntityEventMap}
  * structures.
- * Likewise, each {@link SimEntityEvent} with non-{@code null} job {@link SimEntityEvent#getJob},
+ * Likewise, each {@link SimJQEvent} with non-{@code null} job {@link SimJQEvent#getJob},
  * must be in the {@link #getTimeSimJobSimEntityEventMap} and {@link #getSimJobTimeSimEntityEventMap}
  * structures.
  * 
  * <p>
- * Beware that most {@link SimEntityEvent}s will be present in both the queue-maps and the job-maps.
+ * Beware that most {@link SimJQEvent}s will be present in both the queue-maps and the job-maps.
  * 
  * <p>
- * No ordering is pre-specified for the various sets holding {@link SimEntityEvent}s occurring simultaneously,
+ * No ordering is pre-specified for the various sets holding {@link SimJQEvent}s occurring simultaneously,
  * except that <i>if</i> a meaningful ordering structure is specified on {@link #getEntityEvents} in implementations,
  * all sets in the various maps must use the same ordering.
  * 
- * @see SimEntityEvent#getQueue
- * @see SimEntityEvent#getJob
+ * @see SimJQEvent
+ * @see SimJQEvent#getQueue
+ * @see SimJQEvent#getJob
  *
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public interface SimEntityEventMap
 {
@@ -44,12 +50,12 @@ public interface SimEntityEventMap
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns the set of all {@link SimEntityEvent}s this object represents.
+  /** Returns the set of all {@link SimJQEvent}s this object represents.
    * 
-   * @return The set of all {@link SimEntityEvent}s this object represents.
+   * @return The set of all {@link SimJQEvent}s this object represents.
    * 
    */
-  public Set<SimEntityEvent> getEntityEvents ();
+  Set<SimJQEvent> getEntityEvents ();
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -57,32 +63,38 @@ public interface SimEntityEventMap
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns the {@link SimEntityEvent}s indexed by (in that order) time and queue.
+  /** Returns the {@link SimJQEvent}s indexed by (in that order) time and queue.
    * 
-   * @return The {@link SimEntityEvent}s indexed by (in that order) time and queue.
+   * @return The {@link SimJQEvent}s indexed by (in that order) time and queue.
    * 
    */
-  public NavigableMap<Double, Map<SimQueue, Set<SimEntityEvent>>> getTimeSimQueueSimEntityEventMap ();
+  NavigableMap<Double, Map<SimQueue, Set<SimJQEvent>>> getTimeSimQueueSimEntityEventMap ();
   
-  /** Returns the {@link SimEntityEvent}s indexed by (in that order) queue and time.
+  /** Returns the {@link SimJQEvent}s indexed by (in that order) queue and time.
    * 
-   * @return The {@link SimEntityEvent}s indexed by (in that order) queue and time.
+   * @return The {@link SimJQEvent}s indexed by (in that order) queue and time.
    * 
    */
-  public Map<SimQueue, NavigableMap<Double, Set<SimEntityEvent>>> getSimQueueTimeSimEntityEventMap ();
+  Map<SimQueue, NavigableMap<Double, Set<SimJQEvent>>> getSimQueueTimeSimEntityEventMap ();
   
-  /** Returns the {@link SimEntityEvent}s indexed by (in that order) time and job.
+  /** Returns the {@link SimJQEvent}s indexed by (in that order) time and job.
    * 
-   * @return The {@link SimEntityEvent}s indexed by (in that order) time and job.
+   * @return The {@link SimJQEvent}s indexed by (in that order) time and job.
    * 
    */
-  public NavigableMap<Double, Map<SimJob, Set<SimEntityEvent>>> getTimeSimJobSimEntityEventMap ();
+  NavigableMap<Double, Map<SimJob, Set<SimJQEvent>>> getTimeSimJobSimEntityEventMap ();
   
-  /** Returns the {@link SimEntityEvent}s indexed by (in that order) job and time.
+  /** Returns the {@link SimJQEvent}s indexed by (in that order) job and time.
    * 
-   * @return The {@link SimEntityEvent}s indexed by (in that order) job and time.
+   * @return The {@link SimJQEvent}s indexed by (in that order) job and time.
    * 
    */
-  public Map<SimJob, NavigableMap<Double, Set<SimEntityEvent>>> getSimJobTimeSimEntityEventMap ();
+  Map<SimJob, NavigableMap<Double, Set<SimJQEvent>>> getSimJobTimeSimEntityEventMap ();
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
 }

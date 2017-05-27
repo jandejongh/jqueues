@@ -7,9 +7,9 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jsimulation.r5.SimEvent;
 
 /** A default {@link SimEntityEventMap}.
@@ -17,12 +17,12 @@ import nl.jdj.jsimulation.r5.SimEvent;
  * <p>
  * A {@link DefaultSimEntityEventMap} takes a set of {@link SimEvent}s as input to its (set-argument) constructor,
  * and constructs the maps as specified in {@link SimEntityEventMap}
- * from all {@link SimEntityEvent} it finds that have non-{@code null} job or queue (or both).
+ * from all {@link SimJQEvent} it finds that have non-{@code null} job or queue (or both).
  * 
  * <p>
  * This implementation constructs an internal copy of the input set,
  * and, for what it's worth,
- * maintains the order of simultaneous {@link SimEntityEvent}s in the input of the set-argument constructor
+ * maintains the order of simultaneous {@link SimJQEvent}s in the input of the set-argument constructor
  * throughput all its sets and maps
  * by using {@link LinkedHashSet}s.
  * 
@@ -35,9 +35,15 @@ import nl.jdj.jsimulation.r5.SimEvent;
  * If users prefer to modify the internal data structures, they are themselves responsible
  * for maintaining consistency.
  * 
- * @see SimEntityEvent#getQueue
- * @see SimEntityEvent#getJob
+ * @see SimJQEvent
+ * @see SimJQEvent#getQueue
+ * @see SimJQEvent#getJob
  *
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class DefaultSimEntityEventMap
 implements SimEntityEventMap
@@ -45,11 +51,11 @@ implements SimEntityEventMap
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR(S)
+  // CONSTRUCTOR(S) / CLONING / FACTORIES
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private void addSimEntityEvent (final SimEntityEvent simEntityEvent)
+  private void addSimEntityEvent (final SimJQEvent simEntityEvent)
   {
     if (simEntityEvent == null)
       throw new IllegalArgumentException ();
@@ -94,8 +100,8 @@ implements SimEntityEventMap
   {
     if (events != null)
       for (final SimEvent event : events)
-        if (event != null && (event instanceof SimEntityEvent))
-          addSimEntityEvent ((SimEntityEvent) event);
+        if (event != null && (event instanceof SimJQEvent))
+          addSimEntityEvent ((SimJQEvent) event);
   }
   
   /** Creates a new {@link DefaultSimEntityEventMap}, filling out all the internal sets and maps from scanning an unambiguous
@@ -118,13 +124,13 @@ implements SimEntityEventMap
     if (events != null)
       for (final Entry<Double, Set<E>> entry : events.entrySet ())
         for (final SimEvent event : entry.getValue ())
-          if (event != null && (event instanceof SimEntityEvent))
+          if (event != null && (event instanceof SimJQEvent))
           {
             if (entry.getKey () != event.getTime ())
               throw new IllegalArgumentException ();
              else
               // We can safely use {@link #addSimEntityEvent} because it preserves insertion order for simulateneous events.
-               addSimEntityEvent ((SimEntityEvent) event);
+               addSimEntityEvent ((SimJQEvent) event);
           }
   }
   
@@ -134,10 +140,10 @@ implements SimEntityEventMap
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private final Set<SimEntityEvent> entityEvents = new LinkedHashSet<> ();
+  private final Set<SimJQEvent> entityEvents = new LinkedHashSet<> ();
   
   @Override
-  public final Set<SimEntityEvent> getEntityEvents ()
+  public final Set<SimJQEvent> getEntityEvents ()
   {
     return this.entityEvents;
   }
@@ -148,36 +154,42 @@ implements SimEntityEventMap
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private final NavigableMap<Double, Map<SimQueue, Set<SimEntityEvent>>> timeSimQueueSimEntityEventMap = new TreeMap<> ();
+  private final NavigableMap<Double, Map<SimQueue, Set<SimJQEvent>>> timeSimQueueSimEntityEventMap = new TreeMap<> ();
   
-  private final Map<SimQueue, NavigableMap<Double, Set<SimEntityEvent>>> simQueueTimeSimEntityEventMap = new HashMap<> ();
+  private final Map<SimQueue, NavigableMap<Double, Set<SimJQEvent>>> simQueueTimeSimEntityEventMap = new HashMap<> ();
   
-  private final NavigableMap<Double, Map<SimJob, Set<SimEntityEvent>>> timeSimJobSimEntityEventMap = new TreeMap<> ();
+  private final NavigableMap<Double, Map<SimJob, Set<SimJQEvent>>> timeSimJobSimEntityEventMap = new TreeMap<> ();
   
-  private final Map<SimJob, NavigableMap<Double, Set<SimEntityEvent>>> simJobTimeSimEntityEventMap = new HashMap<> ();
+  private final Map<SimJob, NavigableMap<Double, Set<SimJQEvent>>> simJobTimeSimEntityEventMap = new HashMap<> ();
 
   @Override
-  public final NavigableMap<Double, Map<SimQueue, Set<SimEntityEvent>>> getTimeSimQueueSimEntityEventMap ()
+  public final NavigableMap<Double, Map<SimQueue, Set<SimJQEvent>>> getTimeSimQueueSimEntityEventMap ()
   {
     return this.timeSimQueueSimEntityEventMap;
   }
 
   @Override
-  public final Map<SimQueue, NavigableMap<Double, Set<SimEntityEvent>>> getSimQueueTimeSimEntityEventMap ()
+  public final Map<SimQueue, NavigableMap<Double, Set<SimJQEvent>>> getSimQueueTimeSimEntityEventMap ()
   {
     return this.simQueueTimeSimEntityEventMap;
   }
 
   @Override
-  public final NavigableMap<Double, Map<SimJob, Set<SimEntityEvent>>> getTimeSimJobSimEntityEventMap ()
+  public final NavigableMap<Double, Map<SimJob, Set<SimJQEvent>>> getTimeSimJobSimEntityEventMap ()
   {
     return this.timeSimJobSimEntityEventMap;
   }
 
   @Override
-  public final Map<SimJob, NavigableMap<Double, Set<SimEntityEvent>>> getSimJobTimeSimEntityEventMap ()
+  public final Map<SimJob, NavigableMap<Double, Set<SimJQEvent>>> getSimJobTimeSimEntityEventMap ()
   {
     return this.simJobTimeSimEntityEventMap;
   }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
 }
