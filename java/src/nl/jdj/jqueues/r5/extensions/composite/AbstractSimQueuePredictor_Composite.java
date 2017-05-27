@@ -7,20 +7,19 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.DefaultSimJob;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueComposite;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
-import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
-import nl.jdj.jqueues.r5.event.SimQueueJobRevocationEvent;
-import nl.jdj.jqueues.r5.event.simple.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.event.simple.SimQueueSimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_Pattern;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
@@ -30,19 +29,42 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
  *
  * @param <Q> The type of queue supported.
  * 
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public abstract class AbstractSimQueuePredictor_Composite<Q extends SimQueueComposite>
 extends AbstractSimQueuePredictor<Q>
 {
 
-  protected final List<AbstractSimQueuePredictor> subQueuePredictors;
-  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / CLONING / FACTORIES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   public AbstractSimQueuePredictor_Composite (final List<AbstractSimQueuePredictor> subQueuePredictors)
   {
     if (subQueuePredictors == null || subQueuePredictors.size () < 1)
       throw new IllegalArgumentException ();
     this.subQueuePredictors = subQueuePredictors;
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // CONSTRUCTOR(S) / CLONING / FACTORIES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  protected final List<AbstractSimQueuePredictor> subQueuePredictors;
+    
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // UTILITY METHOD
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   protected final static <T> Set<T> asSet (final T t)
   {
@@ -53,6 +75,53 @@ extends AbstractSimQueuePredictor<Q>
     return set;
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE SIMPLE EVENT
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  protected static class SubQueueSimpleEvent
+  extends SimEntitySimpleEventType.Member
+  {
+
+    public final SimQueue subQueue;
+    
+    public final SimEntitySimpleEventType.Member subQueueWorkloadEvent;
+    
+    public final SimEntitySimpleEventType.Member subQueueQueueEvent;
+    
+    public final SimJob job;
+    
+    public final Object argument;
+    
+    public SubQueueSimpleEvent
+      (final SimQueue subQueue,
+       final SimEntitySimpleEventType.Member subQueueWorkloadEvent,
+       final SimEntitySimpleEventType.Member subQueueQueueEvent,
+       final SimJob job,
+       final Object argument)
+    {
+      super ("SUBQUEUE");
+      if (subQueue == null
+        || (subQueueWorkloadEvent == null && subQueueQueueEvent == null)
+        || (subQueueWorkloadEvent != null && subQueueQueueEvent != null))
+        throw new IllegalArgumentException ();
+      this.subQueue = subQueue;
+      this.subQueueWorkloadEvent = subQueueWorkloadEvent;
+      this.subQueueQueueEvent = subQueueQueueEvent;
+      this.job = job;
+      this.argument = argument;
+    }
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // QUEUE PREDICTOR
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   /** Registers a new {@link SimQueueCompositeStateHandler} at the object created by super method,
    *  creating appropriate empty {@link DefaultSimQueueState}s for the sub-queues.
    * 
@@ -92,41 +161,6 @@ extends AbstractSimQueuePredictor<Q>
     queueState.setTime (newTime);
   }
 
-  protected static class SubQueueSimpleEvent
-  extends SimEntitySimpleEventType.Member
-  {
-
-    public final SimQueue subQueue;
-    
-    public final SimEntitySimpleEventType.Member subQueueWorkloadEvent;
-    
-    public final SimEntitySimpleEventType.Member subQueueQueueEvent;
-    
-    public final SimJob job;
-    
-    public final Object argument;
-    
-    public SubQueueSimpleEvent
-      (final SimQueue subQueue,
-       final SimEntitySimpleEventType.Member subQueueWorkloadEvent,
-       final SimEntitySimpleEventType.Member subQueueQueueEvent,
-       final SimJob job,
-       final Object argument)
-    {
-      super ("SUBQUEUE");
-      if (subQueue == null
-        || (subQueueWorkloadEvent == null && subQueueQueueEvent == null)
-        || (subQueueWorkloadEvent != null && subQueueQueueEvent != null))
-        throw new IllegalArgumentException ();
-      this.subQueue = subQueue;
-      this.subQueueWorkloadEvent = subQueueWorkloadEvent;
-      this.subQueueQueueEvent = subQueueQueueEvent;
-      this.job = job;
-      this.argument = argument;
-    }
-    
-  }
-  
   @Override
   public double getNextQueueEventTimeBeyond
   (final Q queue, final SimQueueState<SimJob, Q> queueState, final Set<SimEntitySimpleEventType.Member> queueEventTypes)
@@ -165,62 +199,6 @@ extends AbstractSimQueuePredictor<Q>
     return minNextEventTime;
   }
 
-  protected void dropJobs
-  (final double time,
-   final Q queue,
-   final SimQueueState<SimJob, Q> queueState,
-   final Set<SimJob> drops,
-   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
-  {
-    queueState.doExits (time, drops, null, null, null, visitLogsSet);
-  }
-  
-  protected void revokeJobs
-  (final double time,
-   final Q queue,
-   final SimQueueState<SimJob, Q> queueState,
-   final Set<SimJob> revokers,
-   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
-  {
-    queueState.doExits (time, null, revokers, null, null, visitLogsSet);
-  }
-  
-  protected void startJobs
-  (final double time,
-   final Q queue,
-   final SimQueueState<SimJob, Q> queueState,
-   final Set<SimJob> starters,
-   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
-  throws SimQueuePredictionException
-  {
-    queueState.doStarts (time, starters);
-    final SimQueue headQueue = (SimQueue) queue.getQueues ().iterator ().next ();
-    for (final SimJob job : starters)
-    {
-      if (! (job instanceof DefaultSimJob))
-        throw new UnsupportedOperationException ();
-      // Check whether job did not already leave!
-      if (queueState.getJobs ().contains (job))
-      {
-        ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (headQueue, job.getServiceTime (queue));
-        final SubQueueSimpleEvent headQueueEvent =
-          new SubQueueSimpleEvent (headQueue, SimEntitySimpleEventType.ARRIVAL, null, job, null);
-        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (headQueueEvent), visitLogsSet);
-      }
-    }
-  }
-  
-  protected void departJobs
-  (final double time,
-   final Q queue,
-   final SimQueueState<SimJob, Q> queueState,
-   final Set<SimJob> departers,
-   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
-  throws SimQueuePredictionException
-  {
-    queueState.doExits (time, null, null, departers, null, visitLogsSet);
-  }
-  
   @Override
   public void doWorkloadEvents_SQ_SV_ROEL_U
   (final Q queue,
@@ -256,7 +234,7 @@ extends AbstractSimQueuePredictor<Q>
       final boolean queueAccessVacation = workloadSchedule.getQueueAccessVacationMap_SQ_SV_ROEL_U ().get (time);
       queueState.setQueueAccessVacation (time, queueAccessVacation);
     }
-    else if (eventType == SimEntitySimpleEventType.ARRIVAL)
+    else if (eventType == SimQueueSimpleEventType.ARRIVAL)
     {
       final SimJob job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
       final Set<SimJob> arrivals = new HashSet<> ();
@@ -266,7 +244,7 @@ extends AbstractSimQueuePredictor<Q>
       && (queueState.getServerAccessCredits () >= 1))
         startJobs (time, queue, queueState, arrivals, visitLogsSet);
     }
-    else if (eventType == SimEntitySimpleEventType.REVOCATION)
+    else if (eventType == SimQueueSimpleEventType.REVOCATION)
     {
       final SimJob job =
         workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).entrySet ().iterator ().next ().getKey ();
@@ -289,7 +267,7 @@ extends AbstractSimQueuePredictor<Q>
             {
               final SimQueue subQueue = new ArrayList<SimQueue> (queue.getQueues ()).get (i);
               final SubQueueSimpleEvent subQueueEvent =
-                new SubQueueSimpleEvent (subQueue, SimEntitySimpleEventType.REVOCATION, null, job, null);
+                new SubQueueSimpleEvent (subQueue, SimQueueSimpleEventType.REVOCATION, null, job, null);
               doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (subQueueEvent), visitLogsSet);
               break;
             }
@@ -366,11 +344,11 @@ extends AbstractSimQueuePredictor<Q>
       {
         if (subQueueWorkloadEvent != null)
         {
-          final SimEntityEvent subQueueEvent;
-          if (subQueueWorkloadEvent == SimEntitySimpleEventType.ARRIVAL)
-            subQueueEvent = new SimQueueJobArrivalEvent (job, subQueue, time);
-          else if (subQueueWorkloadEvent == SimEntitySimpleEventType.REVOCATION)
-            subQueueEvent = new SimQueueJobRevocationEvent (job, subQueue, time, true);
+          final SimJQEvent subQueueEvent;
+          if (subQueueWorkloadEvent == SimQueueSimpleEventType.ARRIVAL)
+            subQueueEvent = new SimJQEvent.Arrival<> (job, subQueue, time);
+          else if (subQueueWorkloadEvent == SimQueueSimpleEventType.REVOCATION)
+            subQueueEvent = new SimJQEvent.Revocation<> (job, subQueue, time, true);
           else
             throw new RuntimeException ();
           final WorkloadSchedule_SQ_SV_ROEL_U subQueueWorkloadSchedule =
@@ -396,7 +374,8 @@ extends AbstractSimQueuePredictor<Q>
           dropJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
         else if (jvl.departed)
         {
-          if (subQueueIndex == subQueues.size () - 1)
+          // XXX
+          if (subQueueIndex == subQueues.size () - 1 || (this instanceof SimQueuePredictor_Pattern))
             departJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
           else
           {
@@ -404,7 +383,7 @@ extends AbstractSimQueuePredictor<Q>
             final int nextSubQueueIndex = subQueueIndex + 1;
             final SimQueue nextSubQueue = subQueues.get (nextSubQueueIndex);
             final SubQueueSimpleEvent nextSubQueueEvent = new SubQueueSimpleEvent
-              (nextSubQueue, SimEntitySimpleEventType.ARRIVAL, null, jvl.job, null);
+              (nextSubQueue, SimQueueSimpleEventType.ARRIVAL, null, jvl.job, null);
             if (! (jvl.job instanceof DefaultSimJob))
               throw new UnsupportedOperationException ();
             ((DefaultSimJob) jvl.job).setRequestedServiceTimeMappingForQueue (nextSubQueue, jvl.job.getServiceTime (queue));
@@ -418,4 +397,72 @@ extends AbstractSimQueuePredictor<Q>
       queueEventTypes.remove (eventType);
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // QUEUE STATE SUPPORT METHODS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  protected void dropJobs
+  (final double time,
+   final Q queue,
+   final SimQueueState<SimJob, Q> queueState,
+   final Set<SimJob> drops,
+   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
+  {
+    queueState.doExits (time, drops, null, null, null, visitLogsSet);
+  }
+  
+  protected void revokeJobs
+  (final double time,
+   final Q queue,
+   final SimQueueState<SimJob, Q> queueState,
+   final Set<SimJob> revokers,
+   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
+  {
+    queueState.doExits (time, null, revokers, null, null, visitLogsSet);
+  }
+  
+  protected void startJobs
+  (final double time,
+   final Q queue,
+   final SimQueueState<SimJob, Q> queueState,
+   final Set<SimJob> starters,
+   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
+  throws SimQueuePredictionException
+  {
+    queueState.doStarts (time, starters);
+    final SimQueue headQueue = (SimQueue) queue.getQueues ().iterator ().next ();
+    for (final SimJob job : starters)
+    {
+      if (! (job instanceof DefaultSimJob))
+        throw new UnsupportedOperationException ();
+      // Check whether job did not already leave!
+      if (queueState.getJobs ().contains (job))
+      {
+        ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (headQueue, job.getServiceTime (queue));
+        final SubQueueSimpleEvent headQueueEvent =
+          new SubQueueSimpleEvent (headQueue, SimQueueSimpleEventType.ARRIVAL, null, job, null);
+        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (headQueueEvent), visitLogsSet);
+      }
+    }
+  }
+  
+  protected void departJobs
+  (final double time,
+   final Q queue,
+   final SimQueueState<SimJob, Q> queueState,
+   final Set<SimJob> departers,
+   final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
+  throws SimQueuePredictionException
+  {
+    queueState.doExits (time, null, null, departers, null, visitLogsSet);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
 }

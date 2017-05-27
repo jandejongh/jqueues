@@ -3,14 +3,19 @@ package nl.jdj.jqueues.r5.extensions.composite;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.queue.composite.SimQueueComposite;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueStateHandler;
 
 /** A {@link SimQueueStateHandler} for composite queues.
  *
  * @see SimQueueComposite
+ * 
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
  * 
  */
 public final class SimQueueCompositeStateHandler
@@ -19,7 +24,7 @@ implements SimQueueStateHandler
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // CONSTRUCTOR(S)
+  // CONSTRUCTOR(S) / CLONING / FACTORIES
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -117,5 +122,11 @@ implements SimQueueStateHandler
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   private DefaultSimQueueState queueState = null;
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // END OF FILE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
 }
