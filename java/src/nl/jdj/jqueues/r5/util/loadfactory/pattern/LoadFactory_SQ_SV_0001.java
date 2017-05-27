@@ -3,10 +3,10 @@ package nl.jdj.jqueues.r5.util.loadfactory.pattern;
 import java.util.Collections;
 import java.util.NavigableMap;
 import java.util.Set;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimJobFactory;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
 import nl.jdj.jqueues.r5.util.loadfactory.AbstractLoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
@@ -20,6 +20,14 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class LoadFactory_SQ_SV_0001<J extends SimJob, Q extends SimQueue>
 extends AbstractLoadFactory_SQ_SV<J, Q>
@@ -44,7 +52,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
     final boolean reset,
     final double resetTime,
     final Set<LoadFactoryHint> hints,
-    final NavigableMap<Double, Set<SimEntityEvent>> queueExternalEvents)
+    final NavigableMap<Double, Set<SimJQEvent>> queueExternalEvents)
   {
     if (eventList == null || queue == null || jobFactory == null)
       throw new IllegalArgumentException ();

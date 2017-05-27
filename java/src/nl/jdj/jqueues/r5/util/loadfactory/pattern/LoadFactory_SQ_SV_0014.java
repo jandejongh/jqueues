@@ -5,15 +5,16 @@ import java.util.NavigableMap;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimJobFactory;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
-import nl.jdj.jqueues.r5.event.SimQueueOperationEvent;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueGateEvent;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGate;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGateOperationUtils;
+import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGateOperationUtils.GatePassageCreditsOperation;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -25,6 +26,14 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class LoadFactory_SQ_SV_0014<J extends SimJob, Q extends SimQueue>
 extends LoadFactory_SQ_SV_0010<J, Q>
@@ -63,13 +72,13 @@ extends LoadFactory_SQ_SV_0010<J, Q>
    * <ul>
    * <li> generates the job load according to {@link LoadFactory_SQ_SV_0010#generate};
    * <li> <i>only if</i> the queue is a {@link SimQueueWithGate}
-   *         or has {@link SimQueueWithGateOperationUtils.GatePassageCreditsOperation} registered,
+   *         or has {@link GatePassageCreditsOperation} registered,
    *         it adds setting the number of gate-passage credits on the queue at 11.19, 22.19, 33.19, etc.
    * </ul>
    * 
    * <p>
    * Note: this method generates {@link SimQueueGateEvent}s <i>only</i> for {@link SimQueueWithGate}s
-   * or queues that have has {@link SimQueueWithGateOperationUtils.GatePassageCreditsOperation} registered as operation.
+   * or queues that have has {@link GatePassageCreditsOperation} registered as operation.
    * The check is done at runtime, and not reflected in the generic-type arguments of this class.
    * Otherwise, instances of this class behave as if they
    * were a {@link LoadFactory_SQ_SV_0010}.
@@ -92,7 +101,7 @@ extends LoadFactory_SQ_SV_0010<J, Q>
     final boolean reset,
     final double resetTime,
     final Set<LoadFactoryHint> hints,
-    final NavigableMap<Double, Set<SimEntityEvent>> queueExternalEvents)
+    final NavigableMap<Double, Set<SimJQEvent>> queueExternalEvents)
   {
     final Set<J> jobs = super.generate (eventList, attachSimJobsToEventList,
       queue, jobFactory, numberOfJobs, reset, resetTime, hints, queueExternalEvents);
@@ -106,10 +115,10 @@ extends LoadFactory_SQ_SV_0010<J, Q>
        || (queue instanceof SimQueueWithGate)
        || queue.getRegisteredOperations ().contains (SimQueueWithGateOperationUtils.GatePassageCreditsOperation.getInstance ())))
     {
-      final NavigableMap<Double, Set<SimEntityEvent>> realQueueExternalEvents =
+      final NavigableMap<Double, Set<SimJQEvent>> realQueueExternalEvents =
         ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
       final int numberOfGateEventsToSchedule = Math.max (1, jobs.size () * (jobs.size () + 1) / 11);
-      final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
+      final Set<SimJQEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
       final Random rngPassageCredits = new Random ();
       for (int i = 1; i <= numberOfGateEventsToSchedule; i++)
       {
@@ -134,14 +143,14 @@ extends LoadFactory_SQ_SV_0010<J, Q>
           default:
             throw new RuntimeException ();
         }
-        final SimEntityEvent<J, Q> gateSchedule;
+        final SimJQEvent<J, Q> gateSchedule;
         if (queue instanceof SimQueueWithGate)
           gateSchedule = new SimQueueGateEvent<> (queue, scheduleTime, gatePassageCredits);
         else
         {
           final SimQueueWithGateOperationUtils.GatePassageCreditsRequest request =
-            new SimQueueWithGateOperationUtils.GatePassageCreditsRequest (gatePassageCredits);
-          gateSchedule = new SimQueueOperationEvent (queue, scheduleTime, request);
+            new SimQueueWithGateOperationUtils.GatePassageCreditsRequest (queue, gatePassageCredits);
+          gateSchedule = new SimQueueEvent.Operation<> (queue, scheduleTime, request);
         }
         if (! realQueueExternalEvents.containsKey (scheduleTime))
           realQueueExternalEvents.put (scheduleTime, new LinkedHashSet<> ());

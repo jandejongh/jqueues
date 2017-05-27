@@ -9,12 +9,11 @@ import java.util.NavigableMap;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimJobFactory;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
-import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
 import nl.jdj.jqueues.r5.extensions.qos.SimJobQoS;
 import nl.jdj.jqueues.r5.util.loadfactory.AbstractLoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
@@ -28,6 +27,14 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class LoadFactory_SQ_SV_0100<J extends SimJob, Q extends SimQueue>
 extends AbstractLoadFactory_SQ_SV<J, Q>
@@ -82,16 +89,16 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
     final boolean reset,
     final double resetTime,
     final Set<LoadFactoryHint> hints,
-    final NavigableMap<Double, Set<SimEntityEvent>> queueExternalEvents)
+    final NavigableMap<Double, Set<SimJQEvent>> queueExternalEvents)
   {
     if (eventList == null || queue == null || jobFactory == null)
       throw new IllegalArgumentException ();
     if (numberOfJobs < 0)
       throw new IllegalArgumentException ();
     final Set<J> jobs = new LinkedHashSet<> ();
-    final NavigableMap<Double, Set<SimEntityEvent>> realQueueExternalEvents =
+    final NavigableMap<Double, Set<SimJQEvent>> realQueueExternalEvents =
       ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
-    final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
+    final Set<SimJQEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
     final SimEventList jobEventList = (attachSimJobsToEventList ? eventList : null);
     final List<Double> qosList = new ArrayList<> ();
     qosList.add (null);
@@ -107,7 +114,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
       final J job = jobFactory.newInstance (jobEventList, Integer.toString (i), generateRequestedServiceTimeMap (queue, i));
       ((SimJobQoS) job).setQoSClass (Double.class);
       ((SimJobQoS) job).setQoS (qosList.get (rngQoSSelect.nextInt (qosList.size ())));
-      final SimEntityEvent<J, Q> arrivalSchedule = new SimQueueJobArrivalEvent (job, queue, (double) i);
+      final SimJQEvent<J, Q> arrivalSchedule = new SimJQEvent.Arrival<> (job, queue, (double) i);
       if (! realQueueExternalEvents.containsKey ((double) i))
         realQueueExternalEvents.put ((double) i, new LinkedHashSet<> ());
       realQueueExternalEvents.get ((double) i).add (arrivalSchedule);

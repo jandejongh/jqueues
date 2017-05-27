@@ -1,8 +1,8 @@
 package nl.jdj.jqueues.r5.util.loadfactory.pattern;
 
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.entity.job.visitslogging.DefaultVisitsLoggingSimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.DefaultVisitsLoggingSimJob;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 
 /** An enumeration of known (and already instantiated) concrete {@link LoadFactory_SQ_SV}s is this package.
@@ -10,6 +10,14 @@ import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
  * <p>
  * Intended for automated testing, allowing to iterate over all known (test) load factories.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public enum KnownLoadFactory_SQ_SV
 {

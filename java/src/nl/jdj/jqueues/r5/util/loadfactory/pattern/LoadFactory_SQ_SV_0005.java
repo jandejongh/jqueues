@@ -4,13 +4,12 @@ import java.util.LinkedHashSet;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.SimJob;
-import nl.jdj.jqueues.r5.SimJobFactory;
-import nl.jdj.jqueues.r5.SimQueue;
-import nl.jdj.jqueues.r5.event.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
+import nl.jdj.jqueues.r5.entity.jq.job.SimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
 import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
-import nl.jdj.jqueues.r5.event.SimQueueJobArrivalEvent;
-import nl.jdj.jqueues.r5.event.SimQueueServerAccessCreditsEvent;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -22,6 +21,14 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
  */
 public class LoadFactory_SQ_SV_0005<J extends SimJob, Q extends SimQueue>
 extends LoadFactory_SQ_SV_0002<J, Q>
@@ -51,16 +58,16 @@ extends LoadFactory_SQ_SV_0002<J, Q>
     final boolean reset,
     final double resetTime,
     final Set<LoadFactoryHint> hints,
-    final NavigableMap<Double, Set<SimEntityEvent>> queueExternalEvents)
+    final NavigableMap<Double, Set<SimJQEvent>> queueExternalEvents)
   {
     if (eventList == null || queue == null || jobFactory == null)
       throw new IllegalArgumentException ();
     final Set<J> jobs = new LinkedHashSet<> ();
-    final NavigableMap<Double, Set<SimEntityEvent>> realQueueExternalEvents =
+    final NavigableMap<Double, Set<SimJQEvent>> realQueueExternalEvents =
       ((queueExternalEvents != null) ? queueExternalEvents : new TreeMap<> ());
-    final Set<SimEntityEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
+    final Set<SimJQEvent<J, Q>> eventsToSchedule = new LinkedHashSet<> ();
     final SimEventList jobEventList = (attachSimJobsToEventList ? eventList : null);
-    final SimEntityEvent<J, Q> sacSchedule_0 = new SimQueueServerAccessCreditsEvent<> (queue, 0.0, 0);
+    final SimJQEvent<J, Q> sacSchedule_0 = new SimQueueEvent.ServerAccessCredits<> (queue, 0.0, 0);
     realQueueExternalEvents.put (0.0, new LinkedHashSet<> ());
     realQueueExternalEvents.get (0.0).add (sacSchedule_0);
     eventsToSchedule.add (sacSchedule_0);
@@ -68,17 +75,17 @@ extends LoadFactory_SQ_SV_0002<J, Q>
     {
       final J job = jobFactory.newInstance
         (jobEventList, Integer.toString (j), generateRequestedServiceTimeMap (queue));
-      final SimEntityEvent<J, Q> arrivalSchedule = new SimQueueJobArrivalEvent (job, queue, (double) j);
+      final SimJQEvent<J, Q> arrivalSchedule = new SimJQEvent.Arrival<> (job, queue, (double) j);
       realQueueExternalEvents.put ((double) j, new LinkedHashSet<> ());
       realQueueExternalEvents.get ((double) j).add (arrivalSchedule);
       eventsToSchedule.add (arrivalSchedule);
       jobs.add (job);
     }
-    final SimEntityEvent<J, Q> sacSchedule_4 = new SimQueueServerAccessCreditsEvent<> (queue, 4.0, 2);
+    final SimJQEvent<J, Q> sacSchedule_4 = new SimQueueEvent.ServerAccessCredits<> (queue, 4.0, 2);
     realQueueExternalEvents.put (4.0, new LinkedHashSet<> ());
     realQueueExternalEvents.get (4.0).add (sacSchedule_4);
     eventsToSchedule.add (sacSchedule_4);
-    final SimEntityEvent<J, Q> sacSchedule_10 = new SimQueueServerAccessCreditsEvent<> (queue, 10.0, Integer.MAX_VALUE);
+    final SimJQEvent<J, Q> sacSchedule_10 = new SimQueueEvent.ServerAccessCredits<> (queue, 10.0, Integer.MAX_VALUE);
     realQueueExternalEvents.put (10.0, new LinkedHashSet<> ());
     realQueueExternalEvents.get (10.0).add (sacSchedule_10);
     eventsToSchedule.add (sacSchedule_10);
