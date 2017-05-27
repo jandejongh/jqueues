@@ -462,7 +462,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * <p>
    * Subsequently, if the queue is on queue-access vacation ({@link #isQueueAccessVacation}),
    * it adds a {@link SimQueueSimpleEventType#DROP} pending notification; bypassing {@link #drop}
-   * since subclasses have no knowledge of the job yet (and they do not need to have).
+   * since subclasses have no knowledge of the job yet (and they do not need to have),
+   * and invokes {@link #queueAccessVacationDropSubClass}.
+   * The latter method allows for (the rare case of) specific sub-class handling. 
    * 
    * <p>
    * Otherwise, it then invokes the subclass-specific {@link #insertJobInQueueUponArrival},
@@ -484,6 +486,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * @see #update
    * @see #isQueueAccessVacation
+   * @see #queueAccessVacationDropSubClass
    * @see #jobQueue
    * @see #jobsInServiceArea
    * @see #insertJobInQueueUponArrival
@@ -673,6 +676,28 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     }
   }
 
+  /** Specific sub-class handling upon job-drop events due to queue-access vacations.
+   * 
+   * <p>
+   * Normally, queue-access vacations, their effects on arriving jobs, as well as the required notifications
+   * are entirely dealt with by this abstract class.
+   * However, this current method is invoked from within {@link #arrive} when a job is dropped due to a queue-access vacation,
+   * for instance, because the concrete sub-class needs to issue dedicated notifications
+   * upon job-drops.
+   * 
+   * <p>
+   * No changes to the state of this {@link SimQueue} should result from this method,
+   * and no {@link SimEvent}s should be scheduled or canceled.
+   * 
+   * <p>
+   * The default implementation does nothing.
+   * 
+   * @param time The time the job was dropped, i.e., the current time.
+   * @param job  The dropped job.
+   * 
+   * @see #arrive
+   * 
+   */
   protected void queueAccessVacationDropSubClass (final double time, final J job)
   {
     /* EMPTY */
