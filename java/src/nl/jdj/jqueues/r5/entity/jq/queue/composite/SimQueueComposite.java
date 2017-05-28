@@ -121,6 +121,8 @@ extends SimQueue<J, Q>
      * This model can only be applied in case of a single sub-queue.
      * Whenever a real job is in the waiting area of the (super) queue, its delegate job resides on the sub-queue,
      * but may be either in its waiting or service area.
+     * In fact, on the composite queue, all real jobs reside in the waiting area and the service area is always empty
+     * (since real jobs do not start).
      * The number of server access credits on this queue is nicely maintained, but they have no effect
      * since real jobs do not start; the number of server-access credits on the sub-queue is always positive infinity
      * (i.e., {@link Integer#MAX_VALUE}.
