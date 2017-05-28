@@ -97,7 +97,7 @@ public class FB_vTest
    * 
    */
   @Test
-  public void testFB_vAux () throws SimQueuePredictionException
+  public void testFB_v () throws SimQueuePredictionException
   {
     final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     final int numberOfJobs = 10;
