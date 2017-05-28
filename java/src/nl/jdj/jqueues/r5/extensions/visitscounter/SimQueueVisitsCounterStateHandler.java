@@ -166,7 +166,7 @@ implements SimQueueStateHandler
     this.numberOfVisitsPerJob.put (job, this.numberOfVisitsPerJob.get (job) + 1);
   }
 
-  /** Removes the given job from the internal queue-visits administration, but insist it is known.
+  /** Removes the given job from the internal queue-visits administration, but insists it is known.
    * 
    * @param job The job, non-{@code null}.
    * 
