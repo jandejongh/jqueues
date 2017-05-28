@@ -99,7 +99,11 @@ implements SimQueuePredictor<NumVisitsFeedbackSimQueue>
       (SimQueueVisitsCounterStateHandler)
         ((DefaultSimQueueState) queueState).getHandler ("SimQueueVisitsCounterStateHandler");
     for (final SimJob job : revokers)
-      queueStateHandler.removeJob (job);
+      // Note: jobs are only inserted into the handler upon their start at the composite FB_v queue.
+      // However, jobs may be revoked from the waiting area of the composite queue.
+      // Better check for presence first, because removeJob insists upon presence of the job.
+      if (queueStateHandler.containsJob (job))
+        queueStateHandler.removeJob (job);
   }
 
   @Override

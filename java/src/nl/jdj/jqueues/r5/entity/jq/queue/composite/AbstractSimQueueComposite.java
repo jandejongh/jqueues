@@ -1027,7 +1027,8 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * 
    * <p>
    * This method ignores the drop-destination queue, see {@link #getDropDestinationQueue}.
-   * Following the contract of {@link AbstractSimQueue#drop}, the drop of the (real) job is inevitable (by) now.
+   * Following the contract of {@link AbstractSimQueue#drop},
+   * the drop of the (real) job is inevitable (by) now.
    * 
    * <p>
    * All we have to do is invoke {@link #removeJobsFromQueueLocal}.
@@ -1076,14 +1077,28 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    */
   private SimJQEvent.Revocation<DJ, DQ> pendingDelegateRevocationEvent = null;
 
-  /** Removes a job if revocation is successful.
+  /** Removes a job upon successful revocation (as determined by our super-class).
+   * 
+   * <p>
+   * This method interacts delicately with {@link #rescheduleAfterRevokation}
+   * and the {@link MultiSimQueueNotificationProcessor} on the sub-queues,
+   * through the use of a pending revocation event (a local private field).
    * 
    * <p>
    * In a {@link AbstractSimQueueComposite}, revocations on real jobs can occur either
-   * through external requests, in other words, through {@link #revoke}, or because of auto-revocations
+   * through external requests, in other words, through {@link #revoke},
+   * or because of auto-revocations
    * on the composite (this) queue through {@link #autoRevoke}.
-   * In both cases, the delegate job is still present on a sub-queue,
-   * and we have to forcibly revoke it.
+   * 
+   * <p>
+   * For {@link SimQueueComposite.StartModel#LOCAL}, if the real job is still in the waiting area of the composite queue
+   * (without presence of the delegate job in any sub-queue),
+   * we suffice with cleaning up both real and delegate job through {@link #removeJobsFromQueueLocal}
+   * and we are finished;
+   * for the other start models absence of the delegate job on any sub-queue leads to an {@link IllegalStateException}.
+   * 
+   * <p>
+   * In all other valid cases, the delegate job is still present on a sub-queue, and we have to forcibly revoke it.
    * Because we cannot perform the revocation here (we are <i>not</i> allowed to reschedule!),
    * we defer until {@link #removeJobFromQueueUponRevokation} by raising an internal flag
    * (in fact a newly created, though not scheduled {@link Revocation}).
@@ -1096,7 +1111,8 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * Note that even though a {@link Revocation} is used internally to flag the
    * required delegate-job revocation, it is never actually scheduled on the event list!
    * 
-   * @throws IllegalStateException If the delegate job is <i>not</i> visiting a sub-queue,
+   * @throws IllegalStateException If, for any start model other than {@link SimQueueComposite.StartModel#LOCAL}
+   *                               the delegate job is <i>not</i> visiting a sub-queue,
    *                               or if a pending delegate revocation has already been flagged (or been forgotten to clear).
    * 
    * @see #revoke
@@ -1105,6 +1121,9 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * @see #rescheduleAfterRevokation
    * @see #getDelegateJob(SimJob)
    * @see SimJob#getQueue
+   * @see SimQueueComposite.StartModel
+   * @see #getStartModel
+   * @see #removeJobsFromQueueLocal
    * 
    */
   @Override
@@ -1113,41 +1132,90 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
     final DJ delegateJob = getDelegateJob (job);
     final DQ subQueue = (DQ) delegateJob.getQueue ();
     if (subQueue == null)
-      // XXX Is this really impossible?
-      // XXX I means, we could have a job still in our waiting area, right, i.e., not present on any sub-queue...
-      throw new IllegalStateException ();
-    if (this.pendingDelegateRevocationEvent != null)
-      throw new IllegalStateException ();
-    this.pendingDelegateRevocationEvent = new SimJQEvent.Revocation<> (delegateJob, subQueue, time, true);
+      switch (getStartModel ())
+      {
+        case LOCAL:
+          // All OK, the job is still in our waiting area,
+          // and has not been released to a sub-queue yet (e.g., due to sac restraints).
+          // No need to revoke the delegate job, just fall through towards cleaning up the local admin.
+          break;
+        case ENCAPSULATOR_QUEUE:
+        case ENCAPSULATOR_HIDE_START_QUEUE:
+        case COMPRESSED_TANDEM_2_QUEUE:
+          // This state is illegal; if a real job is present (wherever),
+          // its delegate job MUST always reside somewhere at a sub-queue.
+          throw new IllegalStateException ();
+        default:
+          throw new RuntimeException ();
+      }
+    else
+    {
+      // Revoke the delegate job on the sub-queue.
+      // Throw illegal state if such a forced delegate-job revocation is still pending.
+      if (this.pendingDelegateRevocationEvent != null)
+        throw new IllegalStateException ();
+      // Prepare the revocation event for rescheduleAfterRevokation.
+      this.pendingDelegateRevocationEvent = new SimJQEvent.Revocation<> (delegateJob, subQueue, time, true);
+    }
+    // Remove the job and delegate job from our admin anyhow.
+    // rescheduleAfterRevokation and the sub-queue event processor take special care of this condition.
     removeJobsFromQueueLocal (job, delegateJob);
   }
 
-  /** Performs the pending revocation on the applicable sub-queue, and check whether that succeeded.
+  /** If present, performs the pending revocation on the applicable sub-queue, and check whether that succeeded.
+   * 
+   * <p>
+   * This method interacts delicately with {@link #removeJobFromQueueUponRevokation}
+   * and the {@link MultiSimQueueNotificationProcessor} on the sub-queues,
+   * through the use of a pending revocation event (a local private field).
    * 
    * <p>
    * Upon return, the pending revocation event has been reset to {@code null}.
    * 
-   * @throws IllegalStateException If no pending delegate revocation was found, or revoking the delegate job failed.
+   * @throws IllegalStateException If, for any start model other than {@link SimQueueComposite.StartModel#LOCAL}
+   *                               no pending delegate revocation was found,
+   *                               or revoking the delegate job failed
+   *                               (as indicated by the failure to reset the pending revocation event by the
+   *                                sub-queue notification processor, see {@link #processSubQueueNotifications}).
+   * 
+   * <p>
+   * Note that even though a {@link Revocation} is used internally to flag the
+   * required delegate-job revocation, it is never actually scheduled on the event list!
    * 
    * @see Revocation
    * @see #removeJobFromQueueUponRevokation
+   * @see #processSubQueueNotifications
    * 
    */
   @Override
   protected final void rescheduleAfterRevokation (final J job, final double time, final boolean auto)
   {
     if (this.pendingDelegateRevocationEvent == null)
-      throw new IllegalStateException ();
-    final SimJQEvent.Revocation event = this.pendingDelegateRevocationEvent;
-    // We set the pendingDelegateRevocationEvent to null in the sub-queue event processor
-    // upon receiving the revocation acknowledgement!
-    // this.pendingDelegateRevocationEvent = null;
-    // Invoking the event's action equivalent to next line:
-    // event.getQueue ().revoke (event.getTime (), event.getJob (), event.isInterruptService ());
-    event.getEventAction ().action (event);
-    // Check that sub-queue actually confirmed the revocation.
-    if (this.pendingDelegateRevocationEvent != null)
-      throw new IllegalStateException ();
+      switch (getStartModel ())
+      {
+        case LOCAL:
+          // All OK, the job is revoked from our own waiting area,
+          // and the delegate job was not on any sub-queue.
+          // Nothing to do here!
+          break;
+        case ENCAPSULATOR_QUEUE:
+        case ENCAPSULATOR_HIDE_START_QUEUE:
+        case COMPRESSED_TANDEM_2_QUEUE:
+          // This state is illegal; a real job was revoked, which should always result in a forced delegate-job revocation.
+          throw new IllegalStateException ();
+        default:
+          throw new RuntimeException ();
+      }
+    else
+    {
+      // Effectuate the pending revocation event by directly invoking the event's action.
+      // We reset the pendingDelegateRevocationEvent to null in the sub-queue event processor
+      // upon receiving the revocation acknowledgement!
+      this.pendingDelegateRevocationEvent.getEventAction ().action (this.pendingDelegateRevocationEvent);
+      // Check that sub-queue actually confirmed the revocation.
+      if (this.pendingDelegateRevocationEvent != null)
+        throw new IllegalStateException ();
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

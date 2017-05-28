@@ -184,12 +184,17 @@ extends AbstractSimQueuePredictor<CUPS>
         final boolean interruptService =
           workloadSchedule.getJobRevocationsMap_SQ_SV_ROEL_U ().get (time).get (job);
         // Make sure we do not revoke an executing job without the interruptService flag.
-        if (interruptService || ! queueState.getJobsInServiceArea ().contains (job))
+        final boolean hasStarted = queueState.getJobsInServiceArea ().contains (job);
+        if (interruptService || ! hasStarted)
         {
           final Set<SimJob> revocations = new HashSet<> ();
           revocations.add (job);
           queueState.doExits (time, null, revocations, null, null, visitLogsSet);
-          queueStateHandler.removeJob (job, true);
+          // Note: since jobs can be revoked from the waiting area (because they are awaiting server-access credits),
+          // and jobs are only inserted into the queue-state handler when they START,
+          // the job is only present in the handler if it is in the service area of the queue!
+          // So prepare 'removeJob' properly for the potential absence of the job.
+          queueStateHandler.removeJob (job, hasStarted);
         }
       }
     }
