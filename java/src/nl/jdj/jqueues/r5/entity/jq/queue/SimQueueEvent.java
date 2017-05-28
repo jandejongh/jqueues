@@ -4,7 +4,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.*;
 import nl.jdj.jqueues.r5.entity.jq.*;
 import nl.jdj.jqueues.r5.entity.SimEntity;
 import nl.jdj.jqueues.r5.entity.SimEntityOperation;
-import nl.jdj.jqueues.r5.entity.jq.SimJQOperation.Request;
+import nl.jdj.jqueues.r5.entity.jq.SimJQOperation.RequestJAndOrQ;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 
@@ -122,7 +122,7 @@ extends SimJQEvent<J, Q>
      * Special care is taken of "migrating" the request to the new job and/or queue.
      * However, a fool-proof approach is not yet within reach.
      * The current implementation throws an {@link UnsupportedOperationException}
-     * for request that are not of type {@link Request}.
+     * for request that are not of type {@link RequestJAndOrQ}.
      * 
      * @return A new operation event at given queue (if non-{@code null}).
      * 
@@ -130,10 +130,10 @@ extends SimJQEvent<J, Q>
      *                                  or if illegal arguments are provided for the specific operation.
      * 
      * @see #getRequest
-     * @see Request
-     * @see Request#forJob
-     * @see Request#forQueue
-     * @see Request#forJobAndQueue
+     * @see RequestJAndOrQ
+     * @see RequestJAndOrQ#forJob
+     * @see RequestJAndOrQ#forQueue
+     * @see RequestJAndOrQ#forJobAndQueue
      * 
      */
     @Override
@@ -141,10 +141,10 @@ extends SimJQEvent<J, Q>
     {
       if (this.request == null)
         throw new IllegalStateException ();    
-      if (! (this.request instanceof SimJQOperation.Request))
+      if (! (this.request instanceof SimJQOperation.RequestJAndOrQ))
         throw new UnsupportedOperationException ();
-      final SimJQOperation.Request rRequest = (SimJQOperation.Request) request;
-      final SimJQOperation.Request cRequest;
+      final SimJQOperation.RequestJAndOrQ rRequest = (SimJQOperation.RequestJAndOrQ) request;
+      final SimJQOperation.RequestJAndOrQ cRequest;
       if (rRequest instanceof SimJQOperation.RequestJ)
         cRequest = rRequest.forJob (newJob != null ? newJob : rRequest.getJob ());
       else if (rRequest instanceof SimJQOperation.RequestQ)

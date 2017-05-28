@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.function.DoubleConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.jdj.jqueues.r5.entity.SimEntity.UnknownOperationPolicy;
 import nl.jdj.jqueues.r5.entity.SimEntityOperation.Reset;
 import nl.jdj.jqueues.r5.entity.SimEntityOperation.Update;
 import nl.jdj.jqueues.r5.entity.jq.AbstractSimJQ;
@@ -174,8 +175,6 @@ implements SimEntity
   
   private final Set<SimEntityOperation> registeredOperations = new LinkedHashSet<> ();
   
-  private final Map<SimEntityOperation, SimEntityOperation> delegatedOperations = new LinkedHashMap<> ();
-  
   @Override
   public final Set<SimEntityOperation> getRegisteredOperations ()
   {
@@ -202,7 +201,24 @@ implements SimEntity
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Registers a {@link SimEntityOperation} at this entity, but delegate it to another operation.
+  private final Map<SimEntityOperation, SimEntityOperation> delegatedOperations = new LinkedHashMap<> ();
+  
+  /** Returns the registered delegated operations.
+   * 
+   * <p>
+   * The set returned is always a subset of all registered operations.
+   * 
+   * @return An unmodifiable set holding the registered delegated operations.
+   * 
+   * @see #getRegisteredOperations
+   * 
+   */
+  public final Set<SimEntityOperation> getRegisteredDelegatedOperations ()
+  {
+    return Collections.unmodifiableSet (this.delegatedOperations.keySet ());
+  }
+  
+  /** Registers a {@link SimEntityOperation} at this entity, but delegates it to another operation.
    * 
    * @param operation         The operation, non-{@code null}.
    * @param delegateOperation The delegate operation, non-{@code null}.
@@ -282,6 +298,29 @@ implements SimEntity
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
+  /** Performs the requested operation.
+   * 
+   * @param time    The time of the request.
+   * @param request The request, non-{@code null}.
+   * 
+   * @return The reply.
+   * 
+   * @throws IllegalArgumentException If the entity or request is {@code null}, the operation is {@code null},
+   *                                  time is in the past (except for the {@link Reset} operation,
+   *                                  the request has target entity other than {@code this},
+   *                                  the is of illegal type, or its parameter values are illegal.
+   * 
+   * @param <O>   The operation type.
+   * @param <Req> The request type (corresponding to the operation type).
+   * @param <Rep> The reply type (corresponding to the operation type).
+   * 
+   * @see #getRegisteredOperations
+   * @see #registerDelegatedOperation
+   * 
+   * @see UnknownOperationPolicy
+   * @see #getUnknownOperationPolicy
+   * 
+   */
   @Override
   public final
   <O   extends SimEntityOperation,
@@ -290,6 +329,10 @@ implements SimEntity
   Rep doOperation (double time, Req request)
   {
     if (request == null)
+      throw new IllegalArgumentException ();
+    if (request.getOperation () == null)
+      throw new IllegalArgumentException ();
+    if (request.getTargetEntity () != this)
       throw new IllegalArgumentException ();
     if (request.getOperation () != SimEntityOperation.Reset.getInstance ()
       && time < getLastUpdateTime ())
@@ -317,7 +360,6 @@ implements SimEntity
         default:
           throw new RuntimeException ();
       }
-    // XXX NEED FURTHER CHECKING ON OPERATION (REQUEST) BY SUBCLASSES!!!
     if (this.delegatedOperations.containsKey (request.getOperation ()))
       return (Rep) this.delegatedOperations.get (request.getOperation ()).doOperation (time, request);
     else

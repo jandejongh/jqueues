@@ -80,6 +80,28 @@ public interface SimEntityOperation
      */
     O getOperation ();
       
+    /** Gets the target entity; the entity to perform the request.
+     * 
+     * <p>
+     * Normally, the target entity is also the entity or one of the entities to which the request applies.
+     * 
+     * @return The target entity; the entity to perform the request (may be {@code null}).
+     * 
+     */
+    SimEntity getTargetEntity ();
+    
+    /** Creates a copy of this request for another target entity.
+     * 
+     * @param newTargetEntity The new target entity, non-{@code null}.
+     * 
+     * @return A copy of this request for given target entity.
+     * 
+     * @throws IllegalArgumentException      If the entity argument is {@code null}.
+     * @throws UnsupportedOperationException If this request does not support the (kind of) new target entity.
+     * 
+     */
+    Req forTargetEntity (SimEntity newTargetEntity);
+    
   }
     
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +133,7 @@ public interface SimEntityOperation
      * 
      */
     Req getRequest ();
-      
+
   }
     
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,8 +144,13 @@ public interface SimEntityOperation
   
   /** A request for an operation that requires an entity argument.
    * 
+   * <p>
+   * The entity provided must be non-{@code null} and is always the target entity.
+   * 
    * @param <O>   The operation type.
    * @param <Req> The request type (corresponding to the operation type).
+   * 
+   * @see Request#getTargetEntity
    * 
    */
   abstract static class RequestE<O extends SimEntityOperation, Req extends SimEntityOperation.Request>
@@ -151,7 +178,8 @@ public interface SimEntityOperation
      * @return The entity argument of this request, non-{@code null}.
      * 
      */
-    public final SimEntity getEntity ()
+    @Override
+    public final SimEntity getTargetEntity ()
     {
       return this.entity;
     }
@@ -254,10 +282,10 @@ public interface SimEntityOperation
     (final double time, final ResetRequest request)
     {
       if (request == null
-        || request.getEntity () == null
+        || request.getTargetEntity () == null
         || request.getOperation () != getInstance ())
         throw new IllegalArgumentException ();
-      request.getEntity ().resetEntity ();
+      request.getTargetEntity ().resetEntity ();
       return new ResetReply (request);
     }
     
@@ -289,6 +317,14 @@ public interface SimEntityOperation
     public final Reset getOperation ()
     {
       return Reset.INSTANCE;
+    }
+    
+    @Override
+    public final ResetRequest forTargetEntity (final SimEntity newTargetEntity)
+    {
+      if (newTargetEntity == null)
+        throw new IllegalArgumentException ();
+      return new ResetRequest (newTargetEntity);
     }
     
   }
@@ -431,10 +467,10 @@ public interface SimEntityOperation
     (final double time, final UpdateRequest request)
     {
       if (request == null
-        || request.getEntity () == null
+        || request.getTargetEntity () == null
         || request.getOperation () != getInstance ())
         throw new IllegalArgumentException ();
-      request.getEntity ().update (time);
+      request.getTargetEntity ().update (time);
       return new UpdateReply (request);
     }
     
@@ -466,6 +502,14 @@ public interface SimEntityOperation
     public final Update getOperation ()
     {
       return Update.INSTANCE;
+    }
+
+    @Override
+    public final UpdateRequest forTargetEntity (final SimEntity newTargetEntity)
+    {
+      if (newTargetEntity == null)
+        throw new IllegalArgumentException ();
+      return new UpdateRequest (newTargetEntity);
     }
     
   }

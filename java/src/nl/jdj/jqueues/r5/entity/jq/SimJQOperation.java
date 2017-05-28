@@ -2,6 +2,8 @@ package nl.jdj.jqueues.r5.entity.jq;
 
 import nl.jdj.jqueues.r5.entity.SimEntity;
 import nl.jdj.jqueues.r5.entity.SimEntityOperation;
+import nl.jdj.jqueues.r5.entity.SimEntityOperation.Request;
+import nl.jdj.jqueues.r5.entity.SimEntityOperation.RequestE;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 
@@ -42,36 +44,101 @@ extends SimEntityOperation<O, Req, Rep>
   
   /** A request of an operation on a {@link SimQueue} and/or a {SimJob}.
    * 
- * @param <O>   The operation type.
- * @param <Req> The request type (corresponding to the operation type).
+   * <p>
+   * Either the job or the queue (or both) must be non-{@code null},
+   * and one of them (non-{@code null}) is always the target entity.
+   * 
+   * @param <O>   The operation type.
+   * @param <Req> The request type (corresponding to the operation type).
+   * 
+   * @see Request#forTargetEntity
    * 
    */
-  abstract static class Request<O extends SimEntityOperation, Req extends Request>
-  implements SimEntityOperation.Request<O, Req>
+  abstract static class RequestJAndOrQ<O extends SimEntityOperation, Req extends RequestJAndOrQ>
+  extends SimEntityOperation.RequestE<O, Req>
   {
+
+    /** Creates a new request for a job or queue or both, with the option to set the target entity.
+     * 
+     * <p>
+     * Either the job or the queue or both must be non-{@code null}.
+     * 
+     * @param job         The job.
+     * @param queue       The queue.
+     * @param jobIsTarget Whether to set the job {@code true}) or the queue ({@code false}) as the target entity.
+     * 
+     * @throws IllegalArgumentException If both job and queue are {@code null}, or the target entity selected is {@code null}.
+     * 
+     * @see Request
+     * @see RequestE
+     * @see Request#getTargetEntity
+     * 
+     */
+    public RequestJAndOrQ (final SimJob job, final  SimQueue queue, final boolean jobIsTarget)
+    {
+      super (jobIsTarget ? job : queue);
+      this.job = job;
+      this.queue = queue;
+    }
+    
+    /** Creates a new request for a job or queue or both, preferring a non-{@code null} queue as target entity.
+     * 
+     * <p>
+     * Either the job or the queue or both must be non-{@code null}.
+     * 
+     * <p>
+     * If the queue is non-{@code null}, it is always the target entity.
+     * If the job is non-{@code null}, it becaomes target entity if and only if the queue is {@code null}.
+     * 
+     * @param job   The job.
+     * @param queue The queue.
+     * 
+     * @throws IllegalArgumentException If both job and queue are {@code null}.
+     * 
+     * @see Request
+     * @see RequestE
+     * @see Request#getTargetEntity
+     * 
+     */
+    public RequestJAndOrQ (final SimJob job, final  SimQueue queue)
+    {
+      this (job, queue, queue == null);
+    }
+    
+    private final SimJob job;
     
     /** Returns the job associated with this request.
      * 
-     * The default implementation returns {@code null}.
+     * <p>
+     * Note: job and queue cannot both be {@code null}.
      * 
      * @return The job associated with this request, may be {@code null}.
      *
+     * @see #getQueue
+     * @see #getTargetEntity
+     * 
      */
-    public SimJob getJob ()
+    public final SimJob getJob ()
     {
-      return null;
+      return this.job;
     }
+    
+    private final SimQueue queue;
     
     /** Returns the queue associated with this request.
      * 
-     * The default implementation returns {@code null}.
+     * <p>
+     * Note: job and queue cannot both be {@code null}.
      * 
      * @return The queue associated with this request, may be {@code null}.
      *
+     * @see #getJob
+     * @see #getTargetEntity
+     * 
      */
-    public SimQueue getQueue ()
+    public final SimQueue getQueue ()
     {
-      return null;
+      return this.queue;
     }
     
     /** Returns a copy of this request for another job.
@@ -110,6 +177,52 @@ extends SimEntityOperation<O, Req, Rep>
      * 
      */
     public abstract Req forJobAndQueue (SimJob job, SimQueue queue);
+
+    /** Creates a new request in which given new entity replaces the current job or queue.
+     * 
+     * <p>
+     * In the current object, either the job or the queue is the target entity; the argument given must respect this.
+     * In other words, this implementation does not allow a change from job to queue as target entity, or vice versa.
+     * 
+     * @param newTargetEntity The target entity, non-{@code null}.
+     * 
+     * @return The new request in which given new entity replaces the current job or queue.
+     * 
+     * @throws IllegalArgumentException If the target entity is null or does not match the type of the current target entity.
+     * 
+     * @see #forJob
+     * @see #forQueue
+     * @see #forJobAndQueue
+     * 
+     */
+    @Override
+    public final Req forTargetEntity (final SimEntity newTargetEntity)
+    {
+      if (newTargetEntity == null)
+        throw new IllegalArgumentException ();
+      if (getTargetEntity () == null)
+        throw new IllegalStateException ();
+      if (getTargetEntity () instanceof SimJob)
+      {
+        if (! (newTargetEntity instanceof SimJob))
+          throw new IllegalArgumentException ();
+        if (getQueue () != null)
+          return forJobAndQueue ((SimJob) newTargetEntity, getQueue ());
+        else
+          return forJob ((SimJob) newTargetEntity);
+      }
+      else if (getTargetEntity () instanceof SimQueue)
+      {
+        if (! (newTargetEntity instanceof SimQueue))
+          throw new IllegalArgumentException ();
+        if (getJob () != null)
+          return forJobAndQueue (getJob (), (SimQueue) newTargetEntity);
+        else
+          return forQueue ((SimQueue) newTargetEntity);        
+      }
+      else
+        throw new IllegalArgumentException ();
+    }
     
   }
   
@@ -119,14 +232,18 @@ extends SimEntityOperation<O, Req, Rep>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** A request for an operation that requires a job argument.
+  /** A request for an operation that requires (only) a job argument.
+   * 
+   * The queue is always {@code null}, and the job is the target entity.
    * 
    * @param <O>   The operation type.
    * @param <Req> The request type (corresponding to the operation type).
    * 
+   * @see #getTargetEntity
+   * 
    */
   abstract static class RequestJ<O extends SimEntityOperation, Req extends RequestJ>
-  extends Request<O, Req>
+  extends RequestJAndOrQ<O, Req>
   {
     
     /** Creates the request.
@@ -138,22 +255,7 @@ extends SimEntityOperation<O, Req, Rep>
      */
     public RequestJ (final SimJob job)
     {
-      if (job == null)
-        throw new IllegalArgumentException ();
-      this.job = job;
-    }
-    
-    private final SimJob job;
-    
-    /** Returns the job argument of this request.
-     * 
-     * @return The job argument of this request, non-{@code null}.
-     * 
-     */
-    @Override
-    public final SimJob getJob ()
-    {
-      return this.job;
+      super (job, null);
     }
     
   }
@@ -164,14 +266,18 @@ extends SimEntityOperation<O, Req, Rep>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** A request for an operation that requires a queue argument.
+  /** A request for an operation that requires (only) a queue argument.
+   * 
+   * The job is always {@code null}, and the queue is the target entity.
    * 
    * @param <O>   The operation type.
    * @param <Req> The request type (corresponding to the operation type).
    * 
+   * @see #getTargetEntity
+   * 
    */
   abstract static class RequestQ<O extends SimEntityOperation, Req extends RequestQ>
-  extends Request<O, Req>
+  extends RequestJAndOrQ<O, Req>
   {
     
     /** Creates the request.
@@ -183,22 +289,7 @@ extends SimEntityOperation<O, Req, Rep>
      */
     public RequestQ (final SimQueue queue)
     {
-      if (queue == null)
-        throw new IllegalArgumentException ();
-      this.queue = queue;
-    }
-    
-    private final SimQueue queue;
-    
-    /** Returns the queue argument of this request.
-     * 
-     * @return The queue argument of this request, non-{@code null}.
-     * 
-     */
-    @Override
-    public final SimQueue getQueue ()
-    {
-      return this.queue;
+      super (null, queue);
     }
     
   }
@@ -211,54 +302,50 @@ extends SimEntityOperation<O, Req, Rep>
   
   /** A request for an operation that requires a job and a queue argument.
    * 
+   * Both job and queue are non-{@code null}, and either one of them is the target entity.
+   * 
    * @param <O>   The operation type.
    * @param <Req> The request type (corresponding to the operation type).
    * 
+   * @see #getTargetEntity
+   * 
    */
   abstract static class RequestJQ<O extends SimEntityOperation, Req extends RequestJQ>
-  extends Request<O, Req>
+  extends RequestJAndOrQ<O, Req>
   {
     
-    /** Creates the request.
+    /** Creates the request, with choice of target-entity selection.
+     * 
+     * @param job         The job, non-{@code null}.
+     * @param queue       The queue, non-{@code null}.
+     * @param jobIsTarget Whether the job ({@code true}) or the queue ({@code false}) is the target entity.
+     * 
+     * @throws IllegalArgumentException If the job or queue is {@code null}.
+     * 
+     * @see #getTargetEntity
+     * 
+     */
+    public RequestJQ (final SimJob job, final SimQueue queue, final boolean jobIsTarget)
+    {
+      super (job, queue, jobIsTarget);
+      // Must explicitly check this as our super-class will in certain cases happily accept one of the arguments being null.
+      if (job == null || queue == null)
+        throw new IllegalArgumentException ();
+    }
+    
+    /** Creates the request with the queue becoming the target entity.
      * 
      * @param job   The job, non-{@code null}.
      * @param queue The queue, non-{@code null}.
      * 
      * @throws IllegalArgumentException If the job or queue is {@code null}.
      * 
+     * @see #getTargetEntity
+     * 
      */
     public RequestJQ (final SimJob job, final SimQueue queue)
     {
-      if (job == null || queue == null)
-        throw new IllegalArgumentException ();
-      this.job = job;
-      this.queue = queue;
-    }
-    
-    private final SimJob job;
-    
-    /** Returns the job argument of this request.
-     * 
-     * @return The job argument of this request, non-{@code null}.
-     * 
-     */
-    @Override
-    public final SimJob getJob ()
-    {
-      return this.job;
-    }
-    
-    private final SimQueue queue;
-    
-    /** Returns the queue argument of this request.
-     * 
-     * @return The queue argument of this request, non-{@code null}.
-     * 
-     */
-    @Override
-    public final SimQueue getQueue ()
-    {
-      return this.queue;
+      this (job, queue, false);
     }
     
   }
@@ -647,7 +734,7 @@ extends SimEntityOperation<O, Req, Rep>
     
   }
   
-  /** *  A reply for the revocation operation {@link Revocation}.
+  /** A reply for the revocation operation {@link Revocation}.
    * 
    */
   public final static class RevocationReply
@@ -682,7 +769,7 @@ extends SimEntityOperation<O, Req, Rep>
       return this.success;
     }
     
-    /** *  Returns the singleton instance of {@link Revocation}.
+    /** Returns the singleton instance of {@link Revocation}.
      * 
      * @return The singleton instance of {@link Revocation}.
      * 

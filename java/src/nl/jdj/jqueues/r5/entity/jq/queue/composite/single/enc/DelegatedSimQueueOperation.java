@@ -137,12 +137,12 @@ implements SimEntityOperation<SimEntityOperation, SimEntityOperation.Request, Si
     // XXX Could use additional error checking on the request!
     if (this.oDQueue == null)
       throw new IllegalStateException ();
-    if (! SimJQOperation.Request.class.isAssignableFrom (this.oDQueue.getOperationRequestClass ()))
+    if (! SimJQOperation.RequestJAndOrQ.class.isAssignableFrom (this.oDQueue.getOperationRequestClass ()))
       throw new UnsupportedOperationException ();
-    if (! (request instanceof SimJQOperation.Request))
+    if (! (request instanceof SimJQOperation.RequestJAndOrQ))
       throw new UnsupportedOperationException ();
-    final SimJQOperation.Request rRequest = (SimJQOperation.Request) request;
-    final SimJQOperation.Request dRequest;
+    final SimJQOperation.RequestJAndOrQ rRequest = (SimJQOperation.RequestJAndOrQ) request;
+    final SimJQOperation.RequestJAndOrQ dRequest;
     if (rRequest.getJob () != null && this.jobMapper == null)
       throw new IllegalArgumentException ();
     final SimJob dJob;
