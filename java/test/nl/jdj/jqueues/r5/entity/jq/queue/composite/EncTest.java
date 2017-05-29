@@ -16,6 +16,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.PreemptionStrategy;
 import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.CUPS;
 import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.PS;
+import nl.jdj.jqueues.r5.entity.jq.queue.qos.PQ;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DROP;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.GATE;
@@ -23,6 +24,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DLIMIT;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.WUR;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.ZERO;
+import nl.jdj.jqueues.r5.extensions.qos.SimQueuePredictor_PQ;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.KnownLoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_0010;
@@ -313,6 +315,37 @@ public class EncTest
       null,
       null,
       null);
+    // Enc[PQ]
+    // EncHS[PQ]
+    for (final PreemptionStrategy preemptionStrategy_pq : PreemptionStrategy.values ())
+      if (preemptionStrategy_pq != PreemptionStrategy.REDRAW && preemptionStrategy_pq != PreemptionStrategy.CUSTOM)
+      {
+        // Test against predictor.
+        testEncAux (hideStart,
+          new PQ (eventList, preemptionStrategy_pq, Double.class, Double.POSITIVE_INFINITY),
+          new SimQueuePredictor_PQ (),
+          numberOfJobs,
+          jitterHint,
+          silent,
+          deadSilent,
+          1.0e-9,
+          null,
+          null,
+          null);
+        if (! hideStart)
+          // Test against queue.
+          testEncAux (hideStart,
+            new PQ (eventList, preemptionStrategy_pq, Double.class, Double.POSITIVE_INFINITY),
+            new PQ (eventList, preemptionStrategy_pq, Double.class, Double.POSITIVE_INFINITY),
+            numberOfJobs,
+            jitterHint,
+            silent,
+            deadSilent,
+            1.0e-9,
+            null,
+            null,
+            null);
+      } 
     // Enc[Enc[FCFS]]
     // EncHS[Enc[FCFS]]
     testEncAux (hideStart,
