@@ -688,7 +688,7 @@ implements SimEntity
    * Note that listeners are <i>not</i> notified with empty notification sets!
    * 
    * @throws IllegalStateException If the time of pending notifications is not equal to {@link #getLastUpdateTime},
-   *                               if this entity is currently firing notifications (already).
+   *                               or if this entity is currently firing notifications (already).
    * 
    * @see #registerPreNotificationHook
    * @see #doAfterNotifications
