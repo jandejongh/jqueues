@@ -25,7 +25,7 @@ import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** Example code for <code>nl.jdj.jqueues.composite</code> for black {@link SimQueueComposite}s.
+/** Example code for (some) {@link SimQueueComposite}s.
  * 
  * @author Jan de Jongh, TNO
  * 
@@ -88,7 +88,7 @@ public final class CompositeSimQueueExample
    */
   public static void main (String[] args)
   {
-    System.out.println ("=== EXAMPLE PROGRAM FOR nl.jdj.jqueues.composite (for black composite queues) PACKAGE ===");
+    System.out.println ("=== EXAMPLE PROGRAM FOR (some) for composite queues...");
     System.out.println ("-> Creating jobs...");
     final List<DefaultExampleSimJob> jobList = new ArrayList<>  ();
     for (int n = 1; n <= 10; n++)
