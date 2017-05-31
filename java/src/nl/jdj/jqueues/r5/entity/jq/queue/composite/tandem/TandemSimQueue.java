@@ -19,6 +19,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * <p>
  * Internally, a {@link TandemSimQueueSelector} is generated from the sub-queues supplied.
  * 
+ * <p>
+ * The start model is set to (fixed) {@link StartModel#LOCAL}.
+ * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
@@ -26,6 +29,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * @see TandemSimQueueSelector
  * @see CompressedTandem2SimQueue
+ * @see StartModel
  * 
  * @author Jan de Jongh, TNO
  * 
@@ -49,6 +53,9 @@ public class TandemSimQueue
   
   /** Creates a tandem queue given an event list and a list of queues to put in sequence.
    *
+   * <p>
+   * The start model is set to (fixed) {@link StartModel#LOCAL}.
+   * 
    * @param eventList             The event list to use.
    * @param queues                The queues, an iteration over the set must return (deterministically)
    *                              the non-<code>null</code> queues in intended order of visit.
@@ -60,6 +67,7 @@ public class TandemSimQueue
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
+   * @see StartModel
    * 
    */
   public TandemSimQueue
@@ -67,7 +75,7 @@ public class TandemSimQueue
    final Set<DQ> queues,
    final DelegateSimJobFactory delegateSimJobFactory)
   {
-    super (eventList, queues, new TandemSimQueueSelector<> (queues), delegateSimJobFactory);
+    super (eventList, queues, new TandemSimQueueSelector<> (queues), delegateSimJobFactory, StartModel.LOCAL);
   }
 
   @Override

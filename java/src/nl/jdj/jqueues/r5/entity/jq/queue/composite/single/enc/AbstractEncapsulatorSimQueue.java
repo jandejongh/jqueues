@@ -37,11 +37,12 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * <p>
  * This queue has non-default semantics for the waiting and service area of the composite queue.
- * For more details, refer to {@link StartModel#ENCAPSULATOR_QUEUE}
- * and {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE}.
+ * It sets its {@link StartModel} to either
+ * {@link StartModel#ENCAPSULATOR_QUEUE} or {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE},
+ * depending upon its parameters upon construction.
  * 
  * <p>
- * Most complexity of the encapsulator queue is dealt with by {@link AbstractSimQueueComposite},
+ * Most of the complexity of the encapsulator queue is dealt with by {@link AbstractSimQueueComposite},
  * through the two start models mentioned above.
  * 
  * @param <DJ> The delegate-job type.
@@ -52,7 +53,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see SimQueueComposite
  * @see StartModel
  * @see StartModel#ENCAPSULATOR_QUEUE
- * @see #setStartModel
+ * @see StartModel#ENCAPSULATOR_HIDE_START_QUEUE
  * @see EncapsulatorSimQueue
  * @see EncapsulatorHideStartSimQueue
  * 
@@ -100,7 +101,6 @@ public abstract class AbstractEncapsulatorSimQueue
    * @see StartModel
    * @see StartModel#ENCAPSULATOR_QUEUE
    * @see StartModel#ENCAPSULATOR_HIDE_START_QUEUE
-   * @see #setStartModel
    * @see #getRegisteredOperations
    * @see #registerDelegatedOperation
    * @see #getRegisteredNotificationTypes
@@ -134,11 +134,8 @@ public abstract class AbstractEncapsulatorSimQueue
           return null;
         }
       },
-      delegateSimJobFactory);
-    if (hideStart)
-      setStartModel (StartModel.ENCAPSULATOR_HIDE_START_QUEUE);
-    else
-      setStartModel (StartModel.ENCAPSULATOR_QUEUE);
+      delegateSimJobFactory,
+      hideStart ? StartModel.ENCAPSULATOR_HIDE_START_QUEUE : StartModel.ENCAPSULATOR_QUEUE);
     // Find the operations on the encapsulated queue that we do not know, and install a delegate for it.
     for (final SimEntityOperation oDQueue : (Set<SimEntityOperation>) queue.getRegisteredOperations ())
       if (! getRegisteredOperations ().contains (oDQueue))

@@ -18,6 +18,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * embedded {@link SimQueue}s,
  * as controlled by a {@link SimQueueSelector} supplied by concrete subclasses.
  * 
+ * <p>
+ * The start model is set to (fixed) {@link StartModel#LOCAL}.
+ * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
@@ -48,6 +51,9 @@ public abstract class AbstractParallelSimQueues
   
   /** Creates a (abstract) parallel queue given an event list and a list of queues to put in parallel.
    *
+   * <p>
+   * The start model is set to (fixed) {@link StartModel#LOCAL}.
+   * 
    * @param eventList             The event list to use.
    * @param queues                The queues in no particular order.
    * @param simQueueSelector      An optional {@link SimQueueSelector} for arriving jobs; if <code>null</code>,
@@ -61,6 +67,7 @@ public abstract class AbstractParallelSimQueues
    * @see ParallelSimQueuesSelector
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
+   * @see StartModel
    * 
    */
   protected AbstractParallelSimQueues
@@ -69,7 +76,7 @@ public abstract class AbstractParallelSimQueues
    final SimQueueSelector simQueueSelector,
    final DelegateSimJobFactory delegateSimJobFactory)
   {
-    super (eventList, queues, new ParallelSimQueuesSelector (simQueueSelector), delegateSimJobFactory);
+    super (eventList, queues, new ParallelSimQueuesSelector (simQueueSelector), delegateSimJobFactory, StartModel.LOCAL);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

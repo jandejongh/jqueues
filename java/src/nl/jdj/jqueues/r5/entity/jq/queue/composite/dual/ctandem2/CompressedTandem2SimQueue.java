@@ -99,7 +99,6 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see SimQueueComposite
  * @see StartModel
  * @see StartModel#COMPRESSED_TANDEM_2_QUEUE
- * @see #setStartModel
  * 
  * @author Jan de Jongh, TNO
  * 
@@ -148,9 +147,6 @@ public class CompressedTandem2SimQueue
    * sets the {@link StartModel} to {@link StartModel#COMPRESSED_TANDEM_2_QUEUE}.
    * The constructor then sets the auto-revocation policy on the wait queue to {@link AutoRevocationPolicy#UPON_START}.
    * 
-   * <p>
-   * Note that setting the initial server-access credits on the wait queue is a side effect of {@link #setStartModel}.
-   * 
    * @param eventList             The event list to use.
    * @param waitQueue             The wait queue.
    * @param serveQueue            The serve queue.
@@ -163,7 +159,6 @@ public class CompressedTandem2SimQueue
    * @see DefaultDelegateSimJobFactory
    * @see StartModel
    * @see StartModel#COMPRESSED_TANDEM_2_QUEUE
-   * @see #setStartModel
    * @see #getWaitQueue
    * @see #getServeQueue
    * @see SimQueue#setAutoRevocationPolicy
@@ -212,8 +207,8 @@ public class CompressedTandem2SimQueue
             throw new IllegalArgumentException ();
         }
       },
-      delegateSimJobFactory);
-    setStartModel (StartModel.COMPRESSED_TANDEM_2_QUEUE);
+      delegateSimJobFactory,
+      StartModel.COMPRESSED_TANDEM_2_QUEUE);
     getWaitQueue ().setAutoRevocationPolicy (AutoRevocationPolicy.UPON_START);
   }
 

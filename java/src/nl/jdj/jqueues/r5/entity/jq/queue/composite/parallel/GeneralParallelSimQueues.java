@@ -4,7 +4,6 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
@@ -17,6 +16,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * a (delegate) job visits one and only one of the
  * embedded {@link SimQueue}s,
  * as controlled by a {@link SimQueueSelector} supplied by concrete subclasses.
+ * 
+ * <p>
+ * The start model is set to (fixed) {@link StartModel#LOCAL}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -34,7 +36,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  */
 public class GeneralParallelSimQueues
 <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends GeneralParallelSimQueues>
-  extends AbstractSimQueueComposite<DJ, DQ, J, Q>
+  extends AbstractParallelSimQueues<DJ, DQ, J, Q>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,6 +47,9 @@ public class GeneralParallelSimQueues
   
   /** Creates a (abstract) parallel queue given an event list and a list of queues to put in parallel.
    *
+   * <p>
+   * The start model is set to (fixed) {@link StartModel#LOCAL}.
+   * 
    * @param eventList             The event list to use.
    * @param queues                The queues in no particular order.
    * @param simQueueSelector      An optional {@link SimQueueSelector} for arriving jobs; if <code>null</code>,
@@ -58,6 +63,7 @@ public class GeneralParallelSimQueues
    * @see ParallelSimQueuesSelector
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
+   * @see StartModel
    * 
    */
   public GeneralParallelSimQueues

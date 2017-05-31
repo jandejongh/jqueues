@@ -15,6 +15,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This composite queue (precisely) mimics the {@link SimQueue} interface of the encapsulated queue.
  * 
  * <p>
+ * The start model is set to (fixed) {@link StartModel#ENCAPSULATOR_QUEUE}.
+ * 
+ * <p>
  * Refer to {@link AbstractEncapsulatorSimQueue},
  * {@link AbstractSimQueueComposite}
  * and {@link SimQueueComposite}
@@ -28,7 +31,6 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see SimQueueComposite
  * @see StartModel
  * @see StartModel#ENCAPSULATOR_QUEUE
- * @see #setStartModel
  * @see EncapsulatorHideStartSimQueue
  * 
  * @author Jan de Jongh, TNO
@@ -66,7 +68,6 @@ public class EncapsulatorSimQueue
    * @see DefaultDelegateSimJobFactory
    * @see StartModel
    * @see StartModel#ENCAPSULATOR_QUEUE
-   * @see #setStartModel
    * 
    */
   public EncapsulatorSimQueue

@@ -16,6 +16,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * but hides the start of (delegate) job on the encapsulated queue.
  * 
  * <p>
+ * The start model is set to (fixed) {@link StartModel#ENCAPSULATOR_HIDE_START_QUEUE}.
+ * 
+ * <p>
  * Refer to {@link AbstractEncapsulatorSimQueue},
  * {@link AbstractSimQueueComposite}
  * and {@link SimQueueComposite}
@@ -29,7 +32,6 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see SimQueueComposite
  * @see StartModel
  * @see StartModel#ENCAPSULATOR_HIDE_START_QUEUE
- * @see #setStartModel
  * @see EncapsulatorSimQueue
  * 
  * @author Jan de Jongh, TNO
@@ -68,7 +70,6 @@ public class EncapsulatorHideStartSimQueue
    * @see DefaultDelegateSimJobFactory
    * @see StartModel
    * @see StartModel#ENCAPSULATOR_HIDE_START_QUEUE
-   * @see #setStartModel
    * 
    */
   public EncapsulatorHideStartSimQueue

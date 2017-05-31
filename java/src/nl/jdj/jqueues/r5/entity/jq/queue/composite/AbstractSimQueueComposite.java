@@ -83,14 +83,17 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * @param simQueueSelector      The object for routing jobs through the network of embedded queues;
    *                                if {@code null}, no sub-queues will be visited.
    * @param delegateSimJobFactory An optional factory for the delegate {@link SimJob}s.
+   * @param startModel            The start model of the composite queue, (non-{@code null}), see {@link StartModel}.
    * 
    * @throws IllegalArgumentException If the event list is {@code null},
    *                                    the <code>queue</code> argument is <code>null</code>, has <code>null</code> members,
-   *                                    or contains this composite queue. 
+   *                                    or contains this composite queue,
+   *                                    or if the start mode is {@code null}.
    * 
    * @see SimQueueSelector
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
+   * @see StartModel
    * @see SimEntity#setIgnoreEventListReset
    * @see SimEntity#registerSimEntityListener
    * @see MultiSimQueueNotificationProcessor
@@ -103,15 +106,17 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
   (final SimEventList eventList,
    final Set<DQ> queues,
    final SimQueueSelector<J, DQ> simQueueSelector,
-   final DelegateSimJobFactory delegateSimJobFactory)
+   final DelegateSimJobFactory delegateSimJobFactory,
+   final StartModel startModel)
   {
     super (eventList);
-    if (queues == null || queues.contains (null) || queues.contains ((DQ) this))
+    if (queues == null || queues.contains (null) || queues.contains ((DQ) this) || startModel == null)
       throw new IllegalArgumentException ();
     this.queues = queues;
     this.simQueueSelector = simQueueSelector;
     this.delegateSimJobFactory =
       ((delegateSimJobFactory == null) ? new DefaultDelegateSimJobFactory () : delegateSimJobFactory);
+    this.startModel = startModel;
     for (final DQ q : this.queues)
     {
       q.setIgnoreEventListReset (true);
@@ -353,50 +358,12 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  private StartModel startModel = StartModel.LOCAL;
+  private final StartModel startModel;
   
   @Override
   public final StartModel getStartModel ()
   {
     return this.startModel;
-  }
-  
-  /** Sets the start model of this composite queue.
-   * 
-   * <p>
-   * The method should only be used by sub-classes upon construction, if needed, and should not
-   * be called afterwards. The start-model setting should survive queue resets.
-   * 
-   * <p>
-   * Upon exit, this method invokes {@link #resetEntitySubClass} to ensure the initial
-   * state of the sub-queues.
-   * 
-   * @param startModel The new start model (non-{@code null}).
-   * 
-   * @throws IllegalArgumentException If the argument is {@code null},
-   *                                  or {@link SimQueueComposite.StartModel#ENCAPSULATOR_QUEUE}
-   *                                  or {@link SimQueueComposite.StartModel#ENCAPSULATOR_HIDE_START_QUEUE} is chosen
-   *                                  while there are fewer or more than <i>one</i> sub-queues,
-   *                                  or {@link SimQueueComposite.StartModel#COMPRESSED_TANDEM_2_QUEUE} is chosen
-   *                                  while there are fewer or more than <i>two</i> sub-queues.
-   * 
-   * @see EncapsulatorSimQueue
-   * @see EncapsulatorHideStartSimQueue
-   * @see CompressedTandem2SimQueue
-   * 
-   */
-  protected final void setStartModel (final StartModel startModel)
-  {
-    if (startModel == null)
-      throw new IllegalArgumentException ();
-    if (startModel == StartModel.ENCAPSULATOR_QUEUE && getQueues ().size () != 1)
-      throw new IllegalArgumentException ();
-    if (startModel == StartModel.ENCAPSULATOR_HIDE_START_QUEUE && getQueues ().size () != 1)
-      throw new IllegalArgumentException ();
-    if (startModel == StartModel.COMPRESSED_TANDEM_2_QUEUE && getQueues ().size () != 2)
-      throw new IllegalArgumentException ();
-    this.startModel = startModel;
-    resetEntitySubClassLocal ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

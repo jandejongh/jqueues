@@ -14,6 +14,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
 /** A {@link SimQueueComposite} implementation of a Jackson queueing network.
  *
  * <p>
+ * The start model is set to (fixed) {@link StartModel#LOCAL}.
+ * 
+ * <p>
  * For more documentation see {@link JacksonSimQueueSelector}.
  * 
  * @param <DJ> The delegate-job type.
@@ -41,8 +44,12 @@ public class JacksonSimQueueNetwork
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a black Jackson queueing network.
+  /** Creates a Jackson queueing network.
    * 
+   * <p>
+   * The start model is set to (fixed) {@link StartModel#LOCAL}.
+   * 
+   * <p>
    * For brevity, <code>|Q|</code> is used as a shorthand for <code>queues.size ()</code>.
    * 
    * @param eventList             The event list to use.
@@ -63,6 +70,7 @@ public class JacksonSimQueueNetwork
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
+   * @see StartModel
    * 
    */
   public JacksonSimQueueNetwork
@@ -76,7 +84,8 @@ public class JacksonSimQueueNetwork
     super (eventList,
       queues,
       new JacksonSimQueueSelector<>  (queues, pdfArrival, pdfTransition, userRNG),
-      delegateSimJobFactory);
+      delegateSimJobFactory,
+      StartModel.LOCAL);
   }
 
   /** Returns a new {@link JacksonSimQueueNetwork} object on the same {@link SimEventList} with copies of the sub-queues and

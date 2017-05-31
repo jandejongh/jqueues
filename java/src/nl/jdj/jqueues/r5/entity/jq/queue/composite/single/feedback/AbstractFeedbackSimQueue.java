@@ -24,6 +24,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * After the delegate job departs the embedded queue and is not fed back, the "real" job departs
  * from the {@link AbstractFeedbackSimQueue}.
  *
+ * <p>
+ * The start model is set to (fixed) {@link StartModel#LOCAL}.
+ * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
@@ -67,6 +70,9 @@ public abstract class AbstractFeedbackSimQueue
   
   /** Creates an (abstract) feedback queue given an event list, a queue and a feedback controller.
    *
+   * <p>
+   * The start model is set to (fixed) {@link StartModel#LOCAL}.
+   * 
    * @param eventList             The event list to use.
    * @param queue                 The queue, non-<code>null</code>.
    * @param feedbackController    The feedback controller, non-<code>null</code>.
@@ -76,6 +82,7 @@ public abstract class AbstractFeedbackSimQueue
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
+   * @see StartModel
    * 
    */
   protected AbstractFeedbackSimQueue
@@ -87,7 +94,8 @@ public abstract class AbstractFeedbackSimQueue
     super (eventList,
       (Set<DQ>) createQueuesSet (queue),
       new FeedbackSimQueueSelector<> (queue, feedbackController),
-      delegateSimJobFactory);
+      delegateSimJobFactory,
+      StartModel.LOCAL);
     this.feedbackController = feedbackController;
   }
   

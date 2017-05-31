@@ -13,6 +13,10 @@ import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A composite queue with two queues, a main one and one collecting all dropped jobs from the main queue.
  *
+ * <p>
+ * The main and drop arguments may be equal,
+ * yet the start model is set to (fixed) {@link StartModel#LOCAL}.
+ * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
@@ -40,6 +44,7 @@ public class DropCollectorSimQueue
   
   /** Auxiliary method to create the required {@link Set} of {@link SimQueue}s in the constructor.
    * 
+   * <p>
    * Note that the mainQueue and the dropQueue arguments may be equal!
    * 
    * @param mainQueue The wait queue.
@@ -60,6 +65,10 @@ public class DropCollectorSimQueue
   
   /** Creates a drop-collector queue given an event list, a main queue and a drop (collector) queue.
    *
+   * <p>
+   * Note that the mainQueue and the dropQueue arguments may be equal!
+   * The {@link StartModel}, however, is always set to {@link StartModel#LOCAL}.
+   * 
    * @param eventList             The event list to use.
    * @param mainQueue             The main queue.
    * @param dropQueue             The drop queue.
@@ -72,6 +81,7 @@ public class DropCollectorSimQueue
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
    * @see #setDropDestinationQueue
+   * @see StartModel
    * 
    */
   public DropCollectorSimQueue
@@ -83,7 +93,8 @@ public class DropCollectorSimQueue
     super (eventList,
       (Set<DQ>) createQueuesSet (mainQueue, dropQueue),
       new DropCollectorSimQueueSelector (mainQueue, dropQueue),
-      delegateSimJobFactory);
+      delegateSimJobFactory,
+      StartModel.LOCAL);
     setDropDestinationQueue ((DQ) dropQueue);
   }
 

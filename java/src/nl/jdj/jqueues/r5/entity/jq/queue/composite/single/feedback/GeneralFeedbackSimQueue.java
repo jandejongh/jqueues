@@ -20,6 +20,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * from the {@link GeneralFeedbackSimQueue}.
  *
  * <p>
+ * The start model is set to (fixed) {@link StartModel#LOCAL}.
+ * 
+ * <p>
  * See {@link AbstractFeedbackSimQueue} for more details on the interplay between
  * {@link SimQueueFeedbackController} and the embedded {@link FeedbackSimQueueSelector},
  * and how, for instance, reset events are propagated.
@@ -55,6 +58,9 @@ public class GeneralFeedbackSimQueue
   
   /** Creates a feedback queue given an event list, a queue and a feedback controller.
    *
+   * <p>
+   * The start model is set to (fixed) {@link StartModel#LOCAL}.
+   * 
    * @param eventList             The event list to use.
    * @param queue                 The queue, non-<code>null</code>.
    * @param feedbackController    The feedback controller, non-<code>null</code>.
@@ -64,6 +70,7 @@ public class GeneralFeedbackSimQueue
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
+   * @see StartModel
    * 
    */
   public GeneralFeedbackSimQueue
