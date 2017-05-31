@@ -445,7 +445,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // ARRIVAL
+  // ARRIVAL [EXTERNAL TOP-LEVEL OPERATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -455,9 +455,13 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * This (final) implementation is as described below.
    * 
    * <p>
-   * It first makes sanity checks (e.g., job not already present), invokes {@link #update},
-   * checks whether we are a top-level event (for later use)
-   * and then adds a {@link SimQueueSimpleEventType#ARRIVAL} pending notification.
+   * It first makes sanity checks (e.g., job not already present).
+   * 
+   * <p>
+   * It then invokes {@link #update}
+   * and {@link #clearAndUnlockPendingNotificationsIfLocked},
+   * insisting to be a top-level event (at the expense of an {@link IllegalStateException}).
+   * 
    * 
    * <p>
    * Subsequently, if the queue is on queue-access vacation ({@link #isQueueAccessVacation}),
@@ -482,7 +486,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * and invokes the subclass-specific {@link #rescheduleAfterArrival}.
    * 
    * <p>
-   * Finally, it notifies listeners of the pending notifications if required (i.e., if we are a top-level event).
+   * Finally, it notifies listeners of the pending notifications.
    * 
    * @see #update
    * @see #isQueueAccessVacation
@@ -493,6 +497,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see SimJob#setQueue
    * @see #rescheduleAfterArrival
    * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
    * @see #fireAndLockPendingNotifications
    * @see SimQueueSimpleEventType#ARRIVAL
    * @see SimQueueSimpleEventType#DROP
@@ -509,6 +514,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new RuntimeException ();
     update (time);
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
+    if (! isTopLevel)
+      throw new IllegalStateException ();
     addPendingNotification (SimQueueSimpleEventType.ARRIVAL, new SimJQEvent.Arrival<> (job, this, time));
     if (this.isQueueAccessVacation)
     {
@@ -518,6 +525,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     else
     {
       insertJobInQueueUponArrival (job, time);
+      //
+      // XXX At some point, we used this approach (checking for presence in #jobQueue)
+      // in order to obtain atomicity for "drop-on-arrival" cases.
+      // With the present framework, it might be obsolete; subclasses can simply invoke #drop
+      // from within rescheduleAfterArrival without losing atomicity.
+      //
       if (! this.jobQueue.contains (job))
       {
         if (this.jobsInServiceArea.contains (job))
@@ -536,8 +549,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
           throw new IllegalStateException ();
       }
     }
-    if (isTopLevel)
-      fireAndLockPendingNotifications ();
+    fireAndLockPendingNotifications ();
   }
 
   /** Inserts a job that just arrived (at given time) into the internal queue(s).
@@ -553,7 +565,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * Implementations must ignore any queue-access vacation as this is taken care of already by the base class.
    * 
    * <p>
-   * Implementations must <i>not</i>reschedule on the event list, or make changes to {@link #jobsInServiceArea},
+   * Implementations must <i>not</i> reschedule on the event list, or make changes to {@link #jobsInServiceArea},
    * but instead wait for the imminent invocation of
    * {@link #rescheduleAfterArrival} for that.
    * 
@@ -583,6 +595,11 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * <p>
    * Typically, but not necessarily, implementations must check whether or not to start the job immediately,
    * and invoke {@link #start} if so.
+   * 
+   * <p>
+   * Implementations must <i>not</i> insert a {@link SimQueueSimpleEventType#ARRIVAL} notification,
+   * as this is already done by the base class {@link AbstractSimQueue}.
+   * They must, however, add appropriate notifications for other internal state-changing events.
    * 
    * <p>
    * Upon return, the job may have left {@link #jobQueue} already (in which case it <i>must</i> not be present in
@@ -623,7 +640,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // QUEUE-ACCESS VACATION
+  // QUEUE-ACCESS VACATION [EXTERNAL TOP-LEVEL OPERATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -633,7 +650,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>
    * Note that queue-access vacations are entirely dealt with by this base class {@link AbstractSimQueue}; there is
-   * no interaction (needed) with concrete subclasses.
+   * no interaction (needed) with concrete subclasses, but see {@link #queueAccessVacationDropSubClass}.
    * 
    */
   @Override
@@ -651,12 +668,20 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * are only effectuated if the vacation status queue actually changed.
    * 
    * <p>
-   * Note that queue-access vacations are entirely dealt with by the base class {@link AbstractSimQueue}; there is
-   * no interaction (needed) with concrete subclasses.
+   * This method insists to be a top-level event (at the expense of an {@link IllegalStateException}).
    * 
+   * <p>
+   * Note that queue-access vacations are entirely dealt with by the base class {@link AbstractSimQueue}; there is
+   * no interaction (needed) with concrete subclasses, but see {@link #queueAccessVacationDropSubClass}.
+   * 
+   * @see SimQueueSimpleEventType#QUEUE_ACCESS_VACATION
    * @see SimQueueSimpleEventType#QAV_START
    * @see SimQueueSimpleEventType#QAV_END
+   * @see #queueAccessVacationDropSubClass
    * @see #arrive
+   * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
+   * @see #fireAndLockPendingNotifications
    * 
    */
   @Override
@@ -666,13 +691,14 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     {
       update (time);
       final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
+      if (! isTopLevel)
+        throw new IllegalStateException ();
       this.isQueueAccessVacation = start;
       if (this.isQueueAccessVacation)
         addPendingNotification (SimQueueSimpleEventType.QAV_START, new SimQueueEvent.QueueAccessVacation (this, time, true));
       else
         addPendingNotification (SimQueueSimpleEventType.QAV_END, new SimQueueEvent.QueueAccessVacation (this, time, false));
-      if (isTopLevel)
-        fireAndLockPendingNotifications ();
+      fireAndLockPendingNotifications ();
     }
   }
 
@@ -705,7 +731,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // DROP
+  // DROP [INTERNAL NON-TOP-LEVEL OPERATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -716,8 +742,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>
    * It first makes makes sanity checks (e.g., job present),
-   * invokes {@link #update}
-   * and checks whether we are a top-level event (for later use).
+   * and assures that {@link #update} and {@link #clearAndUnlockPendingNotificationsIfLocked}
+   * have been invoked by the caller (since this is an <i>internal</i> operation).
    * 
    * <p>
    * It invokes the subclass-specific {@link #removeJobFromQueueUponDrop},
@@ -732,7 +758,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * It then invokes the subclass-specific {@link #rescheduleAfterDrop}.
    * 
    * <p>
-   * Finally, it notifies listeners of the pending notifications if required (i.e., if we are a top-level event).
+   * This method does <i>not</i> notify listeners through {@link #fireAndLockPendingNotifications}.
    * 
    * @param job  The job to be dropped.
    * @param time The current time, i.e., the drop time of the job.
@@ -741,22 +767,31 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @throws IllegalStateException    If the internal administration of this queue has become inconsistent. 
    * 
    * @see SimQueueSimpleEventType#DROP
+   * @see #removeJobFromQueueUponDrop
+   * @see #rescheduleAfterDrop
+   * @see #update
+   * @see #getLastUpdateTime
+   * @see SimJob#setQueue
+   * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
+   * @see #fireAndLockPendingNotifications
    * 
    */
   protected final void drop (final J job, final double time)
   {
     if (job == null || job.getQueue () != this || ! this.jobQueue.contains (job))
       throw new IllegalArgumentException ();
-    update (time);
+    if (time != getLastUpdateTime ())
+      throw new IllegalStateException ();
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
+    if (isTopLevel)
+      throw new IllegalStateException ();
     removeJobFromQueueUponDrop (job, time);
     if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
       throw new IllegalStateException ();
     job.setQueue (null);
     addPendingNotification (SimQueueSimpleEventType.DROP, new SimJQEvent.Drop<> (job, this, time));
     rescheduleAfterDrop (job, time);
-    if (isTopLevel)
-      fireAndLockPendingNotifications ();
   }
 
   /** Removes a job from the internal queue(s) because it is to be dropped.
@@ -770,7 +805,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * job (if needed) from the {@link #jobsInServiceArea} set (this is also checked).
    * 
    * <p>
-   * Implementations must <i>not</i>reschedule events for <i>other</i> jobs on the event list,
+   * Implementations must <i>not</i> reschedule events for <i>other</i> jobs on the event list,
    * but instead wait for the imminent invocation of
    * {@link #rescheduleAfterDrop} for that.
    * 
@@ -791,7 +826,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * and that this method is invoked immediately after {@link #removeJobFromQueueUponDrop}.
    * 
    * <p>
-   * Implementations must <i>not</i> insert {@link SimQueueSimpleEventType#DROP} notification,
+   * Implementations must <i>not</i> insert a {@link SimQueueSimpleEventType#DROP} notification,
    * as this is already done by the base class {@link AbstractSimQueue}.
    * They must, however, add appropriate notifications for other internal state-changing events.
    * 
@@ -806,7 +841,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // REVOKE / AUTO-REVOKE
+  // REVOKE [EXTERNAL TOP-LEVEL OPERATION]
+  //
+  // AUTO-REVOKE [INTERNAL NON-TOP-LEVEL OPERATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -826,7 +863,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * <p>
    * Otherwise,
    * it invokes {@link #update}
-   * and checks whether we are a top-level event (for later use).
+   * and {@link #clearAndUnlockPendingNotificationsIfLocked},
+   * insisting to be a top-level event (at the expense of an {@link IllegalStateException}).
    * 
    * <p>
    * It invokes the subclass-specific {@link #removeJobFromQueueUponRevokation},
@@ -841,11 +879,18 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * It then invokes the subclass-specific {@link #rescheduleAfterRevokation}.
    * 
    * <p>
-   * Finally, it notifies listeners of the pending notifications if required (i.e., if we are a top-level event).
+   * Finally, it notifies listeners of the pending notifications.
    * 
    * @see SimQueueSimpleEventType#REVOCATION
    * @see #removeJobFromQueueUponRevokation
    * @see #rescheduleAfterRevokation
+   * @see #autoRevoke
+   * @see #update
+   * @see #getLastUpdateTime
+   * @see SimJob#setQueue
+   * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
+   * @see #fireAndLockPendingNotifications
    * 
    */
   @Override
@@ -865,6 +910,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       return false;
     update (time);
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
+    if (! isTopLevel)
+      throw new IllegalStateException ();
     removeJobFromQueueUponRevokation (job, time, false);
     if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
       throw new IllegalStateException ();    
@@ -872,8 +919,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     addPendingNotification
       (SimQueueSimpleEventType.REVOCATION, new SimJQEvent.Revocation<> (job, this, time, interruptService));
     rescheduleAfterRevokation (job, time, false);
-    if (isTopLevel)
-      fireAndLockPendingNotifications ();
+    fireAndLockPendingNotifications ();
     return true;
   }
 
@@ -895,16 +941,34 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>
    * The final implementation of this method is identical to that of {@link #revoke},
-   * with the exceptions that (1) the job has to be present a priori (at the expense of an {@link IllegalStateException},
-   * and (2) a {@link SimQueueSimpleEventType#AUTO_REVOCATION} is added as pending notification
-   * (instead of a {@link SimQueueSimpleEventType#REVOCATION}).
+   * with the exceptions that
+   * <ul>
+   * <li>
+   * It first makes makes sanity checks (e.g., job present),
+   * and assures that {@link #update} and {@link #clearAndUnlockPendingNotificationsIfLocked}
+   * have been invoked by the caller (since this is an <i>internal</i> operation),
+   * <li>
+   * the job has to be present a priori (at the expense of an {@link IllegalStateException}),
+   * <li>
+   * a {@link SimQueueSimpleEventType#AUTO_REVOCATION} is added as pending notification
+   * (instead of a {@link SimQueueSimpleEventType#REVOCATION}),
+   * <li>
+   * this method does <i>not</i> notify listeners through {@link #fireAndLockPendingNotifications}.
+   * </ul>
    * 
    * @param job  The job to be revoked.
-   * @param time The current time, i.e., the revocation time of the job.
+   * @param time The current time, i.e., the auto-revocation time of the job.
    * 
    * @see SimQueueSimpleEventType#AUTO_REVOCATION
    * @see #removeJobFromQueueUponRevokation
    * @see #rescheduleAfterRevokation
+   * @see #revoke
+   * @see #update
+   * @see #getLastUpdateTime
+   * @see SimJob#setQueue
+   * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
+   * @see #fireAndLockPendingNotifications
    * 
    */
   protected final void autoRevoke (final double time, final J job)
@@ -913,7 +977,11 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalArgumentException ();
     if (! this.jobQueue.contains (job) && job.getQueue () == this)
       throw new IllegalStateException ();
+    if (time != getLastUpdateTime ())
+      throw new IllegalStateException ();
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
+    if (isTopLevel)
+      throw new IllegalStateException ();
     removeJobFromQueueUponRevokation (job, time, true);
     if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
       throw new IllegalStateException ();    
@@ -921,8 +989,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     addPendingNotification
       (SimQueueSimpleEventType.AUTO_REVOCATION, new SimJQEvent.AutoRevocation<> (job, this, time));
     rescheduleAfterRevokation (job, time, true);
-    if (isTopLevel)
-      fireAndLockPendingNotifications ();
   }
 
   /** Removes a job from the internal queue(s) since it is revoked.
@@ -930,12 +996,15 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * <p>To be implemented by concrete queue types.
    *
    * <p>
+   * This method is shared between {@link #revoke} and {@link #autoRevoke}.
+   * 
+   * <p>
    * Implementations <i>must</i> (at least) remove the job from {@link #jobQueue} (this is actually checked).
    * They should also remove any job-specific events (like a departure event) from the event-list and remove the
    * job (if needed) from the {@link #jobsInServiceArea} set (this is also checked).
    * 
    * <p>
-   * Implementations must <i>not</i>reschedule events for <i>other</i> jobs on the event list,
+   * Implementations must <i>not</i> reschedule events for <i>other</i> jobs on the event list,
    * but instead wait for the imminent invocation of
    * {@link #rescheduleAfterRevokation} for that.
    * 
@@ -952,6 +1021,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   protected abstract void removeJobFromQueueUponRevokation (J job, double time, boolean auto);
   
   /** Reschedules if needed after a job has been revoked from this queue.
+   * 
+   * <p>
+   * This method is shared between {@link #revoke} and {@link #autoRevoke}.
    * 
    * <p>
    * Implementations can rely on the fact that the job is no longer present in the internal data structures,
@@ -978,7 +1050,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // SERVER-ACCESS CREDITS
+  // SERVER-ACCESS CREDITS [EXTERNAL TOP-LEVEL OPERATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -1000,8 +1072,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * <p>
    * Otherwise, it updates the internal administration of the number of server-access credits.
    * It then checks whether we either lost server-access credits, or regained them,
-   * and invokes {@link #rescheduleForNewServerAccessCredits} in the latter case, and sets up
-   * the notification of listeners for these cases.
+   * and invokes {@link #rescheduleForNewServerAccessCredits} in the latter case,
+   * and sets up the proper notification of listeners in both cases,
+   * insisting to be a top-level event (at the expense of an {@link IllegalStateException}).
    * 
    * <p>
    * In any case (including a mere change of value of the server-access credits),
@@ -1035,11 +1108,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       if (needsNotification)
       {
         final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
+        if (! isTopLevel)
+          throw new IllegalStateException ();
         if (regainedCredits)
           rescheduleForNewServerAccessCredits (time);
         setServerAccessCreditsSubClass ();
-        if (isTopLevel)
-          fireAndLockPendingNotifications ();
+        fireAndLockPendingNotifications ();
       }
       else
         setServerAccessCreditsSubClass ();        
@@ -1082,7 +1156,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * Implementations can rely on the availability of server-access credits.
    * 
    * <p>
-   * Implementations must not fire server-access-credits notifications.
+   * Implementations must not insert server-access-credits notifications.
    * This is done by the base class {@link AbstractSimQueue}.
    * They must, however, add appropriate notifications for other internal state-changing events.
    * 
@@ -1111,7 +1185,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * The method is called from {@link #setServerAccessCredits} after the new value has been effectuated into the internal
    * administration, rescheduling has taken place but (right) <i>before</i> any listeners have been notified.
    * Concrete implementations should not change the server-access-credits, obviously,
-   * and should <i>not</i> reschedule (but use {@link #rescheduleForNewServerAccessCredits} to that purpose).
+   * and should <i>not</i> reschedule
+   * (but instead implement such required rescheduling in {@link #rescheduleForNewServerAccessCredits} to that purpose).
    * 
    * <p>
    * The default implementation does nothing.
@@ -1126,6 +1201,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   }
   
   /** The previous reported SAC availability.
+   * 
+   * <p>
+   * For internal use by the {@link #serverAccessCreditsPreNotificationHook}.
    * 
    * <p>
    * Set to {@code true} upon construction and upon reset, since by contract,
@@ -1166,7 +1244,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // START
+  // START [INTERNAL NON-TOP-LEVEL OPERATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -1176,8 +1254,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * This (final) implementation is as described below.
    * 
    * <p>
-   * It first makes sanity checks (e.g., job present and not already started), invokes {@link #update},
-   * and checks whether we are a top-level event (for later use).
+   * It first makes sanity checks (e.g., job present and not already started),
+   * and assures that {@link #update} and {@link #clearAndUnlockPendingNotificationsIfLocked}
+   * have been invoked by the caller (since this is an <i>internal</i> operation).
    * 
    * <p>
    * It then takes a server-access credit through {@link #takeServerAccessCredit},
@@ -1197,8 +1276,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * and invokes the subclass-specific {@link #rescheduleAfterStart}.
    * 
    * <p>
-   * Finally, for both cases,
-   * it then notifies listeners of the pending notifications if required (i.e., if we are a top-level event).
+   * This method does <i>not</i> notify listeners through {@link #fireAndLockPendingNotifications}.
    * 
    * @param job  The job that is to be started.
    * @param time The current time (i.e., start time of the job).
@@ -1211,6 +1289,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see #getAutoRevocationPolicy
    * @see AutoRevocationPolicy#UPON_START
    * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
    * @see #fireAndLockPendingNotifications
    * @see SimQueueSimpleEventType#START
    * 
@@ -1225,8 +1304,11 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new RuntimeException ();
     if (this.jobsInServiceArea.contains (job))
       throw new RuntimeException ();
-    update (time);
+    if (time != getLastUpdateTime ())
+      throw new IllegalStateException ();
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
+    if (isTopLevel)
+      throw new IllegalStateException ();
     takeServerAccessCredit ();
     if (this.autoRevocationPolicy == AutoRevocationPolicy.UPON_START)
     {
@@ -1243,8 +1325,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       addPendingNotification (SimQueueSimpleEventType.START, new SimJQEvent.Start<> (job, this, time));
       rescheduleAfterStart (job, time);
     }
-    if (isTopLevel)
-      fireAndLockPendingNotifications ();    
   }
   
   /** Updates the internal data structures upon the start of a job.
@@ -1284,6 +1364,11 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * Upon return, the job may have left {@link #jobQueue} already (in which case it <i>must</i> not be present in
    * {@link #jobsInServiceArea} either), but the caller then assumes that all appropriate notifications
    * are added (to the pending notifications) in this method.
+   * 
+   * <p>
+   * Implementations must <i>not</i> insert a {@link SimQueueSimpleEventType#START} notification,
+   * as this is already done by the base class {@link AbstractSimQueue}.
+   * They must, however, add appropriate notifications for other internal state-changing events.
    * 
    * <p>
    * Implementations should not care about server-access credits or auto-revocation;
@@ -1339,17 +1424,31 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // DEPARTURE
+  // DEPARTURE FROM EVENT LIST [INTERNAL TOP-LEVEL OPERATION]
+  //
+  // DEPARTURE [INTERNAL NON-TOP-LEVEL OPERATION]
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Deals with a departure event from the event list (for internal use only).
    * 
+   * <p>
+   * Do not invoke this method directly from sub-classes; it is meant to be invoked from a scheduled {@link Departure}.
+   * 
+   * <p>
    * This method (final) check the presence of the departure event in {@link #eventsScheduled},
    * throwing an exception if absent,
    * and removes the event from that collection.
-   * It then grabs the time and job parameters from the event argument, and
-   * invokes {@link #depart}.
+   * 
+   * <p>
+   * It then invokes {@link #update} with the event time,
+   * and {@link #clearAndUnlockPendingNotificationsIfLocked},
+   * insisting to be a top-level event (at the expense of an {@link IllegalStateException}).
+   * 
+   * <p>
+   * Finally, it grabs the time and job parameters from the event argument,
+   * invokes {@link #depart},
+   * and notifies listeners through {@link #fireAndLockPendingNotifications}.
    * 
    * @param event The departure event; must be non-<code>null</code> and present in {@link #eventsScheduled}.
    * 
@@ -1357,6 +1456,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @see Departure
    * @see #scheduleDepartureEvent
    * @see #depart
+   * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
+   * @see #fireAndLockPendingNotifications
    * 
    */
   protected final void departureFromEventList (final SimJQEvent.Departure<J, Q> event)
@@ -1367,8 +1469,13 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalStateException ();
     this.eventsScheduled.remove (event);
     final double time = event.getTime ();
+    update (time);
+    final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
+    if (! isTopLevel)
+      throw new IllegalStateException ();
     final J job = event.getJob ();
     depart (time, job);
+    fireAndLockPendingNotifications ();
   }
   
   /** Departure (unconditionally) of a job (for subclass and departure-event use).
@@ -1378,8 +1485,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>
    * It first makes makes sanity checks (e.g., job present),
-   * invokes {@link #update}
-   * and checks whether we are a top-level event (for later use).
+   * and assures that {@link #update} and {@link #clearAndUnlockPendingNotificationsIfLocked}
+   * have been invoked by the caller (since this is an <i>internal</i> operation).
    * 
    * <p>
    * It sets the visited queue on the job (with {@link SimJob#setQueue}) to <code>null</code>.
@@ -1396,7 +1503,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * It then invokes the subclass-specific {@link #rescheduleAfterDeparture}.
    * 
    * <p>
-   * Finally, it notifies listeners of the pending notifications if required (i.e., if we are a top-level event).
+   * This method does <i>not</i> notify listeners through {@link #fireAndLockPendingNotifications}.
    * 
    * <p>
    * Note that this method does <i>not</i> (attempt to) cancel a {@link Departure}
@@ -1405,16 +1512,26 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param time The departure time.
    * @param job  The job that departs.
    * 
+   * @see SimQueueSimpleEventType#DEPARTURE
    * @see #removeJobFromQueueUponDeparture
    * @see #rescheduleAfterDeparture
+   * @see #update
+   * @see #getLastUpdateTime
+   * @see SimJob#setQueue
+   * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
+   * @see #fireAndLockPendingNotifications
    * 
    */
   protected final void depart (final double time, final J job)
   {
     if (job.getQueue () != this)
       throw new IllegalStateException ();
-    update (time);
+    if (time != getLastUpdateTime ())
+      throw new IllegalStateException ();
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
+    if (isTopLevel)
+      throw new IllegalStateException ();
     job.setQueue (null);
     removeJobFromQueueUponDeparture (job, time);
     if (this.jobQueue.contains (job)
@@ -1422,8 +1539,6 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalStateException ();
     addPendingNotification (SimQueueSimpleEventType.DEPARTURE, new SimJQEvent.Departure<> (job, this, time));
     rescheduleAfterDeparture (job, time);
-    if (isTopLevel)
-      fireAndLockPendingNotifications ();
   }
   
   /** Removes a job from the internal queues upon departure.
@@ -1434,7 +1549,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * job (if needed) from the {@link #jobsInServiceArea} set (this is also checked).
    * 
    * <p>
-   * Implementations must <i>not</i>reschedule (e.g., events for <i>other</i> jobs on the event list),
+   * Implementations must <i>not</i> reschedule (e.g., events for <i>other</i> jobs on the event list),
    * but instead wait for the imminent invocation of
    * {@link #rescheduleAfterDeparture} for that.
    * 
@@ -1458,7 +1573,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * and that this method is invoked immediately after {@link #removeJobFromQueueUponDeparture}.
    * 
    * <p>
-   * Implementations must <i>not</i> insert {@link SimQueueSimpleEventType#DEPARTURE} notification,
+   * Implementations must <i>not</i> insert a {@link SimQueueSimpleEventType#DEPARTURE} notification,
    * as this is already done by the base class {@link AbstractSimQueue}.
    * They must, however, add appropriate notifications for other internal state-changing events.
    * 
