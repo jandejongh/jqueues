@@ -318,10 +318,27 @@ extends AbstractServerlessSimQueue<J, Q>
   /** Notification of rate-limit expiration from an internally-scheduled {@link RateLimitExpirationEvent}.
    * 
    * <p>
+   * Invokes {@link #update}
+   * and {@link #clearAndUnlockPendingNotificationsIfLocked},
+   * insisting to be a top-level event (at the expense of an {@link IllegalStateException}).
+   * 
+   * <p>
    * If there are job in the waiting area, it makes depart the first one.
    * Otherwise, it invokes {@link #triggerPotentialNewStartArmed}.
    * 
+   * <p>
+   * Finally, it notifies listeners through {@link #fireAndLockPendingNotifications}.
+   * 
    * @param event The event that invoked us through its {@link SimEventAction}, non-{@code null}.
+   * 
+   * @see RateLimitExpirationEvent
+   * @see #eventsScheduled
+   * @see #isRateLimited
+   * @see #jobQueue
+   * @see #depart
+   * @see #triggerPotentialNewStartArmed
+   * @see #clearAndUnlockPendingNotificationsIfLocked
+   * @see #fireAndLockPendingNotifications
    * 
    */
   protected final void rateLimitExpiration (final RateLimitExpirationEvent<Q> event)
@@ -335,11 +352,16 @@ extends AbstractServerlessSimQueue<J, Q>
       throw new IllegalStateException ();
     this.isRateLimited = false;
     final double time = event.getTime ();
+    update (time);
+    final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
+    if (! isTopLevel)
+      throw new IllegalStateException ();
     // Note: all jobs present are in waiting area; might as well check 'jobQueue' directly.
     if (! this.jobQueue.isEmpty ())
       depart (time, getFirstJobInWaitingArea ());
     else
       triggerPotentialNewStartArmed (time);
+    fireAndLockPendingNotifications ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
