@@ -2,6 +2,7 @@ package nl.jdj.jqueues.r5.entity.jq.queue.composite;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -1008,36 +1009,33 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * 
    * <p>
    * In the {@link AbstractSimQueueComposite},
-   * a (real) job can <i>only</i> be dropped because
-   * its delegate job is dropped on one of the sub-queues, or perhaps due to some other sub-queue-related event,
-   * see {@link #processSubQueueNotifications},
-   * and the semantics of this composite queue require the real job to be dropped as well
-   * (this is not a general requirement, but we impose it on {@link AbstractSimQueueComposite}).
-   * The notification callback relies on {@link #drop} to perform the drop.
-   * 
-   * <p>
-   * The essential notion is that the delegate job has already left the sub-queue system when we are called,
-   * hence no action is required to remove it from there.
-   * Another way of saying this is that an {@link AbstractSimQueueComposite}
-   * <i>never</i> decides <i>by itself</i> to drop a job,
-   * but only in response to event notifications (drops) from its sub-queues.
-   * If the feature of "locally initiated drops" is desired,
-   * the drop call-backs need to be retrofitted conform the approach with the
-   * {@link #removeJobFromQueueUponRevokation} and {@link #rescheduleAfterRevokation} combo.
+   * a (real) job can <i>only</i> be dropped because of one of the following two reasons:
+   * <ul>
+   * <li>Its delegate job is dropped (autonomously) on one of the sub-queues,
+   *     see {@link #processSubQueueNotifications}.
+   *     In this case,
+   *     the delegate job has already left the sub-queue system when we are called,
+   *     hence no action is required to remove it from there.
+   *     All we have to do is invoke {@link #removeJobsFromQueueLocal}.
+   * <li>The composite queue (us) enforces dropping the job.
+   *     In this case, the delegate job is <i>may</i> still be present on a sub-queue,
+   *     and we have to forcibly revoke it on the sub-queue if so.
+   *     We abuse {@link #removeJobFromQueueUponRevokation} to initiate the revocation
+   *     (note that we cannot directly invoke {@link #revoke} or {@link #autoRevoke} on the composite queue
+   *     as that would trigger an incorrect revocation notification).
+   * </ul>
    * 
    * <p>
    * This method ignores the drop-destination queue, see {@link #getDropDestinationQueue}.
    * Following the contract of {@link AbstractSimQueue#drop},
    * the drop of the (real) job is inevitable (by) now.
    * 
-   * <p>
-   * All we have to do is invoke {@link #removeJobsFromQueueLocal}.
-   * 
-   * @throws IllegalStateException If the delegate job is still visiting a (any) queue.
+   * @throws IllegalStateException If the real or delegate job does not exits.
    * 
    * @see #drop
-   * @see #removeJobsFromQueueLocal
    * @see #rescheduleAfterDrop
+   * @see #removeJobFromQueueUponRevokation
+   * @see #removeJobsFromQueueLocal
    * @see #getDelegateJob(SimJob)
    * @see SimJob#getQueue
    * 
@@ -1048,18 +1046,22 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
     final DJ delegateJob = getDelegateJob (job);
     final DQ subQueue = (DQ) delegateJob.getQueue ();
     if (subQueue != null)
-      throw new IllegalStateException ();
-    removeJobsFromQueueLocal (job, delegateJob);
+      removeJobFromQueueUponRevokation (job, time, true);
+    else
+      removeJobsFromQueueLocal (job, delegateJob);
   }
 
-  /** Empty, nothing to do.
+  /** Enforces the scheduled revocation on the sub-queue, if applicable.
    * 
    * @see #removeJobFromQueueUponDrop
+   * @see #rescheduleAfterRevokation
    * 
    */
   @Override
   protected final void rescheduleAfterDrop (final J job, final double time)
   {
+    if (this.pendingDelegateRevocationEvent != null)
+      rescheduleAfterRevokation (job, time, true);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1440,18 +1442,28 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * 
    * <p>
    * In the {@link AbstractSimQueueComposite},
-   * a (real) job can only depart as a result from an event (notification) of one of its sub-queues.
-   * Refer to {@link #removeJobFromQueueUponDrop} for a more detailed explanation
-   * on the rationale behind this and behind the action taken here...
+   * a (real) job can <i>only</i> depart because of one of the following two reasons:
+   * <ul>
+   * <li>Its delegate job departs (autonomously) on one of the sub-queues and there is no successor queue,
+   *     see {@link #processSubQueueNotifications}.
+   *     In this case,
+   *     the delegate job has already left the sub-queue system when we are called,
+   *     hence no action is required to remove it from there.
+   *     All we have to do is invoke {@link #removeJobsFromQueueLocal}.
+   * <li>The composite queue (us) enforces departure the job.
+   *     In this case, the delegate job is <i>may</i> still be present on a sub-queue,
+   *     and we have to forcibly revoke it on the sub-queue if so.
+   *     We abuse {@link #removeJobFromQueueUponRevokation} to initiate the revocation
+   *     (note that we cannot directly invoke {@link #revoke} or {@link #autoRevoke} on the composite queue
+   *     as that would trigger an incorrect revocation notification).
+   * </ul>
    * 
-   * <p>
-   * All we have to do is invoke {@link #removeJobsFromQueueLocal}.
-   * 
-   * @throws IllegalStateException If the delegate job is still visiting a (any) queue.
+   * @throws IllegalStateException If the real or delegate job does not exits.
    * 
    * @see #depart
-   * @see #removeJobsFromQueueLocal
    * @see #rescheduleAfterDeparture
+   * @see #removeJobFromQueueUponRevokation
+   * @see #removeJobsFromQueueLocal
    * @see #getDelegateJob(SimJob)
    * @see SimJob#getQueue
    * 
@@ -1462,19 +1474,169 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
     final DJ delegateJob = getDelegateJob (departingJob);
     final DQ subQueue = (DQ) delegateJob.getQueue ();
     if (subQueue != null)
-      throw new IllegalStateException ();
-    removeJobsFromQueueLocal (departingJob, delegateJob);
+      removeJobFromQueueUponRevokation (departingJob, time, true);
+    else
+      removeJobsFromQueueLocal (departingJob, delegateJob);
   }
 
-  /** Empty, nothing to do.
+  /** Enforces the scheduled revocation on the sub-queue, if applicable.
    * 
    * @see #removeJobFromQueueUponDeparture
+   * @see #rescheduleAfterRevokation
    * 
    */
   @Override
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
-    ; /* NOTHING TO DO */
+    if (this.pendingDelegateRevocationEvent != null)
+      rescheduleAfterRevokation (departedJob, time, true);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE SUB-NOTIFICATION PROCESSORS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** An object capable of processing a single sub-notification of a sub-queue.
+   * 
+   * <p>
+   * In {@link AbstractSimQueue}, sub-queue notifications are processed through {@link #processSubQueueNotifications},
+   * which is final.
+   * If a sub-class needs access to these notifications, it can register an object of this type
+   * through {@link #registerSubQueueSubNotificationProcessor}.
+   * 
+   * @param <DJ> The delegate-job type.
+   * @param <DQ> The queue-type for delegate jobs.
+   * 
+   */
+  @FunctionalInterface
+  protected interface SubQueueSubNotificationProcessor<DJ extends SimJob, DQ extends SimQueue> 
+  {
+    
+    /** Processes the sub-notification from a sub-queue.
+     * 
+     * @param time             The time at which the sub-queue event occurred.
+     * @param notificationType The notification time of the sub-queue event.
+     * @param event            The event from the sub-queue.
+     * @param subQueue         The sub-queue at which the event occurred,
+     * @param delegateJob      The (optional) delegate job involved with the event.
+     * 
+     */
+    void process
+           (double time,
+            SimEntitySimpleEventType.Member notificationType,
+            SimJQEvent<DJ, DQ> event,
+            DQ subQueue,
+            DJ delegateJob);
+    
+  }
+  
+  private final Map<SimEntitySimpleEventType.Member, Map<DQ, Set<SubQueueSubNotificationProcessor<DJ, DQ>>>>
+    subQueueSubNotificationProcessors = new LinkedHashMap<> ();
+  
+  /** Registers a processor on a sub-notification from a sub-queue.
+   * 
+   * @param notificationType The notification type the processor is interested in.
+   * @param subQueue         The sub-queue the processor is interested in.
+   * @param processor        The (actual) processor.
+   * 
+   * @throws IllegalArgumentException If any of the arguments is {@code null},
+   *                                  the processor appears a already registered for these parameters,
+   *                                  or is otherwise illegal.
+   * 
+   * @see SubQueueSubNotificationProcessor
+   * @see #unregisterSubQueueSubNotificationProcessor
+   * 
+   */
+  protected final void registerSubQueueSubNotificationProcessor
+  (final SimEntitySimpleEventType.Member notificationType,
+   final DQ subQueue,
+   final SubQueueSubNotificationProcessor<DJ, DQ> processor)
+  {
+    if (notificationType == null || subQueue == null || processor == null)
+      throw new IllegalArgumentException ();
+    if (notificationType == SimEntitySimpleEventType.RESET)
+      throw new IllegalArgumentException ();
+    if (! this.subQueueSubNotificationProcessors.containsKey (notificationType))
+      this.subQueueSubNotificationProcessors.put (notificationType, new LinkedHashMap<> ());
+    if (! this.subQueueSubNotificationProcessors.get (notificationType).containsKey (subQueue))
+      this.subQueueSubNotificationProcessors.get (notificationType).put (subQueue, new LinkedHashSet<> ());
+    if (this.subQueueSubNotificationProcessors.get (notificationType).get (subQueue).contains (processor))
+      throw new IllegalArgumentException ();
+    this.subQueueSubNotificationProcessors.get (notificationType).get (subQueue).add (processor);
+  }
+  
+  /** Unregisters a processor on a sub-notification from a sub-queue.
+   * 
+   * @param notificationType The notification type the processor was registered for.
+   * @param subQueue         The sub-queue the processor was registered for.
+   * @param processor        The (actual) processor.
+   * 
+   * @throws IllegalArgumentException If any of the arguments is {@code null}, the processor appears unregistered,
+   *                                  or is otherwise illegal.
+   * 
+   * @see SubQueueSubNotificationProcessor
+   * @see #registerSubQueueSubNotificationProcessor
+   * 
+   */
+  protected final void unregisterSubQueueSubNotificationProcessor
+  (final SimEntitySimpleEventType.Member notificationType,
+   final DQ subQueue,
+   final SubQueueSubNotificationProcessor<DJ, DQ> processor)
+  {
+    if (notificationType == null || subQueue == null || processor == null)
+      throw new IllegalArgumentException ();
+    if (! this.subQueueSubNotificationProcessors.containsKey (notificationType))
+      throw new IllegalArgumentException ();
+    if (! this.subQueueSubNotificationProcessors.get (notificationType).containsKey (subQueue))
+      throw new IllegalArgumentException ();
+    if (! this.subQueueSubNotificationProcessors.get (notificationType).get (subQueue).contains (processor))
+      throw new IllegalArgumentException ();
+    this.subQueueSubNotificationProcessors.get (notificationType).get (subQueue).remove (processor);
+    if (this.subQueueSubNotificationProcessors.get (notificationType).get (subQueue).isEmpty ())
+    {
+      this.subQueueSubNotificationProcessors.get (notificationType).remove (subQueue);
+      if (this.subQueueSubNotificationProcessors.get (notificationType).isEmpty ())
+        this.subQueueSubNotificationProcessors.remove (notificationType);
+    }
+  }
+
+  /** Activates suitable registered {@link SubQueueSubNotificationProcessor}s from our sub-queue notification processor.
+   * 
+   * @param time             The time at which the sub-queue event occurred.
+   * @param notificationType The notification time of the sub-queue event.
+   * @param event            The event from the sub-queue.
+   * @param subQueue         The sub-queue at which the event occurred,
+   * @param delegateJob      The (optional) delegate job involved with the event.
+   * 
+   * @see SubQueueSubNotificationProcessor
+   * @see SubQueueSubNotificationProcessor#process
+   * 
+   */
+  protected final void activateSubQueueSubNotificationProcessors
+  (final double time,
+   final SimEntitySimpleEventType.Member notificationType,
+   SimJQEvent<DJ, DQ> event,
+   DQ subQueue,
+   DJ delegateJob)
+  {
+    if (notificationType == SimEntitySimpleEventType.RESET)
+      return;
+    if (time != getLastUpdateTime ()
+    ||  notificationType == null
+    ||  event == null
+    ||  subQueue == null
+    ||  event.getQueue () != subQueue
+    ||  event.getJob () != delegateJob)
+      throw new IllegalArgumentException ();
+    if (! this.subQueueSubNotificationProcessors.containsKey (notificationType))
+      return;
+    if (! this.subQueueSubNotificationProcessors.get (notificationType).containsKey (subQueue))
+      return;
+    for (final SubQueueSubNotificationProcessor<DJ, DQ> processor :
+      this.subQueueSubNotificationProcessors.get (notificationType).get (subQueue))
+        processor.process (time, notificationType, event, subQueue, delegateJob);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1500,6 +1662,8 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * <p>
    * However, before processing any event, it checks for {@link SimEntitySimpleEventType#RESET}
    * (sub-)notifications. If it finds <i>any</i>, the notifications list is cleared and immediate return from this method follows.
+   * A reset event, however, is subjected to rigorous sanity checks; notably, it has to be an isolated atomic event.
+   * Failure of the sanity checks will lead to an {@link IllegalStateException}.
    * 
    * <p>
    * Otherwise, this method processes the notifications as described below;
@@ -1519,6 +1683,8 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * each of which is processed in turn as follows:
    * <ul>
    * <li>With {@link SimEntitySimpleEventType#RESET}, impossible, see above; throws an {@link IllegalStateException}.
+   * <li>With <i>any</i> other event, registered sub-queue sub-notification processors are invoked through
+   *     {@link #activateSubQueueSubNotificationProcessors}.
    * <li>With queue-access vacation related events,
    *          {@link SimQueueSimpleEventType#QUEUE_ACCESS_VACATION},
    *          {@link SimQueueSimpleEventType#QAV_START},
@@ -1635,17 +1801,23 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
     //
     // Special treatment of RESET notifications: clear the list of notifications, ignore them, and return immediately.
     //
+    // Either the sub-queue was reset from the event list, and we will follow shortly,
+    // or we were reset ourselves, and forced this upon our sub-queues.
+    // Either way, the reset notification has to be a fully isolated one; it cannot be issued in conjunction with
+    // other sub-queue events, so we make a rigorous check.
+    //
+    // However, in the end, we are safe to ignore the event here.
+    //
     if (MultiSimQueueNotificationProcessor.contains (notifications, SimEntitySimpleEventType.RESET))
     {
+      if (notifications.size () != 1
+      ||  notifications.get (0).getSubNotifications ().size () != 1
+      || ! (((SimEntityEvent) notifications.get (0).getSubNotifications ().get (0).get (SimEntitySimpleEventType.RESET))
+            instanceof SimEntityEvent.Reset))
+        throw new IllegalStateException ();
       notifications.clear ();
       return;
     }
-    //
-    // XXX There used to be an additional sanity check to make sure that a RESET notification would be isolated; something like
-    //       if (notification.getSubNotifications ().size () > 1)
-    //         throw new IllegalStateException ();
-    // XXX Not sure why this check was needed...
-    //
     //
     // Make sure we capture a top-level event, so we can keep our own notifications atomic.
     //
@@ -1705,6 +1877,10 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
           if (notificationType != SimQueueSimpleEventType.REVOCATION)
             getRealJob (job);
         }
+        //
+        // Activate our registered sub-queue sub-notification processors.
+        //
+        activateSubQueueSubNotificationProcessors (notificationTime, notificationType, notificationEvent, subQueue, job);
         if (notificationType == SimEntitySimpleEventType.RESET)
           //
           // If we receive a RESET notification at this point, we throw an exception, since we already took care of RESET
