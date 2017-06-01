@@ -8,17 +8,16 @@ import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.JacksonSimQueueNetwork;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.Jackson;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.AbstractParallelSimQueues;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.jsq.JSQ;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.pattern.PatternParallelSimQueues;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Parallel queues with random selection policy.
  *
  * <p>
  * One of the sub-queue is selected at random (independently), with equal probabilities.
- * For non-uniform selection distributions, consider {@link JacksonSimQueueNetwork},
+ * For non-uniform selection distributions, consider {@link Jackson},
  * of which this composite queue is a special case.
  * 
  * @param <DJ> The delegate-job type.
@@ -26,7 +25,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <J>  The job type.
  * @param <Q>  The queue type for jobs.
  *
- * @see JacksonSimQueueNetwork
+ * @see Jackson
  * 
  * @author Jan de Jongh, TNO
  * 
@@ -120,10 +119,10 @@ public class RandomParallelSimQueues
       delegateSimJobFactory);
   }
 
-  /** Returns a new {@link PatternParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
+  /** Returns a new {@link RandomParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
    *  a new RNG, and the same delegate-job factory.
    * 
-   * @return A new {@link PatternParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
+   * @return A new {@link RandomParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
    *           a new RNG, and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the encapsulated queues could not be copied through {@link SimQueue#getCopySimQueue}.

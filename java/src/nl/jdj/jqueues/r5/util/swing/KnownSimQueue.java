@@ -137,7 +137,7 @@ public enum KnownSimQueue
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   JACKSON        ("Jackson", true,
-                  nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.JacksonSimQueueNetwork.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.Jackson.class,
                   GeneratorProfile.UNKNOWN,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,

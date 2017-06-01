@@ -33,8 +33,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class JacksonSimQueueNetwork
-  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends JacksonSimQueueNetwork>
+public class Jackson
+  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends Jackson>
   extends AbstractSimQueueComposite<DJ, DQ, J, Q>
 {
   
@@ -73,7 +73,7 @@ public class JacksonSimQueueNetwork
    * @see StartModel
    * 
    */
-  public JacksonSimQueueNetwork
+  public Jackson
   (final SimEventList eventList,
    final Set<DQ> queues,
    final double[] pdfArrival,
@@ -88,11 +88,11 @@ public class JacksonSimQueueNetwork
       StartModel.LOCAL);
   }
 
-  /** Returns a new {@link JacksonSimQueueNetwork} object on the same {@link SimEventList} with copies of the sub-queues and
+  /** Returns a new {@link Jackson} object on the same {@link SimEventList} with copies of the sub-queues and
    *  probability arguments, a new RNG, and the same delegate-job factory.
    * 
-   * @return A new {@link JacksonSimQueueNetwork} object on the same {@link SimEventList} with copies of the sub-queues and
-   *  probability arguments, a new RNG, and the same delegate-job factory.
+   * @return A new {@link Jackson} object on the same {@link SimEventList} with copies of the sub-queues and
+   *         probability arguments, a new RNG, and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the encapsulated queues could not be copied through {@link SimQueue#getCopySimQueue}.
    * 
@@ -104,10 +104,10 @@ public class JacksonSimQueueNetwork
    * 
    */
   @Override
-  public JacksonSimQueueNetwork<DJ, DQ, J, Q> getCopySimQueue ()
+  public Jackson<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final Set<DQ> queuesCopy = getCopySubSimQueues ();
-    return new JacksonSimQueueNetwork<>
+    return new Jackson<>
       (getEventList (),
         queuesCopy,
         ((JacksonSimQueueSelector) getSimQueueSelector ()).getPdfArrival (),

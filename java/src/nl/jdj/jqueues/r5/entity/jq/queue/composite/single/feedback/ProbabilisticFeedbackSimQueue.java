@@ -6,13 +6,13 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.JacksonSimQueueNetwork;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.Jackson;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Feedback queue with fixed probability of feedback to the embedded {@link SimQueue}.
  * 
  * <p>
- * This composite queue is a special case of a {@link JacksonSimQueueNetwork}.
+ * This composite queue is a special case of a {@link Jackson}.
  * 
  * <p>
  * Internally, a suitable {@link SimQueueFeedbackController} is created from the feedback probability and a
@@ -23,7 +23,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <J>  The job type.
  * @param <Q>  The queue type for jobs.
  * 
- * @see JacksonSimQueueNetwork
+ * @see Jackson
  * @see Random
  * 
  * @author Jan de Jongh, TNO

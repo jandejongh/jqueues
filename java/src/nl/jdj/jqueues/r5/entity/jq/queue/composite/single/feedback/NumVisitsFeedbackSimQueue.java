@@ -54,7 +54,7 @@ public class NumVisitsFeedbackSimQueue
         -> visits < numberOfVisits;
   }
   
-  /** Creates a black feedback queue given an event list a queue and the number of visits required.
+  /** Creates a feedback queue given an event list a queue and the number of visits required.
    *
    * @param eventList             The event list to use.
    * @param queue                 The queue, non-<code>null</code>.
