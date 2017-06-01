@@ -10,7 +10,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.JacksonSimQueueNetwork;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.AbstractParallelSimQueues;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.jsq.JoinShortestSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.jsq.JSQ;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.pattern.PatternParallelSimQueues;
 import nl.jdj.jsimulation.r5.SimEventList;
 
@@ -78,7 +78,7 @@ public class RandomParallelSimQueues
       {
         if (job == null)
           throw new IllegalArgumentException ();
-        return JoinShortestSimQueue.getRandomSimQueueFromSet (queues, rng);
+        return JSQ.getRandomSimQueueFromSet (queues, rng);
       }
       @Override
       public final SimQueue selectNextQueue (final double time, final SimJob job, final SimQueue previousQueue)

@@ -38,8 +38,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class JoinShortestSimQueue
-<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends JoinShortestSimQueue>
+public class JSQ
+<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends JSQ>
   extends AbstractParallelSimQueues<DJ, DQ, J, Q>
 {
 
@@ -117,7 +117,7 @@ public class JoinShortestSimQueue
    * @see Random
    * 
    */
-  public JoinShortestSimQueue
+  public JSQ
   (final SimEventList eventList,
     final Set<DQ> queues,
     final DelegateSimJobFactory delegateSimJobFactory,
@@ -130,10 +130,10 @@ public class JoinShortestSimQueue
     this.onlyWaitingJobs = onlyWaitingJobs;
   }
 
-  /** Returns a new {@link JoinShortestSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
+  /** Returns a new {@link JSQ} object on the same {@link SimEventList} with copies of the sub-queues,
    *  the same <code>onlyWaitingJobs</code> argument, a new RNG, and the same delegate-job factory.
    * 
-   * @return A new {@link JoinShortestSimQueue} object on the same {@link SimEventList} with copies of the sub-queues,
+   * @return A new {@link JSQ} object on the same {@link SimEventList} with copies of the sub-queues,
    *  the same <code>onlyWaitingJobs</code> argument, a new RNG, and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the encapsulated queues could not be copied through {@link SimQueue#getCopySimQueue}.
@@ -145,10 +145,10 @@ public class JoinShortestSimQueue
    * 
    */
   @Override
-  public JoinShortestSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  public JSQ<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final Set<DQ> queuesCopy = getCopySubSimQueues ();
-    return new JoinShortestSimQueue<>
+    return new JSQ<>
       (getEventList (), queuesCopy, getDelegateSimJobFactory (), isOnlyWaitingJobs (), null);
   }
   
