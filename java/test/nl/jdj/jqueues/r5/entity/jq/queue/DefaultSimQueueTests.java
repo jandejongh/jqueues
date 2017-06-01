@@ -29,7 +29,7 @@ import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** Default tests for {@link SimQueue}s.
+/** Default (static) tests for {@link SimQueue}s.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -43,6 +43,13 @@ import nl.jdj.jsimulation.r5.SimEventList;
 public class DefaultSimQueueTests
 {
 
+  /** Prevents instantiation.
+   * 
+   */
+  private DefaultSimQueueTests ()
+  {
+  }
+  
   public final static int NUMBER_OF_PASSES = 2;  
   
   public static <Q extends SimQueue> boolean doSimQueueTests_SQ_SV
@@ -226,6 +233,8 @@ public class DefaultSimQueueTests
           // Create a test string to be passed to the matching functions.
           final String testString =
                                            "    Load Factory   : " + klf
+            + "\n"
+            +                              "      [Description]: " + klf.getLoadFactory ().getDescription ()
             + "\n"
             +                              "    Pass           : " + pass
             + "\n"
