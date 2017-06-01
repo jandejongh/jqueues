@@ -35,6 +35,12 @@ public class LoadFactory_SQ_SV_0013<J extends SimJob, Q extends SimQueue>
 extends LoadFactory_SQ_SV_0010<J, Q>
 {
 
+  @Override
+  public String getDescription ()
+  {
+    return "Standard pattern (0010) with random sac=0/1/2 settings @t=6.75, @t=13.75, @t=20.75, ..., with upto 0.001 jitter.";
+  }
+
   /** Generates the load.
    * 
    * <p>

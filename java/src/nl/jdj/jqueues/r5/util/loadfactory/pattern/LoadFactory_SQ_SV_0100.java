@@ -40,6 +40,12 @@ public class LoadFactory_SQ_SV_0100<J extends SimJob, Q extends SimQueue>
 extends AbstractLoadFactory_SQ_SV<J, Q>
 {
 
+  @Override
+  public String getDescription ()
+  {
+    return "Jobs with U[0.95, 9.5] requested service times and random Double QoS values (incl. +/- infinity).";
+  }
+
   private final Random rngRequestedServiceTime = new Random ();
   
   /** Creates a suitable map for the requested service time for a job visit to a queue.

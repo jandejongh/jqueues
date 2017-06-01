@@ -37,6 +37,12 @@ public class LoadFactory_SQ_SV_0010<J extends SimJob, Q extends SimQueue>
 extends AbstractLoadFactory_SQ_SV<J, Q>
 {
 
+  @Override
+  public String getDescription ()
+  {
+    return "Standard test load pattern A1=1/S1=1, A2=2/S2=2, ..., with optional service-time jitter.";
+  }
+
   /** A load-factory hint enforcing jitter on the service-time requirement of jobs (e.g., in order to avoid ambiguities).
    * 
    */

@@ -36,6 +36,12 @@ public class LoadFactory_SQ_SV_0002<J extends SimJob, Q extends SimQueue>
 extends AbstractLoadFactory_SQ_SV<J, Q>
 {
 
+  @Override
+  public String getDescription ()
+  {
+    return "A single job with unity index and zero requested service time arriving at t=0.";
+  }
+
   /** Creates a suitable map for the requested service time for a job visit to a queue.
    * 
    * <p>

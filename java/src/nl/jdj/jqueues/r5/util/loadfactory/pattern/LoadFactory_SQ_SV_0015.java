@@ -36,6 +36,12 @@ public class LoadFactory_SQ_SV_0015<J extends SimJob, Q extends SimQueue>
 extends LoadFactory_SQ_SV_0002<J, Q>
 {
 
+  @Override
+  public String getDescription ()
+  {
+    return "Three jobs arrive (t=1, 2, 3) during zero sac, as well as revocation requests (t=4, 5) (from the waiting area).";
+  }
+
   /** Generates the load.
    * 
    * <p>

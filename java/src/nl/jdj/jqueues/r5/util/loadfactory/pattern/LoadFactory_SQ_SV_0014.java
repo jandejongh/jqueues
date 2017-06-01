@@ -39,6 +39,12 @@ public class LoadFactory_SQ_SV_0014<J extends SimJob, Q extends SimQueue>
 extends LoadFactory_SQ_SV_0010<J, Q>
 {
 
+  @Override
+  public String getDescription ()
+  {
+    return "Standard pattern (0010) with random (0, 1, 5, infty) gate-passage-credits settings @t=11.19, @t=22.19, @t=33.19, ....";
+  }
+
   /** A load-factory hint that forces gate-passage credits events
    *  (irrespective of the auto-detection of the queue's capabilities).
    * 

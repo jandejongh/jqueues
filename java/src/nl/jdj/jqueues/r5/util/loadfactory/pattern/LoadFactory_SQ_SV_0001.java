@@ -33,6 +33,12 @@ public class LoadFactory_SQ_SV_0001<J extends SimJob, Q extends SimQueue>
 extends AbstractLoadFactory_SQ_SV<J, Q>
 {
 
+  @Override
+  public String getDescription ()
+  {
+    return "Empty workload.";
+  }
+
   /** Generates the load.
    * 
    * <p>

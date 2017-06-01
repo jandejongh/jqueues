@@ -34,6 +34,12 @@ public class LoadFactory_SQ_SV_0011<J extends SimJob, Q extends SimQueue>
 extends LoadFactory_SQ_SV_0010<J, Q>
 {
 
+  @Override
+  public String getDescription ()
+  {
+    return "Standard pattern (0010) with qav from 2.5-3.5, 5.5-6.5, etc., dropping every third job.";
+  }
+
   /** Generates the load.
    * 
    * <p>

@@ -34,6 +34,12 @@ public class LoadFactory_SQ_SV_0005<J extends SimJob, Q extends SimQueue>
 extends LoadFactory_SQ_SV_0002<J, Q>
 {
 
+  @Override
+  public String getDescription ()
+  {
+    return "A few zero-service time jobs subject to zero/low server-access credits.";
+  }
+
   /** Generates the load.
    * 
    * <p>

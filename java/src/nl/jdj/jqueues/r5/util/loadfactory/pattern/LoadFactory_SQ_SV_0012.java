@@ -35,6 +35,12 @@ public class LoadFactory_SQ_SV_0012<J extends SimJob, Q extends SimQueue>
 extends LoadFactory_SQ_SV_0010<J, Q>
 {
 
+  @Override
+  public String getDescription ()
+  {
+    return "Standard pattern (0010) with revocation request for every 5th job with random request time and random interrupt flag.";
+  }
+
   /** Generates the load.
    * 
    * <p>
