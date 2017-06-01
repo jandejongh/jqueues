@@ -115,7 +115,6 @@ public class DropCollectorSimQueue
   @Override
   public DropCollectorSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
   {
-    // XXX Not correct for white composite queues?
     final SimQueue<DJ, DQ> mainQueueCopy = getMainQueue ().getCopySimQueue ();
     final SimQueue<DJ, DQ> dropQueueCopy = getDropQueue ().getCopySimQueue ();
     return new DropCollectorSimQueue<> (getEventList (), mainQueueCopy, dropQueueCopy, getDelegateSimJobFactory ());
