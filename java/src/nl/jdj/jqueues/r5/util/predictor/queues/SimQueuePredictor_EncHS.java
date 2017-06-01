@@ -15,19 +15,15 @@ import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorHideStartSimQueue;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
-import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
-import nl.jdj.jqueues.r5.extensions.composite.SimQueueCompositeStateHandler;
+import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.DefaultSimQueuePrediction_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionInvalidInputException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePrediction_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
-import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
-import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
-import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link EncapsulatorHideStartSimQueue}.
  *
@@ -41,16 +37,15 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
  * 
  */
 public class SimQueuePredictor_EncHS
-extends AbstractSimQueuePredictor<EncapsulatorHideStartSimQueue>
+extends AbstractSimQueuePredictor_Composite<EncapsulatorHideStartSimQueue>
 implements SimQueuePredictor<EncapsulatorHideStartSimQueue>
 {
   
   final SimQueuePredictor encQueuePredictor;
   
-  public SimQueuePredictor_EncHS (final SimQueuePredictor encQueuePredictor)
+  public SimQueuePredictor_EncHS (final AbstractSimQueuePredictor encQueuePredictor)
   {
-    if (encQueuePredictor == null)
-      throw new IllegalArgumentException ();
+    super (Collections.singletonList (encQueuePredictor));
     this.encQueuePredictor = encQueuePredictor;
   }
 
@@ -58,18 +53,6 @@ implements SimQueuePredictor<EncapsulatorHideStartSimQueue>
   public String toString ()
   {
     return "Predictor[EncHS[?]]";
-  }
-
-  @Override
-  public SimQueueState<SimJob, EncapsulatorHideStartSimQueue> createQueueState
-  (final EncapsulatorHideStartSimQueue queue,
-   final boolean isROEL)
-  {
-    final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
-    final SimQueue encQueue = queue.getEncapsulatedQueue ();
-    final DefaultSimQueueState encQueueState = (DefaultSimQueueState) this.encQueuePredictor.createQueueState (encQueue, isROEL);
-    queueState.registerHandler (new SimQueueCompositeStateHandler (queue.getQueues (), Collections.singleton (encQueueState)));
-    return queueState;
   }
 
   @Override
@@ -180,46 +163,4 @@ implements SimQueuePredictor<EncapsulatorHideStartSimQueue>
     throw new UnsupportedOperationException ();
   }  
 
-  @Override
-  public double getNextQueueEventTimeBeyond
-  (final EncapsulatorHideStartSimQueue queue,
-   final SimQueueState<SimJob, EncapsulatorHideStartSimQueue> queueState,
-   final Set<SimEntitySimpleEventType.Member> queueEventTypes)
-  throws SimQueuePredictionException
-  {
-    throw new UnsupportedOperationException ();
-  }
-
-  @Override
-  public void updateToTime
-  (final EncapsulatorHideStartSimQueue queue,
-   final SimQueueState queueState,
-   final double newTime)
-  {
-    throw new UnsupportedOperationException ();
-  }
-
-  @Override
-  public void doWorkloadEvents_SQ_SV_ROEL_U
-  (final EncapsulatorHideStartSimQueue queue,
-   final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
-   final SimQueueState<SimJob, EncapsulatorHideStartSimQueue> queueState,
-   final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
-   final Set<JobQueueVisitLog<SimJob, EncapsulatorHideStartSimQueue>> visitLogsSet)
-  throws SimQueuePredictionException, WorkloadScheduleException
-  {
-    throw new UnsupportedOperationException ();
-  }
-
-  @Override
-  public void doQueueEvents_SQ_SV_ROEL_U
-  (final EncapsulatorHideStartSimQueue queue,
-   final SimQueueState<SimJob, EncapsulatorHideStartSimQueue> queueState,
-   final Set<SimEntitySimpleEventType.Member> queueEventTypes,
-   final Set<JobQueueVisitLog<SimJob, EncapsulatorHideStartSimQueue>> visitLogsSet)
-  throws SimQueuePredictionException
-  {
-    throw new UnsupportedOperationException ();
-  }
-  
 }
