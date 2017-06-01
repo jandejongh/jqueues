@@ -1898,10 +1898,6 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
             //
             if (! getQueues ().contains (getDropDestinationQueue ()))
               throw new RuntimeException ();
-            //
-            // XXX Special care is required with white composite queues here...
-            // What is another white composite queue with this sub-queue has a drop destination queue as well?
-            //
             getDropDestinationQueue ().arrive (notificationTime, job);
           }
           else
