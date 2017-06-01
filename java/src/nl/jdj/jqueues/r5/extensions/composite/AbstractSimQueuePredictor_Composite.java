@@ -14,6 +14,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
@@ -243,9 +244,26 @@ extends AbstractSimQueuePredictor<Q>
       final Set<SimJob> arrivals = new HashSet<> ();
       arrivals.add (job);
       queueState.doArrivals (time, arrivals, visitLogsSet); // Takes care of qav.
-      if (queueState.getJobs ().contains (job)
-      && (queueState.getServerAccessCredits () >= 1))
-        startJobs (time, queue, queueState, arrivals, visitLogsSet);
+      if (queueState.getJobs ().contains (job))
+        switch (queue.getStartModel ())
+        {
+          case LOCAL:
+            if (queueState.getServerAccessCredits () >= 1)
+              startJobs (time, queue, queueState, arrivals, visitLogsSet);
+            break;
+          case ENCAPSULATOR_QUEUE:
+          case ENCAPSULATOR_HIDE_START_QUEUE:
+            final SimQueue encQueue = (SimQueue) queue.getQueues ().iterator ().next ();
+            if (! (job instanceof DefaultSimJob))
+              throw new UnsupportedOperationException ();
+            ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (encQueue, job.getServiceTime (queue));
+            final SubQueueSimpleEvent encQueueEvent =
+              new SubQueueSimpleEvent (encQueue, SimQueueSimpleEventType.ARRIVAL, null, job, null);
+            doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (encQueueEvent), visitLogsSet);
+            break;
+          case COMPRESSED_TANDEM_2_QUEUE:
+            throw new UnsupportedOperationException ();
+        }
     }
     else if (eventType == SimQueueSimpleEventType.REVOCATION)
     {
@@ -283,18 +301,34 @@ extends AbstractSimQueuePredictor<Q>
       final int oldSac = queueState.getServerAccessCredits ();
       final int newSac = workloadSchedule.getServerAccessCreditsMap_SQ_SV_ROEL_U ().get (time);
       queueState.setServerAccessCredits (time, newSac);
-      if (oldSac == 0 && newSac > 0)
+      switch (queue.getStartModel ())
       {
-        final Set<SimJob> starters = new LinkedHashSet<> ();
-        final Iterator<SimJob> i_waiters = queueState.getJobsInWaitingAreaOrdered ().iterator ();
-        int remainingSac = newSac;
-        while ((remainingSac == Integer.MAX_VALUE || remainingSac > 0) && i_waiters.hasNext ())
-        {
-          starters.add (i_waiters.next ());
-          if (remainingSac != Integer.MAX_VALUE)
-            remainingSac--;
-        }
-        startJobs (time, queue, queueState, starters, visitLogsSet);
+        case LOCAL:
+          if (oldSac == 0 && newSac > 0)
+          {
+            final Set<SimJob> starters = new LinkedHashSet<> ();
+            final Iterator<SimJob> i_waiters = queueState.getJobsInWaitingAreaOrdered ().iterator ();
+            int remainingSac = newSac;
+            while ((remainingSac == Integer.MAX_VALUE || remainingSac > 0) && i_waiters.hasNext ())
+            {
+              starters.add (i_waiters.next ());
+              if (remainingSac != Integer.MAX_VALUE)
+                remainingSac--;
+            }
+            startJobs (time, queue, queueState, starters, visitLogsSet);
+          }
+          break;
+        case ENCAPSULATOR_QUEUE:
+        case ENCAPSULATOR_HIDE_START_QUEUE:
+          final SimQueue encQueue = (SimQueue) queue.getQueues ().iterator ().next ();
+          final SubQueueSimpleEvent encQueueEvent =
+            new SubQueueSimpleEvent (encQueue, SimQueueSimpleEventType.SERVER_ACCESS_CREDITS, null, null, newSac);
+          doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (encQueueEvent), visitLogsSet);
+          break;
+        case COMPRESSED_TANDEM_2_QUEUE:
+          throw new UnsupportedOperationException ();
+        default:
+          throw new RuntimeException ();
       }
     }
     else
@@ -336,11 +370,12 @@ extends AbstractSimQueuePredictor<Q>
       final List<SimQueue> subQueues = new ArrayList<> (queue.getQueues ());
       final SimQueue subQueue = ((SubQueueSimpleEvent) eventType).subQueue;
       final int subQueueIndex = subQueues.indexOf (subQueue);
-      final DefaultSimQueueState subQueueState = queueStateHandler.getSubQueueState (subQueueIndex);
+      final DefaultSimQueueState<SimJob, SimQueue> subQueueState = queueStateHandler.getSubQueueState (subQueueIndex);
       final AbstractSimQueuePredictor subQueuePredictor = this.subQueuePredictors.get (subQueueIndex);
       final SimEntitySimpleEventType.Member subQueueWorkloadEvent = ((SubQueueSimpleEvent) eventType).subQueueWorkloadEvent;
       final SimEntitySimpleEventType.Member subQueueQueueEvent = ((SubQueueSimpleEvent) eventType).subQueueQueueEvent;
       final SimJob job = ((SubQueueSimpleEvent) eventType).job;
+      final Object argument = ((SubQueueSimpleEvent) eventType).argument;
       // Apply the event at the sub-queue, and capture its visit logs generated.
       final Set<JobQueueVisitLog<SimJob,Q>> subQueueVisitLogsSet = new HashSet<> ();
       try
@@ -352,6 +387,8 @@ extends AbstractSimQueuePredictor<Q>
             subQueueEvent = new SimJQEvent.Arrival<> (job, subQueue, time);
           else if (subQueueWorkloadEvent == SimQueueSimpleEventType.REVOCATION)
             subQueueEvent = new SimJQEvent.Revocation<> (job, subQueue, time, true);
+          else if (subQueueWorkloadEvent == SimQueueSimpleEventType.SERVER_ACCESS_CREDITS)
+            subQueueEvent = new SimQueueEvent.ServerAccessCredits<> (subQueue, time, (int) argument);
           else
             throw new RuntimeException ();
           final WorkloadSchedule_SQ_SV_ROEL_U subQueueWorkloadSchedule =
@@ -371,8 +408,28 @@ extends AbstractSimQueuePredictor<Q>
       {
         throw new RuntimeException (e);
       }
+      // Check a (true) encapsulated queue for (missed) job starts at this time.
+      if (queue.getStartModel () == SimQueueComposite.StartModel.ENCAPSULATOR_QUEUE
+      &&  subQueueState.getJobsInServiceAreaMap ().containsKey (time))
+      {
+        final Set<SimJob> started = subQueueState.getJobsInServiceAreaMap ().get (time);
+        for (final SimJob j : started)
+          if (! queueState.getJobsInServiceArea ().contains (j))
+            // Delegate job has started, but real job hasn't;
+            // must be propagated to the composite queue since it is a true encapsulator.
+            startJobs (time, queue, queueState, Collections.singleton (j), visitLogsSet);
+      }
+      // Check (again) a (true) encapsulated queue for (missed) job starts at this time.
+      // Note that our first test failed since the job has left the encapsulated queue by now.
+      for (JobQueueVisitLog<SimJob,Q> jvl : subQueueVisitLogsSet)
+        if (queue.getStartModel () == SimQueueComposite.StartModel.ENCAPSULATOR_QUEUE
+        &&  jvl.started
+        &&  (queueState.getJobs ().contains (jvl.job) || ! jvl.revoked)
+        &&  ! queueState.getJobsInServiceArea ().contains (jvl.job))
+          startJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
       // Check the visit logs for drops and departures.
       for (JobQueueVisitLog<SimJob,Q> jvl : subQueueVisitLogsSet)
+      {
         if (jvl.dropped)
           dropJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
         else if (jvl.departed)
@@ -393,6 +450,14 @@ extends AbstractSimQueuePredictor<Q>
             doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (nextSubQueueEvent), visitLogsSet);
           }
         }
+        else if (jvl.revoked)
+        {
+          ; /* EMPTY */
+        }
+        else
+          // Job has left due to some other unknown reason? Should specify here!
+          throw new UnsupportedOperationException ();
+      }
     }
     else
       throw new RuntimeException ();
@@ -434,20 +499,34 @@ extends AbstractSimQueuePredictor<Q>
    final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet)
   throws SimQueuePredictionException
   {
-    queueState.doStarts (time, starters);
-    final SimQueue headQueue = (SimQueue) queue.getQueues ().iterator ().next ();
-    for (final SimJob job : starters)
+    switch (queue.getStartModel ())
     {
-      if (! (job instanceof DefaultSimJob))
+      case LOCAL:
+        queueState.doStarts (time, starters);
+        final SimQueue headQueue = (SimQueue) queue.getQueues ().iterator ().next ();
+        for (final SimJob job : starters)
+        {
+          if (! (job instanceof DefaultSimJob))
+            throw new UnsupportedOperationException ();
+          // Check whether job did not already leave!
+          if (queueState.getJobs ().contains (job))
+          {
+            ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (headQueue, job.getServiceTime (queue));
+            final SubQueueSimpleEvent headQueueEvent =
+              new SubQueueSimpleEvent (headQueue, SimQueueSimpleEventType.ARRIVAL, null, job, null);
+            doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (headQueueEvent), visitLogsSet);
+          }
+        }
+        break;
+      case ENCAPSULATOR_QUEUE:
+        queueState.doStarts (time, starters);
+        break;
+      case ENCAPSULATOR_HIDE_START_QUEUE:
+        throw new IllegalStateException ();
+      case COMPRESSED_TANDEM_2_QUEUE:
         throw new UnsupportedOperationException ();
-      // Check whether job did not already leave!
-      if (queueState.getJobs ().contains (job))
-      {
-        ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (headQueue, job.getServiceTime (queue));
-        final SubQueueSimpleEvent headQueueEvent =
-          new SubQueueSimpleEvent (headQueue, SimQueueSimpleEventType.ARRIVAL, null, job, null);
-        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (headQueueEvent), visitLogsSet);
-      }
+      default:
+        throw new RuntimeException ();
     }
   }
   
