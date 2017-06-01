@@ -19,11 +19,11 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class JBlackSimQueueNetwork
+public class JSimQueueComposite
 extends JComponent
 {
   
-  public JBlackSimQueueNetwork (final SimEventList eventList, final SimQueue queue)
+  public JSimQueueComposite (final SimEventList eventList, final SimQueue queue)
   {
     super ();
     setQueue (eventList, queue);

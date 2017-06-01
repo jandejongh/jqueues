@@ -15,7 +15,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
-import nl.jdj.jqueues.r5.util.swing.JBlackSimQueueNetwork;
+import nl.jdj.jqueues.r5.util.swing.JSimQueueComposite;
 import nl.jdj.jqueues.r5.util.swing.JSimQueueCreationDialog;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
@@ -62,7 +62,7 @@ public final class SwingExample
 
         private SimQueue queue;
         
-        private JBlackSimQueueNetwork jQueue;
+        private JSimQueueComposite jQueue;
           
         private SimQueue getQueue ()
         {
@@ -127,7 +127,7 @@ public final class SwingExample
           // set.add (random1);
           // this.queue = new BlackTandemSimQueue (this.eventList, set, null);
           this.queue = new CompressedTandem2SimQueue (this.eventList, fcfs1, fcfs2, null);
-          this.jQueue = new JBlackSimQueueNetwork (this.eventList, this.queue);
+          this.jQueue = new JSimQueueComposite (this.eventList, this.queue);
           topPanel.add (Box.createRigidArea (new Dimension (0, 10)));
           topPanel.add (this.jQueue);
           final JPanel buttonPanel = new JPanel ();
