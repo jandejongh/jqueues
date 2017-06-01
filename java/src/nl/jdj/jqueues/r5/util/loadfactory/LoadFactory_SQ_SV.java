@@ -62,4 +62,17 @@ extends LoadFactory<J, Q>
     Set<LoadFactoryHint> hints,
     NavigableMap<Double, Set<SimJQEvent>> queueEvents);
 
+  /** Returns a description of this load factory.
+   * 
+   * <p>
+   * The default implementation returns "None provided!".
+   * 
+   * @return A description of this load factory.
+   * 
+   */
+  default String getDescription ()
+  {
+    return "None provided!";
+  }
+  
 }
