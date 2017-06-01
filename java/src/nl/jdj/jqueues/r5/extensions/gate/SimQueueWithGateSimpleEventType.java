@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.extensions.gate;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 
-/** *  A simple representation of a {@link SimJQEvent} specific to {@link SimQueueWithGate}s.
+/** A simple representation of a {@link SimJQEvent} specific to {@link SimQueueWithGate}s.
  * 
  * @author Jan de Jongh, TNO
  * 

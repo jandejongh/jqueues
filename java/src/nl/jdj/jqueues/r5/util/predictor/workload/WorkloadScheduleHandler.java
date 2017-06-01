@@ -9,7 +9,7 @@ import nl.jdj.jqueues.r5.extensions.gate.SimQueueGateEvent;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueuePredictor_GATE;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGate;
 
-/** *  A handler for specific {@link SimJQEvent} types as extension to a {@link DefaultWorkloadSchedule}.
+/** A handler for specific {@link SimJQEvent} types as extension to a {@link DefaultWorkloadSchedule}.
  * 
  * <p>
  * The {@link DefaultWorkloadSchedule} deals with the basic external {@link SimQueue} events:
@@ -54,7 +54,7 @@ public interface WorkloadScheduleHandler
    */
   public String getHandlerName ();
   
-  /** *  Gets the set of {@link SimJQEvent}s of this handler, and the {@link SimEntitySimpleEventType} members onto which they
+  /** Gets the set of {@link SimJQEvent}s of this handler, and the {@link SimEntitySimpleEventType} members onto which they
    *  map.
    * 
    * <p>

@@ -27,7 +27,7 @@ public interface LoadFactory_SQ_SV<J extends SimJob, Q extends SimQueue>
 extends LoadFactory<J, Q>
 {
 
-  /** *  Generates job from a factory, schedule arrivals (and/or revocations) for them on an event list, as well as queue vacations
+  /** Generates job from a factory, schedule arrivals (and/or revocations) for them on an event list, as well as queue vacations
    *  (if applicable), and return the generated load in a user-supplied collection of {@link SimJQEvent}s.
    * 
    * @param eventList                The event list, non-{@code null}.

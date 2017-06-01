@@ -27,7 +27,7 @@ implements WorkloadSchedule_SQ_SV_ROEL_U
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** *  Creates a new {@link DefaultWorkloadSchedule_SQ_SV_ROEL_U}, filling out all the internal sets and maps from scanning a set of
+  /** Creates a new {@link DefaultWorkloadSchedule_SQ_SV_ROEL_U}, filling out all the internal sets and maps from scanning a set of
    *  {@link SimJQEvent}s for a single specified queue, single visits to that queue for each job, and an unambiguous schedule
    *  on a Random-Order Event List.
    * 
@@ -55,7 +55,7 @@ implements WorkloadSchedule_SQ_SV_ROEL_U
       throw new WorkloadScheduleAmbiguityException ();
   }
   
-  /** *  Creates a new {@link DefaultWorkloadSchedule_SQ_SV}, filling out all the internal sets and maps from scanning a map of 
+  /** Creates a new {@link DefaultWorkloadSchedule_SQ_SV}, filling out all the internal sets and maps from scanning a map of 
    *  event time onto sets of {@link SimJQEvent}s
    *  for a single specified queue, single visits to that queue for each job, and an unambiguous schedule
    *  on a Random-Order Event List.

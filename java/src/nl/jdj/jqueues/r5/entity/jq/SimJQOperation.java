@@ -662,7 +662,7 @@ extends SimEntityOperation<O, Req, Rep>
     
   }
   
-  /** *  A request for the revocation operation {@link Revocation}.
+  /** A request for the revocation operation {@link Revocation}.
    * 
    */
   public final static class RevocationRequest
@@ -697,7 +697,7 @@ extends SimEntityOperation<O, Req, Rep>
       return this.interruptService;
     }
     
-    /** *  Returns the singleton instance of {@link Revocation}.
+    /** Returns the singleton instance of {@link Revocation}.
      * 
      * @return The singleton instance of {@link Revocation}.
      * 
