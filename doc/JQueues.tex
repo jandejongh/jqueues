@@ -29,7 +29,7 @@
 
 \chapter*{}
 
-{\em This book is dedicated to Dick Epema and Graham Birtwistle.}
+{\em This book is dedicated to Dick Epema, Graham Birtwistle, and Isi Mitrani.}
 
 \tableofcontents
 
@@ -58,6 +58,236 @@ If there is anything we do most,
 \chapter{Introduction}
 
 \chapter{Guided Tour}
+
+\section{Getting Started}
+
+\section{Creating and Running Queueing-System Simulations}
+
+In order to perform a simulation study in \lstinline|jqueues|,
+  the following four actions need to be taken:
+\begin{itemize}
+\item The creation of an event list;
+\item The creation of one or more queues, and their attachment to the event list;
+\item The selection of the method for listening to the queue(s), and/or the event list;
+\item The creation of a workload consisting of jobs;
+\item Running the event list.
+\end{itemize}
+Without much further ado, here's an example:
+
+\begin{lstlisting}[
+  caption={A simple simulation with a single FCFS\_B queue and ten jobs.},
+  label=simExample1_main,
+  basicstyle=\tiny]
+
+    final SimEventList el = new DefaultSimEventList ();
+    final int bufferSize = 2;
+    final FCFS_B queue = new FCFS_B (el, bufferSize);
+    queue.registerStdOutSimQueueListener ();
+    for (int j = 0; j < 10; j++)
+    {
+      final double jobServiceTime = (double) 2.2 * j;
+      final double jobArrivalTime = (double) j;
+      final String jobName = Integer.toString (j);
+      final SimJob job = new DefaultSimJob (null, jobName, jobServiceTime);
+      SimEntityEventScheduler.scheduleJobArrival (job, queue, jobArrivalTime);
+    }
+    el.run ();
+
+\end{lstlisting}
+
+In Listing \ref{simExample1_main},
+  we first create a single event list of type \lstinline|DefaultSimEventList|
+  and a \lstinline|FCFS_B| queue.
+On the queue, we invoke its default "listener",
+  issuing notification to the standard output.
+Subsequently,
+  we create ten jobs named "0", "1", "2", $\ldots$,
+  scheduled for arrival at the queue
+  at $t=0$, $t=1$, $t=2$, $\ldots$,
+  respectively.
+Finally, we "run" the event list, i.e.,
+  let it process the arrivals.
+
+The event list type
+  \lstinline|DefaultSimEventList|
+  will suffice for almost all practical cases,
+  but it is essential to note already that
+  a {\em single\/} event-list instance is typically used
+  throughout {\em any\/} simulation program.
+Its purpose of the event list is to hold scheduled {\em events\/}
+  in non-decreasing order of {\em schedule time},
+  and, upon request (in this case through \lstinline|el.run|),
+  starts processing the scheduled events in sequence,
+  invoking their associated {\em actions}.
+In this case,
+  the use of events remains hidden,
+  because jobs are scheduled through the use of utility method
+  \lstinline|scheduleJobArrival|.
+
+The queue of choice is the First-Come First-Served queue
+  with limited buffer size, \lstinline|FCFS_B|,
+  described in more detail in Section \ref{FCFS_B}.
+The constructor takes two arguments,
+  the event list \lstinline|el|
+  and the buffer size.
+The queueing system consists of a queue with only \lstinline|B|
+  places to hold jobs,
+  and a single server that "serves" the jobs in the queue in order
+  of their arrival.
+If a job arrives at the \lstinline|FCFS_B| system
+  while all places in the queue are occupied by other jobs,
+  the arriving job is denied access to the system,
+  and is {\em dropped}.
+Once a queue has finished serving the (single) job,
+  the job {\em departs\/} from the system.
+
+So how long does it take to serve a job?
+Well, in \lstinline|jqueues|,
+  the default behavior is that
+  a queue requests the job for its
+  {\em required service time},
+  and we set a fixed service time (at {\em any\/} queue)
+  for each job upon creation as the third argument of the constructur.
+The first argument of the \lstinline-DefaultSimJob-
+  is the event list to which it is to be attached.
+For jobs (well, at least the ones derived from \lstinline|DefaultSimJob|),
+  it is often safe to set this to \lstinline|null|,
+  although we could have equally well set it to \lstinline|el|.
+However, queues must always be attached to the event list;
+  a \lstinline|null| value upon construction will throw an exception.
+
+The (approximate) output of the code fragment of Listing \ref{simExample1_main}
+is shown in Listing \ref{simExample1_out} below.
+
+\begin{lstlisting}[
+  caption={Example output of Listing \ref{simExample1_main}.},
+  label=simExample1_out,
+  basicstyle=\tiny]
+
+StdOutSimQueueListener t=0.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=0.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[0]@FCFS_B[2]]
+  => START [Start[0]@FCFS_B[2]]
+  => DEPARTURE [Dep[0]@FCFS_B[2]]
+StdOutSimQueueListener t=0.0, queue=FCFS_B[2]: ARRIVAL of job 0.
+StdOutSimQueueListener t=0.0, queue=FCFS_B[2]: START of job 0.
+StdOutSimQueueListener t=0.0, queue=FCFS_B[2]: DEPARTURE of job 0.
+StdOutSimQueueListener t=1.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=1.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[1]@FCFS_B[2]]
+  => START [Start[1]@FCFS_B[2]]
+  => STA_FALSE [StartArmed[false]@FCFS_B[2]]
+StdOutSimQueueListener t=1.0, queue=FCFS_B[2]: ARRIVAL of job 1.
+StdOutSimQueueListener t=1.0, queue=FCFS_B[2]: START of job 1.
+StdOutSimQueueListener t=1.0, queue=FCFS_B[2]: START_ARMED -> false.
+StdOutSimQueueListener t=2.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=2.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[2]@FCFS_B[2]]
+StdOutSimQueueListener t=2.0, queue=FCFS_B[2]: ARRIVAL of job 2.
+StdOutSimQueueListener t=3.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=3.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[3]@FCFS_B[2]]
+StdOutSimQueueListener t=3.0, queue=FCFS_B[2]: ARRIVAL of job 3.
+StdOutSimQueueListener t=3.2, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=3.2, entity=FCFS_B[2]: STATE CHANGED:
+  => DEPARTURE [Dep[1]@FCFS_B[2]]
+  => START [Start[2]@FCFS_B[2]]
+StdOutSimQueueListener t=3.2, queue=FCFS_B[2]: DEPARTURE of job 1.
+StdOutSimQueueListener t=3.2, queue=FCFS_B[2]: START of job 2.
+StdOutSimQueueListener t=4.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=4.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[4]@FCFS_B[2]]
+StdOutSimQueueListener t=4.0, queue=FCFS_B[2]: ARRIVAL of job 4.
+StdOutSimQueueListener t=5.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=5.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[5]@FCFS_B[2]]
+  => DROP [Drop[5]@FCFS_B[2]]
+StdOutSimQueueListener t=5.0, queue=FCFS_B[2]: ARRIVAL of job 5.
+StdOutSimQueueListener t=5.0, queue=FCFS_B[2]: DROP of job 5.
+StdOutSimQueueListener t=6.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=6.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[6]@FCFS_B[2]]
+  => DROP [Drop[6]@FCFS_B[2]]
+StdOutSimQueueListener t=6.0, queue=FCFS_B[2]: ARRIVAL of job 6.
+StdOutSimQueueListener t=6.0, queue=FCFS_B[2]: DROP of job 6.
+StdOutSimQueueListener t=7.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=7.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[7]@FCFS_B[2]]
+  => DROP [Drop[7]@FCFS_B[2]]
+StdOutSimQueueListener t=7.0, queue=FCFS_B[2]: ARRIVAL of job 7.
+StdOutSimQueueListener t=7.0, queue=FCFS_B[2]: DROP of job 7.
+StdOutSimQueueListener t=7.6000000000000005, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=7.6000000000000005, entity=FCFS_B[2]: STATE CHANGED:
+  => DEPARTURE [Dep[2]@FCFS_B[2]]
+  => START [Start[3]@FCFS_B[2]]
+StdOutSimQueueListener t=7.6000000000000005, queue=FCFS_B[2]: DEPARTURE of job 2.
+StdOutSimQueueListener t=7.6000000000000005, queue=FCFS_B[2]: START of job 3.
+StdOutSimQueueListener t=8.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=8.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[8]@FCFS_B[2]]
+StdOutSimQueueListener t=8.0, queue=FCFS_B[2]: ARRIVAL of job 8.
+StdOutSimQueueListener t=9.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=9.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[9]@FCFS_B[2]]
+  => DROP [Drop[9]@FCFS_B[2]]
+StdOutSimQueueListener t=9.0, queue=FCFS_B[2]: ARRIVAL of job 9.
+StdOutSimQueueListener t=9.0, queue=FCFS_B[2]: DROP of job 9.
+StdOutSimQueueListener t=14.200000000000001, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=14.200000000000001, entity=FCFS_B[2]: STATE CHANGED:
+  => DEPARTURE [Dep[3]@FCFS_B[2]]
+  => START [Start[4]@FCFS_B[2]]
+StdOutSimQueueListener t=14.200000000000001, queue=FCFS_B[2]: DEPARTURE of job 3.
+StdOutSimQueueListener t=14.200000000000001, queue=FCFS_B[2]: START of job 4.
+StdOutSimQueueListener t=23.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=23.0, entity=FCFS_B[2]: STATE CHANGED:
+  => DEPARTURE [Dep[4]@FCFS_B[2]]
+  => START [Start[8]@FCFS_B[2]]
+StdOutSimQueueListener t=23.0, queue=FCFS_B[2]: DEPARTURE of job 4.
+StdOutSimQueueListener t=23.0, queue=FCFS_B[2]: START of job 8.
+StdOutSimQueueListener t=40.6, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=40.6, entity=FCFS_B[2]: STATE CHANGED:
+  => DEPARTURE [Dep[8]@FCFS_B[2]]
+  => STA_TRUE [StartArmed[true]@FCFS_B[2]]
+StdOutSimQueueListener t=40.6, queue=FCFS_B[2]: DEPARTURE of job 8.
+StdOutSimQueueListener t=40.6, queue=FCFS_B[2]: START_ARMED -> true.
+
+\end{lstlisting}
+
+Apart from the \lstinline-STATE CHANGED-, \lstinline-UPDATE-
+  and \lstinline-START_ARMED- lines in the output,
+  the notifications pretty much speak for themselves.
+We even get notified when jobs start service (\lstinline-START-),
+  and when they are dropped (jobs $5$, $6$, and $7$)
+  by the queue (\lstinline -DROP-).
+The \lstinline-START_ARMED- notifications
+  refer to state changes in a special boolean attribute of a
+  queue named its \lstinline-StartArmed- property.
+It is explained in detail in Section \ref{sec-start-armed}
+  but since you will hardly need it in practical applications,
+  we will not delve into it.
+Suffice it to say that \lstinline|StartArmed| property
+  reveals in some strange way
+  whether the queue {\em would\/}
+  start a hypothetical arriving job
+  if several additional conditions are also met.
+It is crucial for the implementation
+  of more complex queueing systems.
+
+The remaining two notification types, \lstinline|UPDATE| and \lstinline|STATE CHANGED|
+  are essential, however, and require special attention.
+As you may have spotted,
+  events are actually reported twice,
+  once as part of a \lstinline|STATE CHANGED| notification,
+  followed by a separate notification specific to the event type
+  (\lstinline-ARRIVAL-, \lstinline-DEPARTURE-, etc.).
+As a matter of fact, these separate notifications are merely a courtesy
+  of the queue as it is only required to issue
+  \lstinline|UPDATE|, \lstinline|STATE CHANGED| and \lstinline|RESET| notifications.
+
+In order to understand this, we realize that in {\em any\/} discrete-event simulation,
+  the entities (like queues) involved possess an individual {\em state\/}
+  that can only change at discrete moments in time (the {\em epochs\/}),
+  and as a result of an {\em operation\/} on the entity at that time.
 
 \chapter{Events, Event Lists and Actions}
 
@@ -1739,6 +1969,7 @@ We want to stress that jobs do not necessarily
   (in which case we formally do not speak of a visit).
 
 \subsubsection{The StartArmed Property of a SimQueue}
+\label{sec-start-armed}
 
 Every \lstinline|SimQueue| (implementation) supports the notion of the
   \lstinline|StartArmed| property.
@@ -2731,6 +2962,7 @@ Note that just because the serverless queues have no service area
 \end{tabular}
 
 \subsection{The \lstinline{FCFS_B} \lstinline{SimQueue}}
+\label{FCFS_B}
 
 \begin{tabular}{|l|l|l|l|}
 \hline
@@ -3729,7 +3961,7 @@ In Processor-Sharing (PS) queues,
 
 \chapter{Multiclass Queues and Jobs}
 
-\chapter{Fundamental Multiclass Queues}
+\section{Introduction}
 
 \section{Nonpreemptive Multiclass Queues}
 
@@ -4045,7 +4277,7 @@ In the \lstinline|jqueues| implementation,
   composite queues implement the \lstinline|SimQueueComposite| interface,
   which, in turn, inherits from \lstinline|SimQueue|.
 
-\subsection{The 'Queues' property of a SimQueueComposite}
+\subsection{The 'Queues' Property}
 
 The value of the 'Queues' property of a \lstinline|SimQueueComposite|
   is a \lstinline|Set| holding the subqueues of the composite queue.
@@ -4057,48 +4289,23 @@ Since the order of the subqueues is important to most composite-queue types,
   the implementation of \lstinline|getQueues ()| {\em must\/} maintain
   a deterministic ordering of the subqueues.
   
-\subsection{Colors of Composite Queues}
-
-Composite queues come in different so-called {\em colors},
-  determining the level of transparency of the queue:
-\begin{itemize}
-\item A {\em black\/} composite queue completely hides its internal structure,
-        and uses so-called {\em delegate\/} jobs
-        to represent visiting jobs.
-      Black composite queues implement the \lstinline|BlackSimQueueComposite| interface.
-\item A {\em gray\/} composite queue lets jobs visit the sub-queues directly,
-        but adds zero-time visits to itself at the start and the end of a job visit.
-      Obviously, such composite queues do not use delegate jobs.
-      Gray composite queues implement the \lstinline|GraySimQueueComposite| interface.
-\item A {\em white\/} composite queue immediately redirects a visiting job to the first sub-queue to visit;
-        jobs never actually visit a white composite queue.
-      White composite queues implement the \lstinline|WhiteSimQueueComposite| interface.
-\end{itemize}
-
-\chapter{Fundamental Composite Queues}
-
-\section{Introduction}
-
-In this chapter we describe implementations of
-  \lstinline|SimQueueComposite| in \lstinline|jqueues|.
+\subsection{The 'StartModel' Property}
 
 \section{Tandem Queues}
+
+\subsection{The \lstinline{Tandem} \lstinline{SimQueue}}
 
 In tandem queues, visiting jobs must visit each subqueue one in a predetermined (and fixed) sequence.
 The list of (distinct) subqueues is passed upon construction, and cannot be changed afterwards.
 
-\subsection{The \lstinline{BlackTandemSimQueue}}
- 
 \begin{tabular}{|l|l|}
 \hline
 \multicolumn{2}{|c|}{} \\
-\multicolumn{2}{|c|}{\lstinline[basicstyle=\large]{BlackTandemSimQueue}} \\
+\multicolumn{2}{|c|}{\lstinline[basicstyle=\large]{Tandem}} \\
 \multicolumn{2}{|c|}{} \\
 \hline
 Description & Serves jobs by letting their delegate jobs visit \\
             & the sequence of subqueues $\cal{Q}$ exactly once. \\
-\hline
-Color       & Black. \\
 \hline
 \multicolumn{2}{|c|}{} \\
 \multicolumn{2}{|c|}{\bf State} \\
@@ -4153,25 +4360,54 @@ Departure & Jobs depart if its delegate job departs from the last subqueue. \\
 \hline
 \lstinline|Queues|     & The set (and list) of subqueues $\cal{Q}$; ordered; RO. \\
 \hline
-\lstinline|QueueColor| & The color of the queue; \lstinline|QUEUE_COLOR_BLACK|; RO. \\
-\hline
 \end{tabular}
+
+
+\subsection{The \lstinline{CTandem2} \lstinline{SimQueue}}
+
+\section{Parallel Queues}
+
+\subsection{The \lstinline{JSQ} \lstinline{SimQueue}}
+
+\subsection{The \lstinline{JRQ} \lstinline{SimQueue}}
+
+\subsection{The \lstinline{Pattern} \lstinline{SimQueue}}
+
+\subsection{The \lstinline{Parallel} \lstinline{SimQueue}}
+
+\section{Feedback Queues}
+
+\subsection{The \lstinline{FB_v} \lstinline{SimQueue}}
+
+\subsection{The \lstinline{FB_p} \lstinline{SimQueue}}
+
+\subsection{The \lstinline{FB} \lstinline{SimQueue}}
+
+\section{Jackson Queues}
+
+\subsection{The \lstinline{Jackson} \lstinline{SimQueue}}
 
 \section{Encapsulator Queues}
 
 An {\em encapsulator\/} queue has exactly one subqueue.
 
-\section{Compressed Tandem Queues}
+\subsection{The \lstinline{Enc} \lstinline{SimQueue}}
 
-\section{Parallel Queues}
+\subsection{The \lstinline{EncHS} \lstinline{SimQueue}}
 
-\section{Feedback Queues}
+\subsection{The \lstinline{EncTL} \lstinline{SimQueue}}
 
-\section{Jackson Networks}
+\subsection{The \lstinline{EncJL} \lstinline{SimQueue}}
+
+\subsection{The \lstinline{EncXM} \lstinline{SimQueue}}
 
 \section{Special Composite Queues}
 
-\subsection{Drop-Collector Queues}
+\subsection{The Drop-Collector Queue}
+
+\section{Generic Composite Queues}
+
+\subsection{The \lstinline{Comp} \lstinline{SimQueue}}
 
 \chapter{Queue and Job Statistics}
 
@@ -5030,77 +5266,65 @@ P_LCFS:
 
 \section{Conclusions}
 
-\chapter{Visualization of Queues and Jobs with Swing Components}
-
-\chapter{Advanced Topics}
-
-\section{Job Factories}
-
-\section{Queue Events and Schedules}
-
-\section{Load Factories}
+\chapter{Visualization}
 
 \chapter{Building Custom Queues and Jobs}
 
 \section{Introduction}
 
-\section{Building Custom Entities}
+\section{The \lstinline{AbstractSimEntity} Class}
 
-\subsection{Introduction}
+\section{The \lstinline{AbstractSimQueue} Class}
 
-\subsection{The \lstinline{AbstractSimEntity} Class}
+\section{The \lstinline{AbstractSimQueueComposite} Class}
 
-\section{Building Custom Queues}
-
-\subsection{Introduction}
-
-\subsection{The \lstinline{AbstractSimQueueBase} Class}
-
-\subsection{The \lstinline{AbstractSimQueue} Class}
-
-\section{Building Custom Jobs}
-
-\subsection{Introduction}
-
-\subsection{The \lstinline{AbstractSimJob} Class}
-
-\subsection{The \lstinline{DefaultSimJob} Class}
-
-\chapter{Other Topics}
-
-\section{Introduction}
+\section{The \lstinline{AbstractSimJob} and \lstinline{DefaultSimJob} Classes}
 
 \section{Building Custom Listeners}
 
-\chapter{Test Infrastructure}
+\chapter{Use Cases}
 
 \section{Introduction}
 
-\section{Test-Infrastructure Overview}
+\section{Busy/Idle Notifications and Statistics}
 
-\subsection{Introduction}
+\section{A Weird Statistic: The Fraction of Stayers}
+
+\section{The M/M/1/FCFS Queue}
+
+\section{Customers with Varying Impatience}
+
+\section{Customers in a Party}
+
+\section{Waiters with Varying Enthousiasm}
+
+\section{A (Dutch) Restaurant and Its Performance}
+
+\chapter{Testing}
+
+\section{Introduction}
+
+\section{Test Infrastructure}
+
+\section{Generating Workloads}
+
+\subsection{Job Factories}
 
 \subsection{Queue Workloads}
 
-\subsection{Queue Predictors}
+\subsection{Queue Events and Schedules}
 
-\subsection{Confronting Queue Workloads, Predictors, and Queues}
+\subsection{Load Factories}
 
-\section{Workloads}
+\subsubsection{Standardized Workload Patterns}
 
-\subsection{Creating Workloads}
+\section{Queue Predictors}
 
-\subsection{Workload Ambiguities}
+\section{Confronting Queue Workloads, Predictors, and Queues}
 
-\subsection{Standardized Workload Patterns}
+\section{Building a Predictor}
 
-\subsection{Building a Workload}
-
-\section{Predictors}
-
-\subsection{Using a Predictor}
-
-\subsection{Building a Predictor}
+\section{Building a Workload}
 
 \chapter{Conclusions}
 
