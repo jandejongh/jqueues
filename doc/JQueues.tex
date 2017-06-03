@@ -5,6 +5,7 @@
 \usepackage{listings}
 \usepackage{array}
 \usepackage{geometry}
+\usepackage{graphicx}
 
 \title{Discrete-Event Simulation\\
        of Queueing Systems in Java:\\
@@ -62,6 +63,8 @@ If there is anything we do most,
 \section{Getting Started}
 
 \section{Creating and Running Queueing-System Simulations}
+
+\subsubsection{A Simple Simulation with a First-Come First-Served Queue}
 
 In order to perform a simulation study in \lstinline|jqueues|,
   the following four actions need to be taken:
@@ -275,6 +278,12 @@ It is crucial for the implementation
 
 The remaining two notification types, \lstinline|UPDATE| and \lstinline|STATE CHANGED|
   are essential, however, and require special attention.
+We will however, defer their discussion for now.
+
+\subsubsection{Creating and Registering Listeners}
+
+\subsubsection{The \lstinline|UPDATE| and \lstinline|STATE CHANGED| Notifications}
+
 As you may have spotted,
   events are actually reported twice,
   once as part of a \lstinline|STATE CHANGED| notification,
@@ -284,10 +293,172 @@ As a matter of fact, these separate notifications are merely a courtesy
   of the queue as it is only required to issue
   \lstinline|UPDATE|, \lstinline|STATE CHANGED| and \lstinline|RESET| notifications.
 
-In order to understand this, we realize that in {\em any\/} discrete-event simulation,
+In order to understand this,
+  we must realize that in {\em any\/} discrete-event simulation,
   the entities (like queues) involved possess an individual {\em state\/}
   that can only change at discrete moments in time (the {\em epochs\/}),
   and as a result of an {\em operation\/} on the entity at that time.
+This is explained grapically in Figure \ref{fig:SimpleSimulationOverview}.
+
+\begin{figure}[h]
+\label{fig:SimpleSimulationOverview}
+\caption{The relations between simulation time, epochs,
+	 the event list, scheduled events, and actions,
+	 as well their impact on notifications from
+	 and operations on
+	 (the state of) an entity.}
+\includegraphics[width=\textwidth]{SimpleSimulationOverview}
+\end{figure}
+
+In the top of the figure,
+  we show the simulation time and some of the epochs
+  from the example.
+During a simulation run, the simulation time increases monotonically
+  as a function of "real time".
+What this says is that the simulation time does not
+  "strictly decrease" in real time,
+  but at the same time,
+  that's pretty much the only requirement
+  on the relation between real time
+  and simulation time.
+For instance,
+  processing the epochs between $t=0$ and $t=9$
+  may take several minutes in real time,
+  whereas epochs between $t=9$ and $t=100$
+  could be done in a mere second\footnote{
+This is not to say that is is impossible or even hard
+  to let simulation time progress
+  (roughly) at the same rate as real time,
+  or at some scaled version of it.
+However, in discrete-event simulation,
+  the relationship between real time and simulation time
+  is generally considered unimportant.}
+
+Below the simulation-time line,
+  we show the event list and some of the scheduled events
+  from the example.
+The apparent equal distance between the events
+  is actually on pupose.
+The event list is really not concerned with the
+  simulation-time differences between adjacent events.
+No matter how large the time interval between an
+  event and its predecessor,
+  in between (basicaly) nothing happened:
+  There were not events,
+  and hence,
+  no state changes.
+Going back to the figure,
+  we scheduled the arrival events ourselves
+  before processing the event list,
+  but we also see two "departure events"
+  we did not schedule.
+In fact, these events were scheduled by the
+  queue, in response to previous events.
+For instance, when job $1$ arrives at $t=1$ (simulation time),
+  it is taken into service immediately,
+  and after requesting the service time from job $1$ ($2.2$),
+  it schedules a {\em departure event\/} at $t=3.2$,
+  shown in a somewhat different color because we
+  did not schedule this ourselves (we are not even allowed to do so).
+This shows an important aspect of the event list while processing it:
+  in general, the actions taken while processing the event list have
+  full freedom to schedule new events,
+  as long as they are not in the past.
+This, admittedly, is not clear from the figure.
+What is essential to remember is that a scheduled event
+  await its turn while the event list is being processed,
+  and the event list invokes the event's action
+  when it has processed all preceding events.
+
+Assuming the event's action involves the queue in question,
+  we now turn our attention to the bottom part of the figure,
+  showing our queue from the example, the \lstinline|FCFS_B| queue.
+We assume the arrival event at $t=1$ is processed by the event list,
+  and the net effect of this (i.e., the action of the event)
+  is the invokation of the arrival operation on the queue
+  (with the job $1$ as its argument).
+As a result of this operation,
+  the state of the queue will transform,
+  and registered listeners to the queue will be informed
+  of the new state upon completion of the operation.
+This, effectively, is the \lstinline|STATE CHANGED| notification.
+In the figure this is shown with the right-pointing arrow at the bottom
+  from \lstinline|OLD STATE| to \lstinline|NEW STATE|,
+  and the \lstinline|STATE CHANGED| notification below that.
+
+However, before doing anything,
+  the arrival operation invokes
+  the so-called \lstinline|UPDATE| operation,
+  which exposes the {\em old\/} state
+  to listeners and internally registered "hooks",
+  and, subsequently, increases the most essential state
+  property, the {\em last update time}.
+By now, you should realize that
+  as the event list progresses in simulation time,
+  queues (or better, {\em entities\/})
+  that are not affected by the events processed
+  will not be bothered at all.
+Yet a queue needs to assure that time-stamped operations
+  never lie in the past,
+  so they need to maintain a notion of simulation time themselves.
+The importance of the \lstinline|UPDATE| notification
+  lies in {\em statistics gathering},
+  in which it is essential to know exactly
+  during which (non-trivial) intervals
+  the state of a queue did {\em not\/} change,
+  and the lenght of such intervals.
+As long as you are not involved in statistics-gathering,
+  you can safely ignore these notifications,
+  otherwise,
+  you can find more details in Section \ref{sec:statistics}.
+
+Once the \lstinline|UPDATE| operation has been
+  fulfilled, the \lstinline|ARR| (job arrival) operation,
+  in this particular case,
+  checks the number of jobs waiting,
+  and drops the arriving job if the number is $2$ ($=$\lstinline|B|)
+  by invoking the internal operation \lstinline|DROP|.
+However, for job $1$ in the example,
+  it finds an empty waiting area,
+  and, in addition, no job being served at the server.
+This means that the job is taking into service immediately
+  (the \lstinline|START| internal operation),
+  and since the required service time is non-zero,
+  the queue schedules a {\em departure event\/}
+  at $t=3.2$.
+The departur event, in turn,
+  will invoke the internal \lstinline|DEP| (job departure)
+  event because of which the job
+  will eventually depart from the queueing system.
+
+So, what more is there to say.
+Well, we seem to have so called {\em external\/}
+  and {\em internal\/} operations,
+  the latter of which we cannot schedule ourselves
+  (departures, drops, $\ldots$).
+In a way, the external operations allow us
+  to subject a queue to some kind of {\em workload\/}
+  consisting of arriving jobs
+  (as well as of, yet undescribed, other external operations on the queue).
+The internal operations, on the other hand,
+  are always involved from within the queue itself,
+  either as a response to a scheduled event,
+  or as a response to an invocation of an external operation
+  in combination with a state condition
+  (e.g., the arrival of a job while $2$ jobs are already waiting
+  causes the internal \lstinline|DROP| operation to be invoked).
+ 
+\begin{itemize}
+	\item {\bf XXX}
+	\item Atomicity of Operations and Notifications and their importance.
+	\item Queue Invariants.
+	\item \lstinline|RESET| operation.
+	\item \lstinline|UPDATE| operations.
+	\item When does a simulation end?
+	\item Simultaneous events?
+	\item Listeners and Listener Types.
+	\item Remaining Operations (QAV, SAC, REV, AREV).
+\end{itemize}
 
 \chapter{Events, Event Lists and Actions}
 
@@ -4410,6 +4581,7 @@ An {\em encapsulator\/} queue has exactly one subqueue.
 \subsection{The \lstinline{Comp} \lstinline{SimQueue}}
 
 \chapter{Queue and Job Statistics}
+\label{sec:statistics}
 
 \section{Introduction}
 \label{stat-intro}
