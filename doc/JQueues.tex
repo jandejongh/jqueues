@@ -282,6 +282,88 @@ We will however, defer their discussion for now.
 
 \subsubsection{Creating and Registering Listeners}
 
+In \lstinline|jqueues|, monitoring the progress of a running simulation,
+  or perhaps calculating statistiscs on it,
+  starts with chosing the proper {\em listeners}.
+During the simulation,
+  queues and jobs, from hereon collectively referred to as {\em entities},
+  are obliged to notify registered listeners of (at least) {\em all\/}
+  changes to their states.
+A listener is a \lstinline|Java| object implementing the required methods
+  allowing such notifications from the entity.
+
+In the example of Listing \ref{simExample1_main},
+  we used a convenience method \lstinline|registerStdOutSimQueueListener|
+  to register a listener at the \lstinline|FCFS_B| queue
+  that simply writes the details of such notifications
+  to the standard output, \lstinline|Sytem.out| in \lstinline|Java|.
+This is extremely handy for initial testing of a simulation,
+  but in almost all cases,
+  a more sophisticated listener is required;
+  one you have to create yourself.
+Luckily, \lstinline|jqueues| comes with a large collection of
+  listener implementations, each for a specific purpose, that
+  you can modify to suit your needs.
+
+Restricting ourselves for the moment to queue listeners,
+  we can create and register
+  our own listener that reports to \lstinline|System.out|
+  in the code in Listing \ref{simExample1_main}:
+
+\begin{lstlisting}[
+  caption={Creating and registering a listener.},
+  label=simExample1_listener1,
+  basicstyle=\tiny]
+
+  final SimQueueListener listener = new StdOutSimQueueListener ();
+  queue.registerSimEntityListener (listener);
+
+\end{lstlisting}
+
+Running the program of \ref{SimExample1_main} again with
+  this modified code fragment will yiel (roughly)
+  the same output, so we have not gained anything so far.
+However,
+  a \lstinline|StdOutSimQueueListener| allows
+  all (notification) methods to be overridden,
+  so we can, for instance,
+  suppress certain notifications in the output like this:
+
+\begin{lstlisting}[
+  caption={Suppressing specific notifications in a \lstinline|StdOutSimQueueListener|}.
+  label=simExample1_listener1_suppress,
+  basicstyle=\tiny]
+
+    final SimQueueListener listener = new StdOutSimQueueListener ()
+    {
+      
+      @Override
+      public void notifyStateChanged (double time, SimEntity entity, List notifications) {}
+
+      @Override
+      public void notifyUpdate (double time, SimEntity entity) {}
+      
+      @Override
+      public void notifyStartQueueAccessVacation (double time, SimQueue queue) {}
+
+      @Override
+      public void notifyStopQueueAccessVacation (double time, SimQueue queue) {}
+
+      @Override
+      public void notifyNewStartArmed (double time, SimQueue queue, boolean startArmed) {}
+      
+      @Override
+      public void notifyOutOfServerAccessCredits (double time, SimQueue queue) {}
+
+      @Override
+      public void notifyRegainedServerAccessCredits (double time, SimQueue queue) {}
+
+    };
+    queue.registerSimEntityListener (listener);
+
+\end{lstlisting}
+
+
 \subsubsection{The \lstinline|UPDATE| and \lstinline|STATE CHANGED| Notifications}
 
 As you may have spotted,
