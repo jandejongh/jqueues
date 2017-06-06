@@ -2,8 +2,8 @@ package nl.jdj.jqueues.r5.entity.jq.queue.serverless;
 
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
-import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
-import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEventScheduler;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -319,7 +319,7 @@ extends AbstractServerlessSimQueue<J, Q>
    * 
    */
   protected final static class RateLimitExpirationEvent<Q extends ALIMIT>
-  extends SimJQEvent<SimJob, Q>
+  extends SimQueueEvent<SimJob, Q>
   {
     
     /** Creates the actions that invokes {@link DLIMIT#rateLimitExpiration} on the queue,
@@ -335,7 +335,7 @@ extends AbstractServerlessSimQueue<J, Q>
     (final double expirationTime,
      final Q queue)
     {
-      super ("RateLimitExpiration@" + queue, expirationTime, queue, null, (SimEventAction) (final SimEvent event) ->
+      super ("RateLimitExpiration@" + queue, expirationTime, queue, (SimEventAction) (final SimEvent event) ->
       {
         queue.rateLimitExpiration ((RateLimitExpirationEvent) event);
       });
@@ -350,7 +350,7 @@ extends AbstractServerlessSimQueue<J, Q>
      * 
      */
     @Override
-    public final SimJQEvent<SimJob, Q> copyForQueueAndJob (final Q newQueue, final SimJob newJob)
+    public final RateLimitExpirationEvent<Q> copyForQueueAndJob (final Q newQueue, final SimJob newJob)
     {
       throw new UnsupportedOperationException ();
     }
@@ -379,7 +379,7 @@ extends AbstractServerlessSimQueue<J, Q>
     if (expirationTime < getLastUpdateTime ())
       throw new IllegalArgumentException ();
     final RateLimitExpirationEvent<Q> event = new RateLimitExpirationEvent<> (expirationTime, (Q) this);
-    SimEntityEventScheduler.schedule (getEventList (), event);
+    SimJQEventScheduler.scheduleJQ (getEventList (), event);
     this.eventsScheduled.add (event);
     return event;
   }
