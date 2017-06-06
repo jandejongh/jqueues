@@ -13,7 +13,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
-import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEventScheduler;
 import nl.jdj.jqueues.r5.extensions.qos.SimJobQoS;
 import nl.jdj.jqueues.r5.util.loadfactory.AbstractLoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
@@ -82,7 +82,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
    * <p>
    * Jobs are returned in a {@link LinkedHashSet}, preserving the creation order of the jobs.
    * 
-   * @see SimEntityEventScheduler#schedule
+   * @see SimJQEventScheduler#scheduleJQ
    * 
    */
   @Override
@@ -127,7 +127,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
       eventsToSchedule.add (arrivalSchedule);
       jobs.add (job);
     }
-    SimEntityEventScheduler.schedule (eventList, reset, resetTime, eventsToSchedule);
+    SimJQEventScheduler.scheduleJQ (eventList, reset, resetTime, eventsToSchedule);
     return jobs;
   }
   

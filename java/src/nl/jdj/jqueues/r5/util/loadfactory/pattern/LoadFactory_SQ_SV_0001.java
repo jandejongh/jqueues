@@ -7,7 +7,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
-import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEventScheduler;
 import nl.jdj.jqueues.r5.util.loadfactory.AbstractLoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
@@ -45,7 +45,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
    * This method generates no jobs or other external queue events (empty workload)
    * (ignoring the {@code numberOfJobs} argument).
    * 
-   * @see SimEntityEventScheduler#schedule
+   * @see SimJQEventScheduler#scheduleJQ
    * 
    */
   @Override
@@ -63,7 +63,7 @@ extends AbstractLoadFactory_SQ_SV<J, Q>
     if (eventList == null || queue == null || jobFactory == null)
       throw new IllegalArgumentException ();
     // Even though there is nothing to schedule, make sure we obey the reset-related arguments.
-    SimEntityEventScheduler.schedule (eventList, reset, resetTime, Collections.EMPTY_SET);
+    SimJQEventScheduler.scheduleJQ (eventList, reset, resetTime, Collections.EMPTY_SET);
     return Collections.EMPTY_SET;
   }
   

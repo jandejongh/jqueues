@@ -9,7 +9,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
-import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEventScheduler;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -57,7 +57,7 @@ extends LoadFactory_SQ_SV_0002<J, Q>
    * <li> sets the server-access credits to infinity at t=10.
    * </ul>
    * 
-   * @see SimEntityEventScheduler#schedule
+   * @see SimJQEventScheduler#scheduleJQ
    * 
    */
   @Override
@@ -117,7 +117,7 @@ extends LoadFactory_SQ_SV_0002<J, Q>
     realQueueExternalEvents.get (10.0).add (sacSchedule_10);
     eventsToSchedule.add (sacSchedule_10);
     // schedule
-    SimEntityEventScheduler.schedule (eventList, reset, resetTime, eventsToSchedule);
+    SimJQEventScheduler.scheduleJQ (eventList, reset, resetTime, eventsToSchedule);
     //
     return jobs;
   }

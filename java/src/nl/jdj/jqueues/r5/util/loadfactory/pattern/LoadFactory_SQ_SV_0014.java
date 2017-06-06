@@ -10,7 +10,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
-import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEventScheduler;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueGateEvent;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGate;
 import nl.jdj.jqueues.r5.extensions.gate.SimQueueWithGateOperationUtils;
@@ -94,7 +94,7 @@ extends LoadFactory_SQ_SV_0010<J, Q>
    * Setting the gate-passage credits is scheduled roughly until all jobs would have been served under single-server FCFS,
    * with an additional 100% to account for the gate delays.
    * 
-   * @see SimEntityEventScheduler#schedule
+   * @see SimJQEventScheduler#scheduleJQ
    * 
    */
   @Override
@@ -164,7 +164,7 @@ extends LoadFactory_SQ_SV_0010<J, Q>
         eventsToSchedule.add (gateSchedule);
       }
       // Be careful not to reset the event list (again) here!
-      SimEntityEventScheduler.schedule (eventList, false, Double.NaN, eventsToSchedule);
+      SimJQEventScheduler.scheduleJQ (eventList, false, Double.NaN, eventsToSchedule);
     }
     return jobs;
   }

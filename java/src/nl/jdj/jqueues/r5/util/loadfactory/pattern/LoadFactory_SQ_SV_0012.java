@@ -10,7 +10,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
-import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEventScheduler;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -55,7 +55,7 @@ extends LoadFactory_SQ_SV_0010<J, Q>
    * If {@code true}, the revocation is scheduled uniformly distributed in the <i>service</i> interval under
    * single-server FCFS, otherwise in the <i>wait</i> interval.
    * 
-   * @see SimEntityEventScheduler#schedule
+   * @see SimJQEventScheduler#scheduleJQ
    * 
    */
   @Override
@@ -102,7 +102,7 @@ extends LoadFactory_SQ_SV_0010<J, Q>
       }
     }
     // Be careful not to reset the event list (again) here!
-    SimEntityEventScheduler.schedule (eventList, false, Double.NaN, eventsToSchedule);
+    SimJQEventScheduler.scheduleJQ (eventList, false, Double.NaN, eventsToSchedule);
     return jobs;
   }
   

@@ -10,7 +10,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
-import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEventScheduler;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactory_SQ_SV;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -65,7 +65,7 @@ extends LoadFactory_SQ_SV_0010<J, Q>
    * Setting the credits is scheduled roughly until all jobs would have been served under single-server FCFS,
    * with an additional 100% to account for the server-access credits delays.
    * 
-   * @see SimEntityEventScheduler#schedule
+   * @see SimJQEventScheduler#scheduleJQ
    * 
    */
   @Override
@@ -101,7 +101,7 @@ extends LoadFactory_SQ_SV_0010<J, Q>
       eventsToSchedule.add (sacSchedule);
     }
     // Be careful not to reset the event list (again) here!
-    SimEntityEventScheduler.schedule (eventList, false, Double.NaN, eventsToSchedule);
+    SimJQEventScheduler.scheduleJQ (eventList, false, Double.NaN, eventsToSchedule);
     return jobs;
   }
   
