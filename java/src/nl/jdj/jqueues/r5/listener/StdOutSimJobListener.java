@@ -19,7 +19,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
  * 
  */
 public class StdOutSimJobListener<J extends SimJob, Q extends SimQueue>
-extends StdOutSimEntityListener<J, Q>
+extends StdOutSimJQListener<J, Q>
 implements SimJobListener<J, Q>
 {
 

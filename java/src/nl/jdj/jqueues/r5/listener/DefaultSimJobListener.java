@@ -21,7 +21,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
  * 
  */
 public class DefaultSimJobListener<J extends SimJob, Q extends SimQueue>
-extends DefaultSimEntityListener<J, Q>
+extends DefaultSimJQListener<J, Q>
 implements SimJobListener<J, Q>
 {
 

@@ -19,14 +19,14 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueListener;
  * 
  */
 public class StdOutSimQueueListener<J extends SimJob, Q extends SimQueue>
-extends StdOutSimEntityListener<J, Q> 
+extends StdOutSimJQListener<J, Q> 
 implements SimQueueListener<J, Q>
 {
 
   @Override
   public void notifyStartQueueAccessVacation (final double time, final Q queue)
   {
-    if (! isOnlyUpdatesAndStateChanges ())
+    if (! isOnlyResetsAndUpdatesAndStateChanges ())
     {
       System.out.print (getHeaderString () + " ");
       System.out.println ("t=" + time + ", queue=" + queue + ": START OF QUEUE-ACCESS VACATION.");
@@ -36,7 +36,7 @@ implements SimQueueListener<J, Q>
   @Override
   public void notifyStopQueueAccessVacation (final double time, final Q queue)
   {
-    if (! isOnlyUpdatesAndStateChanges ())
+    if (! isOnlyResetsAndUpdatesAndStateChanges ())
     {
       System.out.print (getHeaderString () + " ");
       System.out.println ("t=" + time + ", queue=" + queue + ": END OF QUEUE-ACCESS VACATION.");
@@ -46,7 +46,7 @@ implements SimQueueListener<J, Q>
   @Override
   public void notifyOutOfServerAccessCredits (final double time, final Q queue)
   {
-    if (! isOnlyUpdatesAndStateChanges ())
+    if (! isOnlyResetsAndUpdatesAndStateChanges ())
     {
       System.out.print (getHeaderString () + " ");
       System.out.println ("t=" + time + ", queue=" + queue + ": OUT OF SERVER-ACCESS CREDITS.");
@@ -56,7 +56,7 @@ implements SimQueueListener<J, Q>
   @Override
   public void notifyRegainedServerAccessCredits (final double time, final Q queue)
   {
-    if (! isOnlyUpdatesAndStateChanges ())
+    if (! isOnlyResetsAndUpdatesAndStateChanges ())
     {
       System.out.print (getHeaderString () + " ");
       System.out.println ("t=" + time + ", queue=" + queue + ": REGAINED SERVER-ACCESS CREDITS.");
@@ -66,7 +66,7 @@ implements SimQueueListener<J, Q>
   @Override
   public void notifyNewStartArmed (final double time, final Q queue, final boolean startArmed)
   {
-    if (! isOnlyUpdatesAndStateChanges ())
+    if (! isOnlyResetsAndUpdatesAndStateChanges ())
     {
       System.out.print (getHeaderString () + " ");
       System.out.println ("t=" + time + ", queue=" + queue + ": START_ARMED -> " + startArmed + ".");

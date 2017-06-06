@@ -3,17 +3,12 @@ package nl.jdj.jqueues.r5.listener;
 import java.util.List;
 import java.util.Map;
 import nl.jdj.jqueues.r5.entity.SimEntity;
-import nl.jdj.jqueues.r5.entity.jq.SimJQListener;
-import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
-import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.SimEntityEvent;
+import nl.jdj.jqueues.r5.entity.SimEntityListener;
 import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
 
-/** A {@link SimJQListener} logging events on <code>System.out</code>.
+/** A {@link SimEntityListener} logging events on <code>System.out</code>.
  *
- * @param <J> The type of {@link SimJob}s supported.
- * @param <Q> The type of {@link SimQueue}s supported.
- * 
  * @author Jan de Jongh, TNO
  * 
  * <p>
@@ -23,8 +18,8 @@ import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class StdOutSimEntityListener<J extends SimJob, Q extends SimQueue>
-implements SimJQListener<J, Q>
+public class StdOutSimEntityListener
+implements SimEntityListener
 {
 
   /** Returns the header used in the notifications.
@@ -37,42 +32,11 @@ implements SimJQListener<J, Q>
     return this.getClass ().getSimpleName ();
   }
   
-  private boolean onlyUpdatesAndStateChanges = false;
-
-  /** Returns whether this object only reports updates and state changes.
-   * 
-   * @return Whether this object only reports updates and state changes.
-   * 
-   * @see #notifyUpdate
-   * @see #notifyStateChanged
-   * 
-   */
-  public final boolean isOnlyUpdatesAndStateChanges ()
-  {
-    return this.onlyUpdatesAndStateChanges;
-  }
- 
-  /** Sets whether this object only reports updates and state changes.
-   * 
-   * @param onlyUpdatesAndStateChanges Whether this object only reports updates and state changes.
-   * 
-   * @see #notifyUpdate
-   * @see #notifyStateChanged
-   * 
-   */
-  public final void setOnlyUpdatesAndStateChanges (final boolean onlyUpdatesAndStateChanges)
-  {
-    this.onlyUpdatesAndStateChanges = onlyUpdatesAndStateChanges;
-  }
-  
   @Override
   public void notifyResetEntity (final SimEntity entity)
   {
-    if (! isOnlyUpdatesAndStateChanges ())
-    {
-      System.out.print (getHeaderString () + " ");
-      System.out.println ("entity=" + entity + ": RESET.");
-    }
+    System.out.print (getHeaderString () + " ");
+    System.out.println ("entity=" + entity + ": RESET.");
   }
 
   @Override
@@ -99,66 +63,6 @@ implements SimJQListener<J, Q>
         else
           System.out.println ("  => " + notification.keySet ().iterator ().next ()
                                       + " [" + notification.values ().iterator ().next () + "]");
-    }
-  }
-
-  @Override
-  public void notifyArrival (final double time, final J job, final Q queue)
-  {
-    if (! isOnlyUpdatesAndStateChanges ())
-    {
-      System.out.print (getHeaderString () + " ");
-      System.out.println ("t=" + time + ", queue=" + queue + ": ARRIVAL of job " + job + ".");
-    }
-  }
-
-  @Override
-  public void notifyStart (double time, final J job, final Q queue)
-  {
-    if (! isOnlyUpdatesAndStateChanges ())
-    {
-      System.out.print (getHeaderString () + " ");
-      System.out.println ("t=" + time + ", queue=" + queue + ": START of job " + job + ".");
-    }
-  }
-
-  @Override
-  public void notifyDrop (final double time, final J job, final Q queue)
-  {
-    if (! isOnlyUpdatesAndStateChanges ())
-    {
-      System.out.print (getHeaderString () + " ");
-      System.out.println ("t=" + time + ", queue=" + queue + ": DROP of job " + job + ".");
-    }
-  }
-
-  @Override
-  public void notifyRevocation (final double time, final J job, final Q queue)
-  {
-    if (! isOnlyUpdatesAndStateChanges ())
-    {
-      System.out.print (getHeaderString () + " ");
-      System.out.println ("t=" + time + ", queue=" + queue + ": REVOCATION of job " + job + ".");
-    }
-  }
-
-  @Override
-  public void notifyAutoRevocation (final double time, final J job, final Q queue)
-  {
-    if (! isOnlyUpdatesAndStateChanges ())
-    {
-      System.out.print (getHeaderString () + " ");
-      System.out.println ("t=" + time + ", queue=" + queue + ": AUTO_REVOCATION of job " + job + ".");
-    }
-  }
-
-  @Override
-  public void notifyDeparture (final double time, final J job, final Q queue)
-  {
-    if (! isOnlyUpdatesAndStateChanges ())
-    {
-      System.out.print (getHeaderString () + " ");
-      System.out.println ("t=" + time + ", queue=" + queue + ": DEPARTURE of job " + job + ".");
     }
   }
 
