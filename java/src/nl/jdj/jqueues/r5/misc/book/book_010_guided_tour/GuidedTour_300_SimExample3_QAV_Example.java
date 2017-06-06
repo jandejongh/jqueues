@@ -4,9 +4,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEventScheduler;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEventScheduler;
-import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.PS;
 import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.SocPS;
-import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
 
