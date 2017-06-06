@@ -98,7 +98,7 @@ public final class EncapsulatorTimeLimitSimQueueExample
     final EncapsulatorTimeLimitSimQueue enctlQueue =
       new EncapsulatorTimeLimitSimQueue (el, fcfsQueue, delegateSimJobFactory, 20.1, 5.2, 21.3);
     final StdOutSimQueueListener encListener = new StdOutSimQueueListener ();
-    encListener.setOnlyUpdatesAndStateChanges (true);
+    encListener.setOnlyResetsAndUpdatesAndStateChanges (true);
     enctlQueue.registerSimEntityListener (encListener);
     for (final EncapsulatorTimeLimitSimQueue.ExpirationMethod expirationMethod :
       EncapsulatorTimeLimitSimQueue.ExpirationMethod.values ())

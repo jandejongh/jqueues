@@ -5,7 +5,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.qos.DefaultSimJobQoS;
 import nl.jdj.jqueues.r5.extensions.qos.SimJobQoS;
-import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
+import nl.jdj.jqueues.r5.listener.StdOutSimJQListener;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Implementation of {@link SimJobQoS} used (as starting point) in (most of) the examples.
@@ -31,7 +31,7 @@ extends DefaultSimJobQoS<J, Q, P>
 {
  
   /** Whether or not this job reports main queue operations to {@link System#out}
-   *  through a {@link StdOutSimEntityListener}.
+   *  through a {@link StdOutSimJQListener}.
    * 
    */
   private final boolean reported;
@@ -64,7 +64,7 @@ extends DefaultSimJobQoS<J, Q, P>
     this.reported = reported;
     this.n = n;
     if (this.reported)
-      registerSimEntityListener (new StdOutSimEntityListener ());
+      registerSimEntityListener (new StdOutSimJQListener ());
   }
 
   /** Calls super method (in order to make implementation final).

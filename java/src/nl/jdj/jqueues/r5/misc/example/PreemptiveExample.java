@@ -7,7 +7,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.PreemptionStrategy;
 import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.SRTF;
-import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
+import nl.jdj.jqueues.r5.listener.StdOutSimJQListener;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
@@ -60,7 +60,7 @@ public final class PreemptiveExample
     final SimEventList<SimEvent> el = new DefaultSimEventList<> (SimEvent.class);
     System.out.println ("-> Creating P_LCFS queue (Preemptive/Drop) and registering System.out listener...");
     final SimQueue p_lcfsQueue_drop = new P_LCFS (el, PreemptionStrategy.DROP);
-    p_lcfsQueue_drop.registerSimEntityListener (new StdOutSimEntityListener<> ());
+    p_lcfsQueue_drop.registerSimEntityListener (new StdOutSimJQListener<> ());
     System.out.println ("-> Submitting jobs to P_LCFS (Preemptive/Drop) queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -77,7 +77,7 @@ public final class PreemptiveExample
     el.reset ();
     System.out.println ("-> Creating P_LCFS queue (Preemptive/Resume) and registering System.out listener...");
     final SimQueue p_lcfsQueue_resume = new P_LCFS (el, PreemptionStrategy.RESUME);
-    p_lcfsQueue_resume.registerSimEntityListener (new StdOutSimEntityListener<> ());
+    p_lcfsQueue_resume.registerSimEntityListener (new StdOutSimJQListener<> ());
     System.out.println ("-> Submitting jobs to P_LCFS (Preemptive/Resume) queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -94,7 +94,7 @@ public final class PreemptiveExample
     el.reset ();
     System.out.println ("-> Creating P_LCFS queue (Preemptive/Restart) and registering System.out listener...");
     final SimQueue p_lcfsQueue_restart = new P_LCFS (el, PreemptionStrategy.RESTART);
-    p_lcfsQueue_restart.registerSimEntityListener (new StdOutSimEntityListener<> ());
+    p_lcfsQueue_restart.registerSimEntityListener (new StdOutSimJQListener<> ());
     System.out.println ("-> Submitting jobs to P_LCFS (Preemptive/Restart) queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -111,7 +111,7 @@ public final class PreemptiveExample
     el.reset ();
     System.out.println ("-> Creating P_LCFS queue (Preemptive/Depart) and registering System.out listener...");
     final SimQueue p_lcfsQueue_depart = new P_LCFS (el, PreemptionStrategy.DEPART);
-    p_lcfsQueue_depart.registerSimEntityListener (new StdOutSimEntityListener<> ());
+    p_lcfsQueue_depart.registerSimEntityListener (new StdOutSimJQListener<> ());
     System.out.println ("-> Submitting jobs to P_LCFS (Preemptive/Depart) queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -128,7 +128,7 @@ public final class PreemptiveExample
     el.reset ();
     System.out.println ("-> Creating SRTF queue (Preemptive/Drop) and registering System.out listener...");
     final SimQueue srtfQueue_drop = new SRTF (el, PreemptionStrategy.DROP);
-    srtfQueue_drop.registerSimEntityListener (new StdOutSimEntityListener<> ());
+    srtfQueue_drop.registerSimEntityListener (new StdOutSimJQListener<> ());
     System.out.println ("-> Submitting jobs to SRTF (Preemptive/Drop) queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -145,7 +145,7 @@ public final class PreemptiveExample
     el.reset ();
     System.out.println ("-> Creating SRTF queue (Preemptive/Resume) and registering System.out listener...");
     final SimQueue srtfQueue_resume = new SRTF (el, PreemptionStrategy.RESUME);
-    srtfQueue_resume.registerSimEntityListener (new StdOutSimEntityListener<> ());
+    srtfQueue_resume.registerSimEntityListener (new StdOutSimJQListener<> ());
     System.out.println ("-> Submitting jobs to SRTF (Preemptive/Resume) queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -162,7 +162,7 @@ public final class PreemptiveExample
     el.reset ();
     System.out.println ("-> Creating SRTF queue (Preemptive/Restart) and registering System.out listener...");
     final SimQueue srtfQueue_restart = new SRTF (el, PreemptionStrategy.RESTART);
-    srtfQueue_restart.registerSimEntityListener (new StdOutSimEntityListener<> ());
+    srtfQueue_restart.registerSimEntityListener (new StdOutSimJQListener<> ());
     System.out.println ("-> Submitting jobs to SRTF (Preemptive/Restart) queue...");
     for (int i = 0; i < jobList.size (); i++)
     {
@@ -179,7 +179,7 @@ public final class PreemptiveExample
     el.reset ();
     System.out.println ("-> Creating SRTF queue (Preemptive/Depart) and registering System.out listener...");
     final SimQueue srtfQueue_depart = new SRTF (el, PreemptionStrategy.DEPART);
-    srtfQueue_depart.registerSimEntityListener (new StdOutSimEntityListener<> ());
+    srtfQueue_depart.registerSimEntityListener (new StdOutSimJQListener<> ());
     System.out.println ("-> Submitting jobs to SRTF (Preemptive/Depart) queue...");
     for (int i = 0; i < jobList.size (); i++)
     {

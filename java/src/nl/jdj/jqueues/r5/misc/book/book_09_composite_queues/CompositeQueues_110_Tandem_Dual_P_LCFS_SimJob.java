@@ -5,7 +5,7 @@ import java.util.List;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.selflistening.DefaultSelfListeningSimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
-import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
+import nl.jdj.jqueues.r5.listener.StdOutSimJQListener;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
@@ -27,7 +27,7 @@ final class CompositeQueues_110_Tandem_Dual_P_LCFS_SimJob
     {
       super (eventList, name, requestedServiceTime);
       this.queues = queues;
-      this.registerSimEntityListener (new StdOutSimEntityListener ());
+      this.registerSimEntityListener (new StdOutSimJQListener ());
     }
 
     @Override

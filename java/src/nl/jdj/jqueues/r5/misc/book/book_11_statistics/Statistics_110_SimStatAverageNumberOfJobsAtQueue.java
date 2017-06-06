@@ -5,7 +5,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
-import nl.jdj.jqueues.r5.listener.DefaultSimEntityListener;
+import nl.jdj.jqueues.r5.listener.DefaultSimJQListener;
 import nl.jdj.jsimulation.r5.DefaultSimEventList;
 import nl.jdj.jsimulation.r5.SimEventList;
 
@@ -13,7 +13,7 @@ final class Statistics_110_SimStatAverageNumberOfJobsAtQueue
 {
 
   private final static class AvgJStatListener
-  extends DefaultSimEntityListener
+  extends DefaultSimJQListener
   {
     
     public AvgJStatListener (SimQueue queue)

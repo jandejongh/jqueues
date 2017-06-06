@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.misc.example;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
+import nl.jdj.jqueues.r5.listener.StdOutSimJQListener;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Implementation of {@link SimJob} used (as starting point) in (most of) the examples.
@@ -30,7 +30,7 @@ extends AbstractSimJob<J, Q>
 {
  
   /** Whether or not this job reports main queue operations to {@link System#out}
-   *  through a {@link StdOutSimEntityListener}.
+   *  through a {@link StdOutSimJQListener}.
    * 
    */
   private final boolean reported;
@@ -58,7 +58,7 @@ extends AbstractSimJob<J, Q>
     this.reported = reported;
     this.n = n;
     if (this.reported)
-      registerSimEntityListener (new StdOutSimEntityListener ());
+      registerSimEntityListener (new StdOutSimJQListener ());
   }
 
   /** Returns the index number as service time at given (any non-{@code null}) queue,
