@@ -14,7 +14,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue.AutoRevocationPolicy;
 import nl.jdj.jqueues.r5.entity.jq.AbstractSimJQ;
 import nl.jdj.jqueues.r5.entity.SimEntityEvent;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
-import nl.jdj.jqueues.r5.event.SimEntityEventScheduler;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEventScheduler;
 import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent.Departure;
 import nl.jdj.jqueues.r5.listener.StdOutSimQueueListener;
@@ -635,7 +635,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   {
     if (time < this.getLastUpdateTime () || time < getEventList ().getTime () || job == null)
       throw new IllegalArgumentException ();
-    SimEntityEventScheduler.scheduleJobArrival (job, this, time);
+    SimJQEventScheduler.scheduleJobArrival (job, this, time);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1610,6 +1610,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * @see #getEventList
    * @see #getLastUpdateTime
+   * @see SimJQEventScheduler#scheduleJQ(SimEventList, SimJQEvent)
    * 
    */
   protected final SimJQEvent.Departure<J, Q> scheduleDepartureEvent (final double time, final J job)
@@ -1623,7 +1624,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       {
         AbstractSimQueue.this.departureFromEventList ((SimJQEvent.Departure) e);
       });
-    SimEntityEventScheduler.schedule (getEventList (), event);
+    SimJQEventScheduler.scheduleJQ (getEventList (), event);
     this.eventsScheduled.add (event);
     return event;
   }
