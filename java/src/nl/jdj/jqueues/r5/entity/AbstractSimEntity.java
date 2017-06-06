@@ -16,6 +16,7 @@ import nl.jdj.jqueues.r5.entity.SimEntityOperation.Update;
 import nl.jdj.jqueues.r5.entity.jq.AbstractSimJQ;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.listener.StdOutSimEntityListener;
 import nl.jdj.jsimulation.r5.SimEventList;
 import nl.jdj.jsimulation.r5.SimEventListResetListener;
 
@@ -772,6 +773,42 @@ implements SimEntity
   public final Set<SimEntityListener> getSimEntityListeners ()
   {
     return Collections.unmodifiableSet (this.simEntityListeners);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // STDOUT LISTENER
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** A private instance of a {@link StdOutSimEntityListener}.
+   * 
+   * @see #registerStdOutSimEntityListener
+   * @see #unregisterStdOutSimEntityListener
+   * 
+   */
+  private final StdOutSimEntityListener stdOutSimEntityListener = new StdOutSimEntityListener ();
+  
+  /** Registers the (private) {@link StdOutSimEntityListener} as listener (convenience method).
+   * 
+   * @see #unregisterStdOutSimEntityListener
+   * @see #registerSimEntityListener
+   * 
+   */
+  public final void registerStdOutSimEntityListener ()
+  {
+    registerSimEntityListener (this.stdOutSimEntityListener);
+  }
+  
+  /** Unregisters the (private) {@link StdOutSimEntityListener} as listener, if registered (convenience method).
+   * 
+   * @see #registerStdOutSimEntityListener
+   * @see #unregisterSimEntityListener
+   * 
+   */
+  public final void unregisterStdOutSimEntityListener ()
+  {
+    unregisterSimEntityListener (this.stdOutSimEntityListener);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
