@@ -1505,7 +1505,254 @@ Prototype & Symbol & Remark \\ \hline
 \section{Server-Access Credits}
 \label{sec:guided:sac}
 
-{\bf XXX}
+The \lstinline|ServerAccessCredits|
+  is a state property on every \lstinline|SimQueue|,
+  and setting its value is an
+  external operation
+  named \lstinline|SetServerAccessCredits|.
+Its value represents the maximum number of
+  jobs on that particular \lstinline|SimQueue|
+  that can \lstinline|START|,
+  in other words,
+  move from the waiting area into
+  the service area;
+  see also Figure \ref{fig:WaitingAndServiceArea}.
+Whenever a job starts,
+  the \lstinline|ServerAccessCredits| value
+  is decremented with one,
+  and if it reaches zero,
+  jobs are no longer allowed to start.
+The \lstinline|ServerAccessCredits| value
+  {\em never\/}
+  affects jobs that are already in the
+  service area.
+
+Every \lstinline|SimQueue| reports
+  changes to {\em the availability of server-access credits\/}
+  (i.e., not just changes to the actual value)
+  through the \lstinline|LOST_SAC|
+  and \lstinline|REGAINED SAC|
+  notification.
+The former notification can be the result of
+  starting one or more jobs
+  {\em or\/}
+  the invocation of \lstinline|SetServerAccessCredits|
+  with argument zero,
+  whereas the latter notification is always
+  the result of \lstinline|SetServerAccessCredits|
+  with argument (at least) non-zero.
+
+Since the server-access credits are an integral number,
+  it is represented by \lstinline|Java|'s
+  \lstinline|int| simple type,
+  but the value
+  \lstinline|Integer.MAX_VALUE|
+  is interpreted as infinity.
+This is in fact the default value,
+  as can be see in Table \ref{resetStateSettings-queue},
+  and as long as \lstinline|ServerAccessCredits|
+  has this value,
+  it is not affected by starting jobs
+  (the value is not decremented),
+  effectively turning off the mechanism of
+  server-access credits.
+
+In addition to the default value being $\infty$,
+  \lstinline|SimQueue| implementations
+  cannot use \lstinline|ServerAccessCredits|
+  to meet their requirements.
+For instance, in order to implement queueing
+  systems with multiple servers like
+  \lstinline|FCFS_c|
+  (see Section \ref{sec:FCFS_c}),
+  the use of
+  \lstinline|ServerAccessCredits|
+  could be queue handy.
+However, decrementing the value upon \lstinline|START|
+  of a job is the only thing queues may do
+  (and must adhere to).
+
+These two facts imply that
+  if you never "touch"
+  the \lstinline|ServerAccessCredits|
+  through the use of
+  \lstinline|SetServerAccessCredits|,
+  you can safely forget the entire concept.
+On the other hand,
+  should you have any need for it,
+  it is always available,
+  whatever the (concrete) queue type.
+
+For our example showing the use of server-access credits,
+  shown in Listing \ref{simExample4_main},
+  we switch queues again,
+  and select a \lstinline|FCFS_c| queue.
+In the example, after creating the queue
+  and resetting the event list,
+  we schedule (!) setting the server-access credits
+  on the queue to zero at $t=0$,
+  again using a utility method
+  from \lstinline|SimQueueEventScheduler|.
+We then schedule six jobs
+  with one second inter-arrival time
+  starting at $t=1$,
+  each requiring $1.05$ service time.
+Finally we schedule setting the server-access credits
+  to unity at $t=8$,
+  to three at $t=10$,
+  and to infinity at $t=15$.
+We show the output of the program in
+  Listing \ref{simExample4_out}.
+
+\begin{lstlisting}[
+  caption={Setting Server-Access Credits on a \mbox{\lstinline[basicstyle=\ttfamily]|FCFS_c|} queue.},
+  label=simExample4_main,
+  basicstyle=\tiny]
+
+    final SimEventList el = new DefaultSimEventList ();
+    final FCFS_c queue = new FCFS_c (el, 2);
+    queue.registerStdOutSimEntityListener ();
+    el.reset (0.0);
+    SimQueueEventScheduler.scheduleServerAccessCredits (queue, 0.0, 0);
+    for (int j = 1; j <= 6; j++)
+    {
+      final double jobServiceTime = 1.05;
+      final double jobArrivalTime = (double) j;
+      final String jobName = Integer.toString (j);
+      final SimJob job = new DefaultSimJob (null, jobName, jobServiceTime);
+      SimJQEventScheduler.scheduleJobArrival (job, queue, jobArrivalTime);
+    }
+    SimQueueEventScheduler.scheduleServerAccessCredits (queue,  8.0, 1);
+    SimQueueEventScheduler.scheduleServerAccessCredits (queue, 10.0, 3);
+    SimQueueEventScheduler.scheduleServerAccessCredits (queue, 15.0, Integer.MAX_VALUE);
+    el.run ();
+
+\end{lstlisting}
+  
+\begin{lstlisting}[
+  caption={The output of Listing \ref{simExample4_main}.},
+  label=simExample4_out,
+  basicstyle=\tiny]
+
+StdOutSimEntityListener t=0.0, entity=FCFS_2: STATE CHANGED:
+  => RESET [Reset@FCFS_2]
+StdOutSimEntityListener entity=FCFS_2: RESET.
+StdOutSimEntityListener t=0.0, entity=FCFS_2: STATE CHANGED:
+  => OUT_OF_SAC [SAC[0]@FCFS_2]
+StdOutSimEntityListener t=1.0, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=1.0, entity=FCFS_2: STATE CHANGED:
+  => ARRIVAL [Arr[1]@FCFS_2]
+StdOutSimEntityListener t=2.0, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=2.0, entity=FCFS_2: STATE CHANGED:
+  => ARRIVAL [Arr[2]@FCFS_2]
+StdOutSimEntityListener t=3.0, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=3.0, entity=FCFS_2: STATE CHANGED:
+  => ARRIVAL [Arr[3]@FCFS_2]
+StdOutSimEntityListener t=4.0, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=4.0, entity=FCFS_2: STATE CHANGED:
+  => ARRIVAL [Arr[4]@FCFS_2]
+StdOutSimEntityListener t=5.0, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=5.0, entity=FCFS_2: STATE CHANGED:
+  => ARRIVAL [Arr[5]@FCFS_2]
+StdOutSimEntityListener t=6.0, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=6.0, entity=FCFS_2: STATE CHANGED:
+  => ARRIVAL [Arr[6]@FCFS_2]
+StdOutSimEntityListener t=8.0, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=8.0, entity=FCFS_2: STATE CHANGED:
+  => START [Start[1]@FCFS_2]
+StdOutSimEntityListener t=9.05, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=9.05, entity=FCFS_2: STATE CHANGED:
+  => DEPARTURE [Dep[1]@FCFS_2]
+StdOutSimEntityListener t=10.0, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=10.0, entity=FCFS_2: STATE CHANGED:
+  => START [Start[2]@FCFS_2]
+  => START [Start[3]@FCFS_2]
+  => REGAIN_SAC [SAC[1]@FCFS_2]
+  => STA_FALSE [StartArmed[false]@FCFS_2]
+StdOutSimEntityListener t=11.05, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=11.05, entity=FCFS_2: STATE CHANGED:
+  => DEPARTURE [Dep[2]@FCFS_2]
+  => START [Start[4]@FCFS_2]
+  => OUT_OF_SAC [SAC[0]@FCFS_2]
+StdOutSimEntityListener t=11.05, entity=FCFS_2: STATE CHANGED:
+  => DEPARTURE [Dep[3]@FCFS_2]
+  => STA_TRUE [StartArmed[true]@FCFS_2]
+StdOutSimEntityListener t=12.100000000000001, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=12.100000000000001, entity=FCFS_2: STATE CHANGED:
+  => DEPARTURE [Dep[4]@FCFS_2]
+StdOutSimEntityListener t=15.0, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=15.0, entity=FCFS_2: STATE CHANGED:
+  => START [Start[5]@FCFS_2]
+  => START [Start[6]@FCFS_2]
+  => REGAIN_SAC [SAC[2147483647]@FCFS_2]
+  => STA_FALSE [StartArmed[false]@FCFS_2]
+StdOutSimEntityListener t=16.05, entity=FCFS_2: UPDATE.
+StdOutSimEntityListener t=16.05, entity=FCFS_2: STATE CHANGED:
+  => DEPARTURE [Dep[5]@FCFS_2]
+  => STA_TRUE [StartArmed[true]@FCFS_2]
+StdOutSimEntityListener t=16.05, entity=FCFS_2: STATE CHANGED:
+  => DEPARTURE [Dep[6]@FCFS_2]
+
+\end{lstlisting}
+
+The output shows indeed that at $t=0$,
+  the queue fires a notification \lstinline|OUT_OF_SAC|.
+This makes sense, since the server-access credits
+  were set to zero from their default
+  value infinity.
+Subsequently,
+  the arrival of the jobs at $t=1, 2, \ldots$,
+  is reported,
+  but since there are no server-access credits,
+  the jobs cannot start.
+The behavior of \lstinline|FCFS_c|
+  (and many other queueing systems)
+  to maintain arrival-time ordering
+  of the jobs in the waiting area,
+  irrespective of
+  whether these jobs are waiting for
+  server-access credits or server availability.
+At $t=8$, the queue is given a single
+  server-access credit,
+  and it immediately uses it to
+  take job $1$ into service.
+What we want to emphasize is that
+  despite the server-access credit given to the queue,
+  the queue does {\em not\/} issue a notification
+  that it has regained server-access credits,
+  because the credit is used immediately to start
+  job $1$, thus leaving zero credits available;
+  the same as the number available before
+  invocation of the operation \lstinline|SetServerAccessCredits|
+  at $t=8$.
+This is a clear example of the {\em atomicity\/}
+  of operations and notifications,
+  which we shall explain in more detail in Section \ref{sec:guided:atomicity}.
+At $t=10$, the queue is granted three additional server-access credits,
+  but it can only start two jobs, since it has only two servers available.
+Hence, one credit remains after starting the two jobs,
+  and this time,
+  the queue {\em does\/} issue
+  a \lstinline|REGAIN_SAC| notification.
+Note that in this particular case,
+  the fact that \lstinline|FCFS_c|
+  only allows as many jobs in the service area as there are server available,
+  is a policy choice of \lstinline|FCFS_c|.
+It would have been legal for the queueing system
+  to try to move as many jobs are possible from the waiting area
+  to the service area upon having been granted new service access credits.
+But the choice made in \lstinline|FCFS_c| makes a lot of sense;
+  now the \lstinline|START| notification
+  is issued the moment a job actually starts its service at a
+  server,
+  instead of at the otherwise meaningless moment
+  of entering the service area
+  where is may still have to wait for a server to become available.
+The remainder of the notifications are quite trivial.
+It should, however,
+  be clear that queueing systems have to properly
+  specify their behavior in the presence of limited
+  server-access credits.
 
 \section{Revocations}
 \label{sec:guided:revocations}
