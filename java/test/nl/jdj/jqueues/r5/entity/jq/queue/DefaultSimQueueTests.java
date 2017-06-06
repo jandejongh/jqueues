@@ -96,7 +96,7 @@ public class DefaultSimQueueTests
     if (! (silent || deadSilent))
     {
       final StdOutSimQueueListener listener = new StdOutSimQueueListener ();
-      listener.setOnlyUpdatesAndStateChanges (true);
+      listener.setOnlyResetsAndUpdatesAndStateChanges (true);
       queue.registerSimEntityListener (listener);
       if (queue instanceof SimQueueComposite)
         for (final SimQueue subQueue : (Set<SimQueue>) ((SimQueueComposite) queue).getQueues ())
