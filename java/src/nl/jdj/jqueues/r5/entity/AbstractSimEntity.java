@@ -41,6 +41,7 @@ import nl.jdj.jsimulation.r5.SimEventListResetListener;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
+@SuppressWarnings("LeakingThisInConstructor")
 public abstract class AbstractSimEntity
 implements SimEntity
 {
