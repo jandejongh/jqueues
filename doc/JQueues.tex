@@ -1757,7 +1757,68 @@ It should, however,
 \section{Revocations}
 \label{sec:guided:revocations}
 
+Up to now,
+  we have seen two means by which a \lstinline|SimJob|
+  can end its visit to a \lstinline|SimQueue|:
+  Through {\em departure\/}
+  and through {\em drop}.
+We also found that jobs may not leave the queue at all;
+  the sticky jobs.
+The final way in which a visit can end is through {\em revocation};
+  a revocation is a user-initiated exit of a job at a queue.
+
+There are two flavors of revocations:
+\begin{itemize}
+\item
+  Users can invoke the external \lstinline|REVOKE| operation,
+    requesting for the forced exit of a jobs.
+  Every \lstinline|SimQueue| must support the operation.
+\item
+  Users can set one or more conditions on a queue.
+  Once these conditions are met, the queue automatically
+    revokes the job.
+  Such revocations are named {\em auto-revocations}.
+\end{itemize}
+
+We shall discuss each of these flavors in turn.
+
+\subsection{The \lstinline|REVOKE| Operation}
+
+The external \lstinline|REVOKE| operation
+  {\em requests\/} the removal of a job visiting a queue.
+If successful,
+  a \lstinline|REVOCATION| notification is fired.
+On every \lstinline|SimQueue|,
+  the method \lstinline|revoke (double, SimJob)|
+  revokes a job unconditionally from the queue.
+The first argument is (as always)
+  the time of the request.
+If the job is present a priori,
+  the revocation request cannot fail;
+  every \lstinline|SimQueue| implementation
+  must honor it.
+A variant method exists: \lstinline|revoke (double, SimJob, boolean)|,
+  in which the third argument indicates
+  whether it is allowed to revoke the job
+  from the {\em service area}.
+If the argument is \lstinline|false| and the job is indeed
+  in the service area,
+  the request will fail,
+  and no notification will be fired.
+If, however, the job is in the waiting area,
+  and/or the argument is set to \lstinline|true|
+  and the job is present in either area,
+  then, again, the request cannot fail.
+
+{\bf Example}
+
+\subsection{Auto-Revocations}
+
 {\bf XXX}
+
+The set of conditions for auto-revocation
+  that can be set on a \lstinline|SimQueue|
+  depends on the queue's type.
 
 \section{Multiclass Queues}
 \label{sec:guided:qos}
