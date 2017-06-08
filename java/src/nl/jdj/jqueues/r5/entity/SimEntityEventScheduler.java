@@ -91,6 +91,31 @@ public abstract class SimEntityEventScheduler
     eventList.add (entityEvent);
   }
   
+  /** Creates a default update event and schedules it.
+   * 
+   * @param eventList  The event list, non-{@code null}.
+   * @param entity     The entity to update, non-{@code null}.
+   * @param updateTime The scheduled update time.
+   * 
+   * @throws IllegalArgumentException If the event list or entity is <code>null</code>,
+   *                                  if the scheduled time is in the past
+   *                                  (compared to the time on the event list),
+   *                                  if the entity has a non-{@code null} event list different from the argument.
+   * 
+   * @see SimEntityEvent.Update
+   * @see SimEntity#update
+   * @see #scheduleE(SimEventList, SimEntityEvent) 
+   * 
+   */
+  public static void scheduleUpdate
+  (final SimEventList eventList, final SimEntity entity, final double updateTime)
+  {
+    if (eventList == null || entity == null || eventList.getTime () > updateTime
+    || (entity.getEventList () != null && entity.getEventList () != eventList))
+      throw new IllegalArgumentException ();
+    SimEntityEventScheduler.scheduleE (eventList, new SimEntityEvent.Update (entity, updateTime));
+  }
+    
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // END OF FILE
