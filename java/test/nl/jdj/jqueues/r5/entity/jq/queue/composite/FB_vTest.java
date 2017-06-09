@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.NumVisitsFeedbackSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.FB_v;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DROP;
@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/** Tests for {@link NumVisitsFeedbackSimQueue}.
+/** Tests for {@link FB_v}.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -84,8 +84,8 @@ public class FB_vTest
    final String message)    
    throws SimQueuePredictionException
   {
-    final NumVisitsFeedbackSimQueue fb_v =
-      new NumVisitsFeedbackSimQueue (encQueue.getEventList (), encQueue, numberOfVisits, null);
+    final FB_v fb_v =
+      new FB_v (encQueue.getEventList (), encQueue, numberOfVisits, null);
     final SimQueuePredictor_FB_v predictor_fb_v =
       new SimQueuePredictor_FB_v (encQueuePredictor);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
@@ -93,7 +93,7 @@ public class FB_vTest
   }
   
   /**
-   * Test of NumVisitsFeedbackSimQueue.
+   * Test of FB_v.
    * 
    */
   @Test

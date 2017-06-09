@@ -25,8 +25,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class NumVisitsFeedbackSimQueue
-<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends NumVisitsFeedbackSimQueue>
+public class FB_v
+<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends FB_v>
   extends AbstractFeedbackSimQueue<DJ, DQ, J, Q>
 {
   
@@ -68,7 +68,7 @@ public class NumVisitsFeedbackSimQueue
    * @see DefaultDelegateSimJobFactory
    * 
    */
-  public NumVisitsFeedbackSimQueue
+  public FB_v
   (final SimEventList eventList,
     final DQ queue,
     final int numberOfVisits,
@@ -78,10 +78,10 @@ public class NumVisitsFeedbackSimQueue
     this.numberOfVisits = numberOfVisits;
   }
   
-  /** Returns a new {@link NumVisitsFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
+  /** Returns a new {@link FB_v} object on the same {@link SimEventList} with a copy of the sub-queue,
    *  the same number of visits required, and the same delegate-job factory.
    * 
-   * @return A new {@link NumVisitsFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
+   * @return A new {@link FB_v} object on the same {@link SimEventList} with a copy of the sub-queue,
    *         the same number of visits required, and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
@@ -93,10 +93,10 @@ public class NumVisitsFeedbackSimQueue
    * 
    */
   @Override
-  public NumVisitsFeedbackSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  public FB_v<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final SimQueue<DJ, DQ> queueCopy = getEncapsulatedQueue ().getCopySimQueue ();
-    return new NumVisitsFeedbackSimQueue<>
+    return new FB_v<>
       (getEventList (), (DQ) queueCopy, getNumberOfVisits (), getDelegateSimJobFactory ());
   }
   

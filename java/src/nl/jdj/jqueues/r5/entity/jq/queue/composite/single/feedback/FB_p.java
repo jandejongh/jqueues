@@ -35,8 +35,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class ProbabilisticFeedbackSimQueue
-<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends ProbabilisticFeedbackSimQueue>
+public class FB_p
+<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends FB_p>
   extends AbstractFeedbackSimQueue<DJ, DQ, J, Q>
 {
   
@@ -77,7 +77,7 @@ public class ProbabilisticFeedbackSimQueue
    * @see DefaultDelegateSimJobFactory
    * 
    */
-  public ProbabilisticFeedbackSimQueue
+  public FB_p
   (final SimEventList eventList,
     final DQ queue,
     final double p_feedback,
@@ -88,10 +88,10 @@ public class ProbabilisticFeedbackSimQueue
     this.p_feedback = p_feedback;
   }
   
-  /** Returns a new {@link ProbabilisticFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
+  /** Returns a new {@link FB_p} object on the same {@link SimEventList} with a copy of the sub-queue,
    *  the same feedback probability, a new RNG, and the same delegate-job factory.
    * 
-   * @return A new {@link ProbabilisticFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the sub-queue,
+   * @return A new {@link FB_p} object on the same {@link SimEventList} with a copy of the sub-queue,
    *  the same feedback probability, a new RNG, and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
@@ -103,10 +103,10 @@ public class ProbabilisticFeedbackSimQueue
    * 
    */
   @Override
-  public ProbabilisticFeedbackSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  public FB_p<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final SimQueue<DJ, DQ> queueCopy = getEncapsulatedQueue ().getCopySimQueue ();
-    return new ProbabilisticFeedbackSimQueue<>
+    return new FB_p<>
       (getEventList (), (DQ) queueCopy, getFeedbackProbability (), null, getDelegateSimJobFactory ());
   }
   

@@ -12,8 +12,8 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.Jackson;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.GeneralParallelSimQueues;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.NumVisitsFeedbackSimQueue;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.ProbabilisticFeedbackSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.FB_v;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.FB_p;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LCFS;
@@ -194,7 +194,7 @@ public final class CompositeSimQueueExample
     fcfsQueue3.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Creating NumVisits feedback queue (5 visits)...");
     final SimQueue numVisitsFBQueue =
-      new NumVisitsFeedbackSimQueue (el, fcfsQueue3, 5, delegateSimJobFactory);
+      new FB_v (el, fcfsQueue3, 5, delegateSimJobFactory);
     numVisitsFBQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to NumVisitsFB queue...");
     for (int i = 0; i < jobList.size (); i++)
@@ -219,7 +219,7 @@ public final class CompositeSimQueueExample
     randomQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Creating probabilistic feedback queue (p=50%)...");
     final SimQueue pFBQueue =
-      new ProbabilisticFeedbackSimQueue (el, randomQueue, 0.5, null, delegateSimJobFactory);
+      new FB_p (el, randomQueue, 0.5, null, delegateSimJobFactory);
     pFBQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to probabilistic feedback queue...");
     for (int i = 0; i < jobList.size (); i++)

@@ -14,7 +14,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
  * It uses a more convenient {@link SimQueueFeedbackController} provided upon construction.
  * 
  * <p>
- * In addition, in support for {@link NumVisitsFeedbackSimQueue},
+ * In addition, in support for {@link FB_v},
  * it maintains the number of visits since the last reset for each "real" job in the composite queue.
  * 
  * <p>
@@ -26,7 +26,8 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
  * @param <DQ> The queue-type for delegate jobs.
  * 
  * @see SimQueueFeedbackController
- * @see NumVisitsFeedbackSimQueue
+ * @see FB_v
+ * @see FB_p
  * 
  * @author Jan de Jongh, TNO
  * 

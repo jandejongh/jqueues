@@ -6,7 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.NumVisitsFeedbackSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.FB_v;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite;
 import nl.jdj.jqueues.r5.extensions.visitscounter.SimQueueVisitsCounterStateHandler;
@@ -16,7 +16,7 @@ import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 
-/** A {@link SimQueuePredictor} for {@link NumVisitsFeedbackSimQueue}.
+/** A {@link SimQueuePredictor} for {@link FB_v}.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -28,8 +28,8 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
  * 
  */
 public class SimQueuePredictor_FB_v
-extends AbstractSimQueuePredictor_Composite<NumVisitsFeedbackSimQueue>
-implements SimQueuePredictor<NumVisitsFeedbackSimQueue>
+extends AbstractSimQueuePredictor_Composite<FB_v>
+implements SimQueuePredictor<FB_v>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,8 +47,8 @@ implements SimQueuePredictor<NumVisitsFeedbackSimQueue>
    * 
    */
   @Override
-  public SimQueueState<SimJob, NumVisitsFeedbackSimQueue> createQueueState
-  (final NumVisitsFeedbackSimQueue queue, final boolean isROEL)
+  public SimQueueState<SimJob, FB_v> createQueueState
+  (final FB_v queue, final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
     queueState.registerHandler (new SimQueueVisitsCounterStateHandler ());
@@ -63,7 +63,7 @@ implements SimQueuePredictor<NumVisitsFeedbackSimQueue>
 
   @Override
   public boolean isStartArmed
-  (final NumVisitsFeedbackSimQueue queue, final SimQueueState<SimJob, NumVisitsFeedbackSimQueue> queueState)
+  (final FB_v queue, final SimQueueState<SimJob, FB_v> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
@@ -73,10 +73,10 @@ implements SimQueuePredictor<NumVisitsFeedbackSimQueue>
   @Override
   protected void dropJobs
   (final double time,
-   final NumVisitsFeedbackSimQueue queue,
-   final SimQueueState<SimJob, NumVisitsFeedbackSimQueue> queueState,
+   final FB_v queue,
+   final SimQueueState<SimJob, FB_v> queueState,
    final Set<SimJob> drops,
-   final Set<JobQueueVisitLog<SimJob, NumVisitsFeedbackSimQueue>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, FB_v>> visitLogsSet)
   {
     super.dropJobs (time, queue, queueState, drops, visitLogsSet);
     final SimQueueVisitsCounterStateHandler queueStateHandler =
@@ -89,10 +89,10 @@ implements SimQueuePredictor<NumVisitsFeedbackSimQueue>
   @Override
   protected void revokeJobs
   (final double time,
-   final NumVisitsFeedbackSimQueue queue,
-   final SimQueueState<SimJob, NumVisitsFeedbackSimQueue> queueState,
+   final FB_v queue,
+   final SimQueueState<SimJob, FB_v> queueState,
    final Set<SimJob> revokers,
-   final Set<JobQueueVisitLog<SimJob, NumVisitsFeedbackSimQueue>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, FB_v>> visitLogsSet)
   {
     super.revokeJobs (time, queue, queueState, revokers, visitLogsSet);
     final SimQueueVisitsCounterStateHandler queueStateHandler =
@@ -109,10 +109,10 @@ implements SimQueuePredictor<NumVisitsFeedbackSimQueue>
   @Override
   protected void startJobs
   (final double time,
-   final NumVisitsFeedbackSimQueue queue,
-   final SimQueueState<SimJob, NumVisitsFeedbackSimQueue> queueState,
+   final FB_v queue,
+   final SimQueueState<SimJob, FB_v> queueState,
    final Set<SimJob> starters,
-   final Set<JobQueueVisitLog<SimJob, NumVisitsFeedbackSimQueue>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, FB_v>> visitLogsSet)
   throws SimQueuePredictionException
   {
     // Actually, this is always the case, but let's prepare for predictable extensions...
@@ -129,7 +129,7 @@ implements SimQueuePredictor<NumVisitsFeedbackSimQueue>
             throw new IllegalStateException ();
           final SubQueueSimpleEvent encQueueEvent =
             new SubQueueSimpleEvent (queue.getEncapsulatedQueue (), SimQueueSimpleEventType.ARRIVAL, null, job, null);
-          final Set<JobQueueVisitLog<SimJob, NumVisitsFeedbackSimQueue>> encQueueVisitLogsSet = new HashSet<> ();
+          final Set<JobQueueVisitLog<SimJob, FB_v>> encQueueVisitLogsSet = new HashSet<> ();
           doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (encQueueEvent), encQueueVisitLogsSet);
         }
         else
@@ -152,10 +152,10 @@ implements SimQueuePredictor<NumVisitsFeedbackSimQueue>
   @Override
   protected void departJobs
   (final double time,
-   final NumVisitsFeedbackSimQueue queue,
-   final SimQueueState<SimJob, NumVisitsFeedbackSimQueue> queueState,
+   final FB_v queue,
+   final SimQueueState<SimJob, FB_v> queueState,
    final Set<SimJob> departers,
-   final Set<JobQueueVisitLog<SimJob, NumVisitsFeedbackSimQueue>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, FB_v>> visitLogsSet)
   throws SimQueuePredictionException
   {
     final SimQueueVisitsCounterStateHandler queueStateHandler =
