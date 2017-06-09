@@ -6,7 +6,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncTL;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.enc.EncTL;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.RANDOM;

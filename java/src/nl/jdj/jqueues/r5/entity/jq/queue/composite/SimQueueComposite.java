@@ -5,8 +5,8 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.GeneralParallelSimQueues;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncHS;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.Enc;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.enc.EncHS;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.enc.Enc;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem;
 
 /** A {@link SimQueue} that embeds a fixed set of other queues;
