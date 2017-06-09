@@ -32,7 +32,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see SimQueueComposite
  * @see StartModel
  * @see StartModel#ENCAPSULATOR_HIDE_START_QUEUE
- * @see EncapsulatorSimQueue
+ * @see Enc
  * 
  * @author Jan de Jongh, TNO
  * 

@@ -18,8 +18,8 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite.Rea
  * 
  * @see SimQueue#doOperation
  * @see AbstractSimQueue#registerDelegatedOperation
- * @see EncapsulatorSimQueue
- * @see EncapsulatorHideStartSimQueue
+ * @see Enc
+ * @see EncHS
  * 
  * @author Jan de Jongh, TNO
  * 

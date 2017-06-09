@@ -5,8 +5,8 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.entity.SimEntity;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorHideStartSimQueue;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncHS;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.Enc;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS_B;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IS_CST;
@@ -55,7 +55,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/** Tests for {@link EncapsulatorSimQueue} and {@link EncapsulatorHideStartSimQueue}.
+/** Tests for {@link Enc} and {@link EncHS}.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -111,12 +111,12 @@ public class EncTest
     final SimQueuePredictor cQueuePredictor;
     if (hideStart)
     {
-      cQueue = new EncapsulatorHideStartSimQueue (encQueue.getEventList (), encQueue, null);
+      cQueue = new EncHS (encQueue.getEventList (), encQueue, null);
       cQueuePredictor = new SimQueuePredictor_EncHS (encQueuePredictor);
     }
     else
     {
-      cQueue = new EncapsulatorSimQueue (encQueue.getEventList (), encQueue, null);
+      cQueue = new Enc (encQueue.getEventList (), encQueue, null);
       cQueuePredictor = new SimQueuePredictor_Enc (encQueuePredictor);
     }
     encQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
@@ -141,9 +141,9 @@ public class EncTest
   {
     final SimQueue cQueue;
     if (hideStart)
-      cQueue = new EncapsulatorHideStartSimQueue (encQueue.getEventList (), encQueue, null);
+      cQueue = new EncHS (encQueue.getEventList (), encQueue, null);
     else
-      cQueue = new EncapsulatorSimQueue (encQueue.getEventList (), encQueue, null);
+      cQueue = new Enc (encQueue.getEventList (), encQueue, null);
     encQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     cQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     predictorQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
@@ -349,7 +349,7 @@ public class EncTest
     // Enc[Enc[FCFS]]
     // EncHS[Enc[FCFS]]
     testEncAux (hideStart,
-      new EncapsulatorSimQueue (eventList, new FCFS (eventList), null),
+      new Enc (eventList, new FCFS (eventList), null),
       new SimQueuePredictor_Enc (new SimQueuePredictor_FCFS ()),
       numberOfJobs,
       jitterHint,
@@ -362,9 +362,9 @@ public class EncTest
     if (hideStart)
       // EncHS[Enc[FCFS]] == Enc[EncHS[FCFS]]
       testEncAux (hideStart,
-        new EncapsulatorSimQueue (eventList, new FCFS (eventList), null),
-        new EncapsulatorSimQueue (eventList,
-          new EncapsulatorHideStartSimQueue (eventList,
+        new Enc (eventList, new FCFS (eventList), null),
+        new Enc (eventList,
+          new EncHS (eventList,
             new FCFS (eventList), null), null),
         numberOfJobs,
         jitterHint,
@@ -377,9 +377,9 @@ public class EncTest
     else
       // Enc[EncHS[FCFS]] == EncHS[Enc[FCFS]]
       testEncAux (hideStart,
-        new EncapsulatorHideStartSimQueue (eventList, new FCFS (eventList), null),
-        new EncapsulatorHideStartSimQueue (eventList,
-          new EncapsulatorSimQueue (eventList,
+        new EncHS (eventList, new FCFS (eventList), null),
+        new EncHS (eventList,
+          new Enc (eventList,
             new FCFS (eventList), null), null),
         numberOfJobs,
         jitterHint,
@@ -392,8 +392,8 @@ public class EncTest
     // Enc[Enc[Enc[P_LCFS]]]
     // EncHS[Enc[Enc[P_LCFS]]]
     testEncAux (hideStart,
-      new EncapsulatorSimQueue (eventList,
-        new EncapsulatorSimQueue (eventList,
+      new Enc (eventList,
+        new Enc (eventList,
           new P_LCFS (eventList, null), null), null),
       new SimQueuePredictor_Enc (new SimQueuePredictor_Enc (new SimQueuePredictor_P_LCFS ())),
       numberOfJobs,
@@ -551,7 +551,7 @@ public class EncTest
   }
 
   /**
-   * Test of EncapsulatorSimQueue.
+   * Test of Enc.
    * 
    */
   @Test
@@ -561,7 +561,7 @@ public class EncTest
   }
   
   /**
-   * Test of EncapsulatorHideStartSimQueue.
+   * Test of EncHS.
    * 
    */
   @Test

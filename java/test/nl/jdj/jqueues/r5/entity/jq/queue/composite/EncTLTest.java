@@ -5,8 +5,8 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.entity.SimEntity;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorHideStartSimQueue;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorTimeLimitSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncHS;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncTL;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IS_CST;
 import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.PS;
@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/** Tests for {@link EncapsulatorTimeLimitSimQueue}.
+/** Tests for {@link EncTL}.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -87,7 +87,7 @@ public class EncTLTest
    throws SimQueuePredictionException
   {
     final SimQueue cQueue =
-      new EncapsulatorTimeLimitSimQueue (encQueue.getEventList (), encQueue, null, maWaitingTime, maxServiceTime, maxSojournTime);
+      new EncTL (encQueue.getEventList (), encQueue, null, maWaitingTime, maxServiceTime, maxSojournTime);
     final SimQueuePredictor cQueuePredictor = new SimQueuePredictor_EncTL (encQueuePredictor);
     encQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     cQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
@@ -112,7 +112,7 @@ public class EncTLTest
    throws SimQueuePredictionException
   {
     final SimQueue cQueue =
-      new EncapsulatorTimeLimitSimQueue (encQueue.getEventList (), encQueue, null, maWaitingTime, maxServiceTime, maxSojournTime);
+      new EncTL (encQueue.getEventList (), encQueue, null, maWaitingTime, maxServiceTime, maxSojournTime);
     encQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     cQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     predictorQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
@@ -202,7 +202,7 @@ public class EncTLTest
         {
           final SimQueue encQueue = 
             maxWaitingTime == 0 || maxSojournTime == 0
-              ? new EncapsulatorHideStartSimQueue (eventList, new FCFS<> (eventList), null)
+              ? new EncHS (eventList, new FCFS<> (eventList), null)
               : new FCFS (eventList);
           final AbstractSimQueuePredictor encQueuePredictor =
             maxWaitingTime == 0 || maxSojournTime == 0
