@@ -31,8 +31,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class DropCollectorSimQueue
-  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends DropCollectorSimQueue>
+public class DCol
+  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends DCol>
   extends AbstractSimQueueComposite<DJ, DQ, J, Q>
 {
 
@@ -84,7 +84,7 @@ public class DropCollectorSimQueue
    * @see StartModel
    * 
    */
-  public DropCollectorSimQueue
+  public DCol
   (final SimEventList eventList,
    final SimQueue<DJ, DQ> mainQueue,
    final SimQueue<DJ, DQ> dropQueue,
@@ -98,10 +98,10 @@ public class DropCollectorSimQueue
     setDropDestinationQueue ((DQ) dropQueue);
   }
 
-  /** Returns a new {@link DropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and
+  /** Returns a new {@link DCol} object on the same {@link SimEventList} with copies of the main and
    *  drop queues and the same delegate-job factory.
    * 
-   * @return A new {@link DropCollectorSimQueue} object on the same {@link SimEventList} with copies of the main and
+   * @return A new {@link DCol} object on the same {@link SimEventList} with copies of the main and
    * drop queues and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the main or drop queues could not be copied through {@link SimQueue#getCopySimQueue}.
@@ -113,11 +113,11 @@ public class DropCollectorSimQueue
    * 
    */
   @Override
-  public DropCollectorSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  public DCol<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final SimQueue<DJ, DQ> mainQueueCopy = getMainQueue ().getCopySimQueue ();
     final SimQueue<DJ, DQ> dropQueueCopy = getDropQueue ().getCopySimQueue ();
-    return new DropCollectorSimQueue<> (getEventList (), mainQueueCopy, dropQueueCopy, getDelegateSimJobFactory ());
+    return new DCol<> (getEventList (), mainQueueCopy, dropQueueCopy, getDelegateSimJobFactory ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
