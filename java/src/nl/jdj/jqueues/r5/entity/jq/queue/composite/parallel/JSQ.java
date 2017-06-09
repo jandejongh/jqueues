@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.jsq;
+package nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel;
 
 import java.util.LinkedHashSet;
 import java.util.Random;
@@ -9,7 +9,6 @@ import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.AbstractParallelSimQueues;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Parallel queues with Join Shortest Queue selection policy.

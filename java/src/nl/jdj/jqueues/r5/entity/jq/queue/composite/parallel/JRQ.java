@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.jrq;
+package nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel;
 
 import java.util.Random;
 import java.util.Set;
@@ -9,8 +9,6 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.Jackson;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.AbstractParallelSimQueues;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.jsq.JSQ;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Parallel queues with random selection policy.

@@ -1,4 +1,4 @@
-package nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.pattern;
+package nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -9,7 +9,6 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.AbstractParallelSimQueues;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Parallel queues with pattern selection policy.
