@@ -119,7 +119,7 @@ public enum KnownSimQueue
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   JSQ            ("JSQ", true,
-                  nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.jsq.JSQ.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.JSQ.class,
                   GeneratorProfile.SE_QSET_DSJF_OWJ_RNG,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,

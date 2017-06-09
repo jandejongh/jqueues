@@ -6,7 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.pattern.Pattern;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.Pattern;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IC;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IS;
