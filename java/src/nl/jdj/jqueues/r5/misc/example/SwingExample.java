@@ -13,7 +13,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.ctandem2.CTandem2;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.util.swing.JSimQueueComposite;
 import nl.jdj.jqueues.r5.util.swing.JSimQueueCreationDialog;

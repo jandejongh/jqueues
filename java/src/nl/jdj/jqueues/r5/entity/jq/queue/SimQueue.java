@@ -5,7 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.SimEntity;
 import nl.jdj.jqueues.r5.entity.SimEntityListener;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.ctandem2.CTandem2;
 import nl.jdj.jqueues.r5.entity.jq.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 

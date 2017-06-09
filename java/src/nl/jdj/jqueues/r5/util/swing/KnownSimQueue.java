@@ -109,7 +109,7 @@ public enum KnownSimQueue
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   COMP_TANDEM_2  ("CTandem2", true,
-                  nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.ctandem2.CTandem2.class,
                   GeneratorProfile.SE_Q1_Q2_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,

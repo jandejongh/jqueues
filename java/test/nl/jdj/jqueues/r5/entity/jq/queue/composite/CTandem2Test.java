@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.ctandem2.CTandem2;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS_B;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS_B_c;

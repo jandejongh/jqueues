@@ -11,7 +11,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.ctandem2.CTandem2;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;

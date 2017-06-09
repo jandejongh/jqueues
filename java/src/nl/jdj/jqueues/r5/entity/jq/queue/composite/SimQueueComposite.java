@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.entity.jq.queue.composite;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.ctandem2.CTandem2;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.GeneralParallelSimQueues;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.enc.EncHS;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.enc.Enc;

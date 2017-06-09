@@ -7,7 +7,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.ctandem2.CTandem2;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A tandem (serial) queue.
