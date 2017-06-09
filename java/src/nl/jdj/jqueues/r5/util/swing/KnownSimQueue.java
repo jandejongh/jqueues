@@ -101,7 +101,7 @@ public enum KnownSimQueue
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   TANDEM         ("Tandem", true,
-                  nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.TandemSimQueue.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem.class,
                   GeneratorProfile.SE_QSET_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,

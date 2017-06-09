@@ -40,8 +40,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class TandemSimQueue
-  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends TandemSimQueue>
+public class Tandem
+  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends Tandem>
   extends AbstractSimQueueComposite<DJ, DQ, J, Q>
 {
 
@@ -70,7 +70,7 @@ public class TandemSimQueue
    * @see StartModel
    * 
    */
-  public TandemSimQueue
+  public Tandem
   (final SimEventList eventList,
    final Set<DQ> queues,
    final DelegateSimJobFactory delegateSimJobFactory)
@@ -79,10 +79,10 @@ public class TandemSimQueue
   }
 
   @Override
-  public TandemSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  public Tandem<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final Set<DQ> queuesCopy = getCopySubSimQueues ();
-    return new TandemSimQueue<>
+    return new Tandem<>
       (getEventList (), queuesCopy, getDelegateSimJobFactory ());
   }
   

@@ -7,7 +7,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTande
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.GeneralParallelSimQueues;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorHideStartSimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorSimQueue;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.TandemSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem;
 
 /** A {@link SimQueue} that embeds a fixed set of other queues;
  *  turning its job visits into visits to the embedded queues.
@@ -15,7 +15,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.TandemSimQueue;
  * <p>
  * Also known as a <i>queueing network</i>.
  * Examples are <i>tandem (serial) queues</i>
- * and <i>parallel queues</i>, see {@link TandemSimQueue} and {@link GeneralParallelSimQueues},
+ * and <i>parallel queues</i>, see {@link Tandem} and {@link GeneralParallelSimQueues},
  * respectively.
  * 
  * <p>

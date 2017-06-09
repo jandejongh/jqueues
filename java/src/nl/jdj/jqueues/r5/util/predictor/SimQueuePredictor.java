@@ -10,7 +10,7 @@ import java.util.TreeMap;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.TandemSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IC;
 import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
@@ -59,7 +59,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * occurrence of a "catch-up" and a departure (both "internal events") in a {@link CUPS} queue.
  * Note that even with a ROEL {@link SimEventList}, certain {@link SimQueue} implementations
  * may process "simultaneous events" in a specific sequence, and heavily rely on their sequential execution.
- * For instance, the {@link TandemSimQueue} lets (delegate) jobs arrive at their first sub-queue if
+ * For instance, the {@link Tandem} lets (delegate) jobs arrive at their first sub-queue if
  * server-access credits become available, yet it processes these arrivals in a specific order (the arrival order of the
  * corresponding "real" jobs) and it effectuates these arrivals immediately, without using the underlying event list.
  * 

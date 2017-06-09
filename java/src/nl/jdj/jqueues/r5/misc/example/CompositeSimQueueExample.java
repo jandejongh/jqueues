@@ -14,7 +14,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.Jackson;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.GeneralParallelSimQueues;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.NumVisitsFeedbackSimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.ProbabilisticFeedbackSimQueue;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.TandemSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.RANDOM;
@@ -114,7 +114,7 @@ public final class CompositeSimQueueExample
           return new TestDelegateSimJob (job, true);
         }
       };
-    final SimQueue tandemQueue = new TandemSimQueue (el, set, delegateSimJobFactory);
+    final SimQueue tandemQueue = new Tandem (el, set, delegateSimJobFactory);
     tandemQueue.registerSimEntityListener (new StdOutSimQueueListener ());
     System.out.println ("-> Submitting jobs to Tandem queue...");
     for (int i = 0; i < jobList.size (); i++)

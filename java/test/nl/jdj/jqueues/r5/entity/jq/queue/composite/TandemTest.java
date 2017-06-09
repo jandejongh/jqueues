@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.TandemSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IC;
 import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.P_LCFS;
@@ -38,7 +38,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/** Tests for {@link TandemSimQueue}.
+/** Tests for {@link Tandem}.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -77,7 +77,7 @@ public class TandemTest
   }
 
   /**
-   * Test of a TandemSimQueue.
+   * Test of a Tandem.
    * 
    */
   @Test
@@ -91,7 +91,7 @@ public class TandemTest
     // Tandem[ZERO]
     final ZERO zero = new ZERO (eventList);
     final SimQueuePredictor predictor_zero = new SimQueuePredictor_ZERO ();
-    final TandemSimQueue tandem_zero = new TandemSimQueue (eventList, Collections.singleton (zero), null);
+    final Tandem tandem_zero = new Tandem (eventList, Collections.singleton (zero), null);
     final SimQueuePredictor_Tandem predictor_tandem_zero =
       new SimQueuePredictor_Tandem (Collections.singletonList (predictor_zero));
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
@@ -99,7 +99,7 @@ public class TandemTest
     // Tandem[DROP]
     final DROP drop = new DROP (eventList);
     final SimQueuePredictor predictor_drop = new SimQueuePredictor_DROP ();
-    final TandemSimQueue tandem_drop = new TandemSimQueue (eventList, Collections.singleton (drop), null);
+    final Tandem tandem_drop = new Tandem (eventList, Collections.singleton (drop), null);
     final SimQueuePredictor_Tandem predictor_tandem_drop =
       new SimQueuePredictor_Tandem (Collections.singletonList (predictor_drop));
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
@@ -107,7 +107,7 @@ public class TandemTest
     // Tandem[IC]
     final IC ic = new IC (eventList);
     final SimQueuePredictor predictor_ic = new SimQueuePredictor_IC ();
-    final TandemSimQueue tandem_ic = new TandemSimQueue (eventList, Collections.singleton (ic), null);
+    final Tandem tandem_ic = new Tandem (eventList, Collections.singleton (ic), null);
     final SimQueuePredictor_Tandem predictor_tandem_ic =
       new SimQueuePredictor_Tandem (Collections.singletonList (predictor_ic));
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
@@ -120,7 +120,7 @@ public class TandemTest
     final Set<SimQueue> ic1_ic2_set = new LinkedHashSet<> ();
     ic1_ic2_set.add (ic1);
     ic1_ic2_set.add (ic2);
-    final TandemSimQueue tandem_ic1_ic2 = new TandemSimQueue (eventList, ic1_ic2_set, null);
+    final Tandem tandem_ic1_ic2 = new Tandem (eventList, ic1_ic2_set, null);
     final List<SimQueuePredictor> predictor_tandem_ic1_ic2_set = new ArrayList ();
     predictor_tandem_ic1_ic2_set.add (predictor_ic1);
     predictor_tandem_ic1_ic2_set.add (predictor_ic2);
@@ -136,14 +136,14 @@ public class TandemTest
     final Set<SimQueue> ic3_sink_set = new LinkedHashSet<> ();
     ic3_sink_set.add (ic3);
     ic3_sink_set.add (sink);
-    final TandemSimQueue tandem_ic3_sink = new TandemSimQueue (eventList, ic3_sink_set, null);
+    final Tandem tandem_ic3_sink = new Tandem (eventList, ic3_sink_set, null);
     final List<SimQueuePredictor> predictor_tandem_ic3_sink_set = new ArrayList ();
     predictor_tandem_ic3_sink_set.add (predictor_ic3);
     predictor_tandem_ic3_sink_set.add (predictor_sink);
     final SimQueuePredictor predictor_tandem_ic3_sink =
       new SimQueuePredictor_Tandem (predictor_tandem_ic3_sink_set);
-    final TandemSimQueue tandem_tandem_ic3_sink = 
-      new TandemSimQueue (eventList, Collections.singleton (tandem_ic3_sink), null);
+    final Tandem tandem_tandem_ic3_sink = 
+      new Tandem (eventList, Collections.singleton (tandem_ic3_sink), null);
     final List<SimQueuePredictor> predictor_tandem_tandem_ic3_sink_set = new ArrayList ();
     predictor_tandem_tandem_ic3_sink_set.add (predictor_tandem_ic3_sink);
     final SimQueuePredictor predictor_tandem_tandem_ic3_sink =
@@ -154,7 +154,7 @@ public class TandemTest
     // Tandem[FCFS]
     final FCFS fcfs = new FCFS (eventList);
     final SimQueuePredictor predictor_fcfs = new SimQueuePredictor_FCFS ();
-    final TandemSimQueue tandem_fcfs = new TandemSimQueue (eventList, Collections.singleton (fcfs), null);
+    final Tandem tandem_fcfs = new Tandem (eventList, Collections.singleton (fcfs), null);
     final SimQueuePredictor_Tandem predictor_tandem_fcfs =
       new SimQueuePredictor_Tandem (Collections.singletonList (predictor_fcfs));
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
@@ -167,7 +167,7 @@ public class TandemTest
     final Set<SimQueue> p_lcfs_drop2_set = new LinkedHashSet<> ();
     p_lcfs_drop2_set.add (p_lcfs);
     p_lcfs_drop2_set.add (drop2);
-    final TandemSimQueue tandem_p_lcfs_drop2 = new TandemSimQueue (eventList, p_lcfs_drop2_set, null);
+    final Tandem tandem_p_lcfs_drop2 = new Tandem (eventList, p_lcfs_drop2_set, null);
     final List<SimQueuePredictor> predictor_tandem_p_lcfs_drop2_set = new ArrayList ();
     predictor_tandem_p_lcfs_drop2_set.add (predictor_p_lcfs);
     predictor_tandem_p_lcfs_drop2_set.add (predictor_drop2);
@@ -184,7 +184,7 @@ public class TandemTest
     final Set<SimQueue> delay1_delay2_set = new LinkedHashSet<> ();
     delay1_delay2_set.add (delay1);
     delay1_delay2_set.add (delay2);
-    final TandemSimQueue tandem_delay1_delay2 = new TandemSimQueue (eventList, delay1_delay2_set, null);
+    final Tandem tandem_delay1_delay2 = new Tandem (eventList, delay1_delay2_set, null);
     final List<SimQueuePredictor> predictor_tandem_delay1_delay2_set = new ArrayList ();
     predictor_tandem_delay1_delay2_set.add (predictor_delay1);
     predictor_tandem_delay1_delay2_set.add (predictor_delay2);
@@ -198,7 +198,7 @@ public class TandemTest
     final SimQueuePredictor predictor_dlimit1 = new SimQueuePredictor_DLIMIT ();
     final Set<SimQueue> dlimit1_set = new LinkedHashSet<> ();
     dlimit1_set.add (dlimit1);
-    final TandemSimQueue tandem_dlimit1 = new TandemSimQueue (eventList, dlimit1_set, null);
+    final Tandem tandem_dlimit1 = new Tandem (eventList, dlimit1_set, null);
     final List<SimQueuePredictor> predictor_tandem_dlimit1_set = new ArrayList ();
     predictor_tandem_dlimit1_set.add (predictor_dlimit1);
     final SimQueuePredictor_Tandem predictor_tandem_dlimit1 =
@@ -213,7 +213,7 @@ public class TandemTest
     final Set<SimQueue> dlimit2_dlimit3_set = new LinkedHashSet<> ();
     dlimit2_dlimit3_set.add (dlimit2);
     dlimit2_dlimit3_set.add (dlimit3);
-    final TandemSimQueue tandem_dlimit2_dlimit3 = new TandemSimQueue (eventList, dlimit2_dlimit3_set, null);
+    final Tandem tandem_dlimit2_dlimit3 = new Tandem (eventList, dlimit2_dlimit3_set, null);
     final List<SimQueuePredictor> predictor_tandem_dlimit2_dlimit3_set = new ArrayList ();
     predictor_tandem_dlimit2_dlimit3_set.add (predictor_dlimit2);
     predictor_tandem_dlimit2_dlimit3_set.add (predictor_dlimit3);

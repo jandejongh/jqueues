@@ -11,12 +11,12 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
  * 
  * <p>
  * In a tandem queue, a (delegate) job visits all sub-queues once in a predetermined sequence.
- * This {@link SimQueueSelector} is mandatory for {@link TandemSimQueue}.
+ * This {@link SimQueueSelector} is mandatory for {@link Tandem}.
  * 
  * @param <J>  The job type.
  * @param <DQ> The queue-type for delegate jobs.
  *
- * @see TandemSimQueue
+ * @see Tandem
  * 
  * @author Jan de Jongh, TNO
  * 
