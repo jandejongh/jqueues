@@ -158,15 +158,15 @@ public class DCol
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "DropCol[mainQueue,dropQueue]".
+  /** Returns "DCol[mainQueue,dropQueue]".
    * 
-   * @return "DropCol[mainQueue,dropQueue]".
+   * @return "DCol[mainQueue,dropQueue]".
    * 
    */
   @Override
   public String toStringDefault ()
   {
-    return "DropCol[" + getMainQueue () + "," + getDropQueue () + "]";
+    return "DCol[" + getMainQueue () + "," + getDropQueue () + "]";
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
