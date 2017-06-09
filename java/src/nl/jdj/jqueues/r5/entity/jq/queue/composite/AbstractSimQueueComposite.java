@@ -12,7 +12,7 @@ import nl.jdj.jqueues.r5.entity.SimEntityListener;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.AbstractSimQueue;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.collector.DCol;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.collector.DCol;
 import nl.jdj.jqueues.r5.entity.SimEntityEvent;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;

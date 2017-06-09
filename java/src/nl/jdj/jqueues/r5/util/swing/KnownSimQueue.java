@@ -97,7 +97,7 @@ public enum KnownSimQueue
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   DROP_COLLECTOR ("DCol", true,
-                  nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.collector.DCol.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.collector.DCol.class,
                   GeneratorProfile.SE_Q1_Q2_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
