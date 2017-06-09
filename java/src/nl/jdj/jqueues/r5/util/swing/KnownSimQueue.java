@@ -130,13 +130,13 @@ public enum KnownSimQueue
   // XXX JRQ???
   
   FB_PROB        ("FB_Prob", true,
-                  nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.FB_p.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.feedback.FB_p.class,
                   GeneratorProfile.SE_Q_PFB_RNG_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
   FB_VISITS      ("FB_NumVisits", true,
-                  nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.FB_v.class,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.feedback.FB_v.class,
                   GeneratorProfile.SE_Q_NUMV_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,

@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.FB_v;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.feedback.FB_v;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DROP;

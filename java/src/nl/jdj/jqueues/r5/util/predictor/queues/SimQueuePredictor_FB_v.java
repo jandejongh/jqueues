@@ -6,7 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.FB_v;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.feedback.FB_v;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite;
 import nl.jdj.jqueues.r5.extensions.visitscounter.SimQueueVisitsCounterStateHandler;
