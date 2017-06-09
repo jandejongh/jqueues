@@ -2,10 +2,13 @@
 
 %\usepackage{color}
 \usepackage{xcolor}
+\usepackage{float}
 \usepackage{listings}
 \usepackage{array}
 \usepackage{geometry}
 \usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{tabu}
 
 \title{Discrete-Event Simulation\\
        of Queueing Systems in Java:\\
@@ -24,7 +27,8 @@
   escapeinside={<@}{@>}
 }
 
-\begin{document}
+\newfloat{lstfloat}{htbp}{lop}
+\floatname{lstfloat}{Listing}\begin{document}
 
 \maketitle
 
@@ -57,12 +61,16 @@ If there is anything we do most,
 {\bf XXX}
 
 \chapter{Introduction}
+\label{chap:intro}
 
 \chapter{Guided Tour}
+\label{chap:guided}
 
 \section{Getting Started}
+\label{sec:guided:getting-started}
 
-\section{A Simple Simulation with a First-Come First-Served Queue}
+\section{Creating an Event List, Queues and Jobs and Scheduling Events}
+\label{sec:guided:eventlist-queues-jobs-events}
 
 In order to perform a simulation study in \lstinline|jqueues|,
   the following four actions need to be taken:
@@ -75,6 +83,7 @@ In order to perform a simulation study in \lstinline|jqueues|,
 \end{itemize}
 Without much further ado, here's an example:
 
+\begin{lstfloat}
 \begin{lstlisting}[
   caption={A simple simulation with a single FCFS\_B queue and ten jobs.},
   label=simExample1_main,
@@ -95,6 +104,7 @@ Without much further ado, here's an example:
     el.run ();
 
 \end{lstlisting}
+\end{lstfloat}
 
 In Listing \ref{simExample1_main},
   we first create a single event list of type \lstinline|DefaultSimEventList|
@@ -160,6 +170,7 @@ However, queues must always be attached to the event list;
 The (approximate) output of the code fragment of Listing \ref{simExample1_main}
 is shown in Listing \ref{simExample1_out} below.
 
+\begin{lstfloat}
 \begin{lstlisting}[
   caption={Example output of Listing \ref{simExample1_main}.},
   label=simExample1_out,
@@ -253,6 +264,7 @@ StdOutSimQueueListener t=40.6, queue=FCFS_B[2]: DEPARTURE of job 8.
 StdOutSimQueueListener t=40.6, queue=FCFS_B[2]: START_ARMED -> true.
 
 \end{lstlisting}
+\end{lstfloat}
 
 Apart from the \lstinline-STATE CHANGED-, \lstinline-UPDATE-
   and \lstinline-START_ARMED- lines in the output,
@@ -300,6 +312,239 @@ The queue fires them because it recognizes that the
 The so-called courtesy notifications are quite handy when all
   you are interested in are events like arrivals and
   departures, or for instance changes in the \lstinline|StartArmed| property.
+
+\subsection{Simultaneous Events}
+\label{sec:guided:simultaneous-events}
+
+So far, all events scheduled in our examples had a unique schedule time.
+But what if two events have identical schedule times?
+The short answer is: The \lstinline|DefaultSimEventList| will
+  process them {\em in random order}.
+Why not respect "insertion order"?
+Well, the answers to this seemingly innocent question
+  are quite involved, and are given in
+  Section \ref{sec:events-eventlists-actions:simultaneous-events}.
+
+By slightly modifying our first example in Listing \ref{simExample1_main},
+  we can easily force the occurence of simultaneous events.
+In Listing \ref{simExample1_simul_main},
+  apart from creating and scheduling fewer jobs,
+  we have reduced the required service time to $1.0$,
+  and it is trivial to see that for this particular
+  schedule, the departure of job $1$ coincides
+  with the arrival of job $2$,
+  and similarly for jobs $2$ and $3$.
+In the output shown in Listing \ref{simExample1_simul_out},
+  we indeed see that $t=2$,
+  job $2$ arrives {\em before\/}
+  the departure of job $1$,
+  however,
+  at $t=3$,
+  job $3$ arrives {\em after\/}
+  the departure of job $2$.
+At both instants in time,
+  the relative order of the event is,
+  as mentioned earlied,
+  completely coincidental.
+
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={An example simulation program with simultaneous events.},
+  label=simExample1_simul_main,
+  basicstyle=\tiny]
+
+    final SimEventList el = new DefaultSimEventList ();
+    final int bufferSize = 2;
+    final FCFS_B queue = new FCFS_B (el, bufferSize);
+    final SimQueueListener listener = new StdOutSimQueueListener ();
+    queue.registerSimEntityListener (listener);
+    for (int j = 1; j <= 3; j++)
+    {
+      final double jobServiceTime = 1.0;
+      final double jobArrivalTime = (double) j;
+      final String jobName = Integer.toString (j);
+      final SimJob job = new DefaultSimJob (null, jobName, jobServiceTime);
+      SimJQEventScheduler.scheduleJobArrival (job, queue, jobArrivalTime);
+    }
+    el.run ();
+
+\end{lstlisting}
+\end{lstfloat}
+
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={Example output of Listing \ref{simExample1_simul_main}.},
+  label=simExample1_simul_out,
+  basicstyle=\tiny]
+
+StdOutSimQueueListener t=1.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=1.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[1]@FCFS_B[2]]
+  => START [Start[1]@FCFS_B[2]]
+  => STA_FALSE [StartArmed[false]@FCFS_B[2]]
+StdOutSimQueueListener t=1.0, queue=FCFS_B[2]: ARRIVAL of job 1.
+StdOutSimQueueListener t=1.0, queue=FCFS_B[2]: START of job 1.
+StdOutSimQueueListener t=1.0, queue=FCFS_B[2]: START_ARMED -> false.
+StdOutSimQueueListener t=2.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=2.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[2]@FCFS_B[2]]
+StdOutSimQueueListener t=2.0, queue=FCFS_B[2]: ARRIVAL of job 2.
+StdOutSimQueueListener t=2.0, entity=FCFS_B[2]: STATE CHANGED:
+  => DEPARTURE [Dep[1]@FCFS_B[2]]
+  => START [Start[2]@FCFS_B[2]]
+StdOutSimQueueListener t=2.0, queue=FCFS_B[2]: DEPARTURE of job 1.
+StdOutSimQueueListener t=2.0, queue=FCFS_B[2]: START of job 2.
+StdOutSimQueueListener t=3.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=3.0, entity=FCFS_B[2]: STATE CHANGED:
+  => DEPARTURE [Dep[2]@FCFS_B[2]]
+  => STA_TRUE [StartArmed[true]@FCFS_B[2]]
+StdOutSimQueueListener t=3.0, queue=FCFS_B[2]: DEPARTURE of job 2.
+StdOutSimQueueListener t=3.0, queue=FCFS_B[2]: START_ARMED -> true.
+StdOutSimQueueListener t=3.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[3]@FCFS_B[2]]
+  => START [Start[3]@FCFS_B[2]]
+  => STA_FALSE [StartArmed[false]@FCFS_B[2]]
+StdOutSimQueueListener t=3.0, queue=FCFS_B[2]: ARRIVAL of job 3.
+StdOutSimQueueListener t=3.0, queue=FCFS_B[2]: START of job 3.
+StdOutSimQueueListener t=3.0, queue=FCFS_B[2]: START_ARMED -> false.
+StdOutSimQueueListener t=4.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimQueueListener t=4.0, entity=FCFS_B[2]: STATE CHANGED:
+  => DEPARTURE [Dep[3]@FCFS_B[2]]
+  => STA_TRUE [StartArmed[true]@FCFS_B[2]]
+StdOutSimQueueListener t=4.0, queue=FCFS_B[2]: DEPARTURE of job 3.
+StdOutSimQueueListener t=4.0, queue=FCFS_B[2]: START_ARMED -> true.
+
+\end{lstlisting}
+\end{lstfloat}
+
+\subsection{Infinite Time}
+\label{sec:infinite-time}
+
+In the previous section we showed that
+  events can be scheduled simultaneously.
+Another noteworthy feature of a \lstinline|SimEventList|
+  is that you can schedule events
+  at $t=-\infty$ and at $t=+\infty$\footnote{
+In honor of Georg Cantor.},
+  corresponding to the \lstinline|Java|'s
+  \lstinline|Double.NEGATIVE_INFINITY| and
+  \lstinline|Double.POSITIVE_INFINITY|,
+  respectively.
+There are, however, some caveats:
+\begin{itemize}
+  \item All events scheduled at $t=-\infty$ ($t=+\infty$)
+          are treated as simultaneous events.
+  \item Even though most \lstinline|SimQueue|
+          implementations have documented support
+          for events at infinity,
+          they often behave differently.
+        For instance, if a job requires
+          a finite amount of service,
+          it will most likely depart immediately
+          (informally: "$x + \infty = \infty$ for real $x$").
+\end{itemize}
+In short, caution is advised when scheduling events at infinity.
+
+In our next example shown in Listing \ref{simExample1_infty_main},
+  with corresponding output in Listing \ref{simExample1_infty_out},
+  we show how to schedule events at $-\infty$.
+We increase to buffer size of the \lstinline|FCFS_B| queue to four
+  because we do not want to run into job drops in this example.
+  
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={An example simulation program with events at $t=-\infty$ and $t=\infty$.},
+  label=simExample1_infty_main,
+  basicstyle=\tiny]
+
+StdOutSimQueueListener t=-Infinity, entity=FCFS_B[4]: UPDATE.
+StdOutSimQueueListener t=-Infinity, entity=FCFS_B[4]: STATE CHANGED:
+  => ARRIVAL [Arr[1]@FCFS_B[4]]
+  => START [Start[1]@FCFS_B[4]]
+  => STA_FALSE [StartArmed[false]@FCFS_B[4]]
+StdOutSimQueueListener t=-Infinity, queue=FCFS_B[4]: ARRIVAL of job 1.
+StdOutSimQueueListener t=-Infinity, queue=FCFS_B[4]: START of job 1.
+StdOutSimQueueListener t=-Infinity, queue=FCFS_B[4]: START_ARMED -> false.
+StdOutSimQueueListener t=-Infinity, entity=FCFS_B[4]: UPDATE.
+StdOutSimQueueListener t=-Infinity, entity=FCFS_B[4]: STATE CHANGED:
+  => ARRIVAL [Arr[2]@FCFS_B[4]]
+StdOutSimQueueListener t=-Infinity, queue=FCFS_B[4]: ARRIVAL of job 2.
+StdOutSimQueueListener t=0.0, entity=FCFS_B[4]: UPDATE.
+StdOutSimQueueListener t=0.0, entity=FCFS_B[4]: STATE CHANGED:
+  => ARRIVAL [Arr[3]@FCFS_B[4]]
+StdOutSimQueueListener t=0.0, queue=FCFS_B[4]: ARRIVAL of job 3.
+StdOutSimQueueListener t=Infinity, entity=FCFS_B[4]: UPDATE.
+StdOutSimQueueListener t=Infinity, entity=FCFS_B[4]: STATE CHANGED:
+  => ARRIVAL [Arr[4]@FCFS_B[4]]
+StdOutSimQueueListener t=Infinity, queue=FCFS_B[4]: ARRIVAL of job 4.
+
+\end{lstlisting}
+\end{lstfloat}
+
+In the example, we schedule two jobs, "1" and "2" at $t=-\infty$.
+This is only allowed because the \lstinline|DefaultSimEventList|
+  initialized itself at $t=-\infty$
+  (you are not allowed to schedule events "in the past"!).
+The jobs have unity required service time,
+  but as the output shows, this really is irrelevant:
+  Both jobs arrive (in order of scheduling, but that is a mere coincidence!),
+    are taken into service, and depart immediately,
+    all at the moment ($-\infty$) of arrival,
+    because the required service time is finite.
+We also schedule a third job at $t=0$ yet with infinite
+  required service time,
+  which is allowed for many queue types.
+However, this job never leaves, not even at $t=+\infty$;
+  it is {\em sticky\/}.
+The same goes for job $4$,
+  also requiring infinite service time,
+  yet arriving at $t=+\infty$
+
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={Example output of Listing \ref{simExample1_infty_main}.},
+  label=simExample1_infty_out,
+  basicstyle=\tiny]
+
+StdOutSimQueueListener t=-Infinity, entity=FCFS_B[4]: UPDATE.
+StdOutSimQueueListener t=-Infinity, entity=FCFS_B[4]: STATE CHANGED:
+  => ARRIVAL [Arr[1]@FCFS_B[4]]
+  => START [Start[1]@FCFS_B[4]]
+  => STA_FALSE [StartArmed[false]@FCFS_B[4]]
+StdOutSimQueueListener t=-Infinity, queue=FCFS_B[4]: ARRIVAL of job 1.
+StdOutSimQueueListener t=-Infinity, queue=FCFS_B[4]: START of job 1.
+StdOutSimQueueListener t=-Infinity, queue=FCFS_B[4]: START_ARMED -> false.
+StdOutSimQueueListener t=-Infinity, entity=FCFS_B[4]: UPDATE.
+StdOutSimQueueListener t=-Infinity, entity=FCFS_B[4]: STATE CHANGED:
+  => ARRIVAL [Arr[2]@FCFS_B[4]]
+StdOutSimQueueListener t=-Infinity, queue=FCFS_B[4]: ARRIVAL of job 2.
+StdOutSimQueueListener t=0.0, entity=FCFS_B[4]: UPDATE.
+StdOutSimQueueListener t=0.0, entity=FCFS_B[4]: STATE CHANGED:
+  => ARRIVAL [Arr[3]@FCFS_B[4]]
+StdOutSimQueueListener t=0.0, queue=FCFS_B[4]: ARRIVAL of job 3.
+StdOutSimQueueListener t=Infinity, entity=FCFS_B[4]: UPDATE.
+StdOutSimQueueListener t=Infinity, entity=FCFS_B[4]: STATE CHANGED:
+  => ARRIVAL [Arr[4]@FCFS_B[4]]
+StdOutSimQueueListener t=Infinity, queue=FCFS_B[4]: ARRIVAL of job 4.
+
+\end{lstlisting}
+\end{lstfloat}
+
+This is all documented behavior of \lstinline|FCFS_B|:
+  Irrespective of the arrival time,
+  visiting jobs with infinite required service time
+  never depart.
+Of course, it's just a choice, and other choices could have been made,
+  like, in this particular case,
+  letting job "3" depart at $t=\infty$.
+But what if then job "3" {\em arrives\/} at $t=-\infty$?
+So, even though most queueing systems
+  will support "operation at infinity",
+  be advised that their behavior
+  can be totally unexpected,
+  and consult the queue's documentation on the topic well.
+
+\subsection{Summary}
 
 In summary:
 \begin{itemize}
@@ -365,6 +610,7 @@ Restricting ourselves for the moment to queue listeners,
   our own listener that reports to \lstinline|System.out|
   in the code in Listing \ref{simExample1_main}:
 
+\begin{lstfloat}
 \begin{lstlisting}[
   caption={Creating and registering a listener.},
   label=simExample1_listener1,
@@ -374,6 +620,7 @@ Restricting ourselves for the moment to queue listeners,
   queue.registerSimEntityListener (listener);
 
 \end{lstlisting}
+\end{lstfloat}
 
 Running the program of \ref{simExample1_main} again with
   this modified code fragment will yield (roughly)
@@ -384,8 +631,9 @@ However,
   so we can, for instance,
   suppress certain notifications in the output like this:
 
+\begin{lstfloat}
 \begin{lstlisting}[
-  caption={Suppressing specific notifications in a \mbox{\lstinline[basicstyle=\ttfamily]|StdOutSimQueueListener|.}},
+  caption={Suppressing specific notifications in a \texttt{StdOutSimQueueListener}.},
   label=simExample1_listener1_suppress,
   basicstyle=\tiny]
 
@@ -417,6 +665,7 @@ However,
     queue.registerSimEntityListener (listener);
 
 \end{lstlisting}
+\end{lstfloat}
 
 In Listing \ref{simExample1_listener1_suppress},
   we modify the \lstinline|StdOutSimQueueListener| by overriding
@@ -433,6 +682,7 @@ In addition,
   notifications.
 Our modified listener yields the following output:
 
+\begin{lstfloat}
 \begin{lstlisting}[
   caption={Example output of Listing \ref{simExample1_main} with the modified listener of Listing
   \ref{simExample1_listener1_suppress}},
@@ -467,14 +717,19 @@ Our modified listener yields the following output:
  t=40.6, queue=FCFS_B[2]: DEPARTURE of job 8.
 
 \end{lstlisting}
+\end{lstfloat}
 
 If, on the other hand, your {\em only\/} interest is in the
   fundamental \lstinline|RESET|, \lstinline|UPDATE| and \lstinline|STATE CHANGED|
   notifications,
-  you can register a \lstinline|StdOutSimEntityListener|:
+  you can register a \lstinline|StdOutSimEntityListener|
+  as shown in Listing \ref{simExample1_listener2_1}
+  or, simpler but equivalent, Listing \ref{simExample1_listener2_2},
+  and their corresponding output in Listing \ref{simExample1_listener2_out}.
 
+\begin{lstfloat}
 \begin{lstlisting}[
-  caption={Creating and registering a \mbox{\lstinline[basicstyle=\ttfamily]|StdOutSimEntityListener|}.},
+  caption={Creating and registering a \texttt{StdOutSimEntityListener}.},
   label=simExample1_listener2_1,
   basicstyle=\tiny]
 
@@ -482,20 +737,21 @@ If, on the other hand, your {\em only\/} interest is in the
   queue.registerSimEntityListener (listener);
 
 \end{lstlisting}
+\end{lstfloat}
 
-or, simpler but equivalent,
 
+\begin{lstfloat}
 \begin{lstlisting}[
-  caption={Using \mbox{\lstinline[basicstyle=\ttfamily]|registerStdOutSimEntityListener|}.},
+  caption={Using \texttt{registerStdOutSimEntityListener}.},
   label=simExample1_listener2_2,
   basicstyle=\tiny]
 
   queue.registerStdOutSimEntityListener ();
 
 \end{lstlisting}
+\end{lstfloat}
 
-with yields in both cases:
-
+\begin{lstfloat}
 \begin{lstlisting}[
   caption={Example output of Listing \ref{simExample1_main} with the modified listener of Listings
   \ref{simExample1_listener2_1} or \ref{simExample1_listener2_2}},
@@ -562,6 +818,7 @@ StdOutSimEntityListener t=40.6, entity=FCFS_B[2]: STATE CHANGED:
   => STA_TRUE [StartArmed[true]@FCFS_B[2]]
 
 \end{lstlisting}
+\end{lstfloat}
 
 In most practical cases,
   you will need a listener that does a bit more than reporting to \lstinline|System.out|.
@@ -581,6 +838,7 @@ This time,
   for the listener,
   shown in Listing \ref{simExample1_avgSojournTime_class}.
 
+\begin{lstfloat}
 \begin{lstlisting}[
   caption={A (somewhat naive) queue listener that calculates the average job sojourn time.},
   label=simExample1_avgSojournTime_class,
@@ -632,6 +890,7 @@ extends DefaultSimQueueListener
 }
 
 \end{lstlisting}
+\end{lstfloat}
 
 In the class, we override the (courtesy) notifications for job arrivals,
   departures and drops.
@@ -656,9 +915,10 @@ The use of \lstinline|JobSojournTimeListener| and the corresponding output
   are shown in Listings \ref{simExample1_avgSojournTime_main}
   and \ref{simExample1_avgSojournTime_out}, respectively.
 
+\begin{lstfloat}
 \begin{lstlisting}[
-  caption={Our \mbox{\lstinline[basicstyle=\ttfamily]|FCFS_B|} example
-           with the custom \mbox{\lstinline[basicstyle=\ttfamily]|JobSojournTimeListener|}.},
+  caption={Our \texttt{FCFS\_B} example
+           with the custom \texttt{JobSojournTimeListener}.},
   label=simExample1_avgSojournTime_main,
   basicstyle=\tiny]
 
@@ -679,7 +939,9 @@ The use of \lstinline|JobSojournTimeListener| and the corresponding output
     System.out.println ("Average job sojourn time is " + listener.getAvgSojournTime () + ".");
 
 \end{lstlisting}
+\end{lstfloat}
 
+\begin{lstfloat}
 \begin{lstlisting}[
   caption={The output of Listing \ref{simExample1_avgSojournTime_main}.},
   label=simExample1_avgSojournTime_out,
@@ -688,6 +950,7 @@ The use of \lstinline|JobSojournTimeListener| and the corresponding output
 Average job sojourn time is 7.06.
 
 \end{lstlisting}
+\end{lstfloat}
 
 Before going into details on the average sojourn time reported,
   we want to stress that our implementation of
@@ -737,6 +1000,7 @@ The final rows
 \begin{table}[h]
 \caption{Analysis of job sojourn times in Listing \ref{simExample1_main}.}
 \label{simExample1_analysis}
+\begin{center}
 \begin{tabular}{|l|l|r|l|r|r|r|l|}
 \hline
 Job & Arr & ReqS & WQA & Start & Exit & Sojourn & Remark \\
@@ -758,9 +1022,10 @@ TOT   & & 99.0 &              &      &      & 70.6 &                    \\ \hlin
 AVG   & &  9.9 &              &      &      & 7.06 &                    \\ \hline
 \hline
 \end{tabular}
+\end{center}
 \end{table}
 
-\section{The \lstinline|UPDATE| and \lstinline|STATE CHANGED| Notifications}
+\section{The \texttt{UPDATE} and \texttt{STATE CHANGED} Notifications}
 
 As you may have spotted,
   events are actually reported twice,
@@ -926,15 +1191,320 @@ The internal operations, on the other hand,
   (e.g., the arrival of a job while $2$ jobs are already waiting
   causes the internal \lstinline|DROP| operation to be invoked).
  
+\section{The \texttt{Update} Operation}
+\label{sec:guided:update}
+
+In the previous section we introduced the
+  \lstinline|UPDATE| and \lstinline|STATE CHANGED|
+  notifications,
+  and explained that on a \lstinline|SimEntity|,
+  every state-change must be reported,
+  and that the \lstinline|UPDATE| notification
+  exposes the old state of the entity
+  for (for instance) statistics gathering.
+However, there also exits an \lstinline|Update|
+  operation.
+Its function is to set the \lstinline|LastUpdateTime|
+  state property of the entity.
+The example shown in
+  Listing \ref{simExample1_update_main}
+  with output
+  shown in Listing \ref{simExample1_update_out}
+  demonstrates its use,
+  again using utility methods
+  for scheduling.
+As the output shows,
+  there seems to be little use in the \lstinline|Update|
+  operation; it just updates the time at $t=8.5$ and $t=1000$.
+The reason why you would ever want to use \lstinline|Update|
+  is a bit involved,
+  and deferred until Chapter \ref{chap:entities-queues-jobs}.
+However, we included this example to demonstrate
+  that the end-time of the simulation can be
+  controlled through scheduling an \lstinline|Update|
+  operation.
+In the next section, we will delve a little deeper
+  into the end-time of a simulation.
+
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={The use of the \texttt{Update} operation.},
+  label=simExample1_update_main,
+  basicstyle=\tiny]
+
+    final SimEventList el = new DefaultSimEventList ();
+    final int bufferSize = 2;
+    final FCFS_B queue = new FCFS_B (el, bufferSize);
+    queue.registerStdOutSimEntityListener ();
+    for (int j = 0; j < 4; j++)
+    {
+      final double jobServiceTime = (double) 2.2 * j;
+      final double jobArrivalTime = (double) j;
+      final String jobName = Integer.toString (j);
+      final SimJob job = new DefaultSimJob (null, jobName, jobServiceTime);
+      SimJQEventScheduler.scheduleJobArrival (job, queue, jobArrivalTime);
+    }
+    SimEntityEventScheduler.scheduleUpdate (el, queue, 8.5);
+    SimEntityEventScheduler.scheduleUpdate (el, queue, 1000.0);
+    el.run ();
+
+\end{lstlisting}
+\end{lstfloat}
+
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={The output of Listing \ref{simExample1_update_main}.},
+  label=simExample1_update_out,
+  basicstyle=\tiny]
+
+StdOutSimEntityListener t=0.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimEntityListener t=0.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[0]@FCFS_B[2]]
+  => START [Start[0]@FCFS_B[2]]
+  => DEPARTURE [Dep[0]@FCFS_B[2]]
+StdOutSimEntityListener t=1.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimEntityListener t=1.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[1]@FCFS_B[2]]
+  => START [Start[1]@FCFS_B[2]]
+  => STA_FALSE [StartArmed[false]@FCFS_B[2]]
+StdOutSimEntityListener t=2.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimEntityListener t=2.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[2]@FCFS_B[2]]
+StdOutSimEntityListener t=3.0, entity=FCFS_B[2]: UPDATE.
+StdOutSimEntityListener t=3.0, entity=FCFS_B[2]: STATE CHANGED:
+  => ARRIVAL [Arr[3]@FCFS_B[2]]
+StdOutSimEntityListener t=3.2, entity=FCFS_B[2]: UPDATE.
+StdOutSimEntityListener t=3.2, entity=FCFS_B[2]: STATE CHANGED:
+  => DEPARTURE [Dep[1]@FCFS_B[2]]
+  => START [Start[2]@FCFS_B[2]]
+StdOutSimEntityListener t=7.6000000000000005, entity=FCFS_B[2]: UPDATE.
+StdOutSimEntityListener t=7.6000000000000005, entity=FCFS_B[2]: STATE CHANGED:
+  => DEPARTURE [Dep[2]@FCFS_B[2]]
+  => START [Start[3]@FCFS_B[2]]
+StdOutSimEntityListener t=8.5, entity=FCFS_B[2]: UPDATE.
+StdOutSimEntityListener t=14.200000000000001, entity=FCFS_B[2]: UPDATE.
+StdOutSimEntityListener t=14.200000000000001, entity=FCFS_B[2]: STATE CHANGED:
+  => DEPARTURE [Dep[3]@FCFS_B[2]]
+  => STA_TRUE [StartArmed[true]@FCFS_B[2]]
+StdOutSimEntityListener t=1000.0, entity=FCFS_B[2]: UPDATE.
+
+\end{lstlisting}
+\end{lstfloat}
+
 \section{When Does A Simulation End?}
 \label{sec:guided:simulation-end}
 
-{\bf XXX}
+In the previous section,
+  it became obvious that
+  the event list will happily process
+  all events on the event list until it is empty.
+From the perspective of \lstinline|jqueues|,
+  this is perfectly reasonable:
+  it just processes all events on the list.
+However, in practical situations,
+  one often needs more control over the end
+  simulation.
+First,
+  having processed all events often leaves the queues
+  in an empty state,
+  which may not be a {\em representable\/} state at all.
+Hence, during statistics gathering, one often
+  does not want to wait for the completion of event
+  processing.
+(This is comparable to leaving out the "transient"
+  section starting at the start of a simulation,
+  in order to achieve higher accuracy with statistics.)
+Second, one may want to end a simulation because
+  enough accuracy has been reached.
 
-\section{The \lstinline|UPDATE| Operation}
-\label{sec:guided:update}
+In order to at least partially support these requirements,
+  \lstinline|SimEventList| has an alternative method
+  \lstinline|runUntil| that does exactly what you would expect:
+  It processes the events on the event list
+  upto a given time,
+  and then returns.
+The neat thing is that you can later decide,
+  perhaps after scheduling some extra events
+  ({\em in the future!\/}),
+  to resume the simulation,
+  either with \lstinline|run|
+  or \lstinline|runUntil|.
+Its arguments are the end time (a \lstinline|double|)
+  and two \lstinline|boolean|s.
+The first \lstinline|boolean| argument,
+  \lstinline|inclusive|,
+  controls whether or not to include
+  the end time,
+  in other words,
+  whether to run {\em up to\/}
+  or {\em up to and including\/}
+  the end time.
+The second \lstinline|boolean| argument,
+  \lstinline|setTimeToEndTime|,
+  controls whether or not to set the
+  time to the end time
+  {\em if no event is scheduled at the end time}.
+In Release 5,
+  \lstinline|setTimeToEndTime| only has effect
+  if
+  \lstinline|includeEndTime == true|,
+  but this may change in future releases.
 
-{\bf XXX}
+For full control over your simulation,
+  \lstinline|SimEventList| offers
+  the \lstinline|runSingleStep|
+  method, processing
+  exactly one event
+  (the one at the head of the list)
+  before returning.
+
+We show the use of these methods in Listings
+  \ref{simExample1_run_main} and \ref{simExample1_run_out},
+  this time using a plain \lstinline|FCFS| queue.
+
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={Example showing different methods for running the event list.},
+  label=simExample1_run_main,
+  basicstyle=\tiny]
+
+    final SimEventList el = new DefaultSimEventList ();
+    final FCFS queue = new FCFS (el);
+    queue.registerStdOutSimEntityListener ();
+    for (int j = 0; j < 10; j++)
+    {
+      final double jobServiceTime = 100.0; // Double.POSITIVE_INFINITY;
+      final double jobArrivalTime = (double) j;
+      final String jobName = Integer.toString (j);
+      final SimJob job = new DefaultSimJob (null, jobName, jobServiceTime);
+      SimJQEventScheduler.scheduleJobArrival (job, queue, jobArrivalTime);
+    }
+    // Run the event list until t=3.0 (inclusive; set time to given time).
+    el.runUntil (3.0, true, true);
+    System.out.println ("Time on event list: " + el.getTime () + ".");
+    // Run the event list until t=3.5 (inclusive; set time to last event processed).
+    el.runUntil (3.5, true, false);
+    System.out.println ("Time on event list: " + el.getTime () + ".");
+    // Run the event list until t=3.7 (inclusive; set time to given time).
+    el.runUntil (3.7, true, true);
+    System.out.println ("Time on event list: " + el.getTime () + ".");
+    // Run the event list until t=5.0 (exclusive; set time to last event processed).
+    el.runUntil (5.0, false, false);
+    System.out.println ("Time on event list: " + el.getTime () + ".");
+    // Run the event list until t=7.0 (exclusive; set time to given time => DOES NOT WORK).
+    el.runUntil (7.0, false, true);
+    System.out.println ("Time on event list: " + el.getTime () + ".");
+    // Process remaining events, one at a time.
+    while (! el.isEmpty ())
+    {
+      el.runSingleStep ();
+      System.out.println ("Time on event list: " + el.getTime () + ".");
+    }
+    System.out.println ("Finished!");
+
+\end{lstlisting}
+\end{lstfloat}
+
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={The output of Listing \ref{simExample1_run_main}.},
+  label=simExample1_run_out,
+  basicstyle=\tiny]
+
+StdOutSimEntityListener t=0.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=0.0, entity=FCFS: STATE CHANGED:
+  => ARRIVAL [Arr[0]@FCFS]
+  => START [Start[0]@FCFS]
+  => STA_FALSE [StartArmed[false]@FCFS]
+StdOutSimEntityListener t=1.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=1.0, entity=FCFS: STATE CHANGED:
+  => ARRIVAL [Arr[1]@FCFS]
+StdOutSimEntityListener t=2.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=2.0, entity=FCFS: STATE CHANGED:
+  => ARRIVAL [Arr[2]@FCFS]
+StdOutSimEntityListener t=3.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=3.0, entity=FCFS: STATE CHANGED:
+  => ARRIVAL [Arr[3]@FCFS]
+Time on event list: 3.0.
+Time on event list: 3.0.
+Time on event list: 3.7.
+StdOutSimEntityListener t=4.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=4.0, entity=FCFS: STATE CHANGED:
+  => ARRIVAL [Arr[4]@FCFS]
+Time on event list: 4.0.
+StdOutSimEntityListener t=5.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=5.0, entity=FCFS: STATE CHANGED:
+  => ARRIVAL [Arr[5]@FCFS]
+StdOutSimEntityListener t=6.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=6.0, entity=FCFS: STATE CHANGED:
+  => ARRIVAL [Arr[6]@FCFS]
+Time on event list: 6.0.
+StdOutSimEntityListener t=7.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=7.0, entity=FCFS: STATE CHANGED:
+  => ARRIVAL [Arr[7]@FCFS]
+Time on event list: 7.0.
+StdOutSimEntityListener t=8.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=8.0, entity=FCFS: STATE CHANGED:
+  => ARRIVAL [Arr[8]@FCFS]
+Time on event list: 8.0.
+StdOutSimEntityListener t=9.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=9.0, entity=FCFS: STATE CHANGED:
+  => ARRIVAL [Arr[9]@FCFS]
+Time on event list: 9.0.
+StdOutSimEntityListener t=100.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=100.0, entity=FCFS: STATE CHANGED:
+  => DEPARTURE [Dep[0]@FCFS]
+  => START [Start[1]@FCFS]
+Time on event list: 100.0.
+StdOutSimEntityListener t=200.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=200.0, entity=FCFS: STATE CHANGED:
+  => DEPARTURE [Dep[1]@FCFS]
+  => START [Start[2]@FCFS]
+Time on event list: 200.0.
+StdOutSimEntityListener t=300.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=300.0, entity=FCFS: STATE CHANGED:
+  => DEPARTURE [Dep[2]@FCFS]
+  => START [Start[3]@FCFS]
+Time on event list: 300.0.
+StdOutSimEntityListener t=400.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=400.0, entity=FCFS: STATE CHANGED:
+  => DEPARTURE [Dep[3]@FCFS]
+  => START [Start[4]@FCFS]
+Time on event list: 400.0.
+StdOutSimEntityListener t=500.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=500.0, entity=FCFS: STATE CHANGED:
+  => DEPARTURE [Dep[4]@FCFS]
+  => START [Start[5]@FCFS]
+Time on event list: 500.0.
+StdOutSimEntityListener t=600.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=600.0, entity=FCFS: STATE CHANGED:
+  => DEPARTURE [Dep[5]@FCFS]
+  => START [Start[6]@FCFS]
+Time on event list: 600.0.
+StdOutSimEntityListener t=700.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=700.0, entity=FCFS: STATE CHANGED:
+  => DEPARTURE [Dep[6]@FCFS]
+  => START [Start[7]@FCFS]
+Time on event list: 700.0.
+StdOutSimEntityListener t=800.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=800.0, entity=FCFS: STATE CHANGED:
+  => DEPARTURE [Dep[7]@FCFS]
+  => START [Start[8]@FCFS]
+Time on event list: 800.0.
+StdOutSimEntityListener t=900.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=900.0, entity=FCFS: STATE CHANGED:
+  => DEPARTURE [Dep[8]@FCFS]
+  => START [Start[9]@FCFS]
+Time on event list: 900.0.
+StdOutSimEntityListener t=1000.0, entity=FCFS: UPDATE.
+StdOutSimEntityListener t=1000.0, entity=FCFS: STATE CHANGED:
+  => DEPARTURE [Dep[9]@FCFS]
+  => STA_TRUE [StartArmed[true]@FCFS]
+Time on event list: 1000.0.
+Finished!
+
+\end{lstlisting}
+\end{lstfloat}
 
 \section{Resetting a Simulation}
 \label{sec:guided:reset}
@@ -976,9 +1546,10 @@ A queue will therefore set
   for the jobs that it forcibly removes.
 
 \begin{table}[h]
-\caption{Mandatory settings in the \mbox{\lstinline[basicstyle=\ttfamily]|RESET|} state
+\caption{Mandatory settings in the \texttt{RESET} state
   of a queue.}
 \label{resetStateSettings-queue}
+\begin{center}
 \begin{tabular}{|l|l|l|}
 \hline
 Property & Type & Default Value \\ \hline
@@ -988,18 +1559,21 @@ Property & Type & Default Value \\ \hline
 \lstinline|ServerAccessCredits| & \lstinline|int|         & \lstinline|Integer.MAX_VALUE| (==$\infty$). \\ \hline
 \lstinline|StartArmed|          & \lstinline|int|         & Depends on \lstinline|SimQueue| type.       \\ \hline
 \end{tabular}
+\end{center}
 \end{table}
 
 \begin{table}[h]
-\caption{Mandatory settings in the \mbox{\lstinline[basicstyle=\ttfamily]|RESET|} state
+\caption{Mandatory settings in the \texttt{RESET} state
   of a job.}
 \label{resetStateSettings-job}
+\begin{center}
 \begin{tabular}{|l|l|l|}
 \hline
 Property & Type & Default Value \\ \hline
 \lstinline|LastUpdateDate|      & \lstinline|double|      & From event list or $-\infty$.               \\ \hline
 \lstinline|Queue|               & \lstinline|SimQueue|    & \lstinline|null|.                           \\ \hline
 \end{tabular}
+\end{center}
 \end{table}
 
 \subsection{Resetting the Event List}
@@ -1041,8 +1615,9 @@ Also note that we invoke the super method in \lstinline|notifyResetEntity|;
   although not needed in this case, it is a good habit
   to invoke the super method, especially in reset-related methods.
 
+\begin{lstfloat}
 \begin{lstlisting}[
-  caption={The \mbox{\lstinline[basicstyle=\ttfamily]|JobSojournTimeListenerWithReset|} class,
+  caption={The \texttt{JobSojournTimeListenerWithReset} class,
            showing how to reset listeners.},
   label=simExample2_JobSojournTimeListenerWithReset,
   basicstyle=\tiny]
@@ -1102,7 +1677,9 @@ extends DefaultSimQueueListener
 }
 
 \end{lstlisting}
+\end{lstfloat}
 
+\begin{lstfloat}
 \begin{lstlisting}[
   caption={Example showing resetting the event list.},
   label=simExample2_main,
@@ -1134,6 +1711,7 @@ extends DefaultSimQueueListener
     }
 
 \end{lstlisting}
+\end{lstfloat}
 
 In the outer loop in Listing \ref{simExample2_main},
   we pick up a reset time,
@@ -1228,6 +1806,7 @@ This implies that the end time of the simulation should
   ignoring rounding errors,
   indeed confirmed from the output.
 
+\begin{lstfloat}
 \begin{lstlisting}[
   caption={The output of Listing \ref{simExample2_main}.},
   label=simExample2_out,
@@ -1254,6 +1833,7 @@ AFTER PASS 4.
   Average job sojourn time is 75.7.
 
 \end{lstlisting}
+\end{lstfloat}
 
 At this point,
   we leave the subject of resetting event lists and queues,
@@ -1268,7 +1848,7 @@ In the next sections,
   we therefore first complete the description of the (mandatory)
   \lstinline|SimQueue| interface,
   culminating into to summary
-  in Section \ref{sec:guided:simqueue-model}.
+  in Section \ref{sec:guided:simentity-model}.
 Subsequently,
   we turn our attention to "queues of queues",
   so called {\em composite\/} queues in Section \ref{sec:guided:simqueue-composite},
@@ -1300,7 +1880,7 @@ Starting and stoppping queue-access vacations
   which takes two arguments: (1) the time the operation is invoked,
   and (2), whether the vacation starts of ends.
 
-It is eesential to note that queue-access vacations
+It is essential to note that queue-access vacations
   are {\em always\/} available to you
   as an independent means to drop ariving jobs
   because you think this is the right thing to do at this time,
@@ -1343,8 +1923,9 @@ The \lstinline|SocPS| implementation
 Running the code yields the result on \lstinline|System.out|
   as shown in Listing \ref{simExample3_out}.
 
+\begin{lstfloat}
 \begin{lstlisting}[
-  caption={Setting Queue-Access-Vacations on a \mbox{\lstinline[basicstyle=\ttfamily]|SocPS|} queue.},
+  caption={Setting Queue-Access-Vacations on a \texttt{SocPS} queue.},
   label=simExample3_main,
   basicstyle=\tiny]
 
@@ -1365,7 +1946,9 @@ Running the code yields the result on \lstinline|System.out|
     el.run ();
 
 \end{lstlisting}
+\end{lstfloat}
   
+\begin{lstfloat}
 \begin{lstlisting}[
   caption={The output of Listing \ref{simExample3_main}.},
   label=simExample3_out,
@@ -1402,6 +1985,7 @@ StdOutSimEntityListener t=18.6, entity=SocPS: STATE CHANGED:
   => DEPARTURE [Dep[4]@SocPS]
 
 \end{lstlisting}
+\end{lstfloat}
 
 Indeed, as expected, job $2$ is dropped due to the scheduled queue-access vacation
   upon its arrival.
@@ -1419,7 +2003,7 @@ Since the total "amount of work"
   should be $1.0+17.6=18.6$,
   which is indeed confirmed in the output.
 
-\section{The Waiting and Service Area of a Queue}
+\section{The Waiting and Service Area of a \texttt{SimQueue}}
 \label{sec:guided:wait-serv-area}
 
 Every queue (\lstinline|SimQueue|) consists of
@@ -1444,7 +2028,7 @@ Jobs that do {\em not\/} leave the queue
 
 \begin{figure}[h]
 \label{fig:WaitingAndServiceArea}
-\caption{The waiting and service areas of a \lstinline|SimQueue|.}
+\caption{The waiting and service areas of a \texttt{SimQueue}.}
 \includegraphics[width=\textwidth]{WaitingAndServiceArea}
 \end{figure}
 
@@ -1485,8 +2069,9 @@ In Table \ref{simqueue-methods-areas},
   on a \lstinline|SimQueue|.
 
 \begin{table}[h]
-\caption{\lstinline|SimQueue| methods related to waiting and service areas.}
+\caption{\texttt{SimQueue} methods related to waiting and service areas.}
 \label{simqueue-methods-areas}
+\begin{center}
 \begin{tabular}{|l|l|l|}
 \hline
 Prototype & Symbol & Remark \\ \hline
@@ -1500,6 +2085,7 @@ Prototype & Symbol & Remark \\ \hline
 \lstinline|getNumberOfJobsInServiceArea| & $|J_s(t)|$  & The number of jobs in the service area.           \\ \hline
 \lstinline|isJobInServiceArea (SimJob)|  &             & Checks presence of given job in the service area. \\ \hline
 \end{tabular}
+\end{center}
 \end{table}
 
 \section{Server-Access Credits}
@@ -1604,8 +2190,9 @@ Finally we schedule setting the server-access credits
 We show the output of the program in
   Listing \ref{simExample4_out}.
 
+\begin{lstfloat}
 \begin{lstlisting}[
-  caption={Setting Server-Access Credits on a \mbox{\lstinline[basicstyle=\ttfamily]|FCFS_c|} queue.},
+  caption={Setting Server-Access Credits on a \texttt{FCFS\_c} queue.},
   label=simExample4_main,
   basicstyle=\tiny]
 
@@ -1628,7 +2215,9 @@ We show the output of the program in
     el.run ();
 
 \end{lstlisting}
+\end{lstfloat}
   
+\begin{lstfloat}
 \begin{lstlisting}[
   caption={The output of Listing \ref{simExample4_main}.},
   label=simExample4_out,
@@ -1694,6 +2283,7 @@ StdOutSimEntityListener t=16.05, entity=FCFS_2: STATE CHANGED:
   => DEPARTURE [Dep[6]@FCFS_2]
 
 \end{lstlisting}
+\end{lstfloat}
 
 The output shows indeed that at $t=0$,
   the queue fires a notification \lstinline|OUT_OF_SAC|.
@@ -1782,7 +2372,7 @@ There are two flavors of revocations:
 
 We shall discuss each of these flavors in turn.
 
-\subsection{The \lstinline|REVOKE| Operation}
+\subsection{The \texttt{REVOKE} Operation}
 
 The external \lstinline|REVOKE| operation
   {\em requests\/} the removal of a job visiting a queue.
@@ -1810,43 +2400,828 @@ If, however, the job is in the waiting area,
   and the job is present in either area,
   then, again, the request cannot fail.
 
-{\bf Example}
+In our example shown in Listing \ref{simExample5_revocations_main}
+  we use yet another standard queue, Shortest Job First,
+  or \lstinline|SJF|, a single-server
+  queueing discipline that selects
+  the jobs with the shortest required service time
+  for service when the server becomes idle
+  (but, it {\em preempts\/} the job currently being served).
+In \lstinline|jqueues|,
+  we have to add the additional requirement
+  that there are service-access credits available,
+  as pointed out in Section \ref{sec:guided:sac}.
+In the example,
+  we set the server-access credits to zero at $t=0$,
+  then we schedule four jobs (at
+  $t=1, 2, 3, 4$) with service time
+  $12$, $6$, $4$, and $3$, respectively,
+  and release all constraints on server-access
+  credits at $t=10$,
+  at which time \lstinline|SJF| will
+  take job $4$ into service because it has the (strictly) smallest
+  required service time.
+The output is shown in Listing \ref{simExample5_revocations_out}.
+Of the next two scheduled revocations requests for job $4$,
+  at $t=11$ and $t=12$, respectively,
+  the first one will fail because it does not allow
+  the revocation from the service area,
+  which is where job$4$ is in at the time of the request.
+The second request, though, succeeds, since it allows the
+  revocation to take place from the service area.
+The outcome of the remainder of the scheduled revocation events
+  is quite trivial.
+One thing to bear in mind, though,
+  is that {\em failed\/} revocation requests mostly
+  do {\em not\/} lead to a notification;
+  they just pass by unnoticed
+  (see for instance the failed revocation attempt
+   of job $4$ at $t=11$).
+  
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={Revocation attempts from a \texttt{SJF} queue.},
+  label=simExample5_revocations_main,
+  basicstyle=\tiny]
+
+    final SimEventList el = new DefaultSimEventList ();
+    final SJF queue = new SJF (el);
+    queue.registerStdOutSimEntityListener ();
+    el.reset (0.0);
+    final List<SimJob> jobs = new ArrayList<>  ();
+    // Do not allow jobs to start until t=10.
+    SimQueueEventScheduler.scheduleServerAccessCredits (queue, 0.0, 0);
+    for (int j = 1; j <= 4; j++)
+    {
+      final double jobServiceTime = 12.0 / j;
+      final double jobArrivalTime = (double) j;
+      final String jobName = Integer.toString (j);
+      final SimJob job = new DefaultSimJob (null, jobName, jobServiceTime);
+      jobs.add (job);
+      SimJQEventScheduler.scheduleJobArrival (job, queue, jobArrivalTime);
+    }
+    // Allow jobs to start at t=10.
+    SimQueueEventScheduler.scheduleServerAccessCredits (queue, 10.0, Integer.MAX_VALUE);
+    // At t=10, the SJF will select job 4 for service since it has the shortest service time (3.0).
+    // The next revocation attempt will therefore fail, because job 4 (index 3) is in service,
+    // and we do not allow the revocation from the service area.
+    SimJQEventScheduler.scheduleJobRevocation (jobs.get (3), queue, 11.0, false);
+    // But this attempt will succeed, because this time we allow interruption of service.
+    SimJQEventScheduler.scheduleJobRevocation (jobs.get (3), queue, 12.0, true);
+    // Because at t=12, job 4 (index 3) is revoked, the queue will take
+    // job 3 (index 2) into service, with service time 4.0.
+    // This attempt will succeed; job 1 (index 0) is in the waiting queue.
+    SimJQEventScheduler.scheduleJobRevocation (jobs.get (0), queue, 13.0, false);
+    // However, the next attempt will fail (silently) because job 4 (index 3)
+    // is not longer present..
+    SimJQEventScheduler.scheduleJobRevocation (jobs.get (3), queue, 15.0, true);
+    el.run ();
+
+\end{lstlisting}
+\end{lstfloat}
+  
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={The output of Listing \ref{simExample5_revocations_main}.},
+  label=simExample5_revocations_out,
+  basicstyle=\tiny]
+
+StdOutSimEntityListener t=0.0, entity=SJF: STATE CHANGED:
+  => RESET [Reset@SJF]
+StdOutSimEntityListener entity=SJF: RESET.
+StdOutSimEntityListener t=0.0, entity=SJF: STATE CHANGED:
+  => OUT_OF_SAC [SAC[0]@SJF]
+StdOutSimEntityListener t=1.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=1.0, entity=SJF: STATE CHANGED:
+  => ARRIVAL [Arr[1]@SJF]
+StdOutSimEntityListener t=2.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=2.0, entity=SJF: STATE CHANGED:
+  => ARRIVAL [Arr[2]@SJF]
+StdOutSimEntityListener t=3.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=3.0, entity=SJF: STATE CHANGED:
+  => ARRIVAL [Arr[3]@SJF]
+StdOutSimEntityListener t=4.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=4.0, entity=SJF: STATE CHANGED:
+  => ARRIVAL [Arr[4]@SJF]
+StdOutSimEntityListener t=10.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=10.0, entity=SJF: STATE CHANGED:
+  => START [Start[4]@SJF]
+  => REGAIN_SAC [SAC[2147483647]@SJF]
+  => STA_FALSE [StartArmed[false]@SJF]
+StdOutSimEntityListener t=12.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=12.0, entity=SJF: STATE CHANGED:
+  => REVOCATION [Rev[4]@SJF]
+  => START [Start[3]@SJF]
+StdOutSimEntityListener t=13.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=13.0, entity=SJF: STATE CHANGED:
+  => REVOCATION [Rev[1]@SJF]
+StdOutSimEntityListener t=16.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=16.0, entity=SJF: STATE CHANGED:
+  => DEPARTURE [Dep[3]@SJF]
+  => START [Start[2]@SJF]
+StdOutSimEntityListener t=22.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=22.0, entity=SJF: STATE CHANGED:
+  => DEPARTURE [Dep[2]@SJF]
+  => STA_TRUE [StartArmed[true]@SJF]
+
+\end{lstlisting}
+\end{lstfloat}
 
 \subsection{Auto-Revocations}
 
-{\bf XXX}
-
+Auto-revocations are forced removals from a \lstinline|SimQueue|
+  because a user-set condition is met.
 The set of conditions for auto-revocation
   that can be set on a \lstinline|SimQueue|
-  depends on the queue's type.
+  depends on the queue's type,
+  however,
+  every \lstinline|SimQueue|
+  must have {\em any\/}
+  auto-revocation condition
+  {\em disabled by default}.
+The only auto-revocation condition
+  every \lstinline|SimQueue| {\em must\/}
+  support, is the start of a job.
+(But, it must be disabled by default.)
+A simple example of this feature is given
+  in Listings \ref{simExample5_autorevocations_main}
+  and \ref{simExample5_autorevocations_out},
+  again using the \lstinline|SJF|
+  queueing system.
+Note that successful auto-revocations
+  yield a special notification,
+  \lstinline|AUTO_REVOCATION|.
 
-\section{Multiclass Queues}
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={Auto-revocations from a \texttt{SJF} queue.},
+  label=simExample5_autorevocations_main,
+  basicstyle=\tiny]
+
+    final SimEventList el = new DefaultSimEventList ();
+    final SJF queue = new SJF (el);
+    queue.registerStdOutSimEntityListener ();
+    // Set auto-revocation upon start.
+    queue.setAutoRevocationPolicy (SimQueue.AutoRevocationPolicy.UPON_START);
+    el.reset (0.0);
+    final List<SimJob> jobs = new ArrayList<>  ();
+    // Do not allow jobs to start until t=10.
+    SimQueueEventScheduler.scheduleServerAccessCredits (queue, 0.0, 0);
+    for (int j = 1; j <= 4; j++)
+    {
+      final double jobServiceTime = 12.0 / j;
+      final double jobArrivalTime = (double) j;
+      final String jobName = Integer.toString (j);
+      final SimJob job = new DefaultSimJob (null, jobName, jobServiceTime);
+      jobs.add (job);
+      SimJQEventScheduler.scheduleJobArrival (job, queue, jobArrivalTime);
+    }
+    // Allow two jobs to start at t=10.
+    // These will be immediately auto-revoked.
+    SimQueueEventScheduler.scheduleServerAccessCredits (queue, 10.0, 2);
+    // Allow the other two jobs to start at t=13.
+    // These, again, will be immediately auto-revoked.
+    SimQueueEventScheduler.scheduleServerAccessCredits (queue, 13.0, Integer.MAX_VALUE);    
+    el.run ();
+
+\end{lstlisting}
+\end{lstfloat}
+
+\begin{lstfloat}  
+\begin{lstlisting}[
+  caption={The output of Listing \ref{simExample5_autorevocations_main}.},
+  label=simExample5_autorevocations_out,
+  basicstyle=\tiny]
+
+StdOutSimEntityListener t=0.0, entity=SJF: STATE CHANGED:
+  => RESET [Reset@SJF]
+StdOutSimEntityListener entity=SJF: RESET.
+StdOutSimEntityListener t=0.0, entity=SJF: STATE CHANGED:
+  => OUT_OF_SAC [SAC[0]@SJF]
+StdOutSimEntityListener t=1.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=1.0, entity=SJF: STATE CHANGED:
+  => ARRIVAL [Arr[1]@SJF]
+StdOutSimEntityListener t=2.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=2.0, entity=SJF: STATE CHANGED:
+  => ARRIVAL [Arr[2]@SJF]
+StdOutSimEntityListener t=3.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=3.0, entity=SJF: STATE CHANGED:
+  => ARRIVAL [Arr[3]@SJF]
+StdOutSimEntityListener t=4.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=4.0, entity=SJF: STATE CHANGED:
+  => ARRIVAL [Arr[4]@SJF]
+StdOutSimEntityListener t=10.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=10.0, entity=SJF: STATE CHANGED:
+  => START [Start[4]@SJF]
+  => AUTO_REVOCATION [AutoRev[4]@SJF]
+  => START [Start[3]@SJF]
+  => AUTO_REVOCATION [AutoRev[3]@SJF]
+StdOutSimEntityListener t=13.0, entity=SJF: UPDATE.
+StdOutSimEntityListener t=13.0, entity=SJF: STATE CHANGED:
+  => START [Start[2]@SJF]
+  => AUTO_REVOCATION [AutoRev[2]@SJF]
+  => START [Start[1]@SJF]
+  => AUTO_REVOCATION [AutoRev[1]@SJF]
+  => REGAIN_SAC [SAC[2147483647]@SJF]
+
+\end{lstlisting}
+\end{lstfloat}
+
+\section{Multiclass (QoS) Queues}
 \label{sec:guided:qos}
 
-{\bf XXX}
+So far,
+  the queueing systems in the examples did not
+  have the possibility to provide service based
+  upon job features other that its arrival
+  or required service time.
+In {\em multiclass\/} ({\em QoS}, {\em discriminatory\/})
+  queueing systems,
+  jobs are treated differently based upon their {\em class\/}
+  ({\em priority\/}).
+In order to prevent name clashes with \lstinline|Java|
+  terminology, we shall consistently use the term
+  {\em Qos queueing systems\/} to refer to them.
+More details on QoS queueing systems are provided
+  in Section \ref{sec:multiclass}.
 
-\section{The Model of a Queue in \lstinline|jqueues|: The \lstinline|SimQueue| Interface}
-\label{sec:guided:simqueue-model}
+In \lstinline-jqueues-, 
+  the most common QoS queueing systems
+  like Head-of-the-Line and Priority Queueing
+  have been implemented.
+But their implementation is generic in the sense that
+  you get to ({\em have to\/})
+  choose the set of "QoS values" for the jobs,
+  or, in Java terminology,
+  \lstinline|class|.
+From hereon,
+  we shall refer to this "set of admissible QoS values"
+  as the \lstinline|QoS class|
+  of the queue or job,
+  and its specific value on an entity
+  as the \lstinline|QoS value|.
+On an simulation entity,
+  you can obtain the \lstinline|QoS class|
+  and the \lstinline|QoS value|
+  through the member functions
+  \lstinline|getQoSClass| and \lstinline|getQoSValue|.
+(Clearly,
+  simulation entities have been designed
+  with QoS support in mind
+  from the start.)
+Note that the \lstinline|QoS value| of a queue
+  is to be interpreted as
+  the {\em default\/} value;
+  to assign to jobs that have a \lstinline|null|
+  value (which is allowed),
+  or a non-supported \lstinline|QoS class|.
+There are specific rules as to when it is allowed
+  to change the \lstinline|QoS class|
+  and/or \lstinline|QoS value|
+  of an entity, but we will not go into the details here.
+Suffice it to say that you should not change these
+  settings on queues at all,
+  but that it is safe to set them on jobs
+  {\em in between queue visits}.
 
-{\bf XXX}
+In our example, we choose Priority Queueing (\lstinline|PQ|)
+  to demonstrate some of the features of QoS queues and jobs\footnote{
+In the example, for simplicity,
+  we leave out the so-called {\em generic-type arguments\/}
+  of \lstinline|PQ|.
+Their use is, however, highly recommended.}
+In \lstinline|PQ|,
+  only a single job is served at any time,
+  and it is always the (a) job with the "highest priority".
+Arriving jobs with a strictly higher priority
+  than the job in service will preempt that job,
+  which will {\em resume\/} service when it is the
+  highest-priority job again
+  (in virtue of the \lstinline|RESUME|
+   preemption strategy).
+In \lstinline|jqueues| we follow
+  the somewhat unfortunate convention
+  that {\em the smaller the \lstinline|QoS value|,
+  the higher the priority!\/}
+For QoS, we choose \lstinline|Java|'s \lstinline|Double|.
+We show the example in Listing \ref{simExample6_qos_main}.
+The most important difference with non-QoS systems,
+  is that the \lstinline|QoS class|
+  and \lstinline|QoS value| have to be provided upon construction
+  of the queue, and upon construction of the
+  (specific) \lstinline|DefaultSimJobQoS|.
+We create four jobs, numbered $1$ through $4$,
+  and set their (fixed) respective \lstinline|QoS value|s
+  to $-1$ to $-4$.
+This implies that job $1$ has the lowest priority,
+  and job $4$ the highest.
+We show the program's output in Listing \ref{simExample6_qos_out}.
+We indeed see that job $2$ preempts job $1$ upon its arrival,
+  job $3$ preempts job $2$, and job $4$ preempts job $3$.
+Upon completion of job $4$ at $t=7$,
+  job $3$ is resumed for its remaining service time $4-1=3$,
+  and hence leaves the system at $t=10$.
+Note that the queue does {\em not\/} issue notifications
+  as to which job is {\em resumed\/}!
 
-\section{Composite Queues: The \lstinline|SimQueueComposite| Interface}
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={Example of the use of \texttt{QoS}
+           queues and jobs.},
+  label=simExample6_qos_main,
+  basicstyle=\tiny]
+
+    final SimEventList el = new DefaultSimEventList ();
+    final PQ queue = new PQ (el, PreemptionStrategy.RESUME, Double.class, Double.NEGATIVE_INFINITY);
+    queue.registerStdOutSimEntityListener ();
+    el.reset (0.0);
+    for (int j = 1; j <= 4; j++)
+    {
+      final double jobServiceTime = 12.0 / j;
+      final double jobArrivalTime = (double) j;
+      final String jobName = Integer.toString (j);
+      final SimJob job = new DefaultSimJobQoS (null, jobName, jobServiceTime, Double.class, (double) (-j));
+      SimJQEventScheduler.scheduleJobArrival (job, queue, jobArrivalTime);
+    }
+    el.run ();
+
+\end{lstlisting}
+\end{lstfloat}
+
+\begin{lstfloat}
+\begin{lstlisting}[
+  caption={The output of Listing \ref{simExample6_qos_main}.},
+  label=simExample6_qos_out,
+  basicstyle=\tiny]
+
+StdOutSimEntityListener t=0.0, entity=PQ[RESUME]: STATE CHANGED:
+  => RESET [Reset@PQ[RESUME]]
+StdOutSimEntityListener entity=PQ[RESUME]: RESET.
+StdOutSimEntityListener t=1.0, entity=PQ[RESUME]: UPDATE.
+StdOutSimEntityListener t=1.0, entity=PQ[RESUME]: STATE CHANGED:
+  => ARRIVAL [Arr[1]@PQ[RESUME]]
+  => START [Start[1]@PQ[RESUME]]
+  => STA_FALSE [StartArmed[false]@PQ[RESUME]]
+StdOutSimEntityListener t=2.0, entity=PQ[RESUME]: UPDATE.
+StdOutSimEntityListener t=2.0, entity=PQ[RESUME]: STATE CHANGED:
+  => ARRIVAL [Arr[2]@PQ[RESUME]]
+  => START [Start[2]@PQ[RESUME]]
+StdOutSimEntityListener t=3.0, entity=PQ[RESUME]: UPDATE.
+StdOutSimEntityListener t=3.0, entity=PQ[RESUME]: STATE CHANGED:
+  => ARRIVAL [Arr[3]@PQ[RESUME]]
+  => START [Start[3]@PQ[RESUME]]
+StdOutSimEntityListener t=4.0, entity=PQ[RESUME]: UPDATE.
+StdOutSimEntityListener t=4.0, entity=PQ[RESUME]: STATE CHANGED:
+  => ARRIVAL [Arr[4]@PQ[RESUME]]
+  => START [Start[4]@PQ[RESUME]]
+StdOutSimEntityListener t=7.0, entity=PQ[RESUME]: UPDATE.
+StdOutSimEntityListener t=7.0, entity=PQ[RESUME]: STATE CHANGED:
+  => DEPARTURE [Dep[4]@PQ[RESUME]]
+StdOutSimEntityListener t=10.0, entity=PQ[RESUME]: UPDATE.
+StdOutSimEntityListener t=10.0, entity=PQ[RESUME]: STATE CHANGED:
+  => DEPARTURE [Dep[3]@PQ[RESUME]]
+StdOutSimEntityListener t=15.0, entity=PQ[RESUME]: UPDATE.
+StdOutSimEntityListener t=15.0, entity=PQ[RESUME]: STATE CHANGED:
+  => DEPARTURE [Dep[2]@PQ[RESUME]]
+StdOutSimEntityListener t=26.0, entity=PQ[RESUME]: UPDATE.
+StdOutSimEntityListener t=26.0, entity=PQ[RESUME]: STATE CHANGED:
+  => DEPARTURE [Dep[1]@PQ[RESUME]]
+  => STA_TRUE [StartArmed[true]@PQ[RESUME]]
+
+\end{lstlisting}
+\end{lstfloat}
+
+With the description of \lstinline|QoS| queueing systems,
+  we have completed our first glance at the \lstinline|SimQueue|
+  and \lstinline|SimJob| interfaces.
+Before turning our attention to somewhat more advanced features like
+  {\em composite queues},
+  we want to summarize the complete \lstinline|SimQueue| interface in the next section.
+
+\section{Summary of the \texttt{SimEntity} Interfaces}
+\label{sec:guided:simentity-model}
+
+In this section,
+  having seen almost all aspects of \lstinline|SimEntity|s,
+  \lstinline|SimJob|s,
+  and \lstinline|SimQueue|s,
+  we summarize their state and behavior.
+We have two purposes in mind:
+\begin{itemize}
+  \item To present the material presented thus far in a format
+          that allows you to assert your understanding
+          of the fundamental concepts in \lstinline|jqueues|
+          and \lstinline|jsimulation|.
+  \item To present the interfaces in a compact overview format
+          that can be used as a reference.
+        Really, at this point we have covered almost every aspect
+          of entities, queues, and jobs, and their listeners.
+        The remainder of this Chapter will focus at some
+          left-overs and an important class of queues
+          named {\em composite queues}.
+        The remainder of this entire book is really
+          about explaining rigorously the abstract interfaces
+          and the specific concrete types
+          of queues (mostly), jobs and listeners,
+          and about how you can build your own.
+        In other words, the summary presented in this section
+          is quite complete already,
+          hence it is worth using as a reference.
+\end{itemize}
+
+\subsection{Fundamentals}
+
+Before presenting the details on the \lstinline|SimEntity| interface,
+  we take the time to summarize the fundamental concepts in
+  \lstinline|jsimulation| and \lstinline|jqueues|:
+\begin{itemize}
+  \item The \lstinline|Java| package named \lstinline|jsimulation|
+          is a library for (single-threaded) discrete-event simulation.
+  \item The \lstinline|Java| package named \lstinline|jqueues|
+          is a library for (single-threaded) discrete-event simulation
+          of queueing systems.
+        The library depends on \lstinline|jsimulation|.
+  \item In order to perform discrete event simulations,
+          an event list is needed, on which events can be scheduled.
+        The event list maintains an ordering of the events it contains
+          in non-decreasing simulation time.
+        Typically, a single instance of an event list is used
+          throughout the entire simulation study.
+        The corresponding (abstract) types
+          for event lists and events are defined in \lstinline|jsimulation|,
+          and named \lstinline|SimEventList| and \lstinline|SimEvent|, respectively.
+        This package also provides a reasonable implementation for
+          a \lstinline|SimEventList| named \lstinline|DefaultSimEventList|.
+  \item On a \lstinline|SimEventList|, all scheduled \lstinline|SimEvent|s are
+          unique; you cannot schedule a \lstinline|SimEvent| more than once
+          on a single \lstinline|SimEventList|.
+        Typically, \lstinline|SimEvent|s are created and scheduled through
+          various utility methods.
+  \item The time at which a \lstinline|SimEvent| is scheduled,
+          is kept on the \lstinline|SimEvent| itself,
+          and available though the \lstinline|SimEvent.getTime| method.
+        Once scheduled, you cannot change the time of a \lstinline|SimEvent|.
+        You can, however, reschedule it at a different time
+          through the \lstinline|SimEventList.reschedule| method.
+  \item It is perfectly legel if multiple \lstinline|SimEvent|s are scheduled
+          at the same time.
+        On a \lstinline|DefaultSimEventList|, they are processed in random order.
+  \item With each \lstinline|SimEvent|, an action is associated that determines
+          what to do when the event is processed by the event list.
+        The generic type in \lstinline|jsimulation| is \lstinline|SimEventAction|.
+        Unlike \lstinline|SimEvent|s, \lstinline|SimAction| need not be unique
+          on the event list, and can be shared among different events.
+  \item Once sufficient events have been scheduled,
+          a simulation experiment starts by running or processing
+          the event list.
+        In \lstinline|jsimulation|,
+          you can run the \lstinline|SimEventList| until it is exhausted
+          of events through the \lstinline|SimEventList.run| method,
+          until it has reached a specific simulation time
+          through the \lstinline|SimEventList.runUntil| method,
+          or on an event-by-event basis through \lstinline|SimEventList.runSingleStep|.
+  \item A \lstinline|SimEventList| keeps a notion of simulation time.
+        It is available through \lstinline|SimEventList.getTime|.
+        While running,
+          this is always the scheduled time of the current event being processed.
+        When not, it is always smaller than or equal to the time
+          on the first scheduled \lstinline|SimEvent|.
+  \item You cannot schedule (at the risk of an \lstinline|Exception|)
+          a \lstinline|SimEvent| with time
+          strictly smaller than the current simulation time
+          on the \lstinline|SimEventList|.
+  \item The \lstinline|SimEventList.reset| and \lstinline|SimEventList (double)|
+          methods reset the event list,
+          meaning all scheduled \lstinline|SimEvent|s are removed from the list,
+          and the time on the event list is set to its default time (first method)
+          or given time.
+        The typical use case of these methods is running the simulation again
+          (for instance, for variance-reduction purposes).
+        You cannot invoke either method while the event list is being processed,
+          at the risk of an \lstinline|Exception|.
+  \item In simulation of queueing systems,
+          the center of attention is a simulation entity,
+          an object with a state subject to (the actions of) simulation events.
+  \item In \lstinline|jqueues|, simulation entities are represented
+          as \lstinline|SimEntity| objects.
+        In the present release,
+          a \lstinline|SimEntity| is either a \lstinline|SimJob|
+          (job) or \lstinline|SimQueue| (or their abstract joint interface,
+          \lstinline|SimJQ|).
+        However, other types of \lstinline|SimEntity| may be added in a future release.
+  \item A \lstinline|SimEntity| has the obligation to report
+          changes to its state (as a result of event-list processing)
+          to registered listeners, which are of type \lstinline|SimEntityListener|.
+        Listeners to a \lstinline|SimEntity| can be registered and
+          unregistered at any time through the
+          \lstinline|SimEntity.registerSimEntityListener|
+          and \lstinline|SimEntity.unregisterSimEntityListener|
+          methods, respectively.
+  \item In \lstinline|jqueues|, changes to the state
+          of a \lstinline|SimEntity| is always the result
+          of the invocation of one of a set of well-defined
+          operations on the entity.
+        The specific type of \lstinline|SimEntity|
+          determines the operation it supports.
+        The invocation of an operation is
+          almost always performed by a scheduled event.
+  \item An operation can be external or internal.
+        Events for internal events can only be scheduled
+          by the \lstinline|SimEntity| itself.
+  \item The external operations on a \lstinline|SimQueue| are
+          \lstinline|Arrival| and |\lstinline|Revoke|.
+  \item In \lstinline|jqueues|,
+          a \lstinline|SimJob| starts a visit to a \lstinline|SimQueue|
+          through the \lstinline|Arrival| operation.
+  \item While a \lstinline|SimJob| is present (visiting) a \lstinline|SimQueue|,
+          it is either in its waiting or service area.
+        Upon arrival, a \lstinline|SimJob| enters the waiting area.
+        Moving a \lstinline|SimJob| from the waiting to the service area
+          is performed (if at all) through the internal \lstinline|START|
+          operation.
+  \item A \lstinline|SimJob| can end its visit to a \lstinline|SimQueue|
+          in one of three ways: (1) Through departure
+          (the internal \lstinline|Depart| operation), (2) through dropping
+          (the internal \lstinline|Drop| operation), or (3) through revocation
+          (the external \lstinline|Revoke| operation or the internal \lstinline|AutoRevoke| operation).
+        Whatever way the \lstinline|SimJobb| leaves, it can be from the waiting
+          and service area.
+  \item A job that is present on a queue, but never leaves during a simulation run
+          is named a sticky job.
+  \item {\bf There's more to say here!}
+\end{itemize}
+
+\subsection{Notification Types}
+
+In Table \ref{tab:guided:notification-types},
+  we summarize the notification types supported on a \lstinline|SimQueue|,
+  subdivided into \lstinline|SimEntity|, \lstinline|SimJQ|
+  and \lstinline|SimQueue| notification types.
+
+\begin{table}[h]
+\label{tab:guided:notification-types}
+\caption{The notification types from a \texttt{SimQueue}.}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{|c|}{} \\
+\multicolumn{2}{|c|}{\lstinline[basicstyle=\ttfamily]{SimEntity} Notification Types} \\
+\multicolumn{2}{|c|}{} \\
+\hline
+\lstinline|RESET|         & \lstinline|double|                                \\ \hline
+\lstinline|UPDATE|        & \lstinline|double|                                \\ \hline
+\lstinline|STATE CHANGED| & \lstinline|double|, \lstinline|Set<Notification>| \\ \hline
+\hline
+\multicolumn{2}{|c|}{} \\
+\multicolumn{2}{|c|}{\lstinline[basicstyle=\ttfamily]{SimJQ} Notification Types} \\
+\multicolumn{2}{|c|}{} \\
+\hline
+\lstinline|ARRIVAL|            & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\lstinline|DROP|               & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\lstinline|REVOCATION|         & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\lstinline|AUTO_REVOCATION|    & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\lstinline|START|              & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\lstinline|DEPARTURE|          & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\hline
+\multicolumn{2}{|c|}{} \\
+\multicolumn{2}{|c|}{\lstinline[basicstyle=\ttfamily]{SimQueue} Notification Types} \\
+\multicolumn{2}{|c|}{} \\
+\hline
+\lstinline|QAV_START|    & \lstinline|double|, \lstinline|SimQueue| \\ \hline
+\lstinline|QAV_END|      & \lstinline|double|, \lstinline|SimQueue| \\ \hline
+\lstinline|OUT_OF_SAC|   & \lstinline|double|, \lstinline|SimQueue| \\ \hline
+\lstinline|REGAINED_SAC| & \lstinline|double|, \lstinline|SimQueue| \\ \hline
+\lstinline|STA_FALSE|    & \lstinline|double|, \lstinline|SimQueue| \\ \hline
+\lstinline|STA_TRUE|     & \lstinline|double|, \lstinline|SimQueue| \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsection{Operations}
+
+In Table \ref{tab:guided:operations},
+  we summarize the operations supported on a \lstinline|SimQueue|,
+  subdivided into \lstinline|SimEntity|
+  and \lstinline|SimQueue| operations.
+
+\begin{table}[h]
+\label{tab:guided:operations}
+\caption{The operations on a \texttt{SimQueue}.}
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\texttt{SimEntity} Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|Reset|   & E & \lstinline|double|                                \\ \hline
+\lstinline|Update|  & E & \lstinline|double|                                \\ \hline
+\hline
+\multicolumn{3}{|c|}{} \\
+\multicolumn{3}{|c|}{\texttt{SimQueue} Operations} \\
+\multicolumn{3}{|c|}{} \\
+\hline
+\lstinline|Arrival|           & E & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\lstinline|Drop|              & I & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\lstinline|Revocation|        & E & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\lstinline|AutoRevocation|    & I & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\lstinline|Start|             & I & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\lstinline|Departure|         & I & \lstinline|double|, \lstinline|SimJob|, \lstinline|SimQueue| \\ \hline
+\hline
+\lstinline|QueueAccessVacation| & E & \lstinline|double|, \lstinline|SimQueue|, \lstinline|boolean| \\ \hline
+\lstinline|ServerAccessCredits| & E & \lstinline|double|, \lstinline|SimQueue|, \lstinline|int|     \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsection{Important Methods on a \texttt{SimQueue}}
+
+In Table \ref{tab:guided:simqueue-methods},
+  we list the important methods supported on a \lstinline|SimQueue|,
+  subdivided into state (interrogation) methods,
+  operations,
+  and non-state properties.
+
+\begin{table}
+\label{tab:guided:simqueue-methods}
+\caption{Important methods on a \texttt{SimQueue}.}
+\begin{longtabu}{|l|l|l|}
+\hline
+\multicolumn{2}{|c|}{}             \\
+\multicolumn{2}{|c|}{\large State} \\
+\multicolumn{2}{|c|}{}             \\
+\hline
+\lstinline|double|      & \lstinline|getLastUpdateTime|            \\ \hline
+\lstinline|Set<SimJob>| & \lstinline|getJobs|                      \\
+\lstinline|int|         & \lstinline|getNumberOfJobs|              \\
+\lstinline|boolean|     & \lstinline|isJob (SimJob)|               \\ \hline
+\lstinline|Set<SimJob>| & \lstinline|getJobsInWaitingArea|         \\
+\lstinline|int|         & \lstinline|getNumberOfJobsInWaitingArea| \\
+\lstinline|boolean|     & \lstinline|isJobInWaitingArea (SimJob)|  \\ \hline
+\lstinline|Set<SimJob>| & \lstinline|getJobsInServiceArea|         \\
+\lstinline|int|         & \lstinline|getNumberOfJobsInServiceArea| \\
+\lstinline|boolean|     & \lstinline|isJobInServiceArea (SimJob)|  \\
+\hline
+\lstinline|boolean|     & \lstinline|isQueueAccessVacation|        \\ \hline
+\lstinline|int|         & \lstinline|getServerAccessCredits|       \\ \hline
+\lstinline|boolean|     & \lstinline|isStartArmed|                 \\ \hline
+\hline
+\multicolumn{2}{|c|}{}                  \\
+\multicolumn{2}{|c|}{\large Operations} \\
+\multicolumn{2}{|c|}{}                  \\
+\hline
+\lstinline|void|    & \lstinline|resetSimEntity (double)|                        \\ \hline
+\lstinline|void|    & \lstinline|update (double)|                                \\ \hline
+\hline
+\lstinline|void|    & \lstinline|arrive (double, SimJob)|                        \\ \hline
+\lstinline|void|    & \lstinline|revoke (double, SimJob)|                        \\ \hline
+\lstinline|boolean| & \lstinline|revoke (double, SimJob, boolean)|               \\ \hline
+\hline
+\lstinline|void|    & \lstinline|setQueueAccessVacation (double, boolean)|       \\ \hline
+\lstinline|void|    & \lstinline|setServerAccessCredits (double, int)|           \\ \hline
+\hline
+\multicolumn{2}{|c|}{}                            \\
+\multicolumn{2}{|c|}{\large Non-State Properties} \\
+\multicolumn{2}{|c|}{}                            \\
+\hline
+\lstinline|SimEventList| & \lstinline|getEventList|     \\
+\hline
+\lstinline|void|   & \lstinline|setAutoRevocationPolicy| \\
+                   & \mbox{ } \lstinline|(AutoRevocationPolicy)| \\
+\hline
+\lstinline|Class|  & \lstinline|getQoSClass|            \\
+\lstinline|Object| & \lstinline|getQoSValue|            \\
+\hline
+\lstinline|void|   & \lstinline|setName (String)|       \\
+\hline
+\lstinline|void|                   & \lstinline|registerSimEntityListener|      \\
+                                   & \mbox{ } \lstinline|(SimEntityListener)|   \\
+\lstinline|void|                   & \lstinline|unregisterSimEntityListener|    \\
+                                   & \mbox{ } \lstinline|(SimEntityListener)|   \\
+\lstinline|Set<SimEntityListener>| & \lstinline|getSimEntityListeners|          \\
+\hline
+\end{longtabu}
+\end{table}
+
+\subsection{The \texttt{SimJob} Interface and Important Implementations}
+
+In Table \ref{tab:guided:simjob-methods},
+  we list the important methods supported on a \lstinline|SimJob|,
+  subdivided into state (interrogation) methods,
+  operations,
+  and non-state properties.
+The important \lstinline|SimJob| implementations
+  discussed thus far are shown
+  in Table \ref{tab:guided:simjob-implementations}.
+
+\begin{table}[h]
+\label{tab:guided:simjob-methods}
+\caption{Important methods on a \texttt{SimJob}.}
+\begin{longtabu}{|l|l|l|}
+\hline
+\multicolumn{2}{|c|}{}      \\
+\multicolumn{2}{|c|}{\large State} \\
+\multicolumn{2}{|c|}{}      \\
+\hline
+\lstinline|double|      & \lstinline|getLastUpdateTime|            \\ \hline
+\lstinline|SimQueue|    & \lstinline|getQueue|                     \\ \hline
+\hline
+\multicolumn{2}{|c|}{}                  \\
+\multicolumn{2}{|c|}{\large Operations} \\
+\multicolumn{2}{|c|}{}                  \\
+\hline
+\lstinline|void|    & \lstinline|resetSimEntity (double)|                        \\ \hline
+\lstinline|void|    & \lstinline|update (double)|                                \\ \hline
+\hline
+\multicolumn{2}{|c|}{} \\
+\multicolumn{2}{|c|}{\large Non-State Properties} \\
+\multicolumn{2}{|c|}{}                  \\
+\hline
+\lstinline|SimEventList| & \lstinline|getEventList|     \\
+\hline
+\lstinline|Class|  & \lstinline|getQoSClass|            \\
+\lstinline|Object| & \lstinline|getQoSValue|            \\
+\hline
+\lstinline|void|   & \lstinline|setName (String)|       \\
+\hline
+\lstinline|void|                   & \lstinline|registerSimEntityListener (SimEntityListener)|   \\
+\lstinline|void|                   & \lstinline|unregisterSimEntityListener (SimEntityListener)| \\
+\lstinline|Set<SimEntityListener>| & \lstinline|getSimEntityListeners|                           \\
+\hline
+\end{longtabu}
+\end{table}
+
+\begin{table}[h]
+\label{tab:guided:simjob-implementations}
+\caption{Important \texttt{SimJob} Implementations.}
+\begin{longtabu}{|l|l|}
+\hline
+Class & Constructor Arguments \\ \hline
+\lstinline|DefaultSimJob|     & \lstinline|SimEventList|, \lstinline|String|, \lstinline|double|
+  \\ \hline
+\lstinline|DefaultSimJobQoS|  & \lstinline|SimEventList|, \lstinline|String|, \lstinline|double|, \lstinline|Class|, \lstinline|Object|
+  \\ \hline
+\end{longtabu}
+\end{table}
+
+\subsection{Utility Methods for Scheduling}
+
+In Table \ref{tab:guided:util-scheduling},
+  we list the most important utility methods for scheduling
+  \lstinline|SimEvent|s.
+Note that all methods are static; you cannot instantiate the
+  various classes.
+
+\begin{table}[h]
+\label{tab:guided:util-scheduling}
+\caption{Utility Methods for Scheduling.}
+\begin{longtabu}{|l|l|}
+\hline
+Class & Method (Static) \\ \hline
+\lstinline|SimEntityEventScheduler| & \lstinline|scheduleUpdate (SimEventList, SimEntity, double)|
+  \\ \hline
+\lstinline|SimJQEventScheduler|     & \lstinline|scheduleJobArrival (SimJob, SimQueue, double)|
+  \\ \hline
+\lstinline|SimJQEventScheduler|     & \lstinline|scheduleJobRevocation (SimJob, SimQueue, double, boolean)|
+  \\ \hline
+\lstinline|SimQueueEventScheduler|  & \lstinline|scheduleQueueAccessVacation (SimQueue, double, boolean)|
+  \\ \hline
+\lstinline|SimQueueEventScheduler|  & \lstinline|scheduleServiceAccessCredits (SimQueue, double, int)|
+  \\ \hline
+\end{longtabu}
+\end{table}
+
+\subsection{Important Methods on a \texttt{SimEventList}}
+
+In Table \ref{tab:guided:eventlist},
+  we list the most important methods
+  on a \lstinline|SimEventList|.
+
+\begin{table}[h]
+\label{tab:guided:eventlist}
+\caption{Important methods on a \texttt{SimEventList}.}
+\begin{longtabu}{|l|l|}
+\hline
+\lstinline|void|   & \lstinline|reset (double)|
+  \\ \hline
+\lstinline|double| & \lstinline|getTime|
+  \\ \hline
+\lstinline|void|   & \lstinline|run|
+  \\ \hline
+\lstinline|void|   & \lstinline|runUntil (double, boolean, boolean)|
+  \\ \hline
+\lstinline|void|   & \lstinline|runSingleStep|
+  \\ \hline
+\end{longtabu}
+\end{table}
+
+\section{Composite Queues: The \texttt{SimQueueComposite} Interface}
 \label{sec:guided:simqueue-composite}
-
-{\bf XXX}
-
-\section{Simultaneous Events}
-\label{sec:guided:simultaneous-events}
 
 {\bf XXX}
 
 \section{Atomicity of Operations and Notifications; Queue Invariants}
 \label{sec:guided:atomicity}
-
-{\bf XXX}
-
-\section{Infinite Time}
-\label{sec:infinite-time}
 
 {\bf XXX}
 
@@ -2395,6 +3770,7 @@ We conclude with an overview of
 \end{tabular}
 
 \section{Simultaneous Events}
+\label{sec:events-eventlists-actions:simultaneous-events}
 
 While reading through the previous sections,
   you may have wondered
@@ -2864,6 +4240,7 @@ For instance,
   not supporting "plain" \lstinline|SimEvent|s.
 
 \subsection{Simultaneous Events: Random-Order and Insertion-Order Event Lists}
+\label{sec:el:simul:roel-ioel}
 
 In previous sections in this book,
   we explained that event-list implementations,
@@ -3156,6 +4533,7 @@ The \lstinline|jqueues| library depends on \lstinline|jsimulation|
   for scheduling and processing events and actions.
 
 \chapter{Queueing Systems; Entities, Queues, and Jobs}
+\label{chap:entities-queues-jobs}
 
 This chapter introduces the concepts behind and implementation of the
   \lstinline|jqueues| package.
@@ -5543,26 +6921,32 @@ In Processor-Sharing (PS) queues,
 \hline
 \end{tabular}
 
-\chapter{Multiclass Queues and Jobs}
+\section{Multiclass Queues and Jobs}
+\label{sec:multiclass}
 
-\section{Introduction}
+\subsection{Introduction}
+\label{sec:multiclass-introduction}
 
-\section{Nonpreemptive Multiclass Queues}
+\subsection{Nonpreemptive Multiclass Queues}
+\label{sec:multiclass-nonpreemptive}
 
-\subsection{The \lstinline{HOL} \lstinline{SimQueue}}
+\subsubsection{The \lstinline{HOL} \lstinline{SimQueue}}
 \label{sec:HOL}
 
-\section{Preemptive Multiclass Queues}
+\subsection{Preemptive Multiclass Queues}
+\label{sec:multiclass-preemptive}
 
-\subsection{The \lstinline{PQ} \lstinline{SimQueue}}
+\subsubsection{The \lstinline{PQ} \lstinline{SimQueue}}
 \label{sec:PQ}
 
-\section{Processor-Sharing Multiclass Queues}
+\subsection{Processor-Sharing Multiclass Queues}
+\label{sec:multiclass-processorsharing}
 
 \subsection{The \lstinline{HOL-PS} \lstinline{SimQueue}}
 \label{sec:HOL-PS}
 
 \chapter{Composite Queues}
+\label{sec:composite}
 
 \section{Introduction}
 
