@@ -68,7 +68,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see SimQueueComposite
  * @see StartModel
  * @see StartModel#ENCAPSULATOR_QUEUE
- * @see EncapsulatorSimQueue
+ * @see Enc
  * 
  * @author Jan de Jongh, TNO
  * 
@@ -79,8 +79,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class EncapsulatorTimeLimitSimQueue
-  <DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends EncapsulatorSimQueue>
+public class EncTL
+  <DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends Enc>
   extends AbstractEncapsulatorSimQueue<DJ, DQ, J, Q>
 {
   
@@ -114,7 +114,7 @@ public class EncapsulatorTimeLimitSimQueue
    * @see StartModel#ENCAPSULATOR_QUEUE
    * 
    */
-  public EncapsulatorTimeLimitSimQueue
+  public EncTL
   (final SimEventList eventList,
    final DQ queue,
    final DelegateSimJobFactory delegateSimJobFactory,
@@ -137,10 +137,10 @@ public class EncapsulatorTimeLimitSimQueue
     registerSubQueueSubNotificationProcessor (SimJQSimpleEventType.DEPARTURE,       queue, this::processExit);
   }
   
-  /** Returns a new {@link EncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
+  /** Returns a new {@link Enc} object on the same {@link SimEventList} with a copy of the encapsulated
    *  queue and the same delegate-job factory.
    * 
-   * @return A new {@link EncapsulatorSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
+   * @return A new {@link Enc} object on the same {@link SimEventList} with a copy of the encapsulated
    *         queue and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
@@ -151,10 +151,10 @@ public class EncapsulatorTimeLimitSimQueue
    * 
    */
   @Override
-  public EncapsulatorSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  public Enc<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final SimQueue<DJ, DQ> encapsulatedQueueCopy = getEncapsulatedQueue ().getCopySimQueue ();
-    return new EncapsulatorSimQueue (getEventList (), encapsulatedQueueCopy, getDelegateSimJobFactory ());
+    return new Enc (getEventList (), encapsulatedQueueCopy, getDelegateSimJobFactory ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

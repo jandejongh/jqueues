@@ -13,7 +13,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorHideStartSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncHS;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
 import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite;
@@ -25,7 +25,7 @@ import nl.jdj.jqueues.r5.util.predictor.SimQueuePrediction_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 
-/** A {@link SimQueuePredictor} for {@link EncapsulatorHideStartSimQueue}.
+/** A {@link SimQueuePredictor} for {@link EncHS}.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -37,8 +37,8 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
  * 
  */
 public class SimQueuePredictor_EncHS
-extends AbstractSimQueuePredictor_Composite<EncapsulatorHideStartSimQueue>
-implements SimQueuePredictor<EncapsulatorHideStartSimQueue>
+extends AbstractSimQueuePredictor_Composite<EncHS>
+implements SimQueuePredictor<EncHS>
 {
   
   final SimQueuePredictor encQueuePredictor;
@@ -57,8 +57,8 @@ implements SimQueuePredictor<EncapsulatorHideStartSimQueue>
 
   @Override
   public boolean isStartArmed
-  (final EncapsulatorHideStartSimQueue queue,
-   final SimQueueState<SimJob, EncapsulatorHideStartSimQueue> queueState)
+  (final EncHS queue,
+   final SimQueueState<SimJob, EncHS> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
@@ -68,7 +68,7 @@ implements SimQueuePredictor<EncapsulatorHideStartSimQueue>
   @Override
   public SimQueuePrediction_SQ_SV
   predict_SQ_SV_ROEL_U
-  (final EncapsulatorHideStartSimQueue queue, final Set<SimJQEvent> queueEvents)
+  (final EncHS queue, final Set<SimJQEvent> queueEvents)
    throws SimQueuePredictionException
   {
     if (queue == null || queue.getEncapsulatedQueue () == null)
@@ -124,7 +124,7 @@ implements SimQueuePredictor<EncapsulatorHideStartSimQueue>
     }
     final SimQueuePrediction_SQ_SV encPrediction = this.encQueuePredictor.predict_SQ_SV_ROEL_U (encQueue, encQueueEvents);
     final Map<SimJob, JobQueueVisitLog<SimJob, SimQueue>> encVisitLogs = encPrediction.getVisitLogs ();
-    final Map<SimJob, JobQueueVisitLog<SimJob, EncapsulatorHideStartSimQueue>> visitLogs = new HashMap<> ();
+    final Map<SimJob, JobQueueVisitLog<SimJob, EncHS>> visitLogs = new HashMap<> ();
     for (final Entry<SimJob, JobQueueVisitLog<SimJob, SimQueue>> entry : encVisitLogs.entrySet ())
     {
       final SimJob j = entry.getKey ();
@@ -155,7 +155,7 @@ implements SimQueuePredictor<EncapsulatorHideStartSimQueue>
   @Override
   public SimQueuePrediction_SQ_SV
   predict_SQ_SV_IOEL_U
-  (final EncapsulatorHideStartSimQueue queue,
+  (final EncHS queue,
    final NavigableMap<Double, Set<SimJQEvent>> workloadEventsMap,
    final NavigableMap<Double, Set<SimJQEvent>> processedEventsMap)
   throws SimQueuePredictionException

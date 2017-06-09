@@ -82,14 +82,16 @@ public enum KnownSimQueue
                IntegerParameterProfile.IPP_ALWAYS_INFINITE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
   
+  // XXX preemptive???
+  
   // processorsharing
   PS          ("PS", false, nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.PS.class, GeneratorProfile.SE,
                IntegerParameterProfile.IPP_ALWAYS_ONE, IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                DoubleParameterProfile.DPP_IRRELEVANT),
   
   // composite
-  ENCAPSULATOR   ("Encapsulator", true,
-                  nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorSimQueue.class,
+  ENCAPSULATOR   ("Enc", true,
+                  nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.Enc.class,
                   GeneratorProfile.SE_Q_DSJF,
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
@@ -124,6 +126,9 @@ public enum KnownSimQueue
                   IntegerParameterProfile.IPP_IRRELEVANT,
                   IntegerParameterProfile.IPP_ALWAYS_INFINITE,
                   DoubleParameterProfile.DPP_IRRELEVANT),
+  
+  // XXX JRQ???
+  
   FB_PROB        ("FB_Prob", true,
                   nl.jdj.jqueues.r5.entity.jq.queue.composite.single.feedback.FB_p.class,
                   GeneratorProfile.SE_Q_PFB_RNG_DSJF,

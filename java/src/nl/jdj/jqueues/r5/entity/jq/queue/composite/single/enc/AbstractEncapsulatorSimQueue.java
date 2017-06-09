@@ -54,8 +54,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @see StartModel
  * @see StartModel#ENCAPSULATOR_QUEUE
  * @see StartModel#ENCAPSULATOR_HIDE_START_QUEUE
- * @see EncapsulatorSimQueue
- * @see EncapsulatorHideStartSimQueue
+ * @see Enc
+ * @see EncHS
  * 
  * @author Jan de Jongh, TNO
  * 

@@ -12,7 +12,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.Enc;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
@@ -28,7 +28,7 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
-/** A {@link SimQueuePredictor} for {@link EncapsulatorSimQueue}.
+/** A {@link SimQueuePredictor} for {@link Enc}.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -40,8 +40,8 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
  * 
  */
 public class SimQueuePredictor_Enc
-extends AbstractSimQueuePredictor<EncapsulatorSimQueue>
-implements SimQueuePredictor<EncapsulatorSimQueue>
+extends AbstractSimQueuePredictor<Enc>
+implements SimQueuePredictor<Enc>
 {
   
   final SimQueuePredictor encQueuePredictor;
@@ -60,8 +60,8 @@ implements SimQueuePredictor<EncapsulatorSimQueue>
   }
 
   @Override
-  public SimQueueState<SimJob, EncapsulatorSimQueue> createQueueState
-  (final EncapsulatorSimQueue queue,
+  public SimQueueState<SimJob, Enc> createQueueState
+  (final Enc queue,
    final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
@@ -73,8 +73,8 @@ implements SimQueuePredictor<EncapsulatorSimQueue>
 
   @Override
   public boolean hasServerAccessCredits
-  (final EncapsulatorSimQueue queue,
-   final SimQueueState<SimJob, EncapsulatorSimQueue> queueState)
+  (final Enc queue,
+   final SimQueueState<SimJob, Enc> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
@@ -88,8 +88,8 @@ implements SimQueuePredictor<EncapsulatorSimQueue>
 
   @Override
   public boolean isStartArmed
-  (final EncapsulatorSimQueue queue,
-   final SimQueueState<SimJob, EncapsulatorSimQueue> queueState)
+  (final Enc queue,
+   final SimQueueState<SimJob, Enc> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
@@ -104,7 +104,7 @@ implements SimQueuePredictor<EncapsulatorSimQueue>
   @Override
   public SimQueuePrediction_SQ_SV
   predict_SQ_SV_ROEL_U
-  (final EncapsulatorSimQueue queue, final Set<SimJQEvent> queueEvents)
+  (final Enc queue, final Set<SimJQEvent> queueEvents)
    throws SimQueuePredictionException
   {
     if (queue == null || queue.getEncapsulatedQueue () == null)
@@ -152,7 +152,7 @@ implements SimQueuePredictor<EncapsulatorSimQueue>
     }
     final SimQueuePrediction_SQ_SV encPrediction = this.encQueuePredictor.predict_SQ_SV_ROEL_U (encQueue, encQueueEvents);
     final Map<SimJob, JobQueueVisitLog<SimJob, SimQueue>> encVisitLogs = encPrediction.getVisitLogs ();
-    final Map<SimJob, JobQueueVisitLog<SimJob, EncapsulatorSimQueue>> visitLogs = new HashMap<> ();
+    final Map<SimJob, JobQueueVisitLog<SimJob, Enc>> visitLogs = new HashMap<> ();
     for (final Entry<SimJob, JobQueueVisitLog<SimJob, SimQueue>> entry : encVisitLogs.entrySet ())
     {
       final SimJob j = entry.getKey ();
@@ -180,7 +180,7 @@ implements SimQueuePredictor<EncapsulatorSimQueue>
   @Override
   public SimQueuePrediction_SQ_SV
   predict_SQ_SV_IOEL_U
-  (final EncapsulatorSimQueue queue,
+  (final Enc queue,
    final NavigableMap<Double, Set<SimJQEvent>> workloadEventsMap,
    final NavigableMap<Double, Set<SimJQEvent>> processedEventsMap)
   throws SimQueuePredictionException
@@ -190,8 +190,8 @@ implements SimQueuePredictor<EncapsulatorSimQueue>
 
   @Override
   public double getNextQueueEventTimeBeyond
-  (final EncapsulatorSimQueue queue,
-   final SimQueueState<SimJob, EncapsulatorSimQueue> queueState,
+  (final Enc queue,
+   final SimQueueState<SimJob, Enc> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes)
   throws SimQueuePredictionException
   {
@@ -200,7 +200,7 @@ implements SimQueuePredictor<EncapsulatorSimQueue>
 
   @Override
   public void updateToTime
-  (final EncapsulatorSimQueue queue,
+  (final Enc queue,
    final SimQueueState queueState,
    final double newTime)
   {
@@ -209,11 +209,11 @@ implements SimQueuePredictor<EncapsulatorSimQueue>
 
   @Override
   public void doWorkloadEvents_SQ_SV_ROEL_U
-  (final EncapsulatorSimQueue queue,
+  (final Enc queue,
    final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
-   final SimQueueState<SimJob, EncapsulatorSimQueue> queueState,
+   final SimQueueState<SimJob, Enc> queueState,
    final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
-   final Set<JobQueueVisitLog<SimJob, EncapsulatorSimQueue>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, Enc>> visitLogsSet)
   throws SimQueuePredictionException, WorkloadScheduleException
   {
     throw new UnsupportedOperationException ();
@@ -221,10 +221,10 @@ implements SimQueuePredictor<EncapsulatorSimQueue>
 
   @Override
   public void doQueueEvents_SQ_SV_ROEL_U
-  (final EncapsulatorSimQueue queue,
-   final SimQueueState<SimJob, EncapsulatorSimQueue> queueState,
+  (final Enc queue,
+   final SimQueueState<SimJob, Enc> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
-   final Set<JobQueueVisitLog<SimJob, EncapsulatorSimQueue>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, Enc>> visitLogsSet)
   throws SimQueuePredictionException
   {
     throw new UnsupportedOperationException ();

@@ -10,7 +10,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorTimeLimitSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncTL;
 import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite;
 import nl.jdj.jqueues.r5.extensions.composite.SimQueueCompositeStateHandler;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
@@ -20,7 +20,7 @@ import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 
-/** A {@link SimQueuePredictor} for {@link EncapsulatorTimeLimitSimQueue}.
+/** A {@link SimQueuePredictor} for {@link EncTL}.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -32,8 +32,8 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
  * 
  */
 public class SimQueuePredictor_EncTL
-extends AbstractSimQueuePredictor_Composite<EncapsulatorTimeLimitSimQueue>
-implements SimQueuePredictor<EncapsulatorTimeLimitSimQueue>
+extends AbstractSimQueuePredictor_Composite<EncTL>
+implements SimQueuePredictor<EncTL>
 {
   
   final AbstractSimQueuePredictor encQueuePredictor;
@@ -52,8 +52,8 @@ implements SimQueuePredictor<EncapsulatorTimeLimitSimQueue>
 
   @Override
   public boolean hasServerAccessCredits
-  (final EncapsulatorTimeLimitSimQueue queue,
-   final SimQueueState<SimJob, EncapsulatorTimeLimitSimQueue> queueState)
+  (final EncTL queue,
+   final SimQueueState<SimJob, EncTL> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
@@ -67,8 +67,8 @@ implements SimQueuePredictor<EncapsulatorTimeLimitSimQueue>
 
   @Override
   public boolean isStartArmed
-  (final EncapsulatorTimeLimitSimQueue queue,
-   final SimQueueState<SimJob, EncapsulatorTimeLimitSimQueue> queueState)
+  (final EncTL queue,
+   final SimQueueState<SimJob, EncTL> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
@@ -97,8 +97,8 @@ implements SimQueuePredictor<EncapsulatorTimeLimitSimQueue>
   
   @Override
   public double getNextQueueEventTimeBeyond
-  (final EncapsulatorTimeLimitSimQueue queue,
-    final SimQueueState<SimJob, EncapsulatorTimeLimitSimQueue> queueState,
+  (final EncTL queue,
+    final SimQueueState<SimJob, EncTL> queueState,
     final Set<SimEntitySimpleEventType.Member> queueEventTypes)
     throws SimQueuePredictionException
   {
@@ -157,10 +157,10 @@ implements SimQueuePredictor<EncapsulatorTimeLimitSimQueue>
 
   @Override
   public void doQueueEvents_SQ_SV_ROEL_U
-  (final EncapsulatorTimeLimitSimQueue queue,
-   final SimQueueState<SimJob, EncapsulatorTimeLimitSimQueue> queueState,
+  (final EncTL queue,
+   final SimQueueState<SimJob, EncTL> queueState,
    final Set<SimEntitySimpleEventType.Member> queueEventTypes,
-   final Set<JobQueueVisitLog<SimJob, EncapsulatorTimeLimitSimQueue>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, EncTL>> visitLogsSet)
   throws SimQueuePredictionException
   {
     if ( queue == null

@@ -5,8 +5,8 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.GeneralParallelSimQueues;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorHideStartSimQueue;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncHS;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.Enc;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem;
 
 /** A {@link SimQueue} that embeds a fixed set of other queues;
@@ -110,7 +110,7 @@ extends SimQueue<J, Q>
      * The number of server access credits on this queue and on the sub-queue are always equal,
      * and so are the {@link #isStartArmed} states.
      * 
-     * @see EncapsulatorSimQueue
+     * @see Enc
      * 
      */
     ENCAPSULATOR_QUEUE,
@@ -128,7 +128,7 @@ extends SimQueue<J, Q>
      * (i.e., {@link Integer#MAX_VALUE}.
      * The {@link #isStartArmed} state on this queue is always {@code false}.
      * 
-     * @see EncapsulatorHideStartSimQueue
+     * @see EncHS
      * 
      */
     ENCAPSULATOR_HIDE_START_QUEUE,

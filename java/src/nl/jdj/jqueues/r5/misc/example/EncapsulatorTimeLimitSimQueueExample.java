@@ -6,7 +6,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncapsulatorTimeLimitSimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.single.enc.EncTL;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.LCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.RANDOM;
@@ -17,7 +17,7 @@ import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventAction;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** Example code for {@link EncapsulatorTimeLimitSimQueue}.
+/** Example code for {@link EncTL}.
  * 
  * @author Jan de Jongh, TNO
  * 
@@ -95,13 +95,13 @@ public final class EncapsulatorTimeLimitSimQueueExample
     final DelegateSimJobFactory delegateSimJobFactory =
       (DelegateSimJobFactory<TestDelegateSimJob, SimQueue, DefaultExampleSimJob, SimQueue>)
         (double time, DefaultExampleSimJob job, SimQueue queue) -> new TestDelegateSimJob (job, false);
-    final EncapsulatorTimeLimitSimQueue enctlQueue =
-      new EncapsulatorTimeLimitSimQueue (el, fcfsQueue, delegateSimJobFactory, 20.1, 5.2, 21.3);
+    final EncTL enctlQueue =
+      new EncTL (el, fcfsQueue, delegateSimJobFactory, 20.1, 5.2, 21.3);
     final StdOutSimQueueListener encListener = new StdOutSimQueueListener ();
     encListener.setOnlyResetsAndUpdatesAndStateChanges (true);
     enctlQueue.registerSimEntityListener (encListener);
-    for (final EncapsulatorTimeLimitSimQueue.ExpirationMethod expirationMethod :
-      EncapsulatorTimeLimitSimQueue.ExpirationMethod.values ())
+    for (final EncTL.ExpirationMethod expirationMethod :
+      EncTL.ExpirationMethod.values ())
     {
       System.out.println ();
       System.out.println ("=== Setting expiration method to " + expirationMethod + ".");
