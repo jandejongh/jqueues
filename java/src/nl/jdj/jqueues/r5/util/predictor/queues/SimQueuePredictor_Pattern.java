@@ -7,7 +7,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.pattern.PatternParallelSimQueues;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.pattern.Pattern;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite;
 import nl.jdj.jqueues.r5.extensions.visitscounter.SimQueueVisitsCounterStateHandler;
@@ -17,7 +17,7 @@ import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 
-/** A {@link SimQueuePredictor} for {@link PatternParallelSimQueues}.
+/** A {@link SimQueuePredictor} for {@link Pattern}.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -29,8 +29,8 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
  * 
  */
 public class SimQueuePredictor_Pattern
-extends AbstractSimQueuePredictor_Composite<PatternParallelSimQueues>
-implements SimQueuePredictor<PatternParallelSimQueues>
+extends AbstractSimQueuePredictor_Composite<Pattern>
+implements SimQueuePredictor<Pattern>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,8 +48,8 @@ implements SimQueuePredictor<PatternParallelSimQueues>
    * 
    */
   @Override
-  public SimQueueState<SimJob, PatternParallelSimQueues> createQueueState
-  (final PatternParallelSimQueues queue, final boolean isROEL)
+  public SimQueueState<SimJob, Pattern> createQueueState
+  (final Pattern queue, final boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
     queueState.registerHandler (new SimQueueVisitsCounterStateHandler ());
@@ -64,7 +64,7 @@ implements SimQueuePredictor<PatternParallelSimQueues>
 
   @Override
   public boolean isStartArmed
-  (final PatternParallelSimQueues queue, final SimQueueState<SimJob, PatternParallelSimQueues> queueState)
+  (final Pattern queue, final SimQueueState<SimJob, Pattern> queueState)
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
@@ -74,10 +74,10 @@ implements SimQueuePredictor<PatternParallelSimQueues>
   @Override
   protected void startJobs
   (final double time,
-   final PatternParallelSimQueues queue,
-   final SimQueueState<SimJob, PatternParallelSimQueues> queueState,
+   final Pattern queue,
+   final SimQueueState<SimJob, Pattern> queueState,
    final Set<SimJob> starters,
-   final Set<JobQueueVisitLog<SimJob, PatternParallelSimQueues>> visitLogsSet)
+   final Set<JobQueueVisitLog<SimJob, Pattern>> visitLogsSet)
   throws SimQueuePredictionException
   {
     queueState.doStarts (time, starters);

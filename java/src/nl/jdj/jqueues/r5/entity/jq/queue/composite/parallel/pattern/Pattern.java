@@ -31,8 +31,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class PatternParallelSimQueues
-<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends PatternParallelSimQueues>
+public class Pattern
+<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends Pattern>
   extends AbstractParallelSimQueues<DJ, DQ, J, Q>
 {
 
@@ -112,7 +112,7 @@ public class PatternParallelSimQueues
    * @see SimQueueSelector
    * 
    */
-  public PatternParallelSimQueues
+  public Pattern
   (final SimEventList eventList,
     final Set<DQ> queues,
     final DelegateSimJobFactory delegateSimJobFactory,
@@ -128,10 +128,10 @@ public class PatternParallelSimQueues
       this.pattern = Arrays.copyOf (pattern, pattern.length);
   }
 
-  /** Returns a new {@link PatternParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
+  /** Returns a new {@link Pattern} object on the same {@link SimEventList} with copies of the sub-queues,
    *  the same pattern, and the same delegate-job factory.
    * 
-   * @return A new {@link PatternParallelSimQueues} object on the same {@link SimEventList} with copies of the sub-queues,
+   * @return A new {@link Pattern} object on the same {@link SimEventList} with copies of the sub-queues,
    *           the same pattern, and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the encapsulated queues could not be copied through {@link SimQueue#getCopySimQueue}.
@@ -143,10 +143,10 @@ public class PatternParallelSimQueues
    * 
    */
   @Override
-  public PatternParallelSimQueues<DJ, DQ, J, Q> getCopySimQueue ()
+  public Pattern<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final Set<DQ> queuesCopy = getCopySubSimQueues ();
-    return new PatternParallelSimQueues<>
+    return new Pattern<>
       (getEventList (), queuesCopy, getDelegateSimJobFactory (), getPattern ());
   }
   

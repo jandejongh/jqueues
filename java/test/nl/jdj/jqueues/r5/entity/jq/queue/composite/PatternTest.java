@@ -6,7 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.pattern.PatternParallelSimQueues;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.pattern.Pattern;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IC;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IS;
@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/** Tests for {@link PatternParallelSimQueues}.
+/** Tests for {@link Pattern}.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -71,7 +71,7 @@ public class PatternTest
   }
 
   /**
-   * Test of PatternParallelSimQueues.
+   * Test of Pattern.
    * 
    */
   @Test
@@ -91,8 +91,8 @@ public class PatternTest
     subQueues_pattern0.add (zero0);
     subQueues_pattern0.add (zero1);
     subQueues_pattern0.add (zero2);
-    final PatternParallelSimQueues pattern0 =
-      new PatternParallelSimQueues (eventList, subQueues_pattern0, null, new int[] { 0, 1, 2, -1, 2, 1, 0 });
+    final Pattern pattern0 =
+      new Pattern (eventList, subQueues_pattern0, null, new int[] { 0, 1, 2, -1, 2, 1, 0 });
     final SimQueuePredictor_Pattern predictor_pattern0 =
       new SimQueuePredictor_Pattern
             (Arrays.asList (new AbstractSimQueuePredictor[] {predictor_zero, predictor_zero, predictor_zero}));
@@ -106,8 +106,8 @@ public class PatternTest
     final Set<SimQueue> subQueues_pattern1 = new LinkedHashSet<> ();
     subQueues_pattern1.add (fcfs0);
     subQueues_pattern1.add (lcfs0);
-    final PatternParallelSimQueues pattern1 =
-      new PatternParallelSimQueues (eventList, subQueues_pattern1, null, new int[] { 0, 1 });
+    final Pattern pattern1 =
+      new Pattern (eventList, subQueues_pattern1, null, new int[] { 0, 1 });
     final SimQueuePredictor_Pattern predictor_pattern1 =
       new SimQueuePredictor_Pattern
             (Arrays.asList (new AbstractSimQueuePredictor[] {predictor_fcfs0, predictor_lcfs0}));
@@ -121,20 +121,20 @@ public class PatternTest
     subQueues_pattern2.add (is0);
     subQueues_pattern2.add (is1);
     subQueues_pattern2.add (is2);
-    final PatternParallelSimQueues pattern2 =
-      new PatternParallelSimQueues (eventList, subQueues_pattern2, null, new int[] { 0, 1, 2, 2, 1, 0, 2, 1 });
+    final Pattern pattern2 =
+      new Pattern (eventList, subQueues_pattern2, null, new int[] { 0, 1, 2, 2, 1, 0, 2, 1 });
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (pattern2, null, new IS (eventList), numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
     // Pattern{}[DROP] == IC
     final DROP drop0 = new DROP (eventList);
-    final PatternParallelSimQueues pattern3 =
-      new PatternParallelSimQueues (eventList, Collections.singleton (drop0), null, new int[] { });
+    final Pattern pattern3 =
+      new Pattern (eventList, Collections.singleton (drop0), null, new int[] { });
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (pattern3, null, new IC (eventList), numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
     // Pattern{0}[WUR] == SUR
     final WUR wur0 = new WUR (eventList);
-    final PatternParallelSimQueues pattern4 =
-      new PatternParallelSimQueues (eventList, Collections.singleton (wur0), null, new int[] { 0 });
+    final Pattern pattern4 =
+      new Pattern (eventList, Collections.singleton (wur0), null, new int[] { 0 });
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (pattern4, null, new SUR (eventList), numberOfJobs, null, silent, deadSilent, 1.0e-12, null, null, null);
   }
