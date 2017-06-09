@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.entity.jq.queue.composite;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.GeneralParallelSimQueues;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.enc.EncHS;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.enc.Enc;
@@ -158,7 +158,7 @@ extends SimQueue<J, Q>
      * <p>
      * The {@link #isStartArmed} state on this queue is that of the serve (second) queue.
      * 
-     * @see CompressedTandem2SimQueue
+     * @see CTandem2
      * 
      */
     COMPRESSED_TANDEM_2_QUEUE

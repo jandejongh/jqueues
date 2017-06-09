@@ -9,7 +9,7 @@ import nl.jdj.jqueues.r5.entity.jq.SimJQListener;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueListener;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
 import nl.jdj.jqueues.r5.entity.SimEntityEvent;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
@@ -21,7 +21,7 @@ import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType.Member;
  * <p>
  * By contract of {@link SimEntity} and {@link SimJQListener},
  * it is illegal to operate on an entity from within the context of a listener (notification).
- * However, in certain cases this feature is highly desired, like in {@link CompressedTandem2SimQueue}.
+ * However, in certain cases this feature is highly desired, like in {@link CTandem2}.
  * 
  * <p>
  * In order to facilitate this to some extent,
@@ -40,7 +40,7 @@ import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType.Member;
  * 
  * <p>
  * This class was designed in order to meet some requirements highly specific to implementing,
- * e.g., {@link CompressedTandem2SimQueue},
+ * e.g., {@link CTandem2},
  * and not really meant for general-purpose use.
  * 
  * @param <J> The type of {@link SimJob}s supported.

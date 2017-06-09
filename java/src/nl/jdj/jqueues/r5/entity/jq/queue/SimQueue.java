@@ -5,7 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.SimEntity;
 import nl.jdj.jqueues.r5.entity.SimEntityListener;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
 import nl.jdj.jqueues.r5.entity.jq.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
@@ -338,7 +338,7 @@ extends SimEntity, SimQoS<J, Q>
    * 
    * <p>
    * Auto-revocation refers to the revocation of jobs upon a specific user-specified state condition.
-   * It plays an essential role in composite queues, notably {@link CompressedTandem2SimQueue}.
+   * It plays an essential role in composite queues, notably {@link CTandem2}.
    * 
    */
   public enum AutoRevocationPolicy
@@ -387,7 +387,7 @@ extends SimEntity, SimQoS<J, Q>
    *
    * <p>
    * The number of server-access credits is the remaining number of jobs allowed to start.
-   * They play an essential role in composite queues, notably {@link CompressedTandem2SimQueue}.
+   * They play an essential role in composite queues, notably {@link CTandem2}.
    * 
    * <p>
    * Upon reset, the initial value <i>must</i> be {@link Integer#MAX_VALUE},
@@ -445,7 +445,7 @@ extends SimEntity, SimQoS<J, Q>
    * The {@code StartArmed} state of a queue is admittedly difficult to grasp and unlikely to find many uses in practice,
    * but it is essential for specific types of so-called <i>composite</i> queues,
    * i.e., queues that are composed of other queues.
-   * See, for instance, {@link CompressedTandem2SimQueue}.
+   * See, for instance, {@link CTandem2}.
    * 
    * @return True if the queue is in {@code StartArmed} state.
    * 

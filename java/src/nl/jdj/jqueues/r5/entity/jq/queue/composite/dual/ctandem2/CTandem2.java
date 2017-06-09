@@ -37,7 +37,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * When the delegate job departs from the serve queue, its real job departs from the composite queue.
  * 
  * <p>
- * Notice that a {@link CompressedTandem2SimQueue} guarantees that the serve queue is not on queue-access vacation.
+ * Notice that a {@link CTandem2} guarantees that the serve queue is not on queue-access vacation.
  * always has infinite server-access credits, and always has an empty waiting area.
  * This explains the three conditions mentioned in {@link SimQueue#isStartArmed}.
  * 
@@ -48,35 +48,35 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * and the serve queue may not support the service area at all.
  * 
  * <p>
- * Despite its complications, the {@link CompressedTandem2SimQueue} can be very useful to
+ * Despite its complications, the {@link CTandem2} can be very useful to
  * construct non-standard (at least, not available in this library) {@link SimQueue} implementations,
  * and reduces the pressure on this {@code jqueues} library to implement <i>all</i> possible combinations
  * of waiting-area (buffer) size, job-selection policies and number of servers.
  * For instance, a queueing discipline we have not implemented at this time of writing in {@code jqueues}
  * is multi-server {@link SJF}.
  * There is, however, a multi-server {@link FCFS_c} implementation which features an arbitrary finite number of servers,
- * so we can replace its FIFO waiting-area behavior with SJF with a {@link CompressedTandem2SimQueue}
+ * so we can replace its FIFO waiting-area behavior with SJF with a {@link CTandem2}
  * as shown below (refer to the constructor documentation for more details):
  * 
  * <pre>
  * <code>
- * final SimQueue waitQueue = new SJF (eventList);
- * final SimQueue serveQueue = new FCFS_c (eventList, numberOfServers);
- * final SimQueue sjf_c = new CompressedTandem2SimQueue (eventList, waitQueue, serveQueue, delegateSimJobFactory);
- * </code>
+ final SimQueue waitQueue = new SJF (eventList);
+ final SimQueue serveQueue = new FCFS_c (eventList, numberOfServers);
+ final SimQueue sjf_c = new CTandem2 (eventList, waitQueue, serveQueue, delegateSimJobFactory);
+ </code>
  * </pre>
  * or even (ignoring generic-type arguments):
  * 
  * <pre>
  * <code>
- * public class SJF_c extends CompressedTandem2SimQueue
- * {
- * 
- *   public SJF_c (final SimEventList eventList, final int numberOfServers, final DelegateSimJobFactory delegateSimJobFactory)
- *   {
- *     super (eventList, new SJF (eventList), new FCFS_c (eventList, numberOfServers), delegateSimJobFactory);
- *   }
- * </code>
+ public class SJF_c extends CTandem2
+ {
+ 
+   public SJF_c (final SimEventList eventList, final int numberOfServers, final DelegateSimJobFactory delegateSimJobFactory)
+   {
+     super (eventList, new SJF (eventList), new FCFS_c (eventList, numberOfServers), delegateSimJobFactory);
+   }
+ </code>
  * {@code  @Override}
  * <code>  public String toStringDefault ()
  *   {
@@ -109,8 +109,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class CompressedTandem2SimQueue
-  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends CompressedTandem2SimQueue>
+public class CTandem2
+  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends CTandem2>
   extends AbstractSimQueueComposite<DJ, DQ, J, Q>
 {
 
@@ -166,7 +166,7 @@ public class CompressedTandem2SimQueue
    * @see #resetEntitySubClassLocal
    * 
    */
-  public CompressedTandem2SimQueue
+  public CTandem2
   (final SimEventList eventList,
    final SimQueue<DJ, DQ> waitQueue,
    final SimQueue<DJ, DQ> serveQueue,
@@ -212,10 +212,10 @@ public class CompressedTandem2SimQueue
     getWaitQueue ().setAutoRevocationPolicy (AutoRevocationPolicy.UPON_START);
   }
 
-  /** Returns a new {@link CompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
+  /** Returns a new {@link CTandem2} object on the same {@link SimEventList} with copies of the wait and
    *  serve queues and the same delegate-job factory.
    * 
-   * @return A new {@link CompressedTandem2SimQueue} object on the same {@link SimEventList} with copies of the wait and
+   * @return A new {@link CTandem2} object on the same {@link SimEventList} with copies of the wait and
    *         serve queues and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the wait or serve queues could not be copied through {@link SimQueue#getCopySimQueue}.
@@ -227,11 +227,11 @@ public class CompressedTandem2SimQueue
    * 
    */
   @Override
-  public CompressedTandem2SimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  public CTandem2<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final SimQueue<DJ, DQ> waitQueueCopy = getWaitQueue ().getCopySimQueue ();
     final SimQueue<DJ, DQ> serveQueueCopy = getServeQueue ().getCopySimQueue ();
-    return new CompressedTandem2SimQueue<>
+    return new CTandem2<>
                  (getEventList (), waitQueueCopy, serveQueueCopy, getDelegateSimJobFactory ());
   }
   
@@ -270,15 +270,15 @@ public class CompressedTandem2SimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "ComprTandem2[waitQueue,serveQueue]".
+  /** Returns "CTandem2[waitQueue,serveQueue]".
    * 
-   * @return "ComprTandem2[waitQueue,serveQueue]".
+   * @return "CTandem2[waitQueue,serveQueue]".
    * 
    */
   @Override
   public String toStringDefault ()
   {
-    return "ComprTandem2[" + getWaitQueue () + "," + getServeQueue () + "]";
+    return "CTandem2[" + getWaitQueue () + "," + getServeQueue () + "]";
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

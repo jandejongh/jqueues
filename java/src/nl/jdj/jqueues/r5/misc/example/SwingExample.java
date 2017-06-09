@@ -13,7 +13,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.util.swing.JSimQueueComposite;
 import nl.jdj.jqueues.r5.util.swing.JSimQueueCreationDialog;
@@ -126,7 +126,7 @@ public final class SwingExample
           // set.add (fcfs1);
           // set.add (random1);
           // this.queue = new Tandem (this.eventList, set, null);
-          this.queue = new CompressedTandem2SimQueue (this.eventList, fcfs1, fcfs2, null);
+          this.queue = new CTandem2 (this.eventList, fcfs1, fcfs2, null);
           this.jQueue = new JSimQueueComposite (this.eventList, this.queue);
           topPanel.add (Box.createRigidArea (new Dimension (0, 10)));
           topPanel.add (this.jQueue);

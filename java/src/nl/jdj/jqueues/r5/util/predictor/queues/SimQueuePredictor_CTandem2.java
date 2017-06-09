@@ -11,7 +11,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
@@ -25,7 +25,7 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
 import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
-/** A {@link SimQueuePredictor} for {@link CompressedTandem2SimQueue}.
+/** A {@link SimQueuePredictor} for {@link CTandem2}.
  *
  * @param <Q> The type of queue supported.
  * 
@@ -38,7 +38,7 @@ import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class SimQueuePredictor_ComprTandem2<Q extends CompressedTandem2SimQueue>
+public class SimQueuePredictor_CTandem2<Q extends CTandem2>
 extends AbstractSimQueuePredictor_Composite<Q>
 {
 
@@ -56,7 +56,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
     return list;
   }
   
-  public SimQueuePredictor_ComprTandem2
+  public SimQueuePredictor_CTandem2
   (final AbstractSimQueuePredictor waitQueuePredictor, final AbstractSimQueuePredictor serveQueuePredictor)
   {
     super (asList (waitQueuePredictor, serveQueuePredictor));
@@ -67,7 +67,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
   @Override
   public String toString ()
   {
-    return "Predictor[ComprTandem2[?]]";
+    return "Predictor[CTandem2[?]]";
   }
 
   private SimQueue getWaitQueue (final Q queue)
@@ -169,7 +169,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
         this.waitQueuePredictor.hasServerAccessCredits (getServeQueue (queue), getWaitQueueState (queue, queueState));
       if (needSacOnWaitQueue != sacOnWaitQueue)
       {
-        // System.err.println ("SimQueuePredictor_ComprTandem2; t=" + time
+        // System.err.println ("SimQueuePredictor_CTandem2; t=" + time
         //  + ": Setting (initial) sac on " + getWaitQueue (queue) + " to " + (needSacOnWaitQueue ? 1 : 0) + ".");
         final SubQueueSimpleEvent waitQueueSacEvent =
           new SubQueueSimpleEvent
@@ -242,14 +242,14 @@ extends AbstractSimQueuePredictor_Composite<Q>
     {
       final int oldSac = queueState.getServerAccessCredits ();
       int newSac = workloadSchedule.getServerAccessCreditsMap_SQ_SV_ROEL_U ().get (time);
-      // System.err.println ("SimQueuePredictor_ComprTandem2; t=" + time + ": Setting sac on " + queue + " to " + newSac + ".");
+      // System.err.println ("SimQueuePredictor_CTandem2; t=" + time + ": Setting sac on " + queue + " to " + newSac + ".");
       queueState.setServerAccessCredits (time, newSac);
       final SimQueue waitQueue = getWaitQueue (queue);
       if (oldSac == 0
           && newSac > 0
           && this.serveQueuePredictor.isStartArmed (getServeQueue (queue), getServeQueueState (queue, queueState)))
       {
-        // System.err.println ("SimQueuePredictor_ComprTandem2; t=" + time + ": Setting sac on " + waitQueue + " to " + 1 + ".");
+        // System.err.println ("SimQueuePredictor_CTandem2; t=" + time + ": Setting sac on " + waitQueue + " to " + 1 + ".");
         final SubQueueSimpleEvent waitQueueSacEvent =
           new SubQueueSimpleEvent (waitQueue, SimQueueSimpleEventType.SERVER_ACCESS_CREDITS, null, null, (Integer) 1);
         doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (waitQueueSacEvent), visitLogsSet);
@@ -257,7 +257,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
       }
       else if (oldSac > 0 && newSac == 0)
       {
-        // System.err.println ("SimQueuePredictor_ComprTandem2; t=" + time + ": Setting sac on " + waitQueue + " to " + 0 + ".");
+        // System.err.println ("SimQueuePredictor_CTandem2; t=" + time + ": Setting sac on " + waitQueue + " to " + 0 + ".");
         final SubQueueSimpleEvent waitQueueSacEvent =
           new SubQueueSimpleEvent (waitQueue, SimQueueSimpleEventType.SERVER_ACCESS_CREDITS, null, null, (Integer) 0);
         doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (waitQueueSacEvent), visitLogsSet);      
@@ -390,7 +390,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
     waitQueueState.doExits (time, null, Collections.singleton (job), null, null, null);
     // Let the job start on the main queue.
     queueState.doStarts (time, starters);
-    //System.err.println ("SimQueuePredictor_ComprTandem2; t=" + time + ": Starting job " + job + " on " + queue
+    //System.err.println ("SimQueuePredictor_CTandem2; t=" + time + ": Starting job " + job + " on " + queue
     //  + ", remaining SAC=" + queueState.getServerAccessCredits () + ".");
     // Check whether job did not already leave!
     if (queueState.getJobs ().contains (job))

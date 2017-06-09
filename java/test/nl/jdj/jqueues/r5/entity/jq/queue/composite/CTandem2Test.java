@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CompressedTandem2SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.dual.ctandem2.CTandem2;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS_B;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS_B_c;
@@ -20,7 +20,7 @@ import nl.jdj.jqueues.r5.util.loadfactory.pattern.KnownLoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_0010;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
-import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_ComprTandem2;
+import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_CTandem2;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_DROP;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_FCFS;
 import nl.jdj.jqueues.r5.util.predictor.queues.SimQueuePredictor_LCFS;
@@ -36,7 +36,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/** Tests for {@link CompressedTandem2SimQueue}.
+/** Tests for {@link CTandem2}.
  *
  * @author Jan de Jongh, TNO
  * 
@@ -47,10 +47,10 @@ import org.junit.Test;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class ComprTandem2Test
+public class CTandem2Test
 {
   
-  public ComprTandem2Test ()
+  public CTandem2Test ()
   {
   }
   
@@ -74,7 +74,7 @@ public class ComprTandem2Test
   {
   }
   
-  public void testComprTandem2Aux
+  public void testCTandem2Aux
   (final SimQueue waitQueue,
    final SimQueue serveQueue,
    final AbstractSimQueuePredictor waitQueuePredictor,
@@ -89,15 +89,15 @@ public class ComprTandem2Test
    final String message)    
    throws SimQueuePredictionException
   {
-    final CompressedTandem2SimQueue ctandem2 =
-      new CompressedTandem2SimQueue (waitQueue.getEventList (), waitQueue, serveQueue, null);
-    final SimQueuePredictor_ComprTandem2 predictor_ctandem2 =
-      new SimQueuePredictor_ComprTandem2 (waitQueuePredictor, serveQueuePredictor);
+    final CTandem2 ctandem2 =
+      new CTandem2 (waitQueue.getEventList (), waitQueue, serveQueue, null);
+    final SimQueuePredictor_CTandem2 predictor_ctandem2 =
+      new SimQueuePredictor_CTandem2 (waitQueuePredictor, serveQueuePredictor);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (ctandem2, predictor_ctandem2, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message);
   }
   
-  public void testComprTandem2Aux
+  public void testCTandem2Aux
   (final SimQueue waitQueue,
    final SimQueue serveQueue,
    final SimQueue predictorQueue,
@@ -111,18 +111,18 @@ public class ComprTandem2Test
    final String message)    
    throws SimQueuePredictionException
   {
-    final CompressedTandem2SimQueue ctandem2 =
-      new CompressedTandem2SimQueue (waitQueue.getEventList (), waitQueue, serveQueue, null);
+    final CTandem2 ctandem2 =
+      new CTandem2 (waitQueue.getEventList (), waitQueue, serveQueue, null);
     DefaultSimQueueTests.doSimQueueTests_SQ_SV
       (ctandem2, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message);
   }
   
   /**
-   * Test of CompressedTandem2SimQueue.
+   * Test of CTandem2.
    * 
    */
   @Test
-  public void testComprTandem2 () throws SimQueuePredictionException
+  public void testCTandem2 () throws SimQueuePredictionException
   {
     final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
     final int numberOfJobs = 50;
@@ -130,97 +130,97 @@ public class ComprTandem2Test
     final boolean silent = true;
     final boolean deadSilent = true;
     //
-    // ComprTandem2[FCFS, FCFS]
+    // CTandem2[FCFS, FCFS]
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new FCFS (eventList), new FCFS (eventList),
       new SimQueuePredictor_FCFS (), new SimQueuePredictor_FCFS (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[LCFS, FCFS]
+    // CTandem2[LCFS, FCFS]
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new LCFS (eventList), new FCFS (eventList),
       new SimQueuePredictor_LCFS (), new SimQueuePredictor_FCFS (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[DROP, FCFS]
+    // CTandem2[DROP, FCFS]
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new DROP (eventList), new FCFS (eventList),
       new SimQueuePredictor_DROP (), new SimQueuePredictor_FCFS (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[FCFS, DROP]
+    // CTandem2[FCFS, DROP]
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new FCFS (eventList), new DROP (eventList),
       new SimQueuePredictor_FCFS (), new SimQueuePredictor_DROP (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[SINK, FCFS]
+    // CTandem2[SINK, FCFS]
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new SINK (eventList), new FCFS (eventList),
       new SimQueuePredictor_SINK (), new SimQueuePredictor_FCFS (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[FCFS, SINK]
+    // CTandem2[FCFS, SINK]
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new FCFS (eventList),new SINK (eventList),
       new SimQueuePredictor_FCFS (), new SimQueuePredictor_SINK (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[ZERO, FCFS]
+    // CTandem2[ZERO, FCFS]
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new ZERO (eventList), new FCFS (eventList),
       new SimQueuePredictor_ZERO (), new SimQueuePredictor_FCFS (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[FCFS, ZERO]
+    // CTandem2[FCFS, ZERO]
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new FCFS (eventList), new ZERO (eventList),
       new SimQueuePredictor_FCFS (), new SimQueuePredictor_ZERO (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[ZERO, ZERO]
+    // CTandem2[ZERO, ZERO]
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new ZERO (eventList), new ZERO (eventList),
       new SimQueuePredictor_ZERO (), new SimQueuePredictor_ZERO (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[DLIMIT[0.5], ZERO]
+    // CTandem2[DLIMIT[0.5], ZERO]
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new DLIMIT (eventList, 0.5), new ZERO (eventList),
       new SimQueuePredictor_DLIMIT (), new SimQueuePredictor_ZERO (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[DLIMIT[0.5], DLIMIT[0.1]]
+    // CTandem2[DLIMIT[0.5], DLIMIT[0.1]]
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new DLIMIT (eventList, 0.5), new DLIMIT (eventList, 0.1),
       new SimQueuePredictor_DLIMIT (), new SimQueuePredictor_DLIMIT (),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[FCFS_B[0],FCFS_2] == NoBuffer_2
+    // CTandem2[FCFS_B[0],FCFS_2] == NoBuffer_2
     //
-    testComprTandem2Aux
+    testCTandem2Aux
     ( new FCFS_B (eventList, 0), new FCFS_c (eventList, 2),
       new NoBuffer_c (eventList, 2),
       numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
     //
-    // ComprTandem2[FCFS_B, FCFS_c] == FCFS_B_c
+    // CTandem2[FCFS_B, FCFS_c] == FCFS_B_c
     //
     final int[] bValues = { 0, 1, 2, 100 };
     final int[] cValues = { 0, 1, 2, 10, 100 };
     for (final int B : bValues)
       for (final int c : cValues)
-        testComprTandem2Aux
+        testCTandem2Aux
         ( new FCFS_B (eventList, B), new FCFS_c (eventList, c),
           new FCFS_B_c (eventList, B, c),
           numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
