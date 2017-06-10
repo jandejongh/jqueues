@@ -408,56 +408,10 @@ extends AbstractSimQueuePredictor<Q>
       {
         throw new RuntimeException (e);
       }
-      // Check a (true) encapsulated queue for (missed) job starts at this time.
-      if (queue.getStartModel () == SimQueueComposite.StartModel.ENCAPSULATOR_QUEUE
-      &&  subQueueState.getJobsInServiceAreaMap ().containsKey (time))
-      {
-        final Set<SimJob> started = subQueueState.getJobsInServiceAreaMap ().get (time);
-        for (final SimJob j : started)
-          if (! queueState.getJobsInServiceArea ().contains (j))
-            // Delegate job has started, but real job hasn't;
-            // must be propagated to the composite queue since it is a true encapsulator.
-            startJobs (time, queue, queueState, Collections.singleton (j), visitLogsSet);
-      }
-      // Check (again) a (true) encapsulated queue for (missed) job starts at this time.
-      // Note that our first test failed since the job has left the encapsulated queue by now.
-      for (JobQueueVisitLog<SimJob,Q> jvl : subQueueVisitLogsSet)
-        if (queue.getStartModel () == SimQueueComposite.StartModel.ENCAPSULATOR_QUEUE
-        &&  jvl.started
-        &&  (queueState.getJobs ().contains (jvl.job) || ! jvl.revoked)
-        &&  ! queueState.getJobsInServiceArea ().contains (jvl.job))
-          startJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
-      // Check the visit logs for drops and departures.
-      for (JobQueueVisitLog<SimJob,Q> jvl : subQueueVisitLogsSet)
-      {
-        if (jvl.dropped)
-          dropJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
-        else if (jvl.departed)
-        {
-          // XXX
-          if (subQueueIndex == subQueues.size () - 1 || (this instanceof SimQueuePredictor_Pattern))
-            departJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
-          else
-          {
-            // Apply the arrival at the next queue through recursion.
-            final int nextSubQueueIndex = subQueueIndex + 1;
-            final SimQueue nextSubQueue = subQueues.get (nextSubQueueIndex);
-            final SubQueueSimpleEvent nextSubQueueEvent = new SubQueueSimpleEvent
-              (nextSubQueue, SimQueueSimpleEventType.ARRIVAL, null, jvl.job, null);
-            if (! (jvl.job instanceof DefaultSimJob))
-              throw new UnsupportedOperationException ();
-            ((DefaultSimJob) jvl.job).setRequestedServiceTimeMappingForQueue (nextSubQueue, jvl.job.getServiceTime (queue));
-            doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (nextSubQueueEvent), visitLogsSet);
-          }
-        }
-        else if (jvl.revoked)
-        {
-          ; /* EMPTY */
-        }
-        else
-          // Job has left due to some other unknown reason? Should specify here!
-          throw new UnsupportedOperationException ();
-      }
+      checkSubQueueVisitLogsSet
+        (time,
+         queue, queueState, visitLogsSet,
+         subQueue, subQueueIndex, subQueueState, subQueueVisitLogsSet);
     }
     else
       throw new RuntimeException ();
@@ -541,6 +495,73 @@ extends AbstractSimQueuePredictor<Q>
     queueState.doExits (time, null, null, departers, null, visitLogsSet);
   }
   
+  protected void checkSubQueueVisitLogsSet
+  (
+    final double time,
+    final Q queue,
+    final SimQueueState<SimJob, Q> queueState,
+    final Set<JobQueueVisitLog<SimJob, Q>> visitLogsSet,
+    final SimQueue subQueue,
+    final int subQueueIndex,
+    final DefaultSimQueueState<SimJob, SimQueue> subQueueState,
+    final Set<JobQueueVisitLog<SimJob, Q>> subQueueVisitLogsSet
+  )
+    throws SimQueuePredictionException
+  {
+    final List<SimQueue> subQueues = new ArrayList<> (queue.getQueues ());
+    // Check a (true) encapsulated queue for (missed) job starts at this time.
+    if (queue.getStartModel () == SimQueueComposite.StartModel.ENCAPSULATOR_QUEUE
+    &&  subQueueState.getJobsInServiceAreaMap ().containsKey (time))
+    {
+      final Set<SimJob> started = subQueueState.getJobsInServiceAreaMap ().get (time);
+      for (final SimJob j : started)
+        if (! queueState.getJobsInServiceArea ().contains (j))
+          // Delegate job has started, but real job hasn't;
+          // must be propagated to the composite queue since it is a true encapsulator.
+          startJobs (time, queue, queueState, Collections.singleton (j), visitLogsSet);
+    }
+    // Check (again) a (true) encapsulated queue for (missed) job starts at this time.
+    // Note that our first test failed since the job has left the encapsulated queue by now.
+    for (JobQueueVisitLog<SimJob,Q> jvl : subQueueVisitLogsSet)
+      if (queue.getStartModel () == SimQueueComposite.StartModel.ENCAPSULATOR_QUEUE
+      &&  jvl.started
+      &&  (queueState.getJobs ().contains (jvl.job) || ! jvl.revoked)
+      &&  ! queueState.getJobsInServiceArea ().contains (jvl.job))
+        startJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
+    // Check the visit logs for drops and departures.
+    for (JobQueueVisitLog<SimJob,Q> jvl : subQueueVisitLogsSet)
+    {
+      if (jvl.dropped)
+        dropJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
+      else if (jvl.departed)
+      {
+        // XXX
+        if (subQueueIndex == subQueues.size () - 1 || (this instanceof SimQueuePredictor_Pattern))
+          departJobs (time, queue, queueState, Collections.singleton (jvl.job), visitLogsSet);
+        else
+        {
+          // Apply the arrival at the next queue through recursion.
+          final int nextSubQueueIndex = subQueueIndex + 1;
+          final SimQueue nextSubQueue = subQueues.get (nextSubQueueIndex);
+          final SubQueueSimpleEvent nextSubQueueEvent = new SubQueueSimpleEvent
+            (nextSubQueue, SimQueueSimpleEventType.ARRIVAL, null, jvl.job, null);
+          if (! (jvl.job instanceof DefaultSimJob))
+            throw new UnsupportedOperationException ();
+          ((DefaultSimJob) jvl.job).setRequestedServiceTimeMappingForQueue (nextSubQueue, jvl.job.getServiceTime (queue));
+          doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (nextSubQueueEvent), visitLogsSet);
+        }
+      }
+      else if (jvl.revoked)
+      {
+        ; /* EMPTY */
+      }
+      else
+        // Job has left due to some other unknown reason? Should specify here!
+        throw new UnsupportedOperationException ();
+    }
+  
+  }
+    
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // END OF FILE
