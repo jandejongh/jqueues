@@ -817,7 +817,7 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  public final boolean isStartArmed ()
+  public /* final */ boolean isStartArmed ()
   {
     switch (getStartModel ())
     {
@@ -1221,7 +1221,7 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * 
    */
   @Override
-  protected final void setServerAccessCreditsSubClass ()
+  protected /* final */ void setServerAccessCreditsSubClass ()
   {
     switch (getStartModel ())
     {
@@ -1856,11 +1856,24 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
         else if (notificationType == SimQueueSimpleEventType.QUEUE_ACCESS_VACATION
              ||  notificationType == SimQueueSimpleEventType.QAV_START
              ||  notificationType == SimQueueSimpleEventType.QAV_END)
+        {
           //
-          // Queue-Access Vacations (or, in fact, any state-change reports regarding QAV's
-          // are forbidden on sub-queues.
+          // Queue-Access Vacations (or, in fact, any state-change reports regarding QAV's)
+          // are forbidden on sub-queues except for the encapsulation queues.
           //
-          throw new IllegalStateException ();
+          switch (getStartModel ())
+          {
+            case LOCAL:
+              throw new IllegalStateException ();
+            case ENCAPSULATOR_QUEUE:
+            case ENCAPSULATOR_HIDE_START_QUEUE:
+              break;
+            case COMPRESSED_TANDEM_2_QUEUE:
+              throw new IllegalStateException ();
+            default:
+              throw new RuntimeException ();
+          }
+        }
         else if (notificationType == SimQueueSimpleEventType.SERVER_ACCESS_CREDITS
              ||  notificationType == SimQueueSimpleEventType.OUT_OF_SAC
              ||  notificationType == SimQueueSimpleEventType.REGAINED_SAC)
