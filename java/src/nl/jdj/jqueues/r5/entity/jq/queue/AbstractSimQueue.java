@@ -1144,7 +1144,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   protected final void takeServerAccessCredit ()
   {
     if (this.serverAccessCredits <= 0)
-      throw new IllegalStateException ();
+      throw new IllegalStateException ("queue=" + this
+                                     + ", t=" + getLastUpdateTime ()
+                                     + ", sac=" + this.serverAccessCredits + ".");
     // Integer.MAX_VALUE is treated as infinity.
     if (this.serverAccessCredits < Integer.MAX_VALUE)
       this.serverAccessCredits--;
