@@ -28,13 +28,13 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public final class EncapsulatorTimeLimitSimQueueExample
+public final class EncTLExample
 {
   
   /** Prevents instantiation.
    * 
    */
-  private EncapsulatorTimeLimitSimQueueExample ()
+  private EncTLExample ()
   {
   }
   
@@ -80,7 +80,7 @@ public final class EncapsulatorTimeLimitSimQueueExample
    */
   public static void main (String[] args)
   {
-    System.out.println ("=== EXAMPLE PROGRAM FOR  EncapsulatorTimeLimitSimQueue ===");
+    System.out.println ("=== EXAMPLE PROGRAM FOR  EncTL ===");
     System.out.println ();
     System.out.println ("-> Creating jobs...");
     final List<DefaultExampleSimJob> jobList = new ArrayList<>  ();
@@ -91,7 +91,7 @@ public final class EncapsulatorTimeLimitSimQueueExample
     System.out.println ("-> Creating FCFS queue...");
     final SimQueue fcfsQueue = new FCFS (el);
     // fcfsQueue.registerSimEntityListener (new StdOutSimQueueListener ());
-    System.out.println ("-> Creating EncapsulatorTimeLimitSimQueue...");
+    System.out.println ("-> Creating EncTL...");
     final DelegateSimJobFactory delegateSimJobFactory =
       (DelegateSimJobFactory<TestDelegateSimJob, SimQueue, DefaultExampleSimJob, SimQueue>)
         (double time, DefaultExampleSimJob job, SimQueue queue) -> new TestDelegateSimJob (job, false);
@@ -107,7 +107,7 @@ public final class EncapsulatorTimeLimitSimQueueExample
       System.out.println ("=== Setting expiration method to " + expirationMethod + ".");
       System.out.println ();
       enctlQueue.setExprirationMethod (expirationMethod);
-      System.out.println ("-> Submitting jobs to EncapsulatorTimeLimitSimQueue...");
+      System.out.println ("-> Submitting jobs to EncTL...");
       for (int i = 0; i < jobList.size (); i++)
       {
         final SimJob j = jobList.get (i);
