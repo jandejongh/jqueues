@@ -71,7 +71,7 @@ public class EncTLTest
   }
 
   public void testEncTLAux
-  (final double maWaitingTime,
+  (final double maxWaitingTime,
    final double maxServiceTime,
    final double maxSojournTime,
    final SimQueue encQueue,
@@ -87,7 +87,7 @@ public class EncTLTest
    throws SimQueuePredictionException
   {
     final SimQueue cQueue =
-      new EncTL (encQueue.getEventList (), encQueue, null, maWaitingTime, maxServiceTime, maxSojournTime);
+      new EncTL (encQueue.getEventList (), encQueue, null, maxWaitingTime, maxServiceTime, maxSojournTime);
     final SimQueuePredictor cQueuePredictor = new SimQueuePredictor_EncTL (encQueuePredictor);
     encQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     cQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
@@ -96,7 +96,7 @@ public class EncTLTest
   }
   
   public void testEncTLAux
-  (final double maWaitingTime,
+  (final double maxWaitingTime,
    final double maxServiceTime,
    final double maxSojournTime, 
    final SimQueue encQueue,
@@ -112,7 +112,7 @@ public class EncTLTest
    throws SimQueuePredictionException
   {
     final SimQueue cQueue =
-      new EncTL (encQueue.getEventList (), encQueue, null, maWaitingTime, maxServiceTime, maxSojournTime);
+      new EncTL (encQueue.getEventList (), encQueue, null, maxWaitingTime, maxServiceTime, maxSojournTime);
     encQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     cQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
     predictorQueue.setUnknownOperationPolicy (SimEntity.UnknownOperationPolicy.REPORT);
