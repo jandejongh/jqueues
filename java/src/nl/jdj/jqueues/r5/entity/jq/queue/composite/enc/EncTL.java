@@ -106,7 +106,8 @@ public class EncTL
    * @param maxServiceTime        The maximum service time, non-negative, {@link Double#POSITIVE_INFINITY} is allowed.
    * @param maxSojournTime        The maximum sojourn time, non-negative, {@link Double#POSITIVE_INFINITY} is allowed.
    *
-   * @throws IllegalArgumentException If the event list or the queue is <code>null</code>.
+   * @throws IllegalArgumentException If the event list or the queue is <code>null</code>,
+   *                                    or any of the time arguments is strictly negative.
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
@@ -137,24 +138,32 @@ public class EncTL
     registerSubQueueSubNotificationProcessor (SimJQSimpleEventType.DEPARTURE,       queue, this::processExit);
   }
   
-  /** Returns a new {@link Enc} object on the same {@link SimEventList} with a copy of the encapsulated
-   *  queue and the same delegate-job factory.
+  /** Returns a new {@link EncTL} object on the same {@link SimEventList} with a copy of the encapsulated
+   *  queue, the same delegate-job factory and equal respective expiration times.
    * 
-   * @return A new {@link Enc} object on the same {@link SimEventList} with a copy of the encapsulated
-   *         queue and the same delegate-job factory.
+   * @return A new {@link EncTL} object on the same {@link SimEventList} with a copy of the encapsulated
+   *           queue, the same delegate-job factory and equal respective expiration times.
    * 
    * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
    * 
    * @see #getEventList
    * @see #getEncapsulatedQueue
    * @see #getDelegateSimJobFactory
+   * @see #getMaxWaitingTime
+   * @see #getMaxServiceTime
+   * @see #getMaxSojournTime
    * 
    */
   @Override
-  public Enc<DJ, DQ, J, Q> getCopySimQueue ()
+  public EncTL<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final SimQueue<DJ, DQ> encapsulatedQueueCopy = getEncapsulatedQueue ().getCopySimQueue ();
-    return new Enc (getEventList (), encapsulatedQueueCopy, getDelegateSimJobFactory ());
+    return new EncTL (getEventList (),
+                      encapsulatedQueueCopy,
+                      getDelegateSimJobFactory (),
+                      getMaxWaitingTime (),
+                      getMaxServiceTime (),
+                      getMaxSojournTime ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,7 +197,7 @@ public class EncTL
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // NAME
+  // EXPIRATION METHOD
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -349,6 +358,21 @@ public class EncTL
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // SERVER-ACCESS CREDITS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Calls super method.
+   * 
+   */
+  @Override
+  protected final void setServerAccessCreditsSubClass ()
+  {
+    super.setServerAccessCreditsSubClass ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // STATE [SUBJECT TO RESET]:
   //   * (DELEGATE) JOBS CURRENTLY PRESENT AND THEIR ARRIVAL TIMES
   //   * SORTED-MAP HOLDING AUTO-REVOCATION TIMES FOR DELEGATE JOBS
@@ -425,7 +449,8 @@ public class EncTL
       // We have a scheduled auto-revocation event; it should also be registered at our super-class, so let's check.
       if (! this.eventsScheduled.contains (this.scheduledRevocationEvent))
         throw new IllegalStateException ();
-      if (this.autoRevocationSchedule.isEmpty () || this.autoRevocationSchedule.firstKey () != this.scheduledRevocationEvent.getTime ())
+      if (this.autoRevocationSchedule.isEmpty ()
+      ||  this.autoRevocationSchedule.firstKey () != this.scheduledRevocationEvent.getTime ())
       {
         // Our currently scheduled auto-revocation event is no longer valid;
         // remove it from the event list, our super-class administration of scheduled events and our local admin.
