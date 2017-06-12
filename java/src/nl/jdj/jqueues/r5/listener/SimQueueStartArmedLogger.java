@@ -82,7 +82,7 @@ extends DefaultSimQueueListener
    * of the <i>predicted</i> logs,
    * because some {@link SimQueuePredictor} implementations
    * cannot always provide atomic {@code StartArmed} notifications.
-   * A warning on {@link System.err} is given in case
+   * A warning on {@code System.err} is given in case
    * erroneous notifications are found in the predicted logs.
    * 
    * @param predictedStaLogs The predicted {@code StartArmed} logs.
