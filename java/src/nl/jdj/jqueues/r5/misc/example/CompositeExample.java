@@ -36,13 +36,13 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public final class CompositeSimQueueExample
+public final class CompositeExample
 {
   
   /** Prevents instantiation.
    * 
    */
-  private CompositeSimQueueExample ()
+  private CompositeExample ()
   {
   }
   
