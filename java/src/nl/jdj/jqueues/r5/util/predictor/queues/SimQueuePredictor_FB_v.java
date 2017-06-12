@@ -8,7 +8,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.feedback.FB_v;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
-import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite;
+import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite_LocalStart;
 import nl.jdj.jqueues.r5.extensions.visitscounter.SimQueueVisitsCounterStateHandler;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
@@ -28,7 +28,7 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
  * 
  */
 public class SimQueuePredictor_FB_v
-extends AbstractSimQueuePredictor_Composite<FB_v>
+extends AbstractSimQueuePredictor_Composite_LocalStart<FB_v>
 implements SimQueuePredictor<FB_v>
 {
   
@@ -130,7 +130,8 @@ implements SimQueuePredictor<FB_v>
           final SubQueueSimpleEvent encQueueEvent =
             new SubQueueSimpleEvent (queue.getEncapsulatedQueue (), SimQueueSimpleEventType.ARRIVAL, null, job, null);
           final Set<JobQueueVisitLog<SimJob, FB_v>> encQueueVisitLogsSet = new HashSet<> ();
-          doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (encQueueEvent), encQueueVisitLogsSet);
+          doQueueEvents_SQ_SV_ROEL_U
+            (queue, queueState, new HashSet<> (Collections.singleton (encQueueEvent)), encQueueVisitLogsSet);
         }
         else
         {

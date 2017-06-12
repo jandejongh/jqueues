@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Set;
+import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.DefaultSimJob;
@@ -16,7 +17,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.enc.EncHS;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueEvent;
-import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite;
+import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite_Enc;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.DefaultSimQueuePrediction_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
@@ -24,6 +25,8 @@ import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionInvalidInputException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePrediction_SQ_SV;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
+import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
+import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link EncHS}.
  *
@@ -37,7 +40,7 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
  * 
  */
 public class SimQueuePredictor_EncHS
-extends AbstractSimQueuePredictor_Composite<EncHS>
+extends AbstractSimQueuePredictor_Composite_Enc<EncHS>
 implements SimQueuePredictor<EncHS>
 {
   
@@ -45,7 +48,7 @@ implements SimQueuePredictor<EncHS>
   
   public SimQueuePredictor_EncHS (final AbstractSimQueuePredictor encQueuePredictor)
   {
-    super (Collections.singletonList (encQueuePredictor));
+    super (encQueuePredictor);
     this.encQueuePredictor = encQueuePredictor;
   }
 
@@ -163,4 +166,27 @@ implements SimQueuePredictor<EncHS>
     throw new UnsupportedOperationException ();
   }  
 
+  @Override
+  public void doWorkloadEvents_SQ_SV_ROEL_U
+  (final EncHS queue,
+   final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
+   final SimQueueState<SimJob, EncHS> queueState,
+   final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
+   final Set<JobQueueVisitLog<SimJob, EncHS>> visitLogsSet)
+  throws SimQueuePredictionException, WorkloadScheduleException
+  {
+    throw new UnsupportedOperationException ();
+  }
+
+  @Override
+  public void doQueueEvents_SQ_SV_ROEL_U
+  (final EncHS queue,
+   final SimQueueState<SimJob, EncHS> queueState,
+   final Set<SimEntitySimpleEventType.Member> queueEventTypes,
+   final Set<JobQueueVisitLog<SimJob, EncHS>> visitLogsSet)
+  throws SimQueuePredictionException
+  {
+    throw new UnsupportedOperationException ();
+  }
+  
 }

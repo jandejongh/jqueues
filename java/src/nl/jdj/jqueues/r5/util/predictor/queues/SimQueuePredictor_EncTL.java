@@ -11,7 +11,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.enc.EncTL;
-import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite;
+import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite_Enc;
 import nl.jdj.jqueues.r5.extensions.composite.SimQueueCompositeStateHandler;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionAmbiguityException;
@@ -19,6 +19,8 @@ import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.state.DefaultSimQueueState;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
+import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadScheduleException;
+import nl.jdj.jqueues.r5.util.predictor.workload.WorkloadSchedule_SQ_SV_ROEL_U;
 
 /** A {@link SimQueuePredictor} for {@link EncTL}.
  *
@@ -32,7 +34,7 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
  * 
  */
 public class SimQueuePredictor_EncTL
-extends AbstractSimQueuePredictor_Composite<EncTL>
+extends AbstractSimQueuePredictor_Composite_Enc<EncTL>
 implements SimQueuePredictor<EncTL>
 {
   
@@ -40,7 +42,7 @@ implements SimQueuePredictor<EncTL>
   
   public SimQueuePredictor_EncTL (final AbstractSimQueuePredictor encQueuePredictor)
   {
-    super (Collections.singletonList (encQueuePredictor));
+    super (encQueuePredictor);
     this.encQueuePredictor = encQueuePredictor;
   }
 
@@ -156,6 +158,53 @@ implements SimQueuePredictor<EncTL>
   }
 
   @Override
+  public void doWorkloadEvents_SQ_SV_ROEL_U
+  (final EncTL queue,
+   final WorkloadSchedule_SQ_SV_ROEL_U workloadSchedule,
+   final SimQueueState<SimJob, EncTL> queueState,
+   final Set<SimEntitySimpleEventType.Member> workloadEventTypes,
+   final Set<JobQueueVisitLog<SimJob, EncTL>> visitLogsSet)
+  throws SimQueuePredictionException, WorkloadScheduleException
+  {
+    if ( queue == null
+      || workloadSchedule == null
+      || queueState == null
+      || workloadEventTypes == null
+      || visitLogsSet == null)
+      throw new IllegalArgumentException ();
+    if (workloadEventTypes.size () > 1)
+      throw new SimQueuePredictionAmbiguityException ();
+    final double time = queueState.getTime ();
+    if (Double.isNaN (time))
+      throw new IllegalStateException ();
+    final SimQueueCompositeStateHandler queueStateHandler =
+      (SimQueueCompositeStateHandler)
+        ((DefaultSimQueueState) queueState).getHandler ("SimQueueCompositeHandler");
+    final SimQueue subQueue = queue.getEncapsulatedQueue ();
+    final SimQueueState subQueueState = queueStateHandler.getSubQueueState (0);
+    final SimEntitySimpleEventType.Member eventType = (workloadEventTypes.isEmpty ()
+      ? null
+      : workloadEventTypes.iterator ().next ());
+    if (eventType == SimQueueSimpleEventType.ARRIVAL
+      && (queue.getMaxSojournTime () == 0
+          || (queue.getMaxWaitingTime () == 0
+              && ! (this.subQueuePredictor.isStartArmed (subQueue, subQueueState))
+                    && subQueueState.getJobsInWaitingArea ().isEmpty ()
+                    && subQueueState.getServerAccessCredits () > 0)))
+    {
+      final SimJob job = workloadSchedule.getJobArrivalsMap_SQ_SV_ROEL_U ().get (time);
+      final Set<SimJob> arrivals = new HashSet<> ();
+      arrivals.add (job);
+      queueState.doArrivals (time, arrivals, visitLogsSet); // Takes care of qav.
+      if (queueState.getJobs ().contains (job))
+        queueState.doExits (time, null, null, arrivals, null, visitLogsSet);
+      workloadEventTypes.remove (eventType);
+    }
+    else
+      super.doWorkloadEvents_SQ_SV_ROEL_U (queue, workloadSchedule, queueState, workloadEventTypes, visitLogsSet);
+  }
+
+  @Override
   public void doQueueEvents_SQ_SV_ROEL_U
   (final EncTL queue,
    final SimQueueState<SimJob, EncTL> queueState,
@@ -189,7 +238,8 @@ implements SimQueuePredictor<EncTL>
             throw new UnsupportedOperationException ();
           final SubQueueSimpleEvent encQueueEvent =
             new SubQueueSimpleEvent (encQueue, SimQueueSimpleEventType.REVOCATION, null, job, true);
-          doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (encQueueEvent), /* visitLogsSet */ new HashSet<> ());
+          doQueueEvents_SQ_SV_ROEL_U
+            (queue, queueState, new HashSet<> (Collections.singleton (encQueueEvent)), /* visitLogsSet */ new HashSet<> ());
       }
       departJobs (time, queue, queueState, jobs, visitLogsSet);
     }

@@ -1,5 +1,7 @@
 package nl.jdj.jqueues.r5.util.predictor.queues;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
@@ -9,7 +11,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.visitslogging.JobQueueVisitLog;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.Pattern;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
-import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite;
+import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite_LocalStart;
 import nl.jdj.jqueues.r5.extensions.visitscounter.SimQueueVisitsCounterStateHandler;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
@@ -29,7 +31,7 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
  * 
  */
 public class SimQueuePredictor_Pattern
-extends AbstractSimQueuePredictor_Composite<Pattern>
+extends AbstractSimQueuePredictor_Composite_LocalStart<Pattern>
 implements SimQueuePredictor<Pattern>
 {
   
@@ -113,11 +115,11 @@ implements SimQueuePredictor<Pattern>
           {
             ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (subQueue, job.getServiceTime (queue));
             subQueueEvent = new SubQueueSimpleEvent (subQueue, SimQueueSimpleEventType.ARRIVAL, null, job, null);
-            doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (subQueueEvent), visitLogsSet);
+            doQueueEvents_SQ_SV_ROEL_U (queue, queueState, new HashSet<> (Collections.singleton (subQueueEvent)), visitLogsSet);
           }
         }
         else
-          departJobs (time, queue, queueState, asSet (job), visitLogsSet);
+          departJobs (time, queue, queueState, Collections.singleton (job), visitLogsSet);
       }
   }
     

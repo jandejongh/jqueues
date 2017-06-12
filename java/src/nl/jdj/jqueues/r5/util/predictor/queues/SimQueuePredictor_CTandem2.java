@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
@@ -42,10 +43,6 @@ public class SimQueuePredictor_CTandem2<Q extends CTandem2>
 extends AbstractSimQueuePredictor_Composite<Q>
 {
 
-  private final AbstractSimQueuePredictor waitQueuePredictor;
-  
-  private final AbstractSimQueuePredictor serveQueuePredictor;
-  
   private static List<AbstractSimQueuePredictor> asList (final AbstractSimQueuePredictor p1, final AbstractSimQueuePredictor p2)
   {
     if (p1 == null || p2 == null)
@@ -60,8 +57,6 @@ extends AbstractSimQueuePredictor_Composite<Q>
   (final AbstractSimQueuePredictor waitQueuePredictor, final AbstractSimQueuePredictor serveQueuePredictor)
   {
     super (asList (waitQueuePredictor, serveQueuePredictor));
-    this.waitQueuePredictor = waitQueuePredictor;
-    this.serveQueuePredictor = serveQueuePredictor;
   }
 
   @Override
@@ -87,6 +82,16 @@ extends AbstractSimQueuePredictor_Composite<Q>
     return i_queues.next ();
   }
 
+  private SimQueuePredictor getWaitQueuePredictor ()
+  {
+    return this.subQueuePredictors.get (0);
+  }
+  
+  private SimQueuePredictor getServeQueuePredictor ()
+  {
+    return this.subQueuePredictors.get (1);
+  }
+  
   private DefaultSimQueueState getWaitQueueState (final Q queue, final SimQueueState<SimJob, Q> queueState)
   {
     final SimQueueCompositeStateHandler queueStateHandler =
@@ -108,7 +113,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
   {
     if (queue == null || queueState == null)
       throw new IllegalArgumentException ();
-    return this.serveQueuePredictor.isStartArmed (getServeQueue (queue), getServeQueueState (queue, queueState));
+    return getServeQueuePredictor ().isStartArmed (getServeQueue (queue), getServeQueueState (queue, queueState));
   }
 
   private class SimQueueAndSimQueueState
@@ -126,12 +131,82 @@ extends AbstractSimQueuePredictor_Composite<Q>
   public SimQueueState<SimJob, Q> createQueueState (Q queue, boolean isROEL)
   {
     final DefaultSimQueueState queueState = (DefaultSimQueueState) super.createQueueState (queue, isROEL);
+    final List<SimQueue> subQueues = new ArrayList (queue.getQueues ());
+    if (subQueues.size () != 2)
+      throw new RuntimeException ();
+    final DefaultSimQueueState waitQueueState =
+      (DefaultSimQueueState) getWaitQueuePredictor ().createQueueState (getWaitQueue (queue), isROEL);
+    final DefaultSimQueueState serveQueueState =
+      (DefaultSimQueueState) getServeQueuePredictor ().createQueueState (getServeQueue (queue), isROEL);
+    final Set<DefaultSimQueueState> subQueueStates = new LinkedHashSet<> ();
+    subQueueStates.add (waitQueueState);
+    subQueueStates.add (serveQueueState);
+    queueState.registerHandler (new SimQueueCompositeStateHandler (queue.getQueues (), subQueueStates));
     ((DefaultSimQueueState) getWaitQueueState (queue, queueState)).registerPostStartHook
       (this::waitQueuePostStartHook, new SimQueueAndSimQueueState (queue, queueState));
     return queueState;
   }
 
   private Set<JobQueueVisitLog<SimJob, Q>> cachedVisitLogsSet;
+
+  @Override
+  public double getNextQueueEventTimeBeyond
+  (final Q queue,
+   final SimQueueState<SimJob, Q> queueState,
+   final Set<SimEntitySimpleEventType.Member> queueEventTypes)
+  throws SimQueuePredictionException
+  {
+    final SimQueueCompositeStateHandler queueStateHandler =
+      (SimQueueCompositeStateHandler)
+        ((DefaultSimQueueState) queueState).getHandler ("SimQueueCompositeHandler");
+    final List<SimQueue> subQueues = new ArrayList<> (queue.getQueues ());
+    double minNextEventTime = Double.NaN;
+    Set<SimQueue> subQueuesMinNextEventTime = new HashSet<> ();
+    SimEntitySimpleEventType.Member nextEvent = null;
+    for (int i = 0; i < this.subQueuePredictors.size (); i++)
+    {
+      final SimQueue subQueue = subQueues.get (i);
+      final DefaultSimQueueState subQueueState = queueStateHandler.getSubQueueState (i);
+      final Set<SimEntitySimpleEventType.Member> subQueueEventTypes = new LinkedHashSet<> ();
+      final double subQueueNextEventTime =
+        this.subQueuePredictors.get (i).getNextQueueEventTimeBeyond (subQueue, subQueueState, subQueueEventTypes);
+      if ((! Double.isNaN (subQueueNextEventTime))
+       && (Double.isNaN (minNextEventTime) || subQueueNextEventTime <= minNextEventTime))
+      {
+        if (subQueueEventTypes.size () != 1)
+          throw new SimQueuePredictionAmbiguityException ();
+        if ((! Double.isNaN (minNextEventTime)) && subQueueNextEventTime < minNextEventTime)
+          subQueuesMinNextEventTime.clear ();
+        subQueuesMinNextEventTime.add (subQueue);
+        nextEvent = subQueueEventTypes.iterator ().next ();
+        minNextEventTime = subQueueNextEventTime;
+      }
+    }
+    if (subQueuesMinNextEventTime.size () > 1)
+      throw new SimQueuePredictionAmbiguityException ();
+    else if (subQueuesMinNextEventTime.size () == 1)
+      queueEventTypes.add (new SubQueueSimpleEvent (subQueuesMinNextEventTime.iterator ().next (), null, nextEvent, null, null));
+    return minNextEventTime;
+  }
+
+  @Override
+  public void updateToTime
+  (final Q queue,
+   final SimQueueState queueState,
+   final double newTime)
+  {
+    final SimQueueCompositeStateHandler queueStateHandler =
+      (SimQueueCompositeStateHandler)
+        ((DefaultSimQueueState) queueState).getHandler ("SimQueueCompositeHandler");
+    final List<SimQueue> subQueues = new ArrayList<> (queue.getQueues ());
+    for (int i = 0; i < this.subQueuePredictors.size (); i++)
+    {
+      final SimQueue subQueue = subQueues.get (i);
+      final DefaultSimQueueState subQueueState = queueStateHandler.getSubQueueState (i);
+      this.subQueuePredictors.get (i).updateToTime (subQueue, subQueueState, newTime);
+    }
+    queueState.setTime (newTime);
+  }
   
   @Override
   public void doWorkloadEvents_SQ_SV_ROEL_U
@@ -163,10 +238,10 @@ extends AbstractSimQueuePredictor_Composite<Q>
     if (queueState.getJobs ().isEmpty ())
     {
       final boolean needSacOnWaitQueue =
-        (this.serveQueuePredictor.isStartArmed (getServeQueue (queue), getServeQueueState (queue, queueState)) 
+        (getServeQueuePredictor ().isStartArmed (getServeQueue (queue), getServeQueueState (queue, queueState)) 
          && queueState.getServerAccessCredits () > 0);
       final boolean sacOnWaitQueue =
-        this.waitQueuePredictor.hasServerAccessCredits (getServeQueue (queue), getWaitQueueState (queue, queueState));
+        getWaitQueuePredictor ().hasServerAccessCredits (getServeQueue (queue), getWaitQueueState (queue, queueState));
       if (needSacOnWaitQueue != sacOnWaitQueue)
       {
         // System.err.println ("SimQueuePredictor_CTandem2; t=" + time
@@ -174,7 +249,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
         final SubQueueSimpleEvent waitQueueSacEvent =
           new SubQueueSimpleEvent
             (getWaitQueue (queue), SimQueueSimpleEventType.SERVER_ACCESS_CREDITS, null, null, needSacOnWaitQueue ? 1 : 0);
-        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (waitQueueSacEvent), visitLogsSet);
+        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, new HashSet<> (Collections.singleton (waitQueueSacEvent)), visitLogsSet);
       }
     }
     final SimEntitySimpleEventType.Member eventType = (workloadEventTypes.isEmpty ()
@@ -204,7 +279,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
         ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (waitQueue, job.getServiceTime (queue));
         final SubQueueSimpleEvent waitQueueEvent =
           new SubQueueSimpleEvent (waitQueue, SimQueueSimpleEventType.ARRIVAL, null, job, null);
-        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (waitQueueEvent), visitLogsSet);
+        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, new HashSet<> (Collections.singleton (waitQueueEvent)), visitLogsSet);
       }
     }
     else if (eventType == SimQueueSimpleEventType.REVOCATION)
@@ -231,7 +306,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
               final SimQueue subQueue = new ArrayList<SimQueue> (queue.getQueues ()).get (i);
               final SubQueueSimpleEvent subQueueEvent =
                 new SubQueueSimpleEvent (subQueue, SimQueueSimpleEventType.REVOCATION, null, job, null);
-              doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (subQueueEvent), visitLogsSet);
+              doQueueEvents_SQ_SV_ROEL_U (queue, queueState, new HashSet<> (Collections.singleton (subQueueEvent)), visitLogsSet);
               break;
             }
           }
@@ -247,12 +322,12 @@ extends AbstractSimQueuePredictor_Composite<Q>
       final SimQueue waitQueue = getWaitQueue (queue);
       if (oldSac == 0
           && newSac > 0
-          && this.serveQueuePredictor.isStartArmed (getServeQueue (queue), getServeQueueState (queue, queueState)))
+          && getServeQueuePredictor ().isStartArmed (getServeQueue (queue), getServeQueueState (queue, queueState)))
       {
         // System.err.println ("SimQueuePredictor_CTandem2; t=" + time + ": Setting sac on " + waitQueue + " to " + 1 + ".");
         final SubQueueSimpleEvent waitQueueSacEvent =
           new SubQueueSimpleEvent (waitQueue, SimQueueSimpleEventType.SERVER_ACCESS_CREDITS, null, null, (Integer) 1);
-        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (waitQueueSacEvent), visitLogsSet);
+        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, new HashSet<> (Collections.singleton (waitQueueSacEvent)), visitLogsSet);
         newSac = queueState.getServerAccessCredits ();
       }
       else if (oldSac > 0 && newSac == 0)
@@ -260,7 +335,7 @@ extends AbstractSimQueuePredictor_Composite<Q>
         // System.err.println ("SimQueuePredictor_CTandem2; t=" + time + ": Setting sac on " + waitQueue + " to " + 0 + ".");
         final SubQueueSimpleEvent waitQueueSacEvent =
           new SubQueueSimpleEvent (waitQueue, SimQueueSimpleEventType.SERVER_ACCESS_CREDITS, null, null, (Integer) 0);
-        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (waitQueueSacEvent), visitLogsSet);      
+        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, new HashSet<> (Collections.singleton (waitQueueSacEvent)), visitLogsSet);      
       }
     }
     else
@@ -325,17 +400,17 @@ extends AbstractSimQueuePredictor_Composite<Q>
           else
             throw new RuntimeException ();
           final WorkloadSchedule_SQ_SV_ROEL_U subQueueWorkloadSchedule =
-            subQueuePredictor.createWorkloadSchedule_SQ_SV_ROEL_U (subQueue, Collections.singleton (subQueueEvent));
+            subQueuePredictor.createWorkloadSchedule_SQ_SV_ROEL_U (subQueue, new HashSet<> (Collections.singleton (subQueueEvent)));
           subQueuePredictor.doWorkloadEvents_SQ_SV_ROEL_U
             (subQueue,
             subQueueWorkloadSchedule,
             subQueueState,
-            asSet (subQueueWorkloadEvent),
+            new HashSet<> (Collections.singleton (subQueueWorkloadEvent)),
             subQueueVisitLogsSet);
         }
         else
           subQueuePredictor.doQueueEvents_SQ_SV_ROEL_U
-            (subQueue, subQueueState, asSet (subQueueQueueEvent), subQueueVisitLogsSet);
+            (subQueue, subQueueState, new HashSet<> (Collections.singleton (subQueueQueueEvent)), subQueueVisitLogsSet);
       }
       catch (WorkloadScheduleException e)
       {
@@ -353,23 +428,23 @@ extends AbstractSimQueuePredictor_Composite<Q>
       final int sac = queueState.getServerAccessCredits ();
       final int waitQueueSac = getWaitQueueState (queue, queueState).getServerAccessCredits ();
       final DefaultSimQueueState serveQueueState = getServeQueueState (queue, queueState);
-      if (sac > 0 && this.serveQueuePredictor.isStartArmed (serveQueue, serveQueueState) && waitQueueSac == 0)
+      if (sac > 0 && getServeQueuePredictor ().isStartArmed (serveQueue, serveQueueState) && waitQueueSac == 0)
       {
         final SubQueueSimpleEvent waitQueueSacEvent =
           new SubQueueSimpleEvent (waitQueue, SimQueueSimpleEventType.SERVER_ACCESS_CREDITS, null, null, (Integer) 1);
-        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (waitQueueSacEvent), visitLogsSet);
+        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, new HashSet<> (Collections.singleton (waitQueueSacEvent)), visitLogsSet);
       }
-      else if ((sac == 0 || ! this.serveQueuePredictor.isStartArmed (serveQueue, serveQueueState)) && waitQueueSac > 0)
+      else if ((sac == 0 || ! getServeQueuePredictor ().isStartArmed (serveQueue, serveQueueState)) && waitQueueSac > 0)
       {
         final SubQueueSimpleEvent waitQueueSacEvent =
           new SubQueueSimpleEvent (waitQueue, SimQueueSimpleEventType.SERVER_ACCESS_CREDITS, null, null, (Integer) 0);
-        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (waitQueueSacEvent), visitLogsSet);        
+        doQueueEvents_SQ_SV_ROEL_U (queue, queueState, new HashSet<> (Collections.singleton (waitQueueSacEvent)), visitLogsSet);        
       }
     }
     else
       throw new RuntimeException ();
-    if (eventType != null)
-      queueEventTypes.remove (eventType);
+//    if (eventType != null)
+//      queueEventTypes.remove (eventType);
   }
 
   protected void waitQueuePostStartHook (final double time, final Set<SimJob> starters, final Object userData)
@@ -401,7 +476,8 @@ extends AbstractSimQueuePredictor_Composite<Q>
       ((DefaultSimJob) job).setRequestedServiceTimeMappingForQueue (serveQueue, job.getServiceTime (queue));
       final SubQueueSimpleEvent serveQueueEvent =
         new SubQueueSimpleEvent (serveQueue, SimQueueSimpleEventType.ARRIVAL, null, job, null);
-      doQueueEvents_SQ_SV_ROEL_U (queue, queueState, asSet (serveQueueEvent), this.cachedVisitLogsSet);
+      doQueueEvents_SQ_SV_ROEL_U
+        (queue, queueState, new HashSet<> (Collections.singleton (serveQueueEvent)), this.cachedVisitLogsSet);
     }
   }
   

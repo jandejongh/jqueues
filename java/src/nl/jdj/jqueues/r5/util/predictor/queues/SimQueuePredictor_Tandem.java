@@ -3,7 +3,7 @@ package nl.jdj.jqueues.r5.util.predictor.queues;
 import java.util.List;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem;
-import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite;
+import nl.jdj.jqueues.r5.extensions.composite.AbstractSimQueuePredictor_Composite_LocalStart;
 import nl.jdj.jqueues.r5.util.predictor.AbstractSimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
@@ -20,7 +20,7 @@ import nl.jdj.jqueues.r5.util.predictor.state.SimQueueState;
  * 
  */
 public class SimQueuePredictor_Tandem<Q extends Tandem>
-extends AbstractSimQueuePredictor_Composite<Q>
+extends AbstractSimQueuePredictor_Composite_LocalStart<Q>
 implements SimQueuePredictor<Q>
 {
   
