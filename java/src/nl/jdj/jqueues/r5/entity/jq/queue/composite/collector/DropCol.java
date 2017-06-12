@@ -1,12 +1,9 @@
 package nl.jdj.jqueues.r5.entity.jq.queue.composite.collector;
 
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite_LocalStart;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -14,8 +11,10 @@ import nl.jdj.jsimulation.r5.SimEventList;
 /** A composite queue with two queues, a main one and one collecting all dropped jobs from the main queue.
  *
  * <p>
- * The main and drop arguments may be equal,
- * yet the start model is set to (fixed) {@link StartModel#LOCAL}.
+ * The main and drop arguments may be equal.
+ * 
+ * <p>
+ * This queue uses the {@code LocalStart} model as explained with {@link AbstractSimQueueComposite_LocalStart}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -31,9 +30,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class DCol
-  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends DCol>
-  extends AbstractSimQueueComposite<DJ, DQ, J, Q>
+public class DropCol
+  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends DropCol>
+  extends AbstractCollectorSimQueue<DJ, DQ, J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,32 +41,10 @@ public class DCol
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Auxiliary method to create the required {@link Set} of {@link SimQueue}s in the constructor.
-   * 
-   * <p>
-   * Note that the mainQueue and the dropQueue arguments may be equal!
-   * 
-   * @param mainQueue The wait queue.
-   * @param dropQueue The serve queue.
-   * 
-   * @return A {@link LinkedHashSet} holding both {@link SimQueue}s in the proper order.
-   * 
-   */
-  private static Set<SimQueue> createQueuesSet (final SimQueue mainQueue, final SimQueue dropQueue)
-  {
-    if (mainQueue == null || dropQueue == null)
-      throw new IllegalArgumentException ();
-    final Set<SimQueue> set = new LinkedHashSet<> ();
-    set.add (mainQueue);
-    set.add (dropQueue);
-    return set;
-  }
-  
   /** Creates a drop-collector queue given an event list, a main queue and a drop (collector) queue.
    *
    * <p>
    * Note that the mainQueue and the dropQueue arguments may be equal!
-   * The {@link StartModel}, however, is always set to {@link StartModel#LOCAL}.
    * 
    * @param eventList             The event list to use.
    * @param mainQueue             The main queue.
@@ -77,32 +54,24 @@ public class DCol
    * @throws IllegalArgumentException If the event list is <code>null</code>,
    *                                  one of or both queues are <code>null</code>.
    * 
-   * @see DropCollectorSimQueueSelector
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
-   * @see #setDropDestinationQueue
-   * @see StartModel
    * 
    */
-  public DCol
+  public DropCol
   (final SimEventList eventList,
    final SimQueue<DJ, DQ> mainQueue,
    final SimQueue<DJ, DQ> dropQueue,
    final DelegateSimJobFactory delegateSimJobFactory)
   {
-    super (eventList,
-      (Set<DQ>) createQueuesSet (mainQueue, dropQueue),
-      new DropCollectorSimQueueSelector (mainQueue, dropQueue),
-      delegateSimJobFactory,
-      StartModel.LOCAL);
-    setDropDestinationQueue ((DQ) dropQueue);
+    super (eventList, mainQueue, dropQueue, true, false, false, delegateSimJobFactory);
   }
 
-  /** Returns a new {@link DCol} object on the same {@link SimEventList} with copies of the main and
+  /** Returns a new {@link DropCol} object on the same {@link SimEventList} with copies of the main and
    *  drop queues and the same delegate-job factory.
    * 
-   * @return A new {@link DCol} object on the same {@link SimEventList} with copies of the main and
-   * drop queues and the same delegate-job factory.
+   * @return A new {@link DropCol} object on the same {@link SimEventList} with copies of the main and
+   *         drop queues and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the main or drop queues could not be copied through {@link SimQueue#getCopySimQueue}.
    * 
@@ -113,29 +82,18 @@ public class DCol
    * 
    */
   @Override
-  public DCol<DJ, DQ, J, Q> getCopySimQueue ()
+  public DropCol<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final SimQueue<DJ, DQ> mainQueueCopy = getMainQueue ().getCopySimQueue ();
     final SimQueue<DJ, DQ> dropQueueCopy = getDropQueue ().getCopySimQueue ();
-    return new DCol<> (getEventList (), mainQueueCopy, dropQueueCopy, getDelegateSimJobFactory ());
+    return new DropCol<> (getEventList (), mainQueueCopy, dropQueueCopy, getDelegateSimJobFactory ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // MAIN AND DROP QUEUES
+  // DROP QUEUE
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns the main (first) queue.
-   * 
-   * @return The main (first) queue.
-   * 
-   */
-  protected final DQ getMainQueue ()
-  {
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    return iterator.next ();
-  }
   
   /** Returns the drop (second, last) queue.
    * 
@@ -144,12 +102,7 @@ public class DCol
    */
   protected final DQ getDropQueue ()
   {
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    final DQ firstQueue = iterator.next ();
-    if (! iterator.hasNext ())
-      return firstQueue;
-    else
-      return iterator.next ();
+    return getCollectorQueue ();
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,30 +111,15 @@ public class DCol
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "DCol[mainQueue,dropQueue]".
+  /** Returns "DropCol[mainQueue-&gt;dropQueue]".
    * 
-   * @return "DCol[mainQueue,dropQueue]".
+   * @return "DropCol[mainQueue-&gt;dropQueue]".
    * 
    */
   @Override
   public String toStringDefault ()
   {
-    return "DCol[" + getMainQueue () + "," + getDropQueue () + "]";
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // RESET
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   */
-  @Override
-  protected final void resetEntitySubClass ()
-  {
-    super.resetEntitySubClass ();
+    return "DropCol[" + getMainQueue () + "->" + getDropQueue () + "]";
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

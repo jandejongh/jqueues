@@ -4,13 +4,17 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
 
-/** A {@link SimQueueSelector} for drop-collector queues.
+/** A {@link SimQueueSelector} for collector queues.
  *
  * <p>
- * A drop-collector is a composite queue with two queues, a main one and one collecting all dropped jobs from the main queue.
+ * A drop-collector is a composite queue with two queues,
+ * a main one and one selectively collecting all jobs exiting from the main queue.
  * 
  * @param <J>  The job type.
  * @param <DQ> The queue-type for delegate jobs.
+ *
+ * @see AbstractCollectorSimQueue
+ * @see Col
  * 
  * @author Jan de Jongh, TNO
  * 
@@ -21,7 +25,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class DropCollectorSimQueueSelector<J extends SimJob, DQ extends SimQueue>
+public class CollectorSimQueueSelector<J extends SimJob, DQ extends SimQueue>
 implements SimQueueSelector<J, DQ>
 {
 
@@ -31,31 +35,31 @@ implements SimQueueSelector<J, DQ>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a {@link SimQueueSelector} for a drop-collector queue.
+  /** Creates a {@link SimQueueSelector} for a collector queue.
    * 
-   * @param mainQueue The main queue.
-   * @param dropQueue The drop queue.
+   * @param mainQueue      The main queue.
+   * @param collectorQueue The collector queue.
    * 
    * @throws IllegalArgumentException If one of or both queues are <code>null</code>.
    * 
    */
-  public DropCollectorSimQueueSelector (final DQ mainQueue, final DQ dropQueue)
+  public CollectorSimQueueSelector (final DQ mainQueue, final DQ collectorQueue)
   {
-    if (mainQueue == null || dropQueue == null)
+    if (mainQueue == null || collectorQueue == null)
       throw new IllegalArgumentException ();
     this.mainQueue = mainQueue;
-    this.dropQueue = dropQueue;
+    this.collectorQueue = collectorQueue;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // MAIN AND DROP QUEUES
+  // MAIN AND COLLECTOR QUEUES
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   private final DQ mainQueue;
   
-  private final DQ dropQueue;
+  private final DQ collectorQueue;
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -77,7 +81,7 @@ implements SimQueueSelector<J, DQ>
   @Override
   public DQ selectNextQueue (final double time, final J job, final DQ previousQueue)
   {
-    if (previousQueue == null || (previousQueue != this.mainQueue && previousQueue != this.dropQueue))
+    if (previousQueue == null || (previousQueue != this.mainQueue && previousQueue != this.collectorQueue))
       throw new IllegalStateException ();
     return null;
   }
