@@ -296,6 +296,9 @@ public class CTandem2
   
   /** Calls super method (in order to make implementation final).
    * 
+   * XXX It would be better to cleverly inherit the QoS structure from a sub-queue,
+   * in case both sub-queue do not have a conflicting QoS structure.
+   * 
    */
   @Override
   public final Object getQoS ()
@@ -304,6 +307,9 @@ public class CTandem2
   }
 
   /** Calls super method (in order to make implementation final).
+   * 
+   * XXX It would be better to cleverly inherit the QoS structure from a sub-queue,
+   * in case both sub-queue do not have a conflicting QoS structure.
    * 
    */
   @Override
@@ -1057,13 +1063,11 @@ public class CTandem2
           //
           ; /* NOTHING TO DO */
         else if (notificationType == SimQueueSimpleEventType.ARRIVAL)
-        {
           //
           // A (delegate) job (pseudo) arrives at either sub-queue.
           // In any case, at this point, we sent the (delegate) job to that sub-queue ourselves.
           //
           ; /* NOTHING TO DO */
-        }
         else if (notificationType == SimQueueSimpleEventType.DROP)
         {
           //
