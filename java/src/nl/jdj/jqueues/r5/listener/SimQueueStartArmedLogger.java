@@ -7,6 +7,7 @@ import java.util.Map;
 import nl.jdj.jqueues.r5.entity.SimEntity;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueListener;
+import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictor;
 
 /** A {@link SimQueueListener} that logs {@code StartArmed} in between resets.
  * 
@@ -75,6 +76,15 @@ extends DefaultSimQueueListener
   
   /** Compares two {@code StartArmed} logs (predicted and actual), and reports inequalities to {@link System#err}.
    * 
+   * <p>
+   * In case of a mismatch,
+   * the method re-attempts with a compacted version (dealing with simultaneous notifications)
+   * of the <i>predicted</i> logs,
+   * because some {@link SimQueuePredictor} implementations
+   * cannot always provide atomic {@code StartArmed} notifications.
+   * A warning on {@link System.err} is given in case
+   * erroneous notifications are found in the predicted logs.
+   * 
    * @param predictedStaLogs The predicted {@code StartArmed} logs.
    * @param actualStaLogs    The actual {@code StartArmed} logs.
    * @param accuracy         The allowed deviation in key values (times-of-change).
@@ -114,7 +124,12 @@ extends DefaultSimQueueListener
           break;
         }
       }
-    if (! retVal)
+    if ((! retVal) && compactStartArmedLogs (predictedStaLogs))
+    {
+      System.err.println ("Predictor StartArmed Logs Compaction; check predictor!");
+      return matchStartArmedLogs (predictedStaLogs, actualStaLogs, accuracy, testString);
+    }
+    else if (! retVal)
     {
       System.err.println ("StartArmed Logs mismatch!");
       if (testString != null)
@@ -126,6 +141,41 @@ extends DefaultSimQueueListener
       System.err.println ("  Actual   : " + actualStaLogs + ".");
     }
     return retVal;
+  }
+  
+  private static boolean compactStartArmedLogs (final List<Map<Double, Boolean>> staLogs)
+  {
+    if (staLogs == null)
+      throw new IllegalArgumentException ();
+    if (staLogs.size () == 1)
+      return false;
+    boolean changed = false;
+    boolean changing = true;
+    while (changing)
+    {
+      changing = false;
+      for (int i = 0; i < staLogs.size () - 1; i++)
+      {
+        final double time_i = staLogs.get (i).keySet ().iterator ().next ();
+        final double time_ip1 = staLogs.get (i+1).keySet ().iterator ().next ();
+        if (time_i == time_ip1)
+        {
+          final boolean sta_i = staLogs.get (i).get (time_i);
+          final boolean sta_ip1 = staLogs.get (i+1).get (time_ip1);
+          if (sta_ip1 == sta_i)
+            staLogs.remove (i + 1);
+          else
+          {
+            staLogs.remove (i+1);
+            staLogs.remove (i);
+          }
+          changed = true;
+          changing = true;
+          break;
+        }
+      }
+    }
+    return changed;
   }
   
 }
