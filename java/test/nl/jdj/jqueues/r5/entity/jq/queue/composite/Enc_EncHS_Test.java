@@ -66,10 +66,10 @@ import org.junit.Test;
  * This file is covered by the LICENSE file in the root of this project.
  *
  */
-public class EncTest
+public class Enc_EncHS_Test
 {
   
-  public EncTest ()
+  public Enc_EncHS_Test ()
   {
   }
   
@@ -551,7 +551,7 @@ public class EncTest
   }
 
   /**
-   * Test of Enc.
+   * Test of {@link Enc}.
    * 
    */
   @Test
@@ -561,7 +561,7 @@ public class EncTest
   }
   
   /**
-   * Test of EncHS.
+   * Test of {@link EncHS}.
    * 
    */
   @Test
