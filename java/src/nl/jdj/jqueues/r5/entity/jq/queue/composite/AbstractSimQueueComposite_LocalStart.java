@@ -34,6 +34,13 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * We call this the {@code LocalStart} model for a  {@link SimQueueComposite}.
  * Many concrete implementations such as {@link Tandem},
  * {@link FB_v} and {@link FB_p} use this model.
+ * In this abstract base class, many methods have been made final in order
+ * to ensure compliance with the {@link SimQueue}
+ * and {@link SimQueueComposite} interface.
+ * However, the sub-queue event processor
+ * {@link #processSubQueueNotifications}
+ * can be overridden in order to (carefully)
+ * filter or alter sub-queue notifications.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
