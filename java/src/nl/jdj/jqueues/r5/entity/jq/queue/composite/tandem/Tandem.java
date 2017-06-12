@@ -4,7 +4,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite_LocalStart;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.ctandem2.CTandem2;
@@ -20,7 +20,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * Internally, a {@link TandemSimQueueSelector} is generated from the sub-queues supplied.
  * 
  * <p>
- * The start model is set to (fixed) {@link StartModel#LOCAL}.
+ * This queue uses the {@code LocalStart} model as explained with {@link AbstractSimQueueComposite_LocalStart}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -29,7 +29,6 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * @see TandemSimQueueSelector
  * @see CTandem2
- * @see StartModel
  * 
  * @author Jan de Jongh, TNO
  * 
@@ -42,7 +41,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  */
 public class Tandem
   <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends Tandem>
-  extends AbstractSimQueueComposite<DJ, DQ, J, Q>
+  extends AbstractSimQueueComposite_LocalStart<DJ, DQ, J, Q>
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,9 +52,6 @@ public class Tandem
   
   /** Creates a tandem queue given an event list and a list of queues to put in sequence.
    *
-   * <p>
-   * The start model is set to (fixed) {@link StartModel#LOCAL}.
-   * 
    * @param eventList             The event list to use.
    * @param queues                The queues, an iteration over the set must return (deterministically)
    *                              the non-<code>null</code> queues in intended order of visit.
@@ -67,7 +63,6 @@ public class Tandem
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
-   * @see StartModel
    * 
    */
   public Tandem
@@ -75,7 +70,7 @@ public class Tandem
    final Set<DQ> queues,
    final DelegateSimJobFactory delegateSimJobFactory)
   {
-    super (eventList, queues, new TandemSimQueueSelector<> (queues), delegateSimJobFactory, StartModel.LOCAL);
+    super (eventList, queues, new TandemSimQueueSelector<> (queues), delegateSimJobFactory);
   }
 
   @Override
@@ -114,6 +109,21 @@ public class Tandem
     return string;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void resetEntitySubClass ()
+  {
+    super.resetEntitySubClass ();
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // END OF FILE
