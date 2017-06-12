@@ -639,6 +639,7 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
    *          {@link SimQueueSimpleEventType#STA_FALSE},
    *          {@link SimQueueSimpleEventType#STA_TRUE},
    *          as these are dealt with (if at all) by the outer loop.
+   * <li>With {@link SimQueueSimpleEventType#ARRIVAL}, we do nothing.
    * <li>With {@link SimQueueSimpleEventType#DROP}, we drop the real job through {@link #drop}.
    * <li>With {@link SimQueueSimpleEventType#REVOCATION}, we check for the presence of a corresponding real job through
    *                                                      {@link #getRealJob}, and throw an {@link IllegalStateException}
@@ -817,7 +818,7 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
         else if (notificationType == SimQueueSimpleEventType.ARRIVAL)
         {
           //
-          // A (delegate) job (pseudo) arrives at a sub-queue.
+          // A (delegate) job arrives at a sub-queue.
           // In any case, at this point, we sent the (delegate) job to that sub-queue ourselves.
           //
           ; /* NOTHING TO DO */
