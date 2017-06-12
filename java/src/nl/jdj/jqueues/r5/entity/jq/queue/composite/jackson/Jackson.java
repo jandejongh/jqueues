@@ -5,7 +5,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite_LocalStart;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite;
@@ -14,7 +14,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
 /** A {@link SimQueueComposite} implementation of a Jackson queueing network.
  *
  * <p>
- * The start model is set to (fixed) {@link StartModel#LOCAL}.
+ * This queue uses the {@code LocalStart} model as explained with {@link AbstractSimQueueComposite_LocalStart}.
  * 
  * <p>
  * For more documentation see {@link JacksonSimQueueSelector}.
@@ -35,7 +35,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  */
 public class Jackson
   <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends Jackson>
-  extends AbstractSimQueueComposite<DJ, DQ, J, Q>
+  extends AbstractSimQueueComposite_LocalStart<DJ, DQ, J, Q>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,9 +45,6 @@ public class Jackson
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Creates a Jackson queueing network.
-   * 
-   * <p>
-   * The start model is set to (fixed) {@link StartModel#LOCAL}.
    * 
    * <p>
    * For brevity, <code>|Q|</code> is used as a shorthand for <code>queues.size ()</code>.
@@ -70,7 +67,6 @@ public class Jackson
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
-   * @see StartModel
    * 
    */
   public Jackson
@@ -84,8 +80,7 @@ public class Jackson
     super (eventList,
       queues,
       new JacksonSimQueueSelector<>  (queues, pdfArrival, pdfTransition, userRNG),
-      delegateSimJobFactory,
-      StartModel.LOCAL);
+      delegateSimJobFactory);
   }
 
   /** Returns a new {@link Jackson} object on the same {@link SimEventList} with copies of the sub-queues and
