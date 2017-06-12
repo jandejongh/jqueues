@@ -3,24 +3,20 @@ package nl.jdj.jqueues.r5.entity.jq.queue.composite.enc;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
-import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
-import nl.jdj.jqueues.r5.entity.jq.SimJQSimpleEventType;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
-import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite.StartModel;
-import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.IC;
 import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.PS;
+import nl.jdj.jqueues.r5.listener.MultiSimQueueNotificationProcessor;
 import nl.jdj.jsimulation.r5.DefaultSimEvent;
 import nl.jdj.jsimulation.r5.SimEvent;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -32,12 +28,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This composite queue mimics (precisely) the {@link SimQueue} interface of the encapsulated queue,
  * yet "removes" real jobs if their waiting, service of sojourn time exceeds a given, fixed limit.
  * On the encapsulated queue, the delegate job is removed through {@link SimQueue#revoke}.
- * By default, real jobs for which waiting, service or sojourn time expire will <i>depart</i>,
+ * By default, real jobs for which its waiting, service or sojourn time expires will <i>depart</i>,
  * and in that sense, cannot be distinguished from regular departures on the encapsulated queue.
  * However, one can control this behavior through {@link ExpirationMethod} and {@link #setExprirationMethod}.
- * 
- * <p>
- * The start model is set to (fixed) {@link StartModel#ENCAPSULATOR_QUEUE}.
  * 
  * <p>
  * The semantics of either expiration time being zero are a bit tricky, but in essence, the encapsulated queue takes precedence.
@@ -45,10 +38,6 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * the applicable expiration events to take place.
  * For instance, if the encapsulated queue takes a job into service immediately upon arrival (like {@link PS} does),
  * {@code maxWaitingTime = 0} has no effect, i.e., no revocation (due to expiration) takes place.
- * If in addition the encapsulated queue serves jobs in zero time (like {@link IC} does),
- * {@code maxSojournTime = 0} has no effect either.
- * These arguments also imply that we can safely inherit {@link AbstractSimQueueComposite#isStartArmed}
- * (which is {@code final} anyway...).
  * 
  * <p>
  * However, setting an expiration time to {@link Double#POSITIVE_INFINITY} is legal,
@@ -66,9 +55,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * @param <Q>  The queue type for jobs.
  * 
  * @see SimQueueComposite
- * @see StartModel
- * @see StartModel#ENCAPSULATOR_QUEUE
  * @see Enc
+ * @see EncJL
  * 
  * @author Jan de Jongh, TNO
  * 
@@ -93,11 +81,7 @@ public class EncTL
   /** Creates an encapsulator queue given an event list and a queue and limits on waiting time, service time and sojourn time.
    *
    * <p>
-   * The constructor sets the {@link StartModel} to {@link StartModel#ENCAPSULATOR_QUEUE},
-   * and {@link ExpirationMethod} to {@link ExpirationMethod#DEPARTURE}.
-   * In addition, it registers private listeners on relevant sub-queue events,
-   * viz., arrival, drop, revocation, auto-revocation, start, and departure,
-   * through {@link #registerSubQueueSubNotificationProcessor}.
+   * The constructor sets the {@link ExpirationMethod} to {@link ExpirationMethod#DEPARTURE}.
    * 
    * @param eventList             The event list to use.
    * @param queue                 The encapsulated queue.
@@ -111,8 +95,6 @@ public class EncTL
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
-   * @see StartModel
-   * @see StartModel#ENCAPSULATOR_QUEUE
    * 
    */
   public EncTL
@@ -123,26 +105,20 @@ public class EncTL
    final double maxServiceTime,
    final double maxSojournTime)
   {
-    super (eventList, queue, delegateSimJobFactory, false);
+    super (eventList, queue, delegateSimJobFactory);
     if (maxWaitingTime < 0 || maxServiceTime < 0 || maxSojournTime < 0)
       throw new IllegalArgumentException ();
     this.maxWaitingTime = maxWaitingTime;
     this.maxServiceTime = maxServiceTime;
     this.maxSojournTime = maxSojournTime;
     this.exprirationMethod = ExpirationMethod.DEPARTURE;
-    registerSubQueueSubNotificationProcessor (SimJQSimpleEventType.ARRIVAL,         queue, this::processArrival);
-    registerSubQueueSubNotificationProcessor (SimJQSimpleEventType.DROP,            queue, this::processExit);
-    registerSubQueueSubNotificationProcessor (SimJQSimpleEventType.REVOCATION,      queue, this::processExit);
-    registerSubQueueSubNotificationProcessor (SimJQSimpleEventType.AUTO_REVOCATION, queue, this::processExit);
-    registerSubQueueSubNotificationProcessor (SimJQSimpleEventType.START,           queue, this::processStart);
-    registerSubQueueSubNotificationProcessor (SimJQSimpleEventType.DEPARTURE,       queue, this::processExit);
   }
   
   /** Returns a new {@link EncTL} object on the same {@link SimEventList} with a copy of the encapsulated
-   *  queue, the same delegate-job factory and equal respective expiration times.
+   *  queue, the same delegate-job factory, equal respective expiration times, and the same expiration method.
    * 
    * @return A new {@link EncTL} object on the same {@link SimEventList} with a copy of the encapsulated
-   *           queue, the same delegate-job factory and equal respective expiration times.
+   *           queue, the same delegate-job factory, equal respective expiration times, and the same expiration method.
    * 
    * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
    * 
@@ -152,18 +128,23 @@ public class EncTL
    * @see #getMaxWaitingTime
    * @see #getMaxServiceTime
    * @see #getMaxSojournTime
+   * @see #getExprirationMethod
+   * @see #setExprirationMethod
    * 
    */
   @Override
   public EncTL<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final SimQueue<DJ, DQ> encapsulatedQueueCopy = getEncapsulatedQueue ().getCopySimQueue ();
-    return new EncTL (getEventList (),
-                      encapsulatedQueueCopy,
-                      getDelegateSimJobFactory (),
-                      getMaxWaitingTime (),
-                      getMaxServiceTime (),
-                      getMaxSojournTime ());
+    final EncTL<DJ, DQ, J, Q> copy =
+      new EncTL (getEventList (),
+                 encapsulatedQueueCopy,
+                 getDelegateSimJobFactory (),
+                 getMaxWaitingTime (),
+                 getMaxServiceTime (),
+                 getMaxSojournTime ());
+    copy.setExprirationMethod (getExprirationMethod ());
+    return copy;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,11 +182,11 @@ public class EncTL
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** The method for "presenting" jobs for which a time expired at the composite (this) queue.
+  /** The method for "presenting" jobs for which a time expires at the composite (this) queue.
    * 
    * <p>
-   * Note: This method <i>only</i> applies to jobs that "expire"; all other events from the encapsulated queue are
-   *       processed as described in {@link AbstractSimQueueComposite} and {@link StartModel#ENCAPSULATOR_QUEUE}.
+   * Note: This method <i>only</i> applies to jobs that "expire"; all other job events from the encapsulated queue are
+   *       processed as described in {@link AbstractSimQueueComposite} and {@link AbstractEncapsulatorSimQueue}.
    * 
    */
   public enum ExpirationMethod
@@ -255,42 +236,6 @@ public class EncTL
     if (exprirationMethod == null)
       throw new IllegalArgumentException ();
     this.exprirationMethod = exprirationMethod;
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // RESET
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method and resets the internal administration.
-   * 
-   */
-  @Override
-  protected final void resetEntitySubClass ()
-  {
-    super.resetEntitySubClass ();
-    this.autoRevocationSchedule.clear ();
-    // Note: our super-class takes care of removing the event from the event list through the use of #eventsScheduled.
-    this.scheduledRevocationEvent = null;
-    this.processingOwnAutoRevocationEvent = false;
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // SERVICE TIME FOR JOB
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  /** Calls super method (in order to make implementation final).
-   * 
-   * @return The result from the super method.
-   * 
-   */
-  @Override
-  protected final double getServiceTimeForJob (final J job)
-  {
-    return super.getServiceTimeForJob (job);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -358,19 +303,32 @@ public class EncTL
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // SERVER-ACCESS CREDITS
+  // QoS / QoS CLASS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /** Calls super method.
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
    * 
    */
   @Override
-  protected final void setServerAccessCreditsSubClass ()
+  public final Object getQoS ()
   {
-    super.setServerAccessCreditsSubClass ();
+    return super.getQoS ();
   }
-  
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  public final Class getQoSClass ()
+  {
+    return super.getQoSClass ();
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // STATE [SUBJECT TO RESET]:
@@ -433,14 +391,14 @@ public class EncTL
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // RESCHEDULE
+  // RESCHEDULE EXPIRATION EVENT
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private void reschedule ()
+  private void rescheduleExpirationEvent ()
   {
     // If we are currently processing an event, we just skip.
-    // The event handler will reschedule once it has finished.
+    // The event handler will rescheduleExpirationEvent once it has finished.
     if (this.processingOwnAutoRevocationEvent)
       return;
     // Check whether the currently scheduled auto-revocation event is still valid.
@@ -476,143 +434,27 @@ public class EncTL
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // EVENTS FROM SUB-QUEUE
+  // EXPIRE JOB
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  private void processArrival
-    (final double time,
-     final SimEntitySimpleEventType.Member notificationType,
-     final SimJQEvent<DJ, DQ> event,
-     final DQ subQueue,
-     final DJ delegateJob)
+  private void expireJob (final double time, final J job)
+  {
+    switch (this.exprirationMethod)
     {
-      // Insane sanity check...
-      if (time != getLastUpdateTime ()
-      || notificationType != SimJQSimpleEventType.ARRIVAL
-      || event == null
-      || (! (event instanceof SimJQEvent.Arrival))
-      || event.getTime () != getLastUpdateTime ()
-      || ((SimJQEvent.Arrival) event).getQueue () != subQueue
-      || ((SimJQEvent.Arrival) event).getJob () != delegateJob
-      || subQueue != getEncapsulatedQueue ()
-      || delegateJob == null
-      || (! isDelegateJob (delegateJob)))
-        throw new IllegalArgumentException ();
-      // We always put the delegate job into our arrival-times map upon arrival.
-      if (this.arrivalTimes.containsKey (delegateJob))
-        throw new IllegalStateException ();
-      this.arrivalTimes.put (delegateJob, time);
-      // Calculate the expiration time for this visit.
-      // First, if both MaxWaitingTime and MaxSojournTime are infinite,
-      // we ignore both at this point.
-      if (Double.isInfinite (getMaxWaitingTime ()) && Double.isInfinite (getMaxSojournTime ()))
-        return;
-      // Now we have a finite maximum waiting or sojourn time, but if time is infinite, we must alreay auto-revoke the job.
-      if (Double.isInfinite (getLastUpdateTime ()))
-        autoRevoke (time, getRealJob (delegateJob));
-      // At this point, time is finite, and so is the minimum of waiting-time and sojourn-time expiration.
-      final double waiExpTime = time + getMaxWaitingTime ();
-      final double sojExpTime = time + getMaxSojournTime ();
-      final double expTime = Math.min (waiExpTime, sojExpTime);
-      // Let's check...
-      if (Double.isInfinite (expTime))
-        throw new IllegalStateException ();
-      // Time is finite, and the expiration time is finite.
-      // Enter the job into the scheduled-auto-revocations administration.
-      addNewJobToAutoRevocationSchedule (delegateJob, expTime);
-      // Check to see if we need to reschedule the auto-revocation event.
-      reschedule ();
+      case DROP:
+        drop (job, time);
+        break;
+      case AUTO_REVOCATION:
+        autoRevoke (time, job);
+        break;
+      case DEPARTURE:
+        depart (time, job);
+        break;
+      default:
+        throw new RuntimeException ();
     }
-  
-  private void processStart
-    (final double time,
-     final SimEntitySimpleEventType.Member notificationType,
-     final SimJQEvent<DJ, DQ> event,
-     final DQ subQueue,
-     final DJ delegateJob)
-    {
-      // Insane sanity check...
-      if (time != getLastUpdateTime ()
-      || notificationType != SimJQSimpleEventType.START
-      || event == null
-      || (! (event instanceof SimJQEvent.Start))
-      || event.getTime () != getLastUpdateTime ()
-      || ((SimJQEvent.Start) event).getQueue () != subQueue
-      || ((SimJQEvent.Start) event).getJob () != delegateJob
-      || subQueue != getEncapsulatedQueue ()
-      || delegateJob == null
-      || (! isDelegateJob (delegateJob)))
-        throw new IllegalArgumentException ();
-      // We always put the delegate job into our arrival-times map upon arrival.
-      if (! this.arrivalTimes.containsKey (delegateJob))
-        throw new IllegalStateException ();
-      // For the started job, we simply need to recalculate the expiration time,
-      // because we do not know whether the current expiration time, if applicable, is due to waiting time restraints or
-      // due to sojourn time restraints.
-      // Note that we cannot a priori assume that an auto-revocation is scheduled for the job at all...
-      // Hence, first, let's remove all expirations for the current job.
-      if (containsJobInAutoRevocationSchedule (delegateJob))
-        removeJobFromAutoRevocationSchedule (delegateJob);
-      // Calculate the expiration time for this visit.
-      // First, if both MaxServiceTime and MaxSojournTime are infinite,
-      // we ignore both at this point (but we still may have to reschedule!).
-      // Note that MaxWaitingTime is no longer relevant at this point.
-      if (Double.isFinite (getMaxServiceTime ()) || Double.isFinite (getMaxSojournTime ()))
-      {
-        // Now we have a finite maximum service or sojourn time, but if time is infinite, we must already auto-revoke the job.
-        if (Double.isInfinite (getLastUpdateTime ()))
-          autoRevoke (time, getRealJob (delegateJob));
-        // At this point, time is finite, and so is the minimum of service-time and sojourn-time expiration.
-        final double serExpTime = time + getMaxServiceTime ();
-        final double sojExpTime = this.arrivalTimes.get (delegateJob) + getMaxSojournTime ();
-        final double expTime = Math.min (serExpTime, sojExpTime);
-        // Let's check...
-        if (Double.isInfinite (expTime))
-          throw new IllegalStateException ();
-        // Time is finite, and the expiration time is finite.
-        // Enter the job into the scheduled-auto-revocations administration.
-        addNewJobToAutoRevocationSchedule (delegateJob, expTime);
-      }
-      // Check to see if we need to reschedule the auto-revocation event.
-      reschedule ();      
-    }
-  
-  private void processExit
-    (final double time,
-     final SimEntitySimpleEventType.Member notificationType,
-     final SimJQEvent<DJ, DQ> event,
-     final DQ subQueue,
-     final DJ delegateJob)
-    {
-      // Insane sanity check...
-      if (time != getLastUpdateTime ()
-      || event == null
-      || (! (
-                 (notificationType == SimJQSimpleEventType.DROP            && event instanceof SimJQEvent.Drop)
-              || (notificationType == SimJQSimpleEventType.REVOCATION      && event instanceof SimJQEvent.Revocation)
-              || (notificationType == SimJQSimpleEventType.AUTO_REVOCATION && event instanceof SimJQEvent.AutoRevocation)
-              || (notificationType == SimJQSimpleEventType.DEPARTURE       && event instanceof SimJQEvent.Departure)
-            )
-         )
-      || event.getTime () != getLastUpdateTime ()
-      || ((SimJQEvent) event).getQueue () != subQueue
-      || ((SimJQEvent) event).getJob () != delegateJob
-      || subQueue != getEncapsulatedQueue ()
-      || delegateJob == null
-//      || (! isDelegateJob (delegateJob))
-        )
-        throw new IllegalArgumentException ("notificationType=" + notificationType + ", job=" + delegateJob + ".");
-      // We always put the delegate job into our arrival-times map upon arrival.
-      if (! this.arrivalTimes.containsKey (delegateJob))
-        throw new IllegalStateException ();
-      this.arrivalTimes.remove (delegateJob);
-      // Remove all expirations for the current job (if any).
-      if (containsJobInAutoRevocationSchedule (delegateJob))
-        removeJobFromAutoRevocationSchedule (delegateJob);
-      // Check to see if we need to reschedule the auto-revocation event.      
-      reschedule ();
-    }
+  }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -651,30 +493,358 @@ public class EncTL
       if (! isDelegateJob ((DJ) job))
         continue;
       final J realJob = getRealJob ((DJ) job);
-      switch (this.exprirationMethod)
-      {
-        // XXX The code for DROP could better be done at our super-class...
-        case DROP:
-          removeJobFromQueueUponRevokation (realJob, time, true);
-          rescheduleAfterRevokation (realJob, time, true);
-          addPendingNotification (SimQueueSimpleEventType.DROP, new SimJQEvent.Drop<> (realJob, this, time));
-          break;
-        case AUTO_REVOCATION:
-          autoRevoke (time, realJob);
-          break;
-        case DEPARTURE:
-          depart (time, realJob);
-          break;
-        default:
-          throw new RuntimeException ();
-      }
+      expireJob (time, realJob);
     }
     this.eventsScheduled.remove (this.scheduledRevocationEvent);
     this.scheduledRevocationEvent = null;
     this.processingOwnAutoRevocationEvent = false;
-    reschedule ();
+    rescheduleExpirationEvent ();
     if (isTopLevel)
       fireAndLockPendingNotifications ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method and resets the internal administration.
+   * 
+   */
+  @Override
+  protected final void resetEntitySubClass ()
+  {
+    super.resetEntitySubClass ();
+    this.autoRevocationSchedule.clear ();
+    // Note: our super-class takes care of removing the event from the event list through the use of #eventsScheduled.
+    this.scheduledRevocationEvent = null;
+    this.processingOwnAutoRevocationEvent = false;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // QUEUE-ACCESS VACATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void queueAccessVacationDropSubClass (double time, J job)
+  {
+    super.queueAccessVacationDropSubClass (time, job);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // ARRIVAL
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method and inserts the job in the local administration.
+   * 
+   */
+  @Override
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
+  {
+    super.insertJobInQueueUponArrival (job, time);
+    final DJ delegateJob = getDelegateJob (job);
+    // We always put the delegate job into our arrival-times map upon arrival.
+    if (this.arrivalTimes.containsKey (delegateJob))
+      throw new IllegalStateException ();
+    this.arrivalTimes.put (delegateJob, time);
+  }
+
+  /** Assesses the expiration settings for the newly arrived job,
+   *  and either makes it exit or reschedules the expiration event and calls super method.
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterArrival (final J job, final double time)
+  {
+    if (getMaxSojournTime () > 0
+    &&  (getMaxWaitingTime () > 0
+         || (getEncapsulatedQueue ().getNumberOfJobsInWaitingArea () == 0
+             && getEncapsulatedQueue ().getServerAccessCredits () > 0
+             && getEncapsulatedQueue ().isStartArmed ())))
+    {
+      // Calculate the expiration time for this visit.
+      final DJ delegateJob = getDelegateJob (job);
+      if (Double.isInfinite (getMaxWaitingTime ()) && Double.isInfinite (getMaxSojournTime ()))
+        // First, if both MaxWaitingTime and MaxSojournTime are infinite,
+        // we ignore both at this point.
+        super.rescheduleAfterArrival (job, time);
+      else if (Double.isInfinite (getLastUpdateTime ()))
+        // Now we have a finite maximum waiting or sojourn time, but if time is infinite, we must alreay expire the job.
+        expireJob (time, job);
+      else
+      {
+        // At this point, time is finite, and so is the minimum of waiting-time and sojourn-time expiration.
+        final double waiExpTime = time + getMaxWaitingTime ();
+        final double sojExpTime = time + getMaxSojournTime ();
+        final double expTime = Math.min (waiExpTime, sojExpTime);
+        // Let's check...
+        if (Double.isInfinite (expTime))
+          throw new IllegalStateException ();
+        // Time is finite, and the expiration time is finite.
+        // Enter the job into the scheduled-auto-revocations administration.
+        addNewJobToAutoRevocationSchedule (delegateJob, expTime);
+        // Check to see if we need to rescheduleExpirationEvent the expiration event.
+        // Note that we can safely do that already; before invoking super's rescheduling.
+        rescheduleExpirationEvent ();
+        // Let our super method pick up from here.
+        super.rescheduleAfterArrival (job, time);
+      }
+    }
+    else
+      expireJob (time, job);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DROP
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Removes the job from the local administration and calls super method.
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponDrop (final J job, final double time)
+  {
+    removeJobUponExitLocal (job, time);
+    super.removeJobFromQueueUponDrop (job, time);
+  }
+
+  /** Calls super method and reschedules the expiration event if needed.
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterDrop (final J job, final double time)
+  {
+    super.rescheduleAfterDrop (job, time);
+    rescheduleUponExitLocal (job, time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // REVOCATION
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Removes the job from the local administration and calls super method.
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponRevokation (final J job, final double time, final boolean auto)
+  {
+    removeJobUponExitLocal (job, time);
+    super.removeJobFromQueueUponRevokation (job, time, auto);
+  }
+
+  /** Calls super method and reschedules the expiration event if needed.
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterRevokation (final J job, final double time, final boolean auto)
+  {
+    super.rescheduleAfterRevokation (job, time, auto);
+    rescheduleUponExitLocal (job, time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // StartArmed
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  public final boolean isStartArmed ()
+  {
+    return super.isStartArmed ();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVER-ACCESS CREDITS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void setServerAccessCreditsSubClass ()
+  {
+    super.setServerAccessCreditsSubClass ();
+  }
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void rescheduleForNewServerAccessCredits (final double time)
+  {
+    super.rescheduleForNewServerAccessCredits (time);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // START
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method and performs sanity checks.
+   * 
+   * @throws IllegalStateException If sanity checks fail.
+   * 
+   */
+  @Override
+  protected final void insertJobInQueueUponStart (final J job, final double time)
+  {
+    super.insertJobInQueueUponStart (job, time);
+    // We always put the delegate job into our arrival-times map upon arrival.
+    final DJ delegateJob = getDelegateJob (job);
+    if (! this.arrivalTimes.containsKey (delegateJob))
+      throw new IllegalStateException ();
+  }
+
+  /** Calls super method and assesses the expiration settings for the newly started job,
+   *  and either makes it exit when necessary; always reschedules the expiration event.
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterStart (final J job, final double time)
+  {
+    super.rescheduleAfterStart (job, time);
+    // For the started job, we simply need to recalculate the expiration time,
+    // because we do not know whether the current expiration time, if applicable, is due to waiting time restraints or
+    // due to sojourn time restraints.
+    // Note that we cannot a priori assume that an auto-revocation is scheduled for the job at all...
+    // Hence, first, let's remove all expirations for the current job.
+    final DJ delegateJob = getDelegateJob (job);
+    if (containsJobInAutoRevocationSchedule (delegateJob))
+      removeJobFromAutoRevocationSchedule (delegateJob);
+    // Calculate the expiration time for this visit.
+    // First, if both MaxServiceTime and MaxSojournTime are infinite,
+    // we ignore both at this point (but we still may have to rescheduleExpirationEvent!).
+    // Note that MaxWaitingTime is no longer relevant at this point.
+    if (Double.isFinite (getMaxServiceTime ()) || Double.isFinite (getMaxSojournTime ()))
+    {
+      // Now we have a finite maximum service or sojourn time, but if time is infinite, we must already exit the job.
+      if (Double.isInfinite (getLastUpdateTime ()))
+        expireJob (time, getRealJob (delegateJob));
+      // At this point, time is finite, and so is the minimum of service-time and sojourn-time expiration.
+      final double serExpTime = time + getMaxServiceTime ();
+      final double sojExpTime = this.arrivalTimes.get (delegateJob) + getMaxSojournTime ();
+      final double expTime = Math.min (serExpTime, sojExpTime);
+      // Let's check...
+      if (Double.isInfinite (expTime))
+        throw new IllegalStateException ();
+      // Time is finite, and the expiration time is finite.
+      // Enter the job into the scheduled-auto-revocations administration.
+      addNewJobToAutoRevocationSchedule (delegateJob, expTime);
+    }
+    // Check to see if we need to rescheduleExpirationEvent the auto-revocation event.
+    rescheduleExpirationEvent ();      
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SERVICE TIME FOR JOB
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  protected final double getServiceTimeForJob (final J job)
+  {
+    return super.getServiceTimeForJob (job);
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // DEPARTURE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Removes the job from the local administration and calls super method.
+   * 
+   */
+  @Override
+  protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
+  {
+    removeJobUponExitLocal (departingJob, time);
+    super.removeJobFromQueueUponDeparture (departingJob, time);
+  }
+
+  /** Calls super method and reschedules the expiration event if needed.
+   * 
+   */
+  @Override
+  protected final void rescheduleAfterDeparture (final J departedJob, final double time)
+  {
+    super.rescheduleAfterDeparture (departedJob, time);
+    rescheduleUponExitLocal (departedJob, time);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // REMOVE JOB(LOCAL) UPON EXIT
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private void removeJobUponExitLocal (final J job, final double time)
+  {
+    if (this.jobQueue.contains (job))
+    {
+      // We always put the delegate job into our arrival-times map upon arrival.
+      final DJ delegateJob = getDelegateJob (job);
+      if (this.arrivalTimes.containsKey (delegateJob))
+        this.arrivalTimes.remove (delegateJob);
+      // Remove all expirations for the current job (if any).
+      if (containsJobInAutoRevocationSchedule (delegateJob))
+        removeJobFromAutoRevocationSchedule (delegateJob); 
+    }
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESCHEDULE (LOCAL) UPON EXIT
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private void rescheduleUponExitLocal (final J job, final double time)
+  {
+    // Check to see if we need to rescheduleExpirationEvent the auto-revocation event.      
+    rescheduleExpirationEvent ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE STATE-CHANGE NOTIFICATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (in order to make implementation final).
+   * 
+   */
+  @Override
+  protected final void processSubQueueNotifications
+  (final List<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> notifications)
+  {
+    super.processSubQueueNotifications (notifications);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
