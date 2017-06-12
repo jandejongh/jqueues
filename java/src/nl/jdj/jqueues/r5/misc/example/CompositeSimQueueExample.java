@@ -11,7 +11,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.Jackson;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.GeneralParallelSimQueues;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.parallel.Par;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.feedback.FB_v;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.feedback.FB_p;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem;
@@ -144,7 +144,7 @@ public final class CompositeSimQueueExample
     final Set<SimQueue> set2 = new LinkedHashSet<> ();
     set2.add (fcfsQueue2);
     set2.add (lcfsQueue2);
-    final SimQueue parallelQueue = new GeneralParallelSimQueues
+    final SimQueue parallelQueue = new Par
       (el, set2,
       new SimQueueSelector<SimJob, SimQueue> ()
       {
