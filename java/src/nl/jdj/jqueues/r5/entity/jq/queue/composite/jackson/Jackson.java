@@ -1,5 +1,6 @@
 package nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson;
 
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
@@ -9,6 +10,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite_Loc
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueComposite;
+import nl.jdj.jqueues.r5.listener.MultiSimQueueNotificationProcessor;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A {@link SimQueueComposite} implementation of a Jackson queueing network.
@@ -154,6 +156,22 @@ public class Jackson
     super.resetEntitySubClass ();
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE STATE-CHANGE NOTIFICATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (and made final).
+   * 
+   */
+  @Override
+  protected final void processSubQueueNotifications
+  (final List<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> notifications)
+  {
+    super.processSubQueueNotifications (notifications);
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // END OF FILE

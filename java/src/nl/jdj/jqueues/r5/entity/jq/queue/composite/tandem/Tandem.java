@@ -1,5 +1,6 @@
 package nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem;
 
+import java.util.List;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
@@ -8,6 +9,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite_Loc
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.ctandem2.CTandem2;
+import nl.jdj.jqueues.r5.listener.MultiSimQueueNotificationProcessor;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A tandem (serial) queue.
@@ -122,6 +124,22 @@ public class Tandem
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SUB-QUEUE STATE-CHANGE NOTIFICATIONS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (and made final).
+   * 
+   */
+  @Override
+  protected final void processSubQueueNotifications
+  (final List<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> notifications)
+  {
+    super.processSubQueueNotifications (notifications);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

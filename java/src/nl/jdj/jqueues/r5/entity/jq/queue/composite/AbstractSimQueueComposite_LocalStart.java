@@ -589,7 +589,7 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // PROCESS (AND SANITY ON) SUB-QUEUE STATE-CHANGE NOTIFICATIONS
+  // SUB-QUEUE STATE-CHANGE NOTIFICATIONS
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -707,7 +707,7 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
    * 
    */
   @Override
-  protected final void processSubQueueNotifications
+  protected void processSubQueueNotifications
   (final List<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> notifications)
   {
     //
