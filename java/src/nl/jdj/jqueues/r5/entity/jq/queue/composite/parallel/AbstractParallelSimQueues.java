@@ -4,7 +4,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite_LocalStart;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
@@ -19,14 +19,14 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * as controlled by a {@link SimQueueSelector} supplied by concrete subclasses.
  * 
  * <p>
- * The start model is set to (fixed) {@link StartModel#LOCAL}.
+ * This and derived queues use the {@code LocalStart} model as explained with {@link AbstractSimQueueComposite_LocalStart}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
  * @param <Q>  The queue type for jobs.
  * 
- * @see GeneralParallelSimQueues
+ * @see Par
  * @see ParallelSimQueuesSelector
  * 
  * @author Jan de Jongh, TNO
@@ -40,7 +40,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  */
 public abstract class AbstractParallelSimQueues
 <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends AbstractParallelSimQueues>
-  extends AbstractSimQueueComposite<DJ, DQ, J, Q>
+  extends AbstractSimQueueComposite_LocalStart<DJ, DQ, J, Q>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,9 +51,6 @@ public abstract class AbstractParallelSimQueues
   
   /** Creates a (abstract) parallel queue given an event list and a list of queues to put in parallel.
    *
-   * <p>
-   * The start model is set to (fixed) {@link StartModel#LOCAL}.
-   * 
    * @param eventList             The event list to use.
    * @param queues                The queues in no particular order.
    * @param simQueueSelector      An optional {@link SimQueueSelector} for arriving jobs; if <code>null</code>,
@@ -67,7 +64,6 @@ public abstract class AbstractParallelSimQueues
    * @see ParallelSimQueuesSelector
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
-   * @see StartModel
    * 
    */
   protected AbstractParallelSimQueues
@@ -76,7 +72,7 @@ public abstract class AbstractParallelSimQueues
    final SimQueueSelector simQueueSelector,
    final DelegateSimJobFactory delegateSimJobFactory)
   {
-    super (eventList, queues, new ParallelSimQueuesSelector (simQueueSelector), delegateSimJobFactory, StartModel.LOCAL);
+    super (eventList, queues, new ParallelSimQueuesSelector (simQueueSelector), delegateSimJobFactory);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
