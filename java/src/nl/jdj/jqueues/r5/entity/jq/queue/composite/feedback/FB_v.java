@@ -3,11 +3,16 @@ package nl.jdj.jqueues.r5.entity.jq.queue.composite.feedback;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite_LocalStart;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
 import nl.jdj.jsimulation.r5.SimEventList;
 
 /** Feedback queue with fixed number of visits to the embedded {@link SimQueue}.
+ * 
+ * <p>
+ * This queue uses the {@code LocalStart} model as explained with {@link AbstractSimQueueComposite_LocalStart}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -138,6 +143,25 @@ public class FB_v
     return this.numberOfVisits;
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (and made final).
+   * 
+   * <p>
+   * Note that the {@link SimQueueSelector} of this composite queue is reset by our super class.
+   * In turn, the selector will reset the embedded {@link SimQueueFeedbackController}.
+   * 
+   */
+  @Override
+  protected final void resetEntitySubClass ()
+  {
+    super.resetEntitySubClass ();
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // END OF FILE

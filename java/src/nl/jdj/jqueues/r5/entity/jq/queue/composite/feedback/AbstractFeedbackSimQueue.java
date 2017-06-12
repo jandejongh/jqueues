@@ -5,7 +5,7 @@ import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
-import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite_LocalStart;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
@@ -25,7 +25,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * from the {@link AbstractFeedbackSimQueue}.
  *
  * <p>
- * The start model is set to (fixed) {@link StartModel#LOCAL}.
+ * This and derived queues use the {@code LocalStart} model as explained with {@link AbstractSimQueueComposite_LocalStart}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -43,7 +43,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  */
 public abstract class AbstractFeedbackSimQueue
 <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends AbstractFeedbackSimQueue>
-  extends AbstractSimQueueComposite<DJ, DQ, J, Q>
+  extends AbstractSimQueueComposite_LocalStart<DJ, DQ, J, Q>
 {
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,9 +70,6 @@ public abstract class AbstractFeedbackSimQueue
   
   /** Creates an (abstract) feedback queue given an event list, a queue and a feedback controller.
    *
-   * <p>
-   * The start model is set to (fixed) {@link StartModel#LOCAL}.
-   * 
    * @param eventList             The event list to use.
    * @param queue                 The queue, non-<code>null</code>.
    * @param feedbackController    The feedback controller, non-<code>null</code>.
@@ -82,7 +79,6 @@ public abstract class AbstractFeedbackSimQueue
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
-   * @see StartModel
    * 
    */
   protected AbstractFeedbackSimQueue
@@ -94,8 +90,7 @@ public abstract class AbstractFeedbackSimQueue
     super (eventList,
       (Set<DQ>) createQueuesSet (queue),
       new FeedbackSimQueueSelector<> (queue, feedbackController),
-      delegateSimJobFactory,
-      StartModel.LOCAL);
+      delegateSimJobFactory);
     this.feedbackController = feedbackController;
   }
   

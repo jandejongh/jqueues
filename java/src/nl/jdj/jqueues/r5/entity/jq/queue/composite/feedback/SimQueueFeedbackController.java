@@ -8,7 +8,8 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
  * @param <J>  The job type.
  * @param <DQ> The queue-type for delegate jobs.
  * 
- * @see GeneralFeedbackSimQueue
+ * @see AbstractFeedbackSimQueue
+ * @see FB
  * 
  * @author Jan de Jongh, TNO
  * 

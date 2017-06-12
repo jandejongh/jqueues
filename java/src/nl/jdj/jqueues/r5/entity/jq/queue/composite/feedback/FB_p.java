@@ -4,6 +4,7 @@ import java.util.Random;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite_LocalStart;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.jackson.Jackson;
@@ -17,6 +18,9 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * <p>
  * Internally, a suitable {@link SimQueueFeedbackController} is created from the feedback probability and a
  * (optionally, user-supplied) random-number generator.
+ * 
+ * <p>
+ * This queue uses the {@code LocalStart} model as explained with {@link AbstractSimQueueComposite_LocalStart}.
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -148,6 +152,21 @@ public class FB_p
     return this.p_feedback;
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Calls super method (and made final).
+   * 
+   */
+  @Override
+  protected final void resetEntitySubClass ()
+  {
+    super.resetEntitySubClass ();
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // END OF FILE

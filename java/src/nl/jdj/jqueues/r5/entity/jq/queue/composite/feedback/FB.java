@@ -3,6 +3,7 @@ package nl.jdj.jqueues.r5.entity.jq.queue.composite.feedback;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite_LocalStart;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DefaultDelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.DelegateSimJobFactory;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.SimQueueSelector;
@@ -17,10 +18,10 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * <p>
  * After the delegate job departs the embedded queue and is not fed back, the "real" job departs
- * from the {@link GeneralFeedbackSimQueue}.
+ * from the {@link FB}.
  *
  * <p>
- * The start model is set to (fixed) {@link StartModel#LOCAL}.
+ * This queue uses the {@code LocalStart} model as explained with {@link AbstractSimQueueComposite_LocalStart}.
  * 
  * <p>
  * See {@link AbstractFeedbackSimQueue} for more details on the interplay between
@@ -45,8 +46,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class GeneralFeedbackSimQueue
-<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends GeneralFeedbackSimQueue>
+public class FB
+<DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends FB>
   extends AbstractFeedbackSimQueue<DJ, DQ, J, Q>
 {
   
@@ -58,9 +59,6 @@ public class GeneralFeedbackSimQueue
   
   /** Creates a feedback queue given an event list, a queue and a feedback controller.
    *
-   * <p>
-   * The start model is set to (fixed) {@link StartModel#LOCAL}.
-   * 
    * @param eventList             The event list to use.
    * @param queue                 The queue, non-<code>null</code>.
    * @param feedbackController    The feedback controller, non-<code>null</code>.
@@ -70,10 +68,9 @@ public class GeneralFeedbackSimQueue
    * 
    * @see DelegateSimJobFactory
    * @see DefaultDelegateSimJobFactory
-   * @see StartModel
    * 
    */
-  public GeneralFeedbackSimQueue
+  public FB
   (final SimEventList eventList,
    final DQ queue,
    final SimQueueFeedbackController<J, DQ> feedbackController,
@@ -82,10 +79,10 @@ public class GeneralFeedbackSimQueue
     super (eventList, queue, feedbackController, delegateSimJobFactory);
   }
   
-  /** Returns a new {@link GeneralFeedbackSimQueue} object on the same {@link SimEventList} with a copy of of the encapsulated
+  /** Returns a new {@link FB} object on the same {@link SimEventList} with a copy of of the encapsulated
    *  queue and the same delegate-job factory.
    * 
-   * @return A new {@link GeneralFeedbackSimQueue} object on the same {@link SimEventList} with a copy of the encapsulated
+   * @return A new {@link FB} object on the same {@link SimEventList} with a copy of the encapsulated
    *         queue and the same delegate-job factory.
    * 
    * @throws UnsupportedOperationException If the encapsulated queue could not be copied through {@link SimQueue#getCopySimQueue}.
@@ -97,10 +94,10 @@ public class GeneralFeedbackSimQueue
    * 
    */
   @Override
-  public GeneralFeedbackSimQueue<DJ, DQ, J, Q> getCopySimQueue ()
+  public FB<DJ, DQ, J, Q> getCopySimQueue ()
   {
     final SimQueue<DJ, DQ> encapsulatedQueueCopy = getEncapsulatedQueue ().getCopySimQueue ();
-    return new GeneralFeedbackSimQueue<>
+    return new FB<>
       (getEventList (), (DQ) encapsulatedQueueCopy, getFeedbackController (), getDelegateSimJobFactory ());
   }
   
@@ -110,15 +107,15 @@ public class GeneralFeedbackSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "GenFB[embedded queue]".
+  /** Returns "FB[embedded queue]".
    * 
-   * @return "GenFB[embedded queue]".
+   * @return "FB[embedded queue]".
    * 
    */
   @Override
   public String toStringDefault ()
   {
-    return "GenFB[" + getQueues ().iterator ().next () + "]";
+    return "FB[" + getQueues ().iterator ().next () + "]";
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
