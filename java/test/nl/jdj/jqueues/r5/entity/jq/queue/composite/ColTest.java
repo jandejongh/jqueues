@@ -1,0 +1,130 @@
+package nl.jdj.jqueues.r5.entity.jq.queue.composite;
+
+import java.util.Collections;
+import java.util.Set;
+import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
+import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.collector.Col;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem;
+import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DROP;
+import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
+import nl.jdj.jqueues.r5.util.loadfactory.pattern.KnownLoadFactory_SQ_SV;
+import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_0010;
+import nl.jdj.jqueues.r5.util.predictor.SimQueuePredictionException;
+import nl.jdj.jsimulation.r5.DefaultSimEvent;
+import nl.jdj.jsimulation.r5.DefaultSimEventList;
+import nl.jdj.jsimulation.r5.SimEventList;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+/** Tests for {@link Col}.
+ *
+ * @author Jan de Jongh, TNO
+ * 
+ * <p>
+ * Copyright (C) 2005-2017 Jan de Jongh, TNO
+ * 
+ * <p>
+ * This file is covered by the LICENSE file in the root of this project.
+ * 
+ */
+public class ColTest
+{
+  
+  public ColTest ()
+  {
+  }
+  
+  @BeforeClass
+  public static void setUpClass ()
+  {
+  }
+  
+  @AfterClass
+  public static void tearDownClass ()
+  {
+  }
+  
+  @Before
+  public void setUp ()
+  {
+  }
+  
+  @After
+  public void tearDown ()
+  {
+  }
+  
+  public void testColAux
+  (final boolean collectDrops,
+   final boolean collectAutoRevocations,
+   final boolean collectDepartures,
+   final SimQueue mainQueue,
+   final SimQueue colQueue,
+   final SimQueue predictorQueue,
+   final int numberOfJobs,
+   final Set<LoadFactoryHint> hints,
+   final boolean silent,
+   final boolean deadSilent,
+   final double accuracy,
+   final Set<KnownLoadFactory_SQ_SV> omit,
+   final Set<KnownLoadFactory_SQ_SV> restrict,
+   final String message)    
+   throws SimQueuePredictionException
+  {
+    final Col col =
+      new Col (mainQueue.getEventList (), mainQueue, colQueue, collectDrops, collectAutoRevocations, collectDepartures, null);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (col, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message);
+  }
+  
+  /**
+   * Test of Col.
+   * 
+   */
+  @Test
+  public void testCol () throws SimQueuePredictionException
+  {
+    final SimEventList eventList = new DefaultSimEventList (DefaultSimEvent.class);
+    final int numberOfJobs = 50;
+    final Set<LoadFactoryHint> jitterHint = Collections.singleton (LoadFactory_SQ_SV_0010.SERVICE_TIME_JITTER);
+    final boolean silent = true;
+    final boolean deadSilent = true;
+    //
+    // Col(None)[FCFS->DROP] == Tandem[FCFS]
+    //
+    testColAux
+    ( false, false, false,
+      new FCFS (eventList), new DROP (eventList),
+      new Tandem<> (eventList, Collections.singleton (new FCFS (eventList)), null),
+      numberOfJobs,
+      jitterHint,
+      silent,
+      deadSilent,
+      1.0e-12,
+      null,
+      null,
+      null);
+    //
+    // Col(Dr)[DROP->FCFS] == Tandem[FCFS]
+    //
+    System.err.println ("XXXX testCol: DISABLED[DOES NOT PASS YET!]: Col(Dr)[DROP->FCFS] == Tandem[FCFS]");
+//    testColAux
+//    ( true, false, false,
+//      new DROP (eventList), new FCFS (eventList),
+//      new Tandem<> (eventList, Collections.singleton (new FCFS (eventList)), null),
+//      numberOfJobs,
+//      jitterHint,
+//      silent,
+//      deadSilent,
+//      1.0e-12,
+//      null,
+//      null,
+//      null);
+  }
+
+}

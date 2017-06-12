@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r5.listener;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -297,4 +298,32 @@ extends DefaultSimQueueListener<J, Q>
     return false;
   }
   
+  /** Compacts a {@code List} of {@link Notification}s.
+   * 
+   * <p>
+   * Removes, in  situ, all {@link Notification}s
+   * that are {@code null} or empty (in terms of sub-notifications).
+   * 
+   * @param <J> The type of {@link SimJob}s supported.
+   * @param <Q> The type of {@link SimQueue}s supported.
+   * 
+   * @param notifications The notifications (changed in situ).
+   * 
+   * @see Notification#getSubNotifications
+   * 
+   */
+  public static <J extends SimJob, Q extends SimQueue>
+  void compact (final List<MultiSimQueueNotificationProcessor.Notification<J, Q>> notifications)
+  {
+    if (notifications == null || notifications.isEmpty ())
+      return;
+    final Iterator<MultiSimQueueNotificationProcessor.Notification<J, Q>> i_notifications = notifications.iterator ();
+    while (i_notifications.hasNext ())
+    {
+      final MultiSimQueueNotificationProcessor.Notification notification = i_notifications.next ();
+      if (notification == null || notification.getSubNotifications ().isEmpty ())
+        i_notifications.remove ();
+    }
+  }
+
 }
