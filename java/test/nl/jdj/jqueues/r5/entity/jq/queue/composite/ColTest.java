@@ -1,13 +1,16 @@
 package nl.jdj.jqueues.r5.entity.jq.queue.composite;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.collector.Col;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.tandem.Tandem;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.processorsharing.PS;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DROP;
+import nl.jdj.jqueues.r5.entity.jq.queue.serverless.SINK;
 import nl.jdj.jqueues.r5.util.loadfactory.LoadFactoryHint;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.KnownLoadFactory_SQ_SV;
 import nl.jdj.jqueues.r5.util.loadfactory.pattern.LoadFactory_SQ_SV_0010;
@@ -99,8 +102,8 @@ public class ColTest
     //
     testColAux
     ( false, false, false,
-      new FCFS (eventList), new DROP (eventList),
-      new Tandem<> (eventList, Collections.singleton (new FCFS (eventList)), null),
+      new FCFS<> (eventList), new DROP<> (eventList),
+      new Tandem<> (eventList, Collections.singleton (new FCFS<> (eventList)), null),
       numberOfJobs,
       jitterHint,
       silent,
@@ -112,19 +115,69 @@ public class ColTest
     //
     // Col(Dr)[DROP->FCFS] == Tandem[FCFS]
     //
-    System.err.println ("XXXX testCol: DISABLED[DOES NOT PASS YET!]: Col(Dr)[DROP->FCFS] == Tandem[FCFS]");
-//    testColAux
-//    ( true, false, false,
-//      new DROP (eventList), new FCFS (eventList),
-//      new Tandem<> (eventList, Collections.singleton (new FCFS (eventList)), null),
-//      numberOfJobs,
-//      jitterHint,
-//      silent,
-//      deadSilent,
-//      1.0e-12,
-//      null,
-//      null,
-//      null);
+    testColAux
+    ( true, false, false,
+      new DROP<> (eventList), new FCFS<> (eventList),
+      new Tandem<> (eventList, Collections.singleton (new FCFS<> (eventList)), null),
+      numberOfJobs,
+      jitterHint,
+      silent,
+      deadSilent,
+      1.0e-12,
+      null,
+      null,
+      null);
+    //
+    // Col(De)[PS->SINK] == Tandem[SINK]
+    //
+    testColAux
+    ( false, false, true,
+      new PS<> (eventList), new SINK<> (eventList),
+      new Tandem<> (eventList, Collections.singleton (new SINK<> (eventList)), null),
+      numberOfJobs,
+      jitterHint,
+      silent,
+      deadSilent,
+      1.0e-12,
+      null,
+      null,
+      null);
+    //
+    // Col(Dr,Ar,De)[SINK->self] == Tandem[SINK]
+    //
+    final SINK sink = new SINK<> (eventList);
+    testColAux
+    ( true, true, true,
+      sink, sink,
+      new Tandem<> (eventList, Collections.singleton (new SINK<> (eventList)), null),
+      numberOfJobs,
+      jitterHint,
+      silent,
+      deadSilent,
+      1.0e-12,
+      null,
+      null,
+      null);
+    //
+    // Col(De)[FCFS->PS] == Tandem[FCFS,PS]
+    //
+    final FCFS fcfs = new FCFS<> (eventList);
+    final PS ps = new PS<> (eventList);
+    final Set<SimQueue> subQueues = new LinkedHashSet<>  ();
+    subQueues.add (fcfs);
+    subQueues.add (ps);
+    testColAux
+    ( false, false, true,
+      new FCFS<> (eventList), new PS<> (eventList),
+      new Tandem<> (eventList, subQueues, null),
+      numberOfJobs,
+      jitterHint,
+      silent,
+      deadSilent,
+      1.0e-12,
+      null,
+      null,
+      null);
   }
 
 }

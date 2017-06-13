@@ -122,13 +122,17 @@ public class Col
    * and {@link #isCollectDepartures}
    * properties.
    * 
+   * <p>
+   * If the collector queue is the same as the main queue,
+   * the collector queue's name is replaced with "self".
+   * 
    * @return "Col(conditions)[mainQueue-&gt;collectorQueue]".
    * 
    */
   @Override
   public String toStringDefault ()
   {
-    String conditions = "None";
+    String conditions = "";
     boolean first = true;
     if (isCollectDrops ())
     {
@@ -138,21 +142,22 @@ public class Col
     if (isCollectAutoRevocations ())
     {
       if (first)
-        conditions = "AR";
+        conditions += "AR";
       else
-        conditions = ",AR";
+        conditions += ",AR";
       first = false;
     }
     if (isCollectDepartures ())
     {
       if (first)
-        conditions = "De";
+        conditions += "De";
       else
-        conditions = ",De";
-      first = false;
-      
+        conditions += ",De";
     }
-    return "Col(" + conditions + ")[" + getMainQueue () + "->" + getCollectorQueue () + "]";
+    if (conditions.length () == 0)
+      conditions = "None";
+    final String collQueueName = (getMainQueue () == getCollectorQueue () ? "self" : getCollectorQueue ().toString ());
+    return "Col(" + conditions + ")[" + getMainQueue () + "->" + collQueueName + "]";
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

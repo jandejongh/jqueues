@@ -1,5 +1,6 @@
 package nl.jdj.jqueues.r5.entity.jq.queue.composite.collector;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -234,7 +235,16 @@ public abstract class AbstractCollectorSimQueue
     // Make sure we capture a top-level event, so we can keep our own notifications atomic.
     //
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
-    for (MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification : notifications)
+    //
+    // Collect (and remove from the original data) relevant exit events from the mainQueue into a new List exitJobs.
+    //
+    final List<DJ> exitJobs = new ArrayList<> ();
+    final Iterator<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> i_not = notifications.iterator ();
+    while (i_not.hasNext ())
+    {
+      final MultiSimQueueNotificationProcessor.Notification<DJ, DQ> notification = i_not.next ();
+      if (notification.getTime () != getLastUpdateTime ())
+        throw new IllegalStateException ();
       if (notification.getQueue () == getMainQueue ())
       {
         final Iterator<Map<SimEntitySimpleEventType.Member, SimJQEvent<DJ, DQ>>> i_sub
@@ -242,29 +252,50 @@ public abstract class AbstractCollectorSimQueue
         while (i_sub.hasNext ())
         {
           Map<SimEntitySimpleEventType.Member, SimJQEvent<DJ, DQ>> subNotification = i_sub.next ();
+          if (subNotification.size () != 1)
+            throw new IllegalArgumentException ();
           if (isCollectDrops () && subNotification.containsKey (SimJQSimpleEventType.DROP))
           {
+            if (subNotification.get (SimJQSimpleEventType.DROP).getTime () != getLastUpdateTime ())
+              throw new IllegalArgumentException ();
             final DJ job = subNotification.get (SimJQSimpleEventType.DROP).getJob ();
+            exitJobs.add (job);
             i_sub.remove ();
-            getCollectorQueue ().arrive (notification.getTime (), job);
           }
           else if (isCollectAutoRevocations () && subNotification.containsKey (SimJQSimpleEventType.AUTO_REVOCATION))
           {
+            if (subNotification.get (SimJQSimpleEventType.AUTO_REVOCATION).getTime () != getLastUpdateTime ())
+              throw new IllegalArgumentException ();
             final DJ job = subNotification.get (SimJQSimpleEventType.AUTO_REVOCATION).getJob ();
+            exitJobs.add (job);
             i_sub.remove ();
-            getCollectorQueue ().arrive (notification.getTime (), job);
           }
           else if (isCollectDepartures () && subNotification.containsKey (SimJQSimpleEventType.DEPARTURE))
           {
+            if (subNotification.get (SimJQSimpleEventType.DEPARTURE).getTime () != getLastUpdateTime ())
+              throw new IllegalArgumentException ();
             final DJ job = subNotification.get (SimJQSimpleEventType.DEPARTURE).getJob ();
+            exitJobs.add (job);
             i_sub.remove ();
-            getCollectorQueue ().arrive (notification.getTime (), job);              
           }
         }
+        if (notification.getSubNotifications ().isEmpty ())
+          i_not.remove ();
       }
-    MultiSimQueueNotificationProcessor.compact (notifications);
+    }
+    //
+    // Collectively process the exit jobs by letting them arrive at the collector queue.
+    //
+    for (final DJ job : exitJobs)
+      getCollectorQueue ().arrive (getLastUpdateTime (), job);
+    //
+    // Invoke super method in case there are other (sub-)notifications to process.
+    //
     if (! notifications.isEmpty ())
       super.processSubQueueNotifications (notifications);
+    //
+    // Fire notification as we are most likely a top-level notification.
+    //
     if (isTopLevel)
       fireAndLockPendingNotifications ();
   }
