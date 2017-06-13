@@ -6,7 +6,7 @@ import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.listener.DefaultSimQueueListener;
 
-public class JobSojournTimeListener
+class JobSojournTimeListener
 extends DefaultSimQueueListener
 {
 
