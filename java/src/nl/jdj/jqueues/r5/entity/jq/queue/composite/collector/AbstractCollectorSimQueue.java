@@ -219,13 +219,22 @@ public abstract class AbstractCollectorSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method (and made final).
+  /** Removes applicable exit notifications from the main queue, and let the jobs arrive at the collector queue;
+   *  invoke super method for all other notifications.
+   * 
+   * @see #collectDrops
+   * @see #collectAutoRevocations
+   * @see #collectDepartures
+   * @see SimQueue#arrive
    * 
    */
   @Override
   protected final void processSubQueueNotifications
   (final List<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> notifications)
   {
+    //
+    // Empty or null notifications => let super-class throw the exception.
+    //
     if (notifications == null || notifications.isEmpty ())
     {
       super.processSubQueueNotifications (notifications);
@@ -237,6 +246,7 @@ public abstract class AbstractCollectorSimQueue
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
     //
     // Collect (and remove from the original data) relevant exit events from the mainQueue into a new List exitJobs.
+    // Use nested pair of Iterator's to allow for element removal while iterating.
     //
     final List<DJ> exitJobs = new ArrayList<> ();
     final Iterator<MultiSimQueueNotificationProcessor.Notification<DJ, DQ>> i_not = notifications.iterator ();
