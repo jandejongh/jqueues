@@ -1,6 +1,5 @@
 package nl.jdj.jqueues.r5.entity.jq.queue.composite.ctandem2;
 
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +12,6 @@ import nl.jdj.jqueues.r5.entity.jq.SimJQEvent.Revocation;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue.AutoRevocationPolicy;
-import nl.jdj.jqueues.r5.entity.jq.job.AbstractSimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.AbstractSimQueueComposite_LocalStart;
@@ -122,7 +120,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  */
 public class CTandem2
-  <DJ extends AbstractSimJob, DQ extends SimQueue, J extends SimJob, Q extends CTandem2>
+  <DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends CTandem2>
   extends AbstractSimQueueComposite<DJ, DQ, J, Q>
 {
 
@@ -176,8 +174,8 @@ public class CTandem2
    */
   public CTandem2
   (final SimEventList eventList,
-   final SimQueue<DJ, DQ> waitQueue,
-   final SimQueue<DJ, DQ> serveQueue,
+   final SimQueue<? extends DJ, ? extends DQ> waitQueue,
+   final SimQueue<? extends DJ, ? extends DQ> serveQueue,
    final DelegateSimJobFactory delegateSimJobFactory)
   {
     super (eventList,
@@ -253,10 +251,9 @@ public class CTandem2
    * @return The wait (first) queue.
    * 
    */
-  protected final DQ getWaitQueue ()
+  public final DQ getWaitQueue ()
   {
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    return iterator.next ();
+    return getQueue (0);
   }
   
   /** Gets the serve (second, last) queue.
@@ -264,11 +261,9 @@ public class CTandem2
    * @return The serve (second, last) queue.
    * 
    */
-  protected final DQ getServeQueue ()
+  public final DQ getServeQueue ()
   {
-    final Iterator<DQ> iterator = getQueues ().iterator ();
-    iterator.next ();
-    return iterator.next ();
+    return getQueue (1);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
