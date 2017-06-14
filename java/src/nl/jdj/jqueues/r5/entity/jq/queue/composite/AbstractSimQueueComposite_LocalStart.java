@@ -108,7 +108,7 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
    * 
    */
   @Override
-  public final Object getQoS ()
+  public final Class getQoSClass ()
   {
     return null;
   }
@@ -119,7 +119,7 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
    * 
    */
   @Override
-  public final Class getQoSClass ()
+  public final Object getQoS ()
   {
     return null;
   }
