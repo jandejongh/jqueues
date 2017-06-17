@@ -102,24 +102,30 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns {@code null} since QoS is not supported with the {@code LocalStart} model for composite queues.
+  /** Returns {@code null} since QoS is not supported (by default) with the {@code LocalStart} model for composite queues.
+   * 
+   * <p>
+   * Sub-classes are free to override this method and expose a QoS structure as they see fit.
    * 
    * @return {@code null}.
    * 
    */
   @Override
-  public final Class getQoSClass ()
+  public Class getQoSClass ()
   {
     return null;
   }
 
-  /** Returns {@code null} since QoS is not supported with the {@code LocalStart} model for composite queues.
+  /** Returns {@code null} since QoS is not supported (by default) with the {@code LocalStart} model for composite queues.
+   * 
+   * <p>
+   * Sub-classes are free to override this method and expose a QoS structure as they see fit.
    * 
    * @return {@code null}.
    * 
    */
   @Override
-  public final Object getQoS ()
+  public Object getQoS ()
   {
     return null;
   }
