@@ -4,8 +4,11 @@ import java.util.Collections;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.queue.DefaultSimQueueTests;
+import nl.jdj.jqueues.r5.entity.jq.queue.composite.enc.EncHS;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.feedback.FB_v;
 import nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive.FCFS;
+import nl.jdj.jqueues.r5.entity.jq.queue.preemptive.PreemptionStrategy;
+import nl.jdj.jqueues.r5.entity.jq.queue.qos.PQ;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DELAY;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DROP;
 import nl.jdj.jqueues.r5.entity.jq.queue.serverless.DLIMIT;
@@ -92,6 +95,26 @@ public class FB_vTest
       (fb_v, predictor_fb_v, null, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message);
   }
   
+  public void testFB_vAux
+  (final SimQueue encQueue,
+   final int numberOfVisits,
+   final SimQueue predictorQueue,
+   final int numberOfJobs,
+   final Set<LoadFactoryHint> hints,
+   final boolean silent,
+   final boolean deadSilent,
+   final double accuracy,
+   final Set<KnownLoadFactory_SQ_SV> omit,
+   final Set<KnownLoadFactory_SQ_SV> restrict,
+   final String message)    
+   throws SimQueuePredictionException
+  {
+    final FB_v fb_v =
+      new FB_v (encQueue.getEventList (), encQueue, numberOfVisits, null);
+    DefaultSimQueueTests.doSimQueueTests_SQ_SV
+      (fb_v, null, predictorQueue, numberOfJobs, hints, silent, deadSilent, accuracy, omit, restrict, message);
+  }
+  
   /**
    * Test of FB_v.
    * 
@@ -155,6 +178,35 @@ public class FB_vTest
         numVisits,
         new SimQueuePredictor_DLIMIT (),
         numberOfJobs, jitterHint, silent, deadSilent, 1.0e-12, null, null, null);
+      //
+      // EncHS[FB_1[PQ]] == EncHS[PQ]
+      //
+      if (numVisits ==1)
+        for (final PreemptionStrategy preemptionStrategy : PreemptionStrategy.values ())
+          if (preemptionStrategy != PreemptionStrategy.REDRAW && preemptionStrategy != PreemptionStrategy.CUSTOM)
+          {
+            final SimQueue queueToTest =
+              new EncHS (eventList,
+                         new FB_v (eventList,
+                                   new PQ (eventList, preemptionStrategy, Double.class, Double.POSITIVE_INFINITY),
+                                   numVisits,
+                                   null),
+                         null);
+            final SimQueue testQueue =
+              new EncHS (eventList,
+                         new PQ (eventList, preemptionStrategy, Double.class, Double.POSITIVE_INFINITY),
+                         null);
+            DefaultSimQueueTests.doSimQueueTests_SQ_SV (
+              queueToTest,
+              null,
+              testQueue,
+              numberOfJobs,
+              jitterHint,
+              silent, deadSilent,
+              1.0e-12,
+              null, null,
+              null);
+          }
     }
   }
 

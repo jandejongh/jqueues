@@ -28,6 +28,8 @@ import nl.jdj.jsimulation.r5.SimEventList;
  *
  * <p>
  * This and derived queues use the {@code LocalStart} model as explained with {@link AbstractSimQueueComposite_LocalStart}.
+ * They do, however, inherit their QoS structure from the embedded queue.
+ * (This cannot be overruled in subclasses.)
  * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
@@ -131,6 +133,34 @@ public abstract class AbstractFeedbackSimQueue
   public final SimQueueFeedbackController<J, DQ> getFeedbackController ()
   {
     return this.feedbackController;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // QoS / QoS CLASS
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Returns the QoS value of the encapsulated queue.
+   * 
+   * @return The QoS value of the encapsulated queue.
+   * 
+   */
+  @Override
+  public final Object getQoS ()
+  {
+    return getEncapsulatedQueue ().getQoS ();
+  }
+
+  /** Returns the QoS class of the encapsulated queue.
+   * 
+   * @return The QoS class of the encapsulated queue.
+   * 
+   */
+  @Override
+  public final Class getQoSClass ()
+  {
+    return getEncapsulatedQueue ().getQoSClass ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
