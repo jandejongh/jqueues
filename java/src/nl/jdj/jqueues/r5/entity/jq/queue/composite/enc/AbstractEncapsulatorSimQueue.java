@@ -49,6 +49,47 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * In other words, any job present in the composite queue must also be present on the encapsulated queue
  * and (obviously) vice versa.
  * 
+ * <p>
+ * The default behavior is implemented in {@link Enc},
+ * and is as follows (sloppily erasing the distinction between real and delegate jobs):
+ * <ul>
+ * <li>
+ * If a job arrives at the encapsulator, it arrives at the encapsulated queue.
+ * <li>
+ * If a job is dropped on the encapsulated queue, it is dropped at the encapsulator.
+ * <li>
+ * If a job is revoked on the encapsulator (after checking the {@code interruptService} flag),
+ * it is forcibly revoked from the encapsulated queue.
+ * <li>
+ * If a job is auto-revoked on the encapsulator (e.g., due to {@link #getAutoRevocationPolicy} conditions on the composite queue),
+ * it is forcibly revoked from the encapsulated queue.
+ * <li>
+ * If a job is auto-revoked on the encapsulated queue, it is auto-revoked on the encapsulator.
+ * <li>
+ * If a job starts on the encapsulated queue, it starts on the encapsulator.
+ * <li>
+ * If a job departs from the encapsulated queue, it departs from the encapsulator.
+ * </ul>
+ * 
+ * <p>
+ * However, again we stress the fact that concrete sub-classes may in various ways
+ * change and/or augment this behavior.
+ * For instance, the {@link EncHS} system hides start-events from the encapsulated queue;
+ * all real jobs are thus always in the waiting area of the encapsulator.
+ * The {@link EncXM} system can map exit methods of delegate jobs on the encapsulated queue
+ * onto other exit methods on the encapsulator, e.g., jobs being dropped on the encapsulated
+ * queue appear as departures on the encapsulator.
+ * 
+ * <p>
+ * Users of concrete sub-classes of {@link AbstractEncapsulatorSimQueue}
+ * can rely on the fact that <i>no</i> auto-revocation
+ * triggers are set on the encapsulated queue.
+ * As a result, such conditions may have been set already upon the supplied encapsulated queue upon construction.
+ * The encapsulator will simply "inherit" the auto-revocation conditions.
+ * However, this comes at a price: Sub-classes have complete freedom in adding additional
+ * auto-revocation conditions <i>at the encapsulator level</i>.
+ * Hopefully, such additional conditions are properly documented in the sub-class.
+ * 
  * @param <DJ> The delegate-job type.
  * @param <DQ> The queue-type for delegate jobs.
  * @param <J>  The job type.
@@ -306,24 +347,26 @@ public abstract class AbstractEncapsulatorSimQueue
    */
   private SimJQEvent.Revocation<DJ, DQ> pendingDelegateRevocationEvent = null;
 
-  /** Removes a job upon successful revocation (as determined by our super-class).
+  /** Removes a job upon successful revocation, as determined by our super-class,
+   *  or upon auto-revocation on the encapsulator (i.e., sub-class) or on the encapsulated queue.
    * 
    * <p>
-   * This method interacts delicately with {@link #rescheduleAfterRevokation}
+   * In case of an auto-revocation,
+   * the presence or absence of the job on the encapsulated queue determines
+   * whether auto-revocation is caused by the composite queue or by the encapsulated queue,
+   * respectively.
+   * In the latter case, all we have to do is remove the real job from our local admin.
+   * 
+   * <p>
+   * In the former case,
+   * and in case of (plain) revocation,
+   * we have to forcibly remove the delegate job from the encapsulated queue.
+   * To that effect, this method interacts delicately with {@link #rescheduleAfterRevokation}
    * and the {@link MultiSimQueueNotificationProcessor} on the sub-queue,
    * through the use of a pending revocation event (a local private field).
    * 
    * <p>
-   * In a {@link AbstractEncapsulatorSimQueue}, revocations on real jobs can occur either
-   * through external requests, in other words, through {@link #revoke},
-   * or because of auto-revocations
-   * on the composite (this) queue through {@link #autoRevoke}.
-   * 
-   * <p>
-   * The absence of the delegate job on the encapsulated queue leads to an {@link IllegalStateException}.
-   * 
-   * <p>
-   * We we have to forcibly revoke the delegate job still present on the encapsulated sub-queue.
+   * We have to forcibly revoke the delegate job still present on the encapsulated sub-queue.
    * Because we cannot perform the revocation here (we are <i>not</i> allowed to reschedule!),
    * we defer until {@link #removeJobFromQueueUponRevokation} by raising an internal flag
    * (in fact a newly created, though not scheduled {@link Revocation}).
@@ -336,8 +379,9 @@ public abstract class AbstractEncapsulatorSimQueue
    * Note that even though a {@link Revocation} is used internally to flag the
    * required delegate-job revocation, it is never actually scheduled on the event list!
    * 
-   * @throws IllegalStateException If the delegate job is <i>not</i> visiting the sub-queue,
-   *                               or if a pending delegate revocation has already been flagged (or been forgotten to clear).
+   * @throws IllegalStateException If the delegate job is <i>not</i> visiting the sub-queue while it should,
+   *                               if a pending delegate revocation has already been flagged (or been forgotten to clear),
+   *                               or if any other sanity check fails.
    * 
    * @see #revoke
    * @see #autoRevoke
@@ -351,11 +395,40 @@ public abstract class AbstractEncapsulatorSimQueue
   @Override
   protected void removeJobFromQueueUponRevokation (final J job, final double time, final boolean auto)
   {
+    // This checks the existance of the delegate job in our local admin (throws an exception if not).
     final DJ delegateJob = getDelegateJob (job);
     final DQ subQueue = (DQ) delegateJob.getQueue ();
+    if (auto)
+    {
+      // An auto-revocation; either from the encapsulated queue due to its (initial) auto-revocation conditions,
+      // or due to the encapsulator's auto-revocation settings (perhaps implemented in sub-classes).
+      // The two cases are distinguished by the presence or absence of the delegate job on the encapsulated queue.
+      if (subQueue == null)
+      {
+        // The job has been auto-revoked from on encapsulated queue; so...., we didn't do it :-).
+        // All there is left to do now is remove the real job from our local admin, and return.
+        // If, however, there is a pending revocation event,
+        // we got caught up in the middle of a forced revocation on the encapsulated queue.
+        // We're in trouble now; this really should not happen...
+        if (this.pendingDelegateRevocationEvent != null)
+          throw new IllegalStateException ();
+        // One more check: our caller must have updated the time, and have started an atomic notification,
+        // since the auto-revocation must be a top-level (internal) event.
+        if (time != getLastUpdateTime () || clearAndUnlockPendingNotificationsIfLocked ())
+          throw new IllegalStateException ();
+        removeJobsFromQueueLocal (job, delegateJob);
+        return;
+      }
+      else
+        // We (as a composite queue or encapsulator) are causing the auto-revocation ourselves.
+        // We must forcibly revoke the delegate job from the encapsulated queue,
+        // but that is exactly identical to what needs to be done in case of a job revocation.
+        // Hence, we simply fall through.
+        ; /* EMPTY; FALL THROUGH INTO REMAINDER OF BODY */
+    }
+    // We are about to forcibly revoke the delegate job from the encapsulated queue.
     if (subQueue == null)
-      // This state is illegal; if a real job is present (wherever),
-      // its delegate job MUST always reside at the sub-queue.
+      // This state is illegal; the delegate job MUST be present at the sub-queue.
       throw new IllegalStateException ();
     // Revoke the delegate job on the sub-queue.
     // Throw illegal state if such a forced delegate-job revocation is still pending.
@@ -378,7 +451,7 @@ public abstract class AbstractEncapsulatorSimQueue
    * <p>
    * Upon return, the pending revocation event has been reset to {@code null}.
    * 
-   * @throws IllegalStateException If no pending delegate revocation was found,
+   * @throws IllegalStateException If this is not an auto-revocation and no pending delegate revocation was found,
    *                               or revoking the delegate job failed
    *                               (as indicated by the failure to reset the pending revocation event by the
    *                                sub-queue notification processor, see {@link #processSubQueueNotifications}).
@@ -395,6 +468,13 @@ public abstract class AbstractEncapsulatorSimQueue
   @Override
   protected void rescheduleAfterRevokation (final J job, final double time, final boolean auto)
   {
+    // Entry note: We already removed real and delegate jobs from our local admin.
+    if (auto && this.pendingDelegateRevocationEvent == null)
+      // A job was auto-revoked on the encapsulated queue; we removed real and delegate jobs from our local admin.
+      // There's really nothing more to do now.
+      return;
+    // At this point, revocation or auto-revocation must result in the forced revocation of
+    // the delegate job on the encapsulated queue.
     if (this.pendingDelegateRevocationEvent == null)
       // This state is illegal; a real job was revoked, which should always result in a forced delegate-job revocation.
       throw new IllegalStateException ();
@@ -654,7 +734,7 @@ public abstract class AbstractEncapsulatorSimQueue
    *                                                      If all is well, we simply clear the pending revocation event
    *                                                      on the composite queue.
    * <li>With {@link SimQueueSimpleEventType#AUTO_REVOCATION},
-   *          we do nothing (allowed for sub-class use).
+   *          we invoke {@link #autoRevoke} (allowed for encapsulated-queue or sub-class use).
    * <li>With {@link SimQueueSimpleEventType#START}, we start the real job.
    * <li>With {@link SimQueueSimpleEventType#DEPARTURE}, we make the real job depart.
    * <li>With any non-standard notification type, we pass the notification using {@link SimJQEvent#copyForQueueAndJob}
@@ -857,13 +937,11 @@ public abstract class AbstractEncapsulatorSimQueue
           this.pendingDelegateRevocationEvent = null;
         }
         else if (notificationType == SimQueueSimpleEventType.AUTO_REVOCATION)
-        {
           //
           // An auto-revocation on the sub-queue.
           // Not used in the base class, but we allow it for use in sub-classes.
           //
-          ; /* NOTHING TO DO */
-        }
+          autoRevoke (notificationTime, getRealJob (job));
         else if (notificationType == SimQueueSimpleEventType.START)
           start (notificationTime, getRealJob (job));          
         else if (notificationType == SimQueueSimpleEventType.DEPARTURE)
@@ -877,6 +955,7 @@ public abstract class AbstractEncapsulatorSimQueue
           // 
           final J realJob = (job != null ? getRealJob (job) : null);
           // XXX Shouldn't we check if this notification type was actually registered at the composite queue?
+          // Or does out super-class take care of that?
           addPendingNotification (notificationType,
             (SimJQEvent<J, Q>) notificationEvent.copyForQueueAndJob ((DQ) this, (DJ) realJob));
         }
