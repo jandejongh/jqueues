@@ -28,6 +28,14 @@ public class AutoSimQueueStatEntry<Q extends SimQueue>
   
   private static final Logger LOGGER = Logger.getLogger (AutoSimQueueStatEntry.class.getName ());
   
+  /** Compile-time switch for logging.
+   * 
+   * <p>
+   * Logging this class may lead to excessive object creation.
+   * 
+   */
+  private static final boolean LOGGING = false;
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // CONSTRUCTOR(S)
@@ -167,7 +175,9 @@ public class AutoSimQueueStatEntry<Q extends SimQueue>
     else
     {
       final double probeValue = this.probe.get (queue);
-      LOGGER.log (Level.FINEST, "Updating {0} for queue={1}, value={2}, dt={3}.", new Object[]{this.name, queue, probeValue, dt});
+      if (LOGGING)
+        LOGGER.log (Level.FINEST, "Updating {0} for queue={1}, value={2}, dt={3}.",
+                    new Object[]{this.name, queue, probeValue, dt});
       this.cumValue += probeValue * dt;
       if (this.numberOfProbes == 0)
       {
@@ -200,8 +210,10 @@ public class AutoSimQueueStatEntry<Q extends SimQueue>
       final double dT = endTime - startTime;
       this.avgValue = this.cumValue / dT;
     }
-    LOGGER.log (Level.FINER, "Calculating {0} with dT={1}, cumValue={2}: avgValue={3}, minValue={4}, maxValue={5}.",
-      new Object[]{this.name, endTime - startTime, this.cumValue, this.avgValue, this.minValue, this.maxValue});
+    if (LOGGING)
+      LOGGER.log (Level.FINER,
+                  "Calculating {0} with dT={1}, cumValue={2}: avgValue={3}, minValue={4}, maxValue={5}.",
+                  new Object[]{this.name, endTime - startTime, this.cumValue, this.avgValue, this.minValue, this.maxValue});
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
