@@ -78,6 +78,7 @@ public abstract class SimEntityEventScheduler
    *                                  (compared to the time on the event list).
    * 
    * @see #scheduleE(SimEventList, boolean, double, java.util.Set) 
+   * 
    */
   public static void scheduleE
   (final SimEventList eventList, final SimEntityEvent entityEvent)
@@ -91,6 +92,34 @@ public abstract class SimEntityEventScheduler
     eventList.add (entityEvent);
   }
   
+  /** Creates a default reset (entity) event and schedules it.
+   * 
+   * <p>
+   * The event resets the <i>entity</i>, not the event list!
+   * 
+   * @param eventList The event list, non-{@code null}.
+   * @param entity    The entity to reset, non-{@code null}.
+   * @param resetTime The scheduled reset (entity) time.
+   * 
+   * @throws IllegalArgumentException If the event list or entity is <code>null</code>,
+   *                                  if the scheduled time is in the past
+   *                                  (compared to the time on the event list),
+   *                                  if the entity has a non-{@code null} event list different from the argument.
+   * 
+   * @see SimEntityEvent.Reset
+   * @see SimEntity#resetEntity
+   * @see #scheduleE(SimEventList, SimEntityEvent) 
+   * 
+   */
+  public static void scheduleResetEntity
+  (final SimEventList eventList, final SimEntity entity, final double resetTime)
+  {
+    if (eventList == null || entity == null || eventList.getTime () > resetTime
+    || (entity.getEventList () != null && entity.getEventList () != eventList))
+      throw new IllegalArgumentException ();
+    SimEntityEventScheduler.scheduleE (eventList, new SimEntityEvent.Reset (entity, resetTime));
+  }
+    
   /** Creates a default update event and schedules it.
    * 
    * @param eventList  The event list, non-{@code null}.
