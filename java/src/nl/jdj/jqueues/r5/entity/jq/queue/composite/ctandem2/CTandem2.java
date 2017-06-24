@@ -323,29 +323,17 @@ public class CTandem2
    * 
    * <p>
    * Calls super method (not if called from constructor, for which a private variant for local resets is used),
-   * resets the sub-queue selector,
-   * clears the pending revocation event for a sub-queue,
-   * clears the internal mapping between real and delegate {@link SimJob}s (removing all real and delegate jobs),
-   * and resets all sub-queues in the order in which they appear in {@link #getQueues}.
-   * (Note: some sub-classes rely on this order!)
-   * 
-   * <p>
-   * Finally, it sets the server-access credits on the wait (first) sub-queue to unity
+   * and sets the server-access credits on the wait (first) sub-queue to unity
    * if the serve (second) queue has {@link SimQueue#isStartArmed} value {@code true},
    * and zero if not.
    * 
-   * @see #removeJobFromQueueUponRevokation
-   * @see #rescheduleAfterRevokation
    * @see SimQueue#resetEntity
-   * @see SimQueueSelector#resetSimQueueSelector
    * @see SimQueue#setServerAccessCredits
    * @see SimQueue#isStartArmed
    * 
-   * @see SimQueue#resetEntity
-   * 
    */
   @Override
-  protected final void resetEntitySubClass ()
+  protected void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
     // Implemented in private method to make it accessible from the constructor(s).
@@ -354,8 +342,7 @@ public class CTandem2
   
   private void resetEntitySubClassLocal ()
   {
-    super.resetEntitySubClass ();
-    getWaitQueue ().setServerAccessCredits (getLastUpdateTime (), getQueue (1).isStartArmed () ? 1 : 0);
+    getWaitQueue ().setServerAccessCredits (getLastUpdateTime (), getServeQueue () .isStartArmed () ? 1 : 0);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -437,7 +424,7 @@ public class CTandem2
     final DQ serveQueue = getQueue (1);
     final int oldWaitQueueSac = waitQueue.getServerAccessCredits ();
     if (oldWaitQueueSac < 0 || oldWaitQueueSac > 1)
-      throw new IllegalStateException ();
+      throw new IllegalStateException ("oldWaitQueueSac: " + oldWaitQueueSac);
     final int newWaitQueueSac = (hasServerAcccessCredits () && serveQueue.isStartArmed ()) ? 1 : 0;
     if (newWaitQueueSac != oldWaitQueueSac)
       waitQueue.setServerAccessCredits (getLastUpdateTime (), newWaitQueueSac);
