@@ -246,6 +246,22 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     throw new IllegalStateException ();
   }
 
+  /** Returns the last job in {@link #getJobs} that <i>is not</i> in {@link #getJobsInServiceArea}.
+   * 
+   * @return The last job in {@link #getJobs} that is not in {@link #getJobsInServiceArea},
+   *         <code>null</code> if there are no waiting jobs.
+   * 
+   */
+  protected final J getLastJobInWaitingArea ()
+  {
+    if (getNumberOfJobsInWaitingArea () == 0)
+      return null;
+    for (int i = this.jobQueue.size () - 1; i >= 0; i--)
+      if (! this.jobsInServiceArea.contains (this.jobQueue.get (i)))
+        return this.jobQueue.get (i);
+    throw new IllegalStateException ();
+  }
+
   /** Returns whether or not this queue has at least one job in the service area.
    * 
    * @return True if there are jobs in the service area.
@@ -271,6 +287,22 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     for (J j : this.jobQueue)
       if (this.jobsInServiceArea.contains (j))
         return j;
+    throw new IllegalStateException ();
+  }
+
+  /** Returns the last job in {@link #getJobs} that <i>is</i> in {@link #getJobsInServiceArea}.
+   * 
+   * @return The last job in {@link #getJobs} that is in {@link #getJobsInServiceArea},
+             <code>null</code> if there are no jobs in the service area.
+   * 
+   */
+  protected final J getLastJobInServiceArea ()
+  {
+    if (getNumberOfJobsInServiceArea () == 0)
+      return null;
+    for (int i = this.jobQueue.size () - 1; i >= 0; i--)
+      if (this.jobsInServiceArea.contains (this.jobQueue.get (i)))
+        return this.jobQueue.get (i);
     throw new IllegalStateException ();
   }
 
