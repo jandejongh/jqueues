@@ -1,6 +1,7 @@
 package nl.jdj.jqueues.r5.util.predictor.queues;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,7 +38,7 @@ public class SimQueuePredictor_FCFS
 extends AbstractSimQueuePredictor<SimQueue>
 {
   
-  final boolean hasB;
+  final boolean hasB; // Misleading; if false -> queue has unlimited waiting area.
   
   final int B;
   
@@ -45,7 +46,9 @@ extends AbstractSimQueuePredictor<SimQueue>
   
   final int c;
   
-  protected SimQueuePredictor_FCFS (final boolean hasB, final int B, final boolean hasc, final int c)
+  final boolean useLifo;
+  
+  protected SimQueuePredictor_FCFS (final boolean hasB, final int B, final boolean hasc, final int c, final boolean useLifo)
   {
     if (hasB && B < 0)
       throw new IllegalArgumentException ();
@@ -55,6 +58,12 @@ extends AbstractSimQueuePredictor<SimQueue>
     this.B = B;
     this.hasc = hasc;
     this.c = c;
+    this.useLifo = useLifo;
+  }
+  
+  protected SimQueuePredictor_FCFS (final boolean hasB, final int B, final boolean hasc, final int c)
+  {
+    this (hasB, B, hasc, c, false);
   }
   
   public SimQueuePredictor_FCFS ()
@@ -126,7 +135,13 @@ extends AbstractSimQueuePredictor<SimQueue>
    final SimQueueState<SimJob, SimQueue> queueState)
    throws SimQueuePredictionException
   {
-    return queueState.getJobsInWaitingAreaOrdered ().iterator ().next ();
+    if (this.useLifo)
+    {
+      final ArrayList<SimJob> waitingJobs = new ArrayList<> (queueState.getJobsInWaitingAreaOrdered ());
+      return waitingJobs.get (waitingJobs.size () - 1);  
+    }
+    else
+      return queueState.getJobsInWaitingAreaOrdered ().iterator ().next ();
   }
   
   @Override
@@ -175,8 +190,18 @@ extends AbstractSimQueuePredictor<SimQueue>
         if (this.hasB && queueState.getJobsInWaitingArea ().size () == this.B
           && ! ((queueState.getServerAccessCredits () > 0)
                 && ((! this.hasc) || queueState.getJobsInServiceArea ().size () < this.c)))
-          // Drops.
-          queueState.doExits (time, arrivals, null, null, null, visitLogsSet);
+        {
+          if (this.useLifo && ! queueState.getJobsInWaitingArea ().isEmpty ())
+          {
+            // Drops the first arrival in the waiting area, and inserts the arriving job in the queue state.
+            queueState.doArrivals (time, arrivals, visitLogsSet);
+            final SimJob jobToDrop = queueState.getJobsInWaitingAreaOrdered ().iterator ().next ();
+            queueState.doExits (time, Collections.singleton (jobToDrop), null, null, null, visitLogsSet);
+          }
+          else
+            // Drop the arriving job.
+            queueState.doExits (time, arrivals, null, null, null, visitLogsSet);
+        }
         else
         {
           queueState.doArrivals (time, arrivals, visitLogsSet);
