@@ -5,18 +5,17 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.SimQoS;
 import nl.jdj.jsimulation.r5.SimEventList;
 
-/** The single-server {@link FCFS} queue serves jobs one at a time in order of arrival times.
+/** A {@link LCFS} queue with given (possibly infinite) buffer size.
  *
  * <p>
- * First Come First Served.
+ * Last Come First Served with buffer size B and a single server.
  * 
  * <p>
- * This implementation has infinite buffer size.
- *
+ * When a job arrives when the buffer is full and non-empty,
+ * the job in the waiting queue that arrived least recently is dropped.
+ * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
- *
- * @see FCFS_B
  * 
  * @author Jan de Jongh, TNO
  * 
@@ -27,38 +26,42 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
-public class FCFS<J extends SimJob, Q extends FCFS>
+public class LCFS_B<J extends SimJob, Q extends LCFS_B>
 extends AbstractNonPreemptiveWorkConservingSimQueue<J, Q>
 implements SimQoS<J, Q>
 {
-
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // CONSTRUCTOR(S) / CLONING / FACTORIES
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a single-server FCFS queue given an event list.
+  /** Creates a single-server LCFS queue given an event list and given (possibly infinite) buffer size.
    *
-   * @param eventList The event list to use.
+   * @param eventList  The event list to use.
+   * @param bufferSize The buffer size (non-negative), {@link Integer#MAX_VALUE} is interpreted as infinity.
    *
+   * @throws IllegalArgumentException If the buffer size is negative.
+   * 
    */
-  public FCFS (final SimEventList eventList)
+  public LCFS_B (final SimEventList eventList, final int bufferSize)
   {
-    super (eventList, Integer.MAX_VALUE, 1);
+    super (eventList, bufferSize, 1);
   }
   
-  /** Returns a new {@link FCFS} object on the same {@link SimEventList}.
+  /** Returns a new {@link LCFS_B} object on the same {@link SimEventList} with the same buffer size.
    * 
-   * @return A new {@link FCFS} object on the same {@link SimEventList}.
+   * @return A new {@link LCFS_B} object on the same {@link SimEventList} with the same buffer size.
    * 
    * @see #getEventList
+   * @see #getBufferSize
    * 
    */
   @Override
-  public FCFS<J, Q> getCopySimQueue ()
+  public LCFS_B<J, Q> getCopySimQueue ()
   {
-    return new FCFS<> (getEventList ());
+    return new LCFS_B<> (getEventList (), getBufferSize ());
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,15 +70,15 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns "FCFS".
+  /** Returns "LCFS_B[buffer size]".
    * 
-   * @return "FCFS".
+   * @return "LCFS_B[buffer size]".
    * 
    */
   @Override
   public String toStringDefault ()
   {
-    return "FCFS";
+    return "LCFS_B[" + getBufferSize () + "]";
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +118,7 @@ implements SimQoS<J, Q>
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
-  }
+  }  
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -123,7 +126,7 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of the job queue.
+  /** Inserts the job at the head of the job queue.
    * 
    * @see #jobQueue
    * @see #insertJobInQueueUponArrival
@@ -132,23 +135,29 @@ implements SimQoS<J, Q>
   @Override
   protected final void insertAdmittedJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (job);
+    this.jobQueue.add (0, job);
   }
 
-  /** Throws an exception.
+  /** Returns the job at the tail of the wait queue.
    * 
-   * @param  arrivingJob The arriving job.
-   * @param  time        The arrival time.
+   * @param arrivingJob The job that arrived at the queue.
+   * @param time        THe job's arrival time.
    * 
-   * @return This method does not return.
+   * @return The job at the tail of the wait queue.
    * 
-   * @throws IllegalStateException As invocation of this method is unexpected (buffer cannot be full).
+   * @throws IllegalStateException If the waiting area is empty,
+   *                               or the arriving job is {@code null}
+   *                               or already present in {@link #jobQueue}.
+   * 
+   * @see #getLastJobInWaitingArea
    * 
    */
   @Override
   protected final J selectJobToDropAtFullQueue (final J arrivingJob, final double time)
   {
-    throw new IllegalStateException ();
+    if (getNumberOfJobsInWaitingArea () == 0 || this.jobQueue.contains (arrivingJob))
+      throw new IllegalStateException ();
+    return getLastJobInWaitingArea ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -167,7 +176,7 @@ implements SimQoS<J, Q>
   {
     return getFirstJobInWaitingArea ();
   }
-
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // SERVICE TIME FOR JOB

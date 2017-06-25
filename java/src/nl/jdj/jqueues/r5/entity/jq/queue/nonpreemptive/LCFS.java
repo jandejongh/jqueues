@@ -137,6 +137,22 @@ implements SimQoS<J, Q>
     this.jobQueue.add (0, job);
   }
 
+  /** Throws an exception.
+   * 
+   * @param  arrivingJob The arriving job.
+   * @param  time        The arrival time.
+   * 
+   * @return This method does not return.
+   * 
+   * @throws IllegalStateException As invocation of this method is unexpected (buffer cannot be full).
+   * 
+   */
+  @Override
+  protected final J selectJobToDropAtFullQueue (final J arrivingJob, final double time)
+  {
+    throw new IllegalStateException ();
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // START

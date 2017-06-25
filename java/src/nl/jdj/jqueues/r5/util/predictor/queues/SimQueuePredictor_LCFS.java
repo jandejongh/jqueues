@@ -22,17 +22,9 @@ public class SimQueuePredictor_LCFS
 extends SimQueuePredictor_FCFS
 {
 
-  @Override
-  protected SimJob getJobToStart (final SimQueue queue, final SimQueueState<SimJob, SimQueue> queueState)
-  {
-    final ArrayList<SimJob> waitingJobs = new ArrayList<> (queueState.getJobsInWaitingAreaOrdered ());
-    return waitingJobs.get (waitingJobs.size () - 1);
-  }
-
-  
   public SimQueuePredictor_LCFS ()
   {
-    super ();
+    super (false, 0, true, 1, true);
   }
 
   @Override

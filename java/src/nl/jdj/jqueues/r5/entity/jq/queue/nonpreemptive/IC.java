@@ -135,6 +135,22 @@ implements SimQoS<J, Q>
     return getFirstJobInWaitingArea ();
   }
   
+  /** Throws an exception.
+   * 
+   * @param  arrivingJob The arriving job.
+   * @param  time        The arrival time.
+   * 
+   * @return This method does not return.
+   * 
+   * @throws IllegalStateException As invocation of this method is unexpected (buffer cannot be full).
+   * 
+   */
+  @Override
+  protected final J selectJobToDropAtFullQueue (final J arrivingJob, final double time)
+  {
+    throw new IllegalStateException ();
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // SERVICE TIME FOR JOB

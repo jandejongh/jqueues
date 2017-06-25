@@ -136,6 +136,17 @@ implements SimQoS<J, Q>
     this.jobQueue.add (job);
   }
 
+  /** Calls super method (in order to make implementation final).
+   * 
+   * @return The result from the super method.
+   * 
+   */
+  @Override
+  protected final J selectJobToDropAtFullQueue (final J arrivingJob, final double time)
+  {
+    return super.selectJobToDropAtFullQueue (arrivingJob, time);
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // START
