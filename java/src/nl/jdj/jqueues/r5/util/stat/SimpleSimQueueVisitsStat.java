@@ -31,9 +31,13 @@ extends AbstractSimQueueStat<J, Q>
   
   // Our actual statistics, with corresponding (calculated) average.
   
-  private int Narrivals;   // Number of arrivals.
-  private int Nstarted;    // Number of jobs started.
-  private int Ndepartures; // Number of departures.
+  private int Narrivals;        // Number of arrivals.
+  private int Ndrops;           // Number of jobs dropped.
+  private int Nrevocations;     // Number of jobs revoked (not auto-revoked).
+  private int NautoRevocations; // Number of jobs auto-revoked.
+  private int Nstarted;         // Number of jobs started.
+  private int Ndepartures;      // Number of departures.
+  private int Nexits;           // Number of jobs that left the queue.
   
   private double cumWaitingTime = 0; // Cumulative waiting time (over jobs started).
   private double cumSojournTime = 0; // Cumulative sojourn time (over departures).
@@ -58,8 +62,12 @@ extends AbstractSimQueueStat<J, Q>
   private void resetStatisticsInt ()
   {
     this.Narrivals = 0;
+    this.Ndrops = 0;
+    this.Nrevocations = 0;
+    this.NautoRevocations = 0;
     this.Nstarted = 0;
     this.Ndepartures = 0;
+    this.Nexits = 0;
     this.cumWaitingTime = 0;
     this.cumSojournTime = 0;
     this.avgWaitingTime = Double.NaN;
@@ -98,9 +106,13 @@ extends AbstractSimQueueStat<J, Q>
     if (endTime < startTime)
       throw new IllegalArgumentException ();
     if (this.Nstarted > 0)
-      this.avgWaitingTime = this.cumWaitingTime / Nstarted;
+      this.avgWaitingTime = this.cumWaitingTime / this.Nstarted;
+    else
+      this.avgWaitingTime = Double.NaN;
     if (this.Ndepartures > 0)
-      this.avgSojournTime = this.cumSojournTime / Ndepartures;    
+      this.avgSojournTime = this.cumSojournTime / this.Ndepartures;
+    else
+      this.avgSojournTime = Double.NaN;
   }
   
   // Add getters for your favorite performance measures below...
@@ -116,6 +128,39 @@ extends AbstractSimQueueStat<J, Q>
     return this.Narrivals;
   }
   
+  /** Returns the number of dropped jobs.
+   * 
+   * @return The number of dropped jobs.
+   * 
+   */
+  public final int getNumberOfJobsDropped ()
+  {
+    calculate ();
+    return this.Ndrops;
+  }
+  
+  /** Returns the number of revoked jobs (not auto-revoked).
+   * 
+   * @return The number of revoked jobs (not auto-revoked).
+   * 
+   */
+  public final int getNumberOfRevocations ()
+  {
+    calculate ();
+    return this.Nrevocations;
+  }
+  
+  /** Returns the number of auto-revoked jobs.
+   * 
+   * @return The number of auto-revoked jobs.
+   * 
+   */
+  public final int getNumberOfAutoRevocations ()
+  {
+    calculate ();
+    return this.NautoRevocations;
+  }
+  
   /** Returns the number of started jobs.
    * 
    * @return The number of started jobs.
@@ -127,7 +172,7 @@ extends AbstractSimQueueStat<J, Q>
     return this.Nstarted;
   }
   
-  /** Returns the number departures.
+  /** Returns the number of departures.
    * 
    * @return The number of departures.
    * 
@@ -138,9 +183,23 @@ extends AbstractSimQueueStat<J, Q>
     return this.Nstarted;
   }
   
+  /** Returns the number of job exits.
+   * 
+   * @return The number of job exits.
+   * 
+   */
+  public final int getNumberOfExits ()
+  {
+    calculate ();
+    return this.Nexits;
+  }
+  
   /** Returns the average waiting time at the queue.
    * 
-   * @return The average waiting time at the queue.
+   * <p>
+   * The average is taken over all jobs that <i>started</i>.
+   * 
+   * @return The average waiting time at the queue; {@link Double#NaN} in case no job has started (yet).
    * 
    */
   public final double getAvgWaitingTime ()
@@ -151,7 +210,11 @@ extends AbstractSimQueueStat<J, Q>
 
   /** Returns the average sojourn time at the queue.
    * 
-   * @return The average sojourn time at the queue.
+   * <p>
+   * The average is taken over all jobs that <i>departed</i>;
+   * ignoring jobs that left the queue through other means.
+   * 
+   * @return The average sojourn time at the queue; {@link Double#NaN} in case no job has departed (yet).
    * 
    */
   public final double getAvgSojournTime ()
@@ -162,7 +225,10 @@ extends AbstractSimQueueStat<J, Q>
 
   /** Returns the minimum waiting time at the queue.
    * 
-   * @return The minimum waiting time at the queue.
+   * <p>
+   * The minimum is taken over all jobs that <i>started</i>.
+   * 
+   * @return The minimum waiting time at the queue; {@link Double#NaN} in case no job has started (yet).
    * 
    */
   public final double getMinWaitingTime ()
@@ -172,7 +238,11 @@ extends AbstractSimQueueStat<J, Q>
 
   /** Returns the minimum sojourn time at the queue.
    * 
-   * @return The minimum sojourn time at the queue.
+   * <p>
+   * The minimum is taken over all jobs that <i>departed</i>;
+   * ignoring jobs that left the queue through other means.
+   * 
+   * @return The minimum sojourn time at the queue; {@link Double#NaN} in case no job has departed (yet).
    * 
    */
   public final double getMinSojournTime ()
@@ -182,7 +252,10 @@ extends AbstractSimQueueStat<J, Q>
 
   /** Returns the maximum waiting time at the queue.
    * 
-   * @return The maximum waiting time at the queue.
+   * <p>
+   * The maximum is taken over all jobs that <i>started</i>.
+   * 
+   * @return The maximum waiting time at the queue; {@link Double#NaN} in case no job has started (yet).
    * 
    */
   public final double getMaxWaitingTime ()
@@ -192,7 +265,11 @@ extends AbstractSimQueueStat<J, Q>
 
   /** Returns the maximum sojourn time at the queue.
    * 
-   * @return The maximum sojourn time at the queue.
+   * <p>
+   * The maximum is taken over all jobs that <i>departed</i>;
+   * ignoring jobs that left the queue through other means.
+   * 
+   * @return The maximum sojourn time at the queue; {@link Double#NaN} in case no job has departed (yet).
    * 
    */
   public final double getMaxSojournTime ()
@@ -290,16 +367,39 @@ extends AbstractSimQueueStat<J, Q>
   public void notifyDrop (final double time, final J job, final Q queue)
   {
     super.notifyDrop (time, job, queue);
-    // XXX To be implemented later; also think about semantics of the performance measures!
-    throw new UnsupportedOperationException ();
+    if (time < getLastUpdateTime () || job == null || queue == null || queue != getQueue ()
+      || ! this.arrivals.containsKey (job))
+      throw new IllegalArgumentException ();
+    this.Ndrops++;
+    this.Nexits++;
+    this.arrivals.remove (job);
+    this.started.remove (job);
   }
 
   @Override
   public void notifyRevocation (final double time, final J job, final Q queue)
   {
     super.notifyRevocation (time, job, queue);
-    // XXX To be implemented later; also think about semantics of the performance measures!
-    throw new UnsupportedOperationException ();
+    if (time < getLastUpdateTime () || job == null || queue == null || queue != getQueue ()
+      || ! this.arrivals.containsKey (job))
+      throw new IllegalArgumentException ();
+    this.Nrevocations++;
+    this.Nexits++;
+    this.arrivals.remove (job);
+    this.started.remove (job);
+  }
+
+  @Override
+  public void notifyAutoRevocation (final double time, final J job, final Q queue)
+  {
+    super.notifyAutoRevocation (time, job, queue);
+    if (time < getLastUpdateTime () || job == null || queue == null || queue != getQueue ()
+      || ! this.arrivals.containsKey (job))
+      throw new IllegalArgumentException ();
+    this.NautoRevocations++;
+    this.Nexits++;
+    this.arrivals.remove (job);
+    this.started.remove (job);
   }
 
   @Override
@@ -322,6 +422,7 @@ extends AbstractSimQueueStat<J, Q>
       this.maxSojournTime = Math.max (this.maxSojournTime, sojournTime);      
     }
     this.Ndepartures++;
+    this.Nexits++;
     this.arrivals.remove (job);
     this.started.remove (job);
   }
