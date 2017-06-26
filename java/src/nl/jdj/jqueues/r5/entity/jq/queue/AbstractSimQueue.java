@@ -179,6 +179,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     return this.jobQueue.size ();
   }
 
+  @Override
+  public final boolean isJob (final SimJob job)
+  {
+    return job != null && this.jobQueue.contains ((J) job); // Note: futile cast, but stops compiler from complaining.
+  }
+
   /** Jobs currently in the service area.
    *
    * <p>
@@ -199,6 +205,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   {
     return this.jobsInServiceArea.size ();
   }
+
+  @Override
+  public final boolean isJobInServiceArea (final SimJob job)
+  {
+    return job != null && this.jobsInServiceArea.contains ((J) job); // Note: futile cast, but stops compiler from complaining.
+  }
   
   /** Overridden to make (default) implementation final.
    * 
@@ -216,6 +228,15 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   public final int getNumberOfJobsInWaitingArea ()
   {
     return SimQueue.super.getNumberOfJobsInWaitingArea ();
+  }
+
+  /** Overridden to make (default) implementation final.
+   * 
+   */
+  @Override
+  public final boolean isJobInWaitingArea (final SimJob job)
+  {
+    return SimQueue.super.isJobInWaitingArea (job);
   }
   
   /** Returns whether or not this queue has at least one job waiting.

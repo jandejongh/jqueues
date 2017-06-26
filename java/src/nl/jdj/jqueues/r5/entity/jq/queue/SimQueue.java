@@ -167,6 +167,21 @@ extends SimEntity, SimQoS<J, Q>
    */
   public int getNumberOfJobs ();
   
+  /** Checks for the presence of a job.
+   *
+   * <p>
+   * Typically, this method is more efficient than {@code getJobs ().contains (job)},
+   * but both methods must always yield the same result.
+   * 
+   * @param job The job.
+   * 
+   * @return Whether given job is currently visiting this queue.
+   * 
+   * @see #getJobs
+   * 
+   */
+  public boolean isJob (SimJob job);
+  
   /** Get the set of jobs in the waiting area.
    *
    * @return The set of jobs in the waiting area, non-{@code null}.
@@ -201,6 +216,24 @@ extends SimEntity, SimQoS<J, Q>
     return getNumberOfJobs () - getNumberOfJobsInServiceArea ();
   }
 
+  /** Checks for the presence of a job in the waiting area.
+   *
+   * <p>
+   * Typically, this method is more efficient than {@code getJobsInWaitingArea ().contains (job)},
+   * but both methods must always yield the same result.
+   * 
+   * @param job The job.
+   * 
+   * @return Whether given job is currently present in the waiting area this queue.
+   * 
+   * @see #getJobsInWaitingArea
+   * 
+   */
+  public default boolean isJobInWaitingArea (final SimJob job)
+  {
+    return job != null && isJob (job) && ! isJobInServiceArea (job);
+  }
+  
   /** Get the set of jobs in the service area.
    *
    * @return The set of jobs in the service area, non-{@code null}.
@@ -226,6 +259,21 @@ extends SimEntity, SimQoS<J, Q>
    * 
    */
   public int getNumberOfJobsInServiceArea ();
+  
+  /** Checks for the presence of a job in the service area.
+   *
+   * <p>
+   * Typically, this method is more efficient than {@code getJobsInServiceArea ().contains (job)},
+   * but both methods must always yield the same result.
+   * 
+   * @param job The job.
+   * 
+   * @return Whether given job is currently present in the service area this queue.
+   * 
+   * @see #getJobsInWaitingArea
+   * 
+   */
+  public boolean isJobInServiceArea (SimJob job);
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
