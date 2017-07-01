@@ -100,6 +100,18 @@ implements SimEntity
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
+  // USE ARRAY OPTIMIZATION [COMPILE-TIME SWITCH]
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** When {@code true}, this class maintains various array copies of collections
+   *  often iterated over, like listeners and hooks, and uses array iteration instead of Collection iteration.
+   * 
+   */
+  private final static boolean USE_ARRAY_OPTIMIZATION = true;
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
   // EVENT LIST
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -479,6 +491,8 @@ implements SimEntity
    */
   private final Set<PreNotificationHook> preNotificationHooks = new LinkedHashSet<> ();
 
+  private PreNotificationHook[] preNotificationHooksAsArray = new PreNotificationHook[0];
+  
   /** Registers a pre-notification hook.
    * 
    * @param preNotificationHook The hook, non-{@code null}.
@@ -491,6 +505,9 @@ implements SimEntity
     if (preNotificationHook == null || this.preNotificationHooks.contains (preNotificationHook))
       throw new IllegalArgumentException ();
     this.preNotificationHooks.add (preNotificationHook);
+    if (AbstractSimEntity.USE_ARRAY_OPTIMIZATION)
+      this.preNotificationHooksAsArray
+        = this.preNotificationHooks.toArray (new PreNotificationHook[this.preNotificationHooks.size ()]);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -757,23 +774,37 @@ implements SimEntity
    */
   private final Set<SimEntityListener> simEntityListeners = new LinkedHashSet<>();
 
+  private SimEntityListener[] simEntityListenersAsArray = new SimEntityListener[0];
+  
   @Override
   public final void registerSimEntityListener (final SimEntityListener listener)
   {
-    if (listener != null)
+    if (listener != null && ! this.simEntityListeners.contains (listener))
+    {
       this.simEntityListeners.add (listener);
+      if (AbstractSimEntity.USE_ARRAY_OPTIMIZATION)
+        this.simEntityListenersAsArray = this.simEntityListeners.toArray (new SimEntityListener[this.simEntityListeners.size ()]);
+    }
   }
 
   @Override
   public final void unregisterSimEntityListener (final SimEntityListener listener)
   {
-    this.simEntityListeners.remove (listener);
+    if (this.simEntityListeners.contains (listener))
+    {
+      this.simEntityListeners.remove (listener);
+      if (AbstractSimEntity.USE_ARRAY_OPTIMIZATION)
+        this.simEntityListenersAsArray = this.simEntityListeners.toArray (new SimEntityListener[this.simEntityListeners.size ()]);
+    }
   }  
 
   @Override
   public final Set<SimEntityListener> getSimEntityListeners ()
   {
-    return Collections.unmodifiableSet (this.simEntityListeners);
+    // The right way, actually...
+    // return Collections.unmodifiableSet (this.simEntityListeners);
+    // However, for performance reasons, send direct reference to the set.
+    return this.simEntityListeners;
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -967,18 +998,28 @@ implements SimEntity
       LOGGER.log (Level.SEVERE, "Update in the past on {0}: {1} < {2}!", new Object[]{this, time, this.lastUpdateTime});
       throw new IllegalStateException ("update in the past: " + time + " < " + this.lastUpdateTime + "!");
     }
-    for (final DoubleConsumer preEventHook : this.preEventHooks)
-      preEventHook.accept (time);
+    if (AbstractSimEntity.USE_ARRAY_OPTIMIZATION)
+      for (final DoubleConsumer preEventHook : this.preEventHooksAsArray)
+        preEventHook.accept (time);
+    else
+      for (final DoubleConsumer preEventHook : this.preEventHooks)
+        preEventHook.accept (time);
     if (Double.isInfinite (time) || time > this.lastUpdateTime)
     {
-      for (final DoubleConsumer preUpdateHook : this.preUpdateHooks)
-        preUpdateHook.accept (time);
+      if (AbstractSimEntity.USE_ARRAY_OPTIMIZATION)
+        for (final DoubleConsumer preUpdateHook : this.preEventHooksAsArray)
+          preUpdateHook.accept (time);
+      else
+        for (final DoubleConsumer preUpdateHook : this.preUpdateHooks)
+          preUpdateHook.accept (time);
       fireUpdate (time);
       this.lastUpdateTime = time;
     }
   }
 
   private final Set<DoubleConsumer> preUpdateHooks = new LinkedHashSet<> ();
+  
+  private DoubleConsumer[] preUpdateHooksAsArray = new DoubleConsumer[0];
   
   /** Registers a pre-update hook (for sub-class use only).
    * 
@@ -1009,10 +1050,17 @@ implements SimEntity
   {
     if (preUpdateHook == null)
       throw new IllegalArgumentException ();
-    this.preUpdateHooks.add (preUpdateHook);
+    if (! this.preUpdateHooks.contains (preUpdateHook))
+    {
+      this.preUpdateHooks.add (preUpdateHook);
+      if (AbstractSimEntity.USE_ARRAY_OPTIMIZATION)
+        this.preUpdateHooksAsArray = this.preUpdateHooks.toArray (new DoubleConsumer[this.preUpdateHooks.size ()]);
+    }
   }
   
   private final Set<DoubleConsumer> preEventHooks = new LinkedHashSet<> ();
+  
+  private DoubleConsumer[] preEventHooksAsArray = new DoubleConsumer[0];
   
   /** Registers a pre-event hook (for sub-class use only).
    * 
@@ -1021,7 +1069,7 @@ implements SimEntity
    * that is invoked by {@link #update} <i>before</i> anything else (i.c., notifying listeners),
    * and <i>even if indeed there is no update</i> (in view of the elapsed time since the last update).
    * It allows sub-class implementations to update internal administration as part of the update,
-   * and gives them access to the "old time", i.e.,, the time of the previous update,
+   * and gives them access to the "old time", i.e., the time of the previous update,
    * through {@link #getLastUpdateTime} (before it is overwritten by this method {@link #update}).
    * The hook should <i>never</i> initiate state-change events or notify listeners.
    * 
@@ -1045,7 +1093,12 @@ implements SimEntity
   {
     if (preEventHook == null)
       throw new IllegalArgumentException ();
-    this.preEventHooks.add (preEventHook);
+    if (! this.preEventHooks.contains (preEventHook))
+    {
+      this.preEventHooks.add (preEventHook);
+      if (AbstractSimEntity.USE_ARRAY_OPTIMIZATION)
+        this.preEventHooksAsArray = this.preEventHooks.toArray (new DoubleConsumer[this.preEventHooks.size ()]);
+    }
   }
   
   /** Notifies all listeners upon an immediate upcoming update at this entity.
@@ -1057,8 +1110,12 @@ implements SimEntity
    */
   private void fireUpdate (final double time)
   {
-    for (SimEntityListener l : getSimEntityListeners ())
-      l.notifyUpdate (time, this);
+    if (AbstractSimEntity.USE_ARRAY_OPTIMIZATION)
+      for (final SimEntityListener l: this.simEntityListenersAsArray)
+        l.notifyUpdate (time, this);
+    else
+      for (SimEntityListener l : getSimEntityListeners ())
+        l.notifyUpdate (time, this);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
