@@ -1,7 +1,6 @@
 package nl.jdj.jqueues.r5.entity.jq.queue;
 
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.SimEntity;
 import nl.jdj.jqueues.r5.entity.SimEntityListener;
@@ -191,12 +190,7 @@ extends SimEntity, SimQoS<J, Q>
    * @see #getJobsInServiceArea
    * 
    */
-  public default Set<J> getJobsInWaitingArea ()
-  {
-    final Set<J> set = new LinkedHashSet<> (getJobs ());
-    set.removeAll (getJobsInServiceArea ());
-    return set;
-  }
+  public Set<J> getJobsInWaitingArea ();
 
   /** Gets the number of jobs in the waiting area.
    * 
@@ -211,10 +205,7 @@ extends SimEntity, SimQoS<J, Q>
    * @see #getNumberOfJobsInServiceArea
    * 
    */
-  public default int getNumberOfJobsInWaitingArea ()
-  {
-    return getNumberOfJobs () - getNumberOfJobsInServiceArea ();
-  }
+  public int getNumberOfJobsInWaitingArea ();
 
   /** Checks for the presence of a job in the waiting area.
    *
@@ -229,10 +220,7 @@ extends SimEntity, SimQoS<J, Q>
    * @see #getJobsInWaitingArea
    * 
    */
-  public default boolean isJobInWaitingArea (final SimJob job)
-  {
-    return job != null && isJob (job) && ! isJobInServiceArea (job);
-  }
+  public boolean isJobInWaitingArea (final SimJob job);
   
   /** Get the set of jobs in the service area.
    *
