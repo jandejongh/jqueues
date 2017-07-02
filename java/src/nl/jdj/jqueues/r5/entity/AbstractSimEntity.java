@@ -1007,7 +1007,7 @@ implements SimEntity
     if (Double.isInfinite (time) || time > this.lastUpdateTime)
     {
       if (AbstractSimEntity.USE_ARRAY_OPTIMIZATION)
-        for (final DoubleConsumer preUpdateHook : this.preEventHooksAsArray)
+        for (final DoubleConsumer preUpdateHook : this.preUpdateHooksAsArray)
           preUpdateHook.accept (time);
       else
         for (final DoubleConsumer preUpdateHook : this.preUpdateHooks)
