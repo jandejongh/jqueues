@@ -110,7 +110,7 @@ public abstract class AbstractEgalitarianProcessorSharingSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** The mapping from jobs in {@link #jobsInServiceArea} to their respective virtual departure times.
+  /** The mapping from jobs in {@link #getJobsInServiceArea} to their respective virtual departure times.
    * 
    * <p>
    * The special extensions to <code>TreeMap</code> allow for efficient  determination of the pre-images of
@@ -174,7 +174,7 @@ public abstract class AbstractEgalitarianProcessorSharingSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job, after sanity checks, in the service area and administers its virtual departure time.
+  /** Performs sanity checks, and administers the job's virtual departure time.
    * 
    * @see #getServiceTimeForJob
    * @see #getVirtualTime
@@ -184,12 +184,8 @@ public abstract class AbstractEgalitarianProcessorSharingSimQueue
   @Override
   protected final void insertJobInQueueUponStart (final J job, final double time)
   {
-    if (job == null
-    || (! getJobs ().contains (job))
-    || getJobsInServiceArea ().contains (job)
-    || this.virtualDepartureTime.containsKey (job))
+    if (this.virtualDepartureTime.containsKey (job))
       throw new IllegalArgumentException ();
-    this.jobsInServiceArea.add (job);
     final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
@@ -310,7 +306,7 @@ public abstract class AbstractEgalitarianProcessorSharingSimQueue
    * @see #getLastUpdateTime
    * @see #getDepartureEvents
    * @see #cancelDepartureEvent
-   * @see #jobsInServiceArea
+   * @see #getJobsInServiceArea
    * @see #virtualDepartureTime
    * @see #getVirtualTime
    * @see #depart
@@ -328,13 +324,13 @@ public abstract class AbstractEgalitarianProcessorSharingSimQueue
       cancelDepartureEvent (departureEvents.iterator ().next ());
     if (! this.virtualDepartureTime.isEmpty ())
     {
-      if (getNumberOfJobsInServiceArea () == 0)
+      if (! hasJobsInServiceArea ())
         throw new IllegalStateException ();
       if (Double.isInfinite (getLastUpdateTime ()))
       {
         // If time is either positive of negative infinity,
         // all jobs in the service area must have infinite service-time requirement,
-        // because if finite, they should gave departed upon start already.
+        // because if finite, they should have departed upon start already.
         // Other than that, there is nothing to do at positive or negative infinity,
         // because jobs with infinite service-time requirement never depart.
         for (final J job : getJobsInServiceArea ())

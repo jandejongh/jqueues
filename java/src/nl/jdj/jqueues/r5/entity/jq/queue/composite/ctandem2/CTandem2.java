@@ -436,7 +436,7 @@ public class CTandem2
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Creates the delegate job, administers it and puts the (real) job into {@link #jobQueue}.
+  /** Creates the delegate job and administers it.
    * 
    * @see #addRealJobLocal
    * @see #rescheduleAfterArrival
@@ -459,7 +459,7 @@ public class CTandem2
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if ((! this.jobQueue.contains (job)) || this.jobsInServiceArea.contains (job))
+    if ((! isJob (job)) || isJobInServiceArea (job))
       throw new IllegalArgumentException ();
     final DJ delegateJob = getDelegateJob (job);
     getWaitQueue ().arrive (time, delegateJob);
@@ -691,11 +691,12 @@ public class CTandem2
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job in the service area (after sanity checks).
+  /** Performs sanity checks.
    * 
    * @throws IllegalStateException If sanity checks on internal consistency fail.
    * 
-   * @see #jobsInServiceArea
+   * @see #isJob
+   * @see #isJobInServiceArea
    * @see #rescheduleAfterStart
    * 
    */
@@ -704,17 +705,20 @@ public class CTandem2
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if ((! this.jobQueue.contains (job)) || this.jobsInServiceArea.contains (job))
+    if ((! isJob (job)) || isJobInServiceArea (job))
       throw new IllegalArgumentException ();
     getDelegateJob (job); // Sanity on existence of delegate job.
-    this.jobsInServiceArea.add (job);
   }
 
   /** Lets the delegate job arrive at the serve queue.
    * 
+   * @see #isJob
+   * @see #isJobInServiceArea
    * @see #getDelegateJob
    * @see SimQueue#arrive
    * @see #insertJobInQueueUponStart
+   * 
+   * @throws IllegalStateException If sanity checks on internal consistency fail.
    * 
    */
   @Override
@@ -722,7 +726,7 @@ public class CTandem2
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if ((! this.jobQueue.contains (job)) || (! this.jobsInServiceArea.contains (job)))
+    if ((! isJob (job)) || (! isJobInServiceArea (job)))
       throw new IllegalArgumentException ();
     final DJ delegateJob = getDelegateJob (job);
     getServeQueue ().arrive (time, delegateJob);

@@ -194,7 +194,7 @@ extends AbstractProcessorSharingSimQueue<J, Q>
     if (job == null)
       throw new IllegalArgumentException ();
     sanityInternalAdministration ();
-    if (! getJobsInServiceArea ().contains (job))
+    if (! isJobInServiceArea (job))
       return;
     final Iterator<Entry<Double, Set<J>>> ost_i = this.obtainedServiceTimeMap.entrySet ().iterator ();
     while (ost_i.hasNext ())
@@ -350,16 +350,14 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of the job queue.
+  /** Does nothing, and makes that final.
    * 
    * @see #arrive
-   * @see #jobQueue
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (job);
   }
 
   /** Starts the arrived job if server-access credits are available.
@@ -417,25 +415,14 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   
   /** Removes the jobs from the internal data structures.
    * 
-   * <p>
-   * Also removes the job from {@link #jobQueue} and {@link #jobsInServiceArea}.
-   * 
    * @see #revoke
    * @see #removeJobFromInternalAdministration
-   * @see #jobQueue
-   * @see #jobsInServiceArea
    * 
    */
   @Override
   protected final void removeJobFromQueueUponRevokation (final J job, final double time, final boolean auto)
   {
-    if (job == null)
-      throw new IllegalArgumentException ();
-    if (! this.jobQueue.contains (job))
-      throw new IllegalArgumentException ();
     removeJobFromInternalAdministration (job);
-    this.jobQueue.remove (job);
-    this.jobsInServiceArea.remove (job);
   }
 
   /** Calls {@link #rescheduleDepartureEvent} and {@link #rescheduleCatchUpEvent}.
@@ -507,9 +494,8 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job, after sanity checks, in the service area and administers its initial obtained service time.
+  /** Performs sanity checks and administers the job's initial obtained service time.
    * 
-   * @see #jobsInServiceArea
    * @see #getServiceTimeForJob
    * @see #obtainedServiceTimeMap
    * 
@@ -518,11 +504,10 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   protected final void insertJobInQueueUponStart (final J job, final double time)
   {
     if (job == null
-    || (! getJobs ().contains (job))
-    || getJobsInServiceArea ().contains (job))
+    || (! isJob (job))
+    || isJobInServiceArea (job))
       throw new IllegalArgumentException ();
     sanityInternalAdministration ();
-    this.jobsInServiceArea.add (job);
     final double jobRequiredServiceTime = getServiceTimeForJob (job);
     if (jobRequiredServiceTime < 0)
       throw new RuntimeException ();
@@ -683,7 +668,7 @@ extends AbstractProcessorSharingSimQueue<J, Q>
    * 
    * @see #getDepartureEvents
    * @see #cancelDepartureEvent
-   * @see #jobsInServiceArea
+   * @see #getJobsInServiceArea
    * @see #getServiceTimeForJob
    * @see #getMinimumObtainedServiceTime
    * @see #scheduleDepartureEvent

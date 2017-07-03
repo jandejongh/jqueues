@@ -132,16 +132,15 @@ public class SUR
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of the job queue.
+  /** Does nothing.
    * 
-   * @see #jobQueue
    * @see #rescheduleAfterArrival
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (job);
+    /* EMPTY */
   }
 
   /** Starts the arrived job if server-access credits are available.
@@ -181,14 +180,13 @@ public class SUR
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Removes the job from {@link #jobQueue} and {@link #jobsInServiceArea}.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
-    this.jobQueue.remove (job);
-    this.jobsInServiceArea.remove (job);    
+    /* EMPTY */
   }
   
   /** Does nothing.
@@ -206,14 +204,13 @@ public class SUR
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Removes the job from {@link #jobQueue} and {@link #jobsInServiceArea}.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponRevokation (final J job, final double time, final boolean auto)
   {
-    this.jobQueue.remove (job);
-    this.jobsInServiceArea.remove (job);    
+    /* EMPTY */
   }
 
   /** Does nothing.
@@ -278,33 +275,22 @@ public class SUR
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Adds the job to the tail of the service area (which is either first or second position).
+  /** Does nothing.
    * 
-   * <p>
-   * Note that we temporarily allow a non-legal state in case a job is already present in the service area:
-   * more than one jobs will be in the service area (upon exit) if another job is being served upon entry of this method.
-   * We rely on {@link #rescheduleAfterStart} to resolve this.
-   * 
-   * @see #jobsInServiceArea
    * @see #rescheduleAfterStart
    * 
    */
   @Override
   protected final void insertJobInQueueUponStart (final J job, final double time)
   {
-    if (job == null || (! getJobs ().contains (job)) || getJobsInServiceArea ().contains (job))
-      throw new IllegalArgumentException ();
-    if (getJobsInServiceArea ().size () > 1)
-      throw new IllegalStateException ();
-    this.jobsInServiceArea.add (job);
   }
 
-  /** Departs the first job in {@link #jobsInServiceArea} if it is not the only job in the service area.
+  /** Departs the first job in {@link #getJobsInServiceArea} if it is not the only job in the service area.
    * 
    * <p>
    * Performs sanity checks on the fly.
    * 
-   * @see #getFirstJobInServiceArea
+   * @see #getNumberOfJobsInServiceArea
    * @see #getFirstJobInServiceArea
    * @see #depart
    * 
@@ -312,11 +298,11 @@ public class SUR
   @Override
   protected final void rescheduleAfterStart (final J job, final double time)
   {
-    if (job == null || (! getJobs ().contains (job)) || (! getJobsInServiceArea ().contains (job)))
+    if (job == null || (! isJob (job)) || (! isJobInServiceArea (job)))
       throw new IllegalArgumentException ();
-    if (getJobsInServiceArea ().isEmpty () || getJobsInServiceArea ().size () > 2)
+    if (getJobsInServiceArea ().isEmpty () || getNumberOfJobsInServiceArea () > 2)
       throw new IllegalStateException ();
-    if (getJobsInServiceArea ().size () == 2)
+    if (getNumberOfJobsInServiceArea () == 2)
       depart (time, getFirstJobInServiceArea ());
     if (getJobsInServiceArea ().size () != 1)
       throw new IllegalStateException ();
@@ -329,6 +315,8 @@ public class SUR
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   /** Throws {@link IllegalStateException}.
+   * 
+   * @return Nothing, as we throw an exception.
    * 
    * @throws IllegalStateException Always, as a call to this method is unexpected.
    * 
@@ -345,14 +333,13 @@ public class SUR
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Removes the job from {@link #jobQueue} and {@link #jobsInServiceArea}.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    this.jobQueue.remove (departingJob);
-    this.jobsInServiceArea.remove (departingJob);    
+    /* EMPTY */
   }
 
   /** Does nothing.

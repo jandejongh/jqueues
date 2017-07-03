@@ -1,5 +1,7 @@
 package nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive;
 
+import java.util.ArrayList;
+import java.util.List;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.SimQoS;
@@ -111,14 +113,23 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and clears the internal LIFO queue.
    * 
    */
   @Override
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
+    this.lifoWaitingQueue.clear ();
   }  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // LIFO WAITING QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final List<J> lifoWaitingQueue = new ArrayList<> ();
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -126,38 +137,32 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the head of the job queue.
+  /** Inserts the job at the head of an internal LIFO queue.
    * 
-   * @see #jobQueue
-   * @see #insertJobInQueueUponArrival
    * 
    */
   @Override
-  protected final void insertAdmittedJobInQueueUponArrival (final J job, final double time)
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (0, job);
+    this.lifoWaitingQueue.add (0, job);
   }
 
-  /** Returns the job at the tail of the wait queue.
+  /** Returns the job at the tail of the internal LIFO (wait) queue, i.e., the "oldest" waiter.
    * 
    * @param arrivingJob The job that arrived at the queue.
    * @param time        THe job's arrival time.
    * 
-   * @return The job at the tail of the wait queue.
+   * @return The job at the tail of the internal LIFO (wait) queue.
    * 
-   * @throws IllegalStateException If the waiting area is empty,
-   *                               or the arriving job is {@code null}
-   *                               or already present in {@link #jobQueue}.
-   * 
-   * @see #getLastJobInWaitingArea
+   * @throws IllegalStateException If the waiting area or internal LIFO queue is empty
    * 
    */
   @Override
   protected final J selectJobToDropAtFullQueue (final J arrivingJob, final double time)
   {
-    if (getNumberOfJobsInWaitingArea () == 0 || this.jobQueue.contains (arrivingJob))
+    if (getNumberOfJobsInWaitingArea () == 0 || this.lifoWaitingQueue.isEmpty ())
       throw new IllegalStateException ();
-    return getLastJobInWaitingArea ();
+    return this.lifoWaitingQueue.get (this.lifoWaitingQueue.size () - 1);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,15 +171,15 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns the result from {@link #getFirstJobInWaitingArea}.
+  /** Returns the first job in (and removes it from) the internal LIFO queue.
    * 
-   * @return The result from {@link #getFirstJobInWaitingArea}.
+   * @return The first job in the internal LIFO queue.
    * 
    */
   @Override
   protected final J selectJobToStart ()
   {
-    return getFirstJobInWaitingArea ();
+    return this.lifoWaitingQueue.remove (0);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -200,13 +205,14 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and removes the job (if present) from the internal LIFO queue.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponExit  (final J exitingJob, final double time)
   {
     super.removeJobFromQueueUponExit (exitingJob, time);
+    this.lifoWaitingQueue.remove (exitingJob);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

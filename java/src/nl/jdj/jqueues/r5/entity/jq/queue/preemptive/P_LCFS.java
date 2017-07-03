@@ -1,5 +1,7 @@
 package nl.jdj.jqueues.r5.entity.jq.queue.preemptive;
 
+import java.util.ArrayList;
+import java.util.List;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jsimulation.r5.SimEventList;
@@ -102,14 +104,26 @@ extends AbstractPreemptiveSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and clears the internal LIFO queues.
    * 
    */
   @Override
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
+    this.lifoJobQueue.clear ();
+    this.lifoWaitQueue.clear ();
   }  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // LIFO JOB AND LIFO WAITING QUEUES
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final List<J> lifoJobQueue = new ArrayList<> ();
+  
+  private final List<J> lifoWaitQueue = new ArrayList<> ();
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -117,15 +131,15 @@ extends AbstractPreemptiveSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the head of the job queue.
-   * 
-   * @see #jobQueue
+  /** Inserts the job at the head of an internal LIFO job queue (for selecting which job to resume)
+   *  and at the head of an internal LIFO wait queue (for selecting which job to start).
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (0, job);
+    this.lifoJobQueue.add (0, job);
+    this.lifoWaitQueue.add (0, job);
   }
 
   /** Starts the arrived job if server-access credits are available.
@@ -137,9 +151,11 @@ extends AbstractPreemptiveSimQueue<J, Q>
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (! this.jobQueue.contains (job))
+    if (! isJob (job))
       throw new IllegalStateException ();
-    if (this.jobsInServiceArea.contains (job))
+    if (isJobInServiceArea (job))
+      throw new IllegalStateException ();
+    if (this.lifoJobQueue.get (0) != job || this.lifoWaitQueue.get (0) != job)
       throw new IllegalStateException ();
     if (hasServerAcccessCredits ())
       start (time, job);
@@ -162,17 +178,19 @@ extends AbstractPreemptiveSimQueue<J, Q>
 
   /** Starts jobs as long as there are server-access credits and jobs waiting.
    * 
+   * <p>
+   * Jobs are started in reverse order of arrival through the use of an internal LIFO wait queue.
+   * 
    * @see #hasServerAcccessCredits
    * @see #hasJobsInWaitingArea
    * @see #start
-   * @see #getFirstJobInWaitingArea
    * 
    */
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
   {
     while (hasServerAcccessCredits () && hasJobsInWaitingArea ())
-      start (time, getFirstJobInWaitingArea ());
+      start (time, this.lifoWaitQueue.get (0));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -198,9 +216,8 @@ extends AbstractPreemptiveSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job, after sanity checks, in the service area and administers its remaining service time.
+  /** Performs sanity checks, removes the job from the internal LIFO wait queue, and administers its remaining service time.
    * 
-   * @see #jobsInServiceArea
    * @see #getServiceTimeForJob
    * @see #remainingServiceTime
    * 
@@ -209,11 +226,13 @@ extends AbstractPreemptiveSimQueue<J, Q>
   protected final void insertJobInQueueUponStart (final J job, final double time)
   {
     if (job == null
-    || (! getJobs ().contains (job))
-    || getJobsInServiceArea ().contains (job)
+    || (! isJob (job))
+    || isJobInServiceArea (job)
     || this.remainingServiceTime.containsKey (job))
       throw new IllegalArgumentException ();
-    this.jobsInServiceArea.add (job);
+    if (this.lifoWaitQueue.get (0) != job)
+      throw new IllegalStateException ();
+    this.lifoWaitQueue.remove (0);
     final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
@@ -224,8 +243,9 @@ extends AbstractPreemptiveSimQueue<J, Q>
    *  or if its arrival time is strictly smaller than the arrival time of a job in execution,
    *  the latter of which is then preempted.
    * 
-   * @see #jobsBeingServed
-   * @see #getFirstJobInServiceArea
+   * <p>
+   * The reverse order of arrival time is achieved with the internal LIFO job queue.
+   * 
    * @see #preemptJob
    * @see #startServiceChunk
    * 
@@ -242,10 +262,11 @@ extends AbstractPreemptiveSimQueue<J, Q>
       throw new IllegalStateException ();
     if (this.jobsBeingServed.size () > 1)
       throw new IllegalStateException ();
-    if (getFirstJobInServiceArea () == job)
+    // Find the job currently being served; if any.
+    final J jobBeingServed = (this.jobsBeingServed.isEmpty () ? null : this.jobsBeingServed.keySet ().iterator ().next ());
+    if (jobBeingServed == null || this.lifoJobQueue.indexOf (job) < this.lifoJobQueue.indexOf (jobBeingServed))
     {
       // The job is eligible for immediate execution, hence we must preempt the job currently being executed.
-      final J jobBeingServed = (this.jobsBeingServed.isEmpty () ? null : this.jobsBeingServed.keySet ().iterator ().next ());
       if (jobBeingServed != null)
         preemptJob (time, jobBeingServed);
       // The preemption could have scheduled 'job' already, so make sure we check!
@@ -281,10 +302,9 @@ extends AbstractPreemptiveSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Removes the job from internal administration and cancels any pending departure event for it.
+  /** Removes the job from internal administration (a.o., LIFO job and LIFO wait queues)
+   *  and cancels any pending departure event for it.
    * 
-   * @see #jobQueue
-   * @see #jobsInServiceArea
    * @see #remainingServiceTime
    * @see #jobsBeingServed
    * @see #getDepartureEvents
@@ -294,9 +314,11 @@ extends AbstractPreemptiveSimQueue<J, Q>
   @Override
   protected final void removeJobFromQueueUponExit (final J exitingJob, final double time)
   {
-    if (exitingJob == null || ! this.jobQueue.contains (exitingJob))
+    if (exitingJob == null || ! isJob (exitingJob))
       throw new IllegalArgumentException ();
-    if (this.jobsInServiceArea.contains (exitingJob))
+    if (! this.lifoJobQueue.remove (exitingJob))
+      throw new IllegalStateException ();
+    if (isJobInServiceArea (exitingJob))
     {
       if (! this.remainingServiceTime.containsKey (exitingJob))
         throw new IllegalStateException ();
@@ -312,26 +334,38 @@ extends AbstractPreemptiveSimQueue<J, Q>
         }
         this.jobsBeingServed.remove (exitingJob);
       }
-      this.jobsInServiceArea.remove (exitingJob);
     }
-    this.jobQueue.remove (exitingJob);
+    else if (! this.lifoWaitQueue.remove (exitingJob))
+      throw new IllegalStateException ();
   }
   
   /** If there are jobs in the service area but none in execution,
    *  starts a service-chunk for the job in the service area
    *  that arrived last at the queue.
    * 
-   * @see #jobsBeingServed
-   * @see #jobsInServiceArea
-   * @see #getFirstJobInServiceArea
+   * <p>
+   * The reverse order of arrival time is achieved with the internal LIFO job queue.
+   * 
    * @see #startServiceChunk
    * 
    */
   @Override
   protected final void rescheduleAfterExit (final double time)
   {
-    if (this.jobsBeingServed.isEmpty () && ! this.jobsInServiceArea.isEmpty ())
-      startServiceChunk (time, getFirstJobInServiceArea ());
+    if (this.jobsBeingServed.isEmpty () && hasJobsInServiceArea ())
+    {
+      // Iterate over lifoJobQueue, and starts a service chunk for the first job found that is in the service area.
+      J jobToStartServiceChunk = null;
+      for (final J j : this.lifoJobQueue)
+        if (isJobInServiceArea (j))
+        {
+          jobToStartServiceChunk = j;
+          break;
+        }
+      if (jobToStartServiceChunk == null)
+        throw new IllegalStateException ();
+      startServiceChunk (time, jobToStartServiceChunk);
+    }
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

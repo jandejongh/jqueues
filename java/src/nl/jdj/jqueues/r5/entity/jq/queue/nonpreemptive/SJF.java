@@ -1,5 +1,7 @@
 package nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive;
 
+import java.util.ArrayList;
+import java.util.List;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
 import nl.jdj.jqueues.r5.entity.jq.SimQoS;
@@ -109,14 +111,23 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and clears the internal SJF queue.
    * 
    */
   @Override
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
+    this.sjfWaitingQueue.clear ();
   }  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SJF WAITING QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final List<J> sjfWaitingQueue = new ArrayList<> ();
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -124,24 +135,22 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job in the job queue maintaining non-decreasing service-time ordering.
+  /** Inserts the job in the internal SJF job queue maintaining non-decreasing service-time ordering.
    * 
    * <p>
    * In case of ties, jobs are scheduled for service in order of arrival from the underlying event list.
    * 
-   * @see #jobQueue
    * @see #getServiceTimeForJob
-   * @see #insertJobInQueueUponArrival
    * 
    */
   @Override
-  protected final void insertAdmittedJobInQueueUponArrival (final J job, final double time)
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
     int newPosition = 0;
-    while (newPosition < this.jobQueue.size ()
-      && getServiceTimeForJob (this.jobQueue.get (newPosition)) <= getServiceTimeForJob (job))
+    while (newPosition < this.sjfWaitingQueue.size ()
+      && getServiceTimeForJob (this.sjfWaitingQueue.get (newPosition)) <= getServiceTimeForJob (job))
       newPosition++;
-    this.jobQueue.add (newPosition, job);    
+    this.sjfWaitingQueue.add (newPosition, job);    
   }
   
   /** Throws an exception.
@@ -166,15 +175,15 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns the result from {@link #getFirstJobInWaitingArea}.
+  /** Returns the first job in (and removes it from) the internal SJF queue.
    * 
-   * @return The result from {@link #getFirstJobInWaitingArea}.
+   * @return The first job in the internal SJF queue.
    * 
    */
   @Override
   protected final J selectJobToStart ()
   {
-    return getFirstJobInWaitingArea ();
+    return this.sjfWaitingQueue.remove (0);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -200,13 +209,14 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and removes the job (if present) from the internal SJF queue.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponExit  (final J exitingJob, final double time)
   {
     super.removeJobFromQueueUponExit (exitingJob, time);
+    this.sjfWaitingQueue.remove (exitingJob);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

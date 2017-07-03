@@ -10,6 +10,7 @@ import nl.jdj.jqueues.r5.entity.jq.queue.AbstractSimQueue;
 import nl.jdj.jqueues.r5.entity.SimEntityEvent;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent;
 import nl.jdj.jqueues.r5.entity.SimEntitySimpleEventType;
+import nl.jdj.jqueues.r5.entity.jq.SimJQEvent.AutoRevocation;
 import nl.jdj.jqueues.r5.entity.jq.SimJQEvent.Revocation;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueueSimpleEventType;
 import nl.jdj.jqueues.r5.entity.jq.queue.composite.feedback.FB_p;
@@ -201,7 +202,7 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Creates the delegate job, administers it and puts the (real) job into {@link #jobQueue}.
+  /** Creates the delegate job and administers it.
    * 
    * @see AbstractSimQueue#arrive
    * @see #addRealJobLocal
@@ -226,7 +227,7 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if ((! this.jobQueue.contains (job)) || this.jobsInServiceArea.contains (job))
+    if ((! isJob (job)) || isJobInServiceArea (job))
       throw new IllegalArgumentException ();
     if (hasServerAcccessCredits ())
       start (time, job);
@@ -345,8 +346,8 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
    * 
    * @see AbstractSimQueue#revoke
    * @see AbstractSimQueue#autoRevoke
-   * @see SimJQEvent.Revocation
-   * @see SimJQEvent.AutoRevocation
+   * @see Revocation
+   * @see AutoRevocation
    * @see #rescheduleAfterRevokation
    * @see #getDelegateJob(SimJob)
    * @see SimJob#getQueue
@@ -397,8 +398,8 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
    * 
    * @see AbstractSimQueue#revoke
    * @see AbstractSimQueue#autoRevoke
-   * @see SimJQEvent.Revocation
-   * @see SimJQEvent.AutoRevocation
+   * @see Revocation
+   * @see AutoRevocation
    * @see #removeJobFromQueueUponRevokation
    * @see #processSubQueueNotifications
    * 
@@ -467,12 +468,11 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job in the service area (after sanity checks).
+  /** Performs sanity chekcs.
    * 
    * @throws IllegalStateException If sanity checks on internal consistency fail.
    * 
    * @see AbstractSimQueue#start
-   * @see #jobsInServiceArea
    * @see #rescheduleAfterStart
    * 
    */
@@ -481,10 +481,9 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if ((! this.jobQueue.contains (job)) || this.jobsInServiceArea.contains (job))
+    if ((! isJob (job)) || isJobInServiceArea (job))
       throw new IllegalArgumentException ();
     getDelegateJob (job); // Sanity on existence of delegate job.
-    this.jobsInServiceArea.add (job);
   }
 
   /** Lets the delegate job arrive at its first queue, or make it depart immediately if no such queue is provided.
@@ -508,7 +507,7 @@ extends AbstractSimQueueComposite<DJ, DQ, J, Q>
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if ((! this.jobQueue.contains (job)) || (! this.jobsInServiceArea.contains (job)))
+    if ((! isJob (job)) || (! isJobInServiceArea (job)))
       throw new IllegalArgumentException ();
     final DJ delegateJob = getDelegateJob (job);
     final SimQueue<DJ, DQ> firstQueue = selectFirstQueue (time, job);

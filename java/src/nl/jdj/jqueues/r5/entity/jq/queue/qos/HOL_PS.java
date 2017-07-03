@@ -203,10 +203,9 @@ implements SimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of {@link #jobQueue} and into {@link #jobsQoSMap}.
+  /** Inserts the job into {@link #jobsQoSMap}.
    * 
    * @see #arrive
-   * @see #jobQueue
    * @see #jobsQoSMap
    * @see #rescheduleAfterArrival
    * 
@@ -214,7 +213,6 @@ implements SimQueueQoS<J, Q, P>
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (job);
     final P qos = SimQueueQoSUtils.getAndCheckJobQoS (job, this);
     if (! this.jobsQoSMap.containsKey (qos))
       this.jobsQoSMap.put (qos, new LinkedHashSet<> ());
@@ -227,14 +225,14 @@ implements SimQueueQoS<J, Q, P>
    * @see SimQueueQoSUtils#getAndCheckJobQoS
    * @see #jobsQoSMap
    * @see #start
-   * @see #jobsInServiceArea
+   * @see #isJobInServiceArea
    * @see #insertJobInQueueUponArrival
    * 
    */
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (job == null || ! getJobsInWaitingArea ().contains (job))
+    if (job == null || ! isJobInWaitingArea (job))
       throw new IllegalArgumentException ();
     if (hasServerAcccessCredits ())
     {
@@ -243,7 +241,7 @@ implements SimQueueQoS<J, Q, P>
         throw new IllegalArgumentException ();
       if (this.jobsQoSMap.get (qos).size () == 1)
         start (time, job);
-      else if (! this.jobsInServiceArea.contains (this.jobsQoSMap.get (qos).iterator ().next ()))
+      else if (! isJobInServiceArea (this.jobsQoSMap.get (qos).iterator ().next ()))
         throw new IllegalStateException ();
     }
   }
@@ -292,14 +290,13 @@ implements SimQueueQoS<J, Q, P>
    * Core method for removing a job for both revocations and departures from {@link AbstractEgalitarianProcessorSharingSimQueue}.
    * 
    * <p>
-   * Removes the job from {@link #jobQueue} and {@link #jobsQoSMap},
-   * and if needed from {@link #jobsInServiceArea} and {@link #virtualDepartureTime}.
+   * Removes the job from {@link #jobsQoSMap},
+   * and if needed {@link #virtualDepartureTime}.
    * 
    * @see #revoke
    * @see #autoRevoke
-   * @see #jobQueue
+   * @see #isJobInServiceArea
    * @see #jobsQoSMap
-   * @see #jobsInServiceArea
    * @see #virtualDepartureTime
    * @see #rescheduleAfterRevokation
    * 
@@ -309,14 +306,11 @@ implements SimQueueQoS<J, Q, P>
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if (! this.jobQueue.contains (job))
-      throw new IllegalArgumentException ();
-    if (this.jobsInServiceArea.contains (job))
+    if (isJobInServiceArea (job))
     {
       if (! this.virtualDepartureTime.containsKey (job))
         throw new IllegalStateException ();
       this.virtualDepartureTime.remove (job);
-      this.jobsInServiceArea.remove (job);
     }
     final P qos = SimQueueQoSUtils.getAndCheckJobQoS (job, this);
     if (! this.jobsQoSMap.get (qos).contains (job))
@@ -324,7 +318,6 @@ implements SimQueueQoS<J, Q, P>
     this.jobsQoSMap.get (qos).remove (job);
     if (this.jobsQoSMap.get (qos).isEmpty ())
       this.jobsQoSMap.remove (qos);
-    this.jobQueue.remove (job);
   }
 
   /** Attempts to start a job of the same QoS value as the job that was revoked (or departed);
@@ -337,7 +330,7 @@ implements SimQueueQoS<J, Q, P>
    * @see SimQueueQoSUtils#getAndCheckJobQoS
    * @see #jobsQoSMap
    * @see #hasServerAcccessCredits
-   * @see #jobsInServiceArea
+   * @see #isJobInServiceArea
    * @see #start
    * @see #rescheduleDepartureEvent
    * @see #removeJobFromQueueUponRevokation
@@ -352,7 +345,7 @@ implements SimQueueQoS<J, Q, P>
     if (this.jobsQoSMap.containsKey (qos)
       && hasServerAcccessCredits ()
       // Next check is unnecessary for departure handling, but a revocation may have been from the waiting area!
-      && ! this.jobsInServiceArea.contains (this.jobsQoSMap.get (qos).iterator ().next ()))
+      && ! isJobInServiceArea (this.jobsQoSMap.get (qos).iterator ().next ()))
       start (time, this.jobsQoSMap.get (qos).iterator ().next ());
     else
       rescheduleDepartureEvent ();
@@ -383,10 +376,9 @@ implements SimQueueQoS<J, Q, P>
    * @see #getJobsInWaitingArea
    * @see SimQueueQoSUtils#getAndCheckJobQoS
    * @see #jobsQoSMap
-   * @see #jobsInServiceArea
+   * @see #isJobInServiceArea
    * @see #start
    * @see #hasServerAcccessCredits
-   * @see #setServerAccessCreditsSubClass
    * 
    */
   @Override
@@ -403,7 +395,7 @@ implements SimQueueQoS<J, Q, P>
         final P qos = SimQueueQoSUtils.getAndCheckJobQoS (job, this);
         if (! this.jobsQoSMap.containsKey (qos))
           throw new IllegalStateException ();
-        if (! this.jobsInServiceArea.contains (this.jobsQoSMap.get (qos).iterator ().next ()))
+        if (! isJobInServiceArea (this.jobsQoSMap.get (qos).iterator ().next ()))
         {
           start (time, this.jobsQoSMap.get (qos).iterator ().next ());
           hasStartedJob = true;

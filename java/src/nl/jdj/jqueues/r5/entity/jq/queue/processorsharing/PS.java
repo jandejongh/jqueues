@@ -121,17 +121,14 @@ extends AbstractEgalitarianProcessorSharingSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of the job queue.
+  /** Does nothing, and makes that final.
    * 
    * @see #arrive
-   * @see #jobQueue
-   * @see #rescheduleAfterArrival
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (job);
   }
 
   /** Starts the arrived job if server-access credits are available.
@@ -144,7 +141,7 @@ extends AbstractEgalitarianProcessorSharingSimQueue<J, Q>
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (job == null || ! getJobsInWaitingArea ().contains (job))
+    if (job == null || ! isJobInWaitingArea (job))
       throw new IllegalArgumentException ();
     if (hasServerAcccessCredits ())
       start (time, job);
@@ -191,8 +188,7 @@ extends AbstractEgalitarianProcessorSharingSimQueue<J, Q>
   /** Removes the jobs from the internal data structures.
    * 
    * <p>
-   * Removes the job from {@link #jobQueue},
-   * and if needed from {@link #jobsInServiceArea} and {@link #virtualDepartureTime}.
+   * Removes the job {@link #virtualDepartureTime}.
    * 
    * @see #revoke
    * 
@@ -202,16 +198,12 @@ extends AbstractEgalitarianProcessorSharingSimQueue<J, Q>
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if (! this.jobQueue.contains (job))
-      throw new IllegalArgumentException ();
-    if (this.jobsInServiceArea.contains (job))
+    if (isJobInServiceArea (job))
     {
       if (! this.virtualDepartureTime.containsKey (job))
         throw new IllegalStateException ();
       this.virtualDepartureTime.remove (job);
-      this.jobsInServiceArea.remove (job);
     }
-    this.jobQueue.remove (job);
   }
 
   /** Calls {@link #rescheduleDepartureEvent}.

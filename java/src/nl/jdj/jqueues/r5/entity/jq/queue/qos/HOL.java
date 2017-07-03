@@ -101,7 +101,7 @@ implements SimQueueQoS<J, Q, P>
    * <p>
    * Iterates over the job sets in increasing order of QoS value,
    * and iterates over the jobs within each set in order as enforced by the standard Java {@link Set} iterator,
-   * and returns the first job it finds that is <i>not</i> in {@link #jobsInServiceArea}.
+   * and returns the first job it finds that is <i>not</i> in the service area.
    * 
    * <p>
    * This method does (some) sanity checks on {@link #jobsQoSMap} on the fly.
@@ -111,8 +111,8 @@ implements SimQueueQoS<J, Q, P>
    * @throws IllegalStateException If the {@link #jobsQoSMap} is in an illegal state.
    * 
    * @see #jobsQoSMap
-   * @see #jobQueue
-   * @see #jobsInServiceArea
+   * @see #isJob
+   * @see #isJobInServiceArea
    * 
    */
   protected final J getNextJobToServeInWaitingArea ()
@@ -122,9 +122,9 @@ implements SimQueueQoS<J, Q, P>
         throw new IllegalStateException ();
       else
         for (final J job : jobsP)
-          if (job == null || ! this.jobQueue.contains (job))
+          if (job == null || ! isJob (job))
             throw new IllegalStateException ();
-          else if (! this.jobsInServiceArea.contains (job))
+          else if (! isJobInServiceArea (job))
             return job;
     return null;
   }
@@ -135,7 +135,7 @@ implements SimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Calls super method and clear {@link #jobsQoSMap}.
+  /** Calls super method and clears {@link #jobsQoSMap}.
    * 
    * @see #jobsQoSMap
    * 
@@ -153,7 +153,7 @@ implements SimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job into {@link #jobQueue} (tail) and {@link #jobsQoSMap}.
+  /** Inserts the job {@link #jobsQoSMap}.
    * 
    * @see SimQueueQoSUtils#getAndCheckJobQoS
    * 
@@ -161,11 +161,6 @@ implements SimQueueQoS<J, Q, P>
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    if (job == null || this.jobQueue.contains (job) || job.getQueue () != null)
-      throw new IllegalArgumentException ();
-    if (this.jobsInServiceArea.contains (job))
-      throw new IllegalStateException ();
-    this.jobQueue.add (job);
     final P qos = SimQueueQoSUtils.getAndCheckJobQoS (job, this);
     if (! this.jobsQoSMap.containsKey (qos))
       this.jobsQoSMap.put (qos, new LinkedHashSet<> ());
@@ -175,19 +170,15 @@ implements SimQueueQoS<J, Q, P>
   /** Starts the arrived job if server-access credits are available and if there are no jobs in the service area.
    * 
    * @see #hasServerAcccessCredits
-   * @see #getNumberOfJobsInServiceArea
+   * @see #hasJobsInServiceArea
    * @see #start
    * 
    */
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (! this.jobQueue.contains (job))
-      throw new IllegalStateException ();
-    if (this.jobsInServiceArea.contains (job))
-      throw new IllegalStateException ();
     if (hasServerAcccessCredits ()
-    &&  getNumberOfJobsInServiceArea () == 0)
+    &&  ! hasJobsInServiceArea ())
       start (time, job);
   }
     
@@ -228,15 +219,10 @@ implements SimQueueQoS<J, Q, P>
   /** Removes the job from the internal data structures, and if needed, cancels a pending departure event.
    * 
    * <p>
-   * If the job is in service, its departure event is canceled through {@link #cancelDepartureEvent},
-   * and the job is removed from {@link #jobsInServiceArea}.
+   * If the job is in service, its departure event is canceled through {@link #cancelDepartureEvent}.
    * Subsequently, whether the job was in service or not,
-   * it is removed from {@link #jobQueue},
-   * and {@link #jobsQoSMap}
-   * and <code>true</code> is returned.
+   * it is removed from {@link #jobsQoSMap}.
    * 
-   * @see #jobQueue
-   * @see #jobsInServiceArea
    * @see #cancelDepartureEvent
    * @see #jobsQoSMap
    * 
@@ -244,14 +230,8 @@ implements SimQueueQoS<J, Q, P>
   @Override
   protected final void removeJobFromQueueUponRevokation (final J job, final double time, final boolean auto)
   {
-    if (! this.jobQueue.contains (job))
-      throw new IllegalStateException ();
-    if (this.jobsInServiceArea.contains (job))
-    {
-      this.jobsInServiceArea.remove (job);
+    if (isJobInServiceArea (job))
       cancelDepartureEvent (job);
-    }
-    this.jobQueue.remove (job);
     final P qos = SimQueueQoSUtils.getAndCheckJobQoS (job, this);
     if (! this.jobsQoSMap.containsKey (qos))
       throw new IllegalStateException ();
@@ -274,8 +254,6 @@ implements SimQueueQoS<J, Q, P>
   @Override
   protected final void rescheduleAfterRevokation (final J job, final double time, final boolean auto)
   {
-    if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
-      throw new IllegalStateException ();
     if (hasServerAcccessCredits ()
     &&  hasJobsInWaitingArea ()
     &&  getNumberOfJobsInServiceArea () == 0)
@@ -337,9 +315,7 @@ implements SimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Adds the job to the tail of the service area.
-   * 
-   * @see #jobsInServiceArea
+  /** Performs sanity checks (only).
    * 
    */
   @Override
@@ -349,7 +325,6 @@ implements SimQueueQoS<J, Q, P>
     || (! getJobs ().contains (job))
     || getJobsInServiceArea ().contains (job))
       throw new IllegalArgumentException ();
-    this.jobsInServiceArea.add (job);
   }
 
   /** Depending on the job's requested service time, makes it depart immediately, or schedules a suitable departure event.
@@ -383,8 +358,8 @@ implements SimQueueQoS<J, Q, P>
   protected final void rescheduleAfterStart (final J job, final double time)
   {
     if (job == null
-    || (! getJobs ().contains (job))
-    || (! getJobsInServiceArea ().contains (job)))
+    || (! isJob (job))
+    || (! isJobInServiceArea (job)))
       throw new IllegalArgumentException ();
     final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
@@ -424,25 +399,16 @@ implements SimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Checks the presence of the departing job in {@link #jobQueue}, {@link #jobsInServiceArea}, and {@link #jobsQoSMap},
-   *  and removes the job from those collections.
+  /** Removes the departing job from {@link #jobsQoSMap}.
    * 
-   * @throws IllegalStateException If the <code>departingJob</code> is not in one of the lists.
+   * @throws IllegalStateException If the job is not in the map.
    * 
-   * @see #jobQueue
-   * @see #jobsInServiceArea
    * @see #jobsQoSMap
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    if (! this.jobQueue.contains (departingJob))
-      throw new IllegalStateException ();
-    if (! this.jobsInServiceArea.contains (departingJob))
-      throw new IllegalStateException ();
-    this.jobQueue.remove (departingJob);
-    this.jobsInServiceArea.remove (departingJob);
     final P qos = SimQueueQoSUtils.getAndCheckJobQoS (departingJob, this);
     if (! this.jobsQoSMap.containsKey (qos))
       throw new IllegalStateException ();
@@ -457,7 +423,7 @@ implements SimQueueQoS<J, Q, P>
    * 
    * @throws IllegalStateException If there are jobs in the service area (i.e., being served).
    * 
-   * @see #getNumberOfJobsInServiceArea
+   * @see #hasJobsInServiceArea
    * @see #hasServerAcccessCredits
    * @see #hasJobsInWaitingArea
    * @see #start
@@ -467,7 +433,7 @@ implements SimQueueQoS<J, Q, P>
   @Override
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
-    if (getNumberOfJobsInServiceArea () > 0)
+    if (hasJobsInServiceArea ())
       throw new IllegalStateException ();
     if (hasServerAcccessCredits ()
     &&  hasJobsInWaitingArea ())

@@ -1,6 +1,5 @@
 package nl.jdj.jqueues.r5.entity.jq.queue;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,6 +23,19 @@ import nl.jdj.jsimulation.r5.SimEventList;
 
 /** A partial implementation of a {@link SimQueue}.
  * 
+ * <p>
+ * The abstract base class takes care of maintaining
+ * the job queue {@link #getJobs},
+ * the jobs in the waiting area {@link #getJobsInWaitingArea}
+ * and the jobs in the service area {@link #getJobsInServiceArea}.
+ * It provides final implementations of all {@link SimQueue}'s internal
+ * and external operation,
+ * delegating when needed to (simpler) abstract operation-specific methods
+ * to be implemented by sub-classes.
+ * 
+ * <p>
+ * XXX A bit more explanation would be nice here...
+ * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
  * 
@@ -40,6 +52,17 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   extends AbstractSimJQ<J, Q>
   implements SimQueue<J, Q>
 {
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SANITY CHECKING [COMPILE-TIME SWITCH]
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** When {@code false}, this class and some sub-classes skip several (not all) sanity checks.
+   * 
+   */
+  protected final static boolean SANITY = true;
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -152,52 +175,143 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  // INTERNAL STORAGE OF JOBS IN SYSTEM AND JOBS IN THE SERVIVE AREA
-  // - jobQueue
-  // - jobsInServiceArea (subset of jobQueue)
-  //
-  // TO BE MAINTAINED BY CONCRETE SUBCLASSES
+  // STATE: JOB QUEUE / JOBS IN WAITING AREA / JOBS IN SERVICE AREA
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Jobs currently in queue.
+  /** Jobs currently in queueing system.
    * 
-   * Note: this includes jobs in service (in the service area).
+   * <p>
+   * In order or arrival.
+   * 
+   * Note: This includes jobs in service (in the service area).
    *
    */
-  protected final List<J> jobQueue = new ArrayList<> ();
-
+  private final Set<J> jobs = new LinkedHashSet<> ();
+  
   @Override
   public final Set<J> getJobs ()
   {
-    return Collections.unmodifiableSet (new LinkedHashSet (this.jobQueue));
+    // return Collections.unmodifiableSet (this.jobs);
+    return this.jobs;
   }
 
   @Override
   public final int getNumberOfJobs ()
   {
-    return this.jobQueue.size ();
+    return this.jobs.size ();
   }
 
   @Override
   public final boolean isJob (final SimJob job)
   {
-    return job != null && this.jobQueue.contains ((J) job); // Note: futile cast, but stops compiler from complaining.
+    return job != null && this.jobs.contains ((J) job); // Note: futile cast, but stops compiler from complaining.
+  }
+
+  /** Returns whether this queue has jobs present.
+   * 
+   * <p>
+   * Functionally equivalent to {@code getNumberOfJobs () == 0}.
+   * 
+   * @return Whether this queue has jobs present.
+   * 
+   * @see #getNumberOfJobs
+   * 
+   */
+  protected final boolean hasJobs ()
+  {
+    return ! this.jobs.isEmpty ();
+  }
+  
+  /** Returns the first job in {@link #getJobs} (earliest arriver) .
+   * 
+   * @return The first job in {@link #getJobs},
+   *           i.e., the one with the earliest arrival time;
+   *           {@code null} if there are no jobs.
+   * 
+   */
+  protected final J getFirstJob ()
+  {
+    if (this.jobs.isEmpty ())
+      return null;
+    return this.jobs.iterator ().next ();
+  }
+
+  /** Jobs currently in the waiting area.
+   *
+   * <p>
+   * In order or arrival.
+   * 
+   * <p>
+   * Any job in this set must also be in {@link #jobs}.
+   * 
+   */
+  private final Set<J> jobsInWaitingArea = new LinkedHashSet<> ();
+  
+  @Override
+  public final Set<J> getJobsInWaitingArea ()
+  {
+    // return Collections.unmodifiableSet (new LinkedHashSet (this.jobsInWaitingArea));
+    return this.jobsInWaitingArea;
+  }
+
+  @Override
+  public final int getNumberOfJobsInWaitingArea ()
+  {
+    return this.jobsInWaitingArea.size ();
+  }
+
+  @Override
+  public final boolean isJobInWaitingArea (final SimJob job)
+  {
+    return job != null && this.jobsInWaitingArea.contains ((J) job);
+  }
+  
+  /** Returns whether or not this queue has at least one job waiting.
+   * 
+   * <p>
+   * Functionally equivalent to {@code getNumberOfJobsInWaitingArea () == 0}.
+   * 
+   * @return True if there are jobs waiting.
+   * 
+   * @see #getNumberOfJobsInWaitingArea
+   * 
+   */
+  protected final boolean hasJobsInWaitingArea ()
+  {
+    return ! this.jobsInWaitingArea.isEmpty ();
+  }
+  
+  /** Returns the first job in {@link #getJobsInWaitingArea} (earliest waiting arriver) .
+   * 
+   * @return The first job in {@link #getJobsInWaitingArea},
+   *           i.e., the one with the earliest arrival time;
+   *           {@code null} if there are no waiting jobs.
+   * 
+   */
+  protected final J getFirstJobInWaitingArea ()
+  {
+    if (this.jobsInWaitingArea.isEmpty ())
+      return null;
+    return this.jobsInWaitingArea.iterator ().next ();
   }
 
   /** Jobs currently in the service area.
    *
    * <p>
-   * Any job in this set must also be in {@link #jobQueue}.
+   * In (increasing) order of start time.
+   * 
+   * <p>
+   * Any job in this set must also be in {@link #jobs}.
    * 
    */
-  protected final Set<J> jobsInServiceArea
-    = new HashSet<> ();
+  private final Set<J> jobsInServiceArea = new LinkedHashSet<> ();
 
   @Override
   public final Set<J> getJobsInServiceArea ()
   {
-    return Collections.unmodifiableSet (new LinkedHashSet (this.jobsInServiceArea));
+    // return Collections.unmodifiableSet (new LinkedHashSet (this.jobsInServiceArea));
+    return this.jobsInServiceArea;
   }
 
   @Override
@@ -212,78 +326,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     return job != null && this.jobsInServiceArea.contains ((J) job); // Note: futile cast, but stops compiler from complaining.
   }
   
-  /** Overridden to make (default) implementation final.
-   * 
-   */
-  @Override
-  public final Set<J> getJobsInWaitingArea ()
-  {
-    return SimQueue.super.getJobsInWaitingArea ();
-  }
-
-  /** Overridden to make (default) implementation final.
-   * 
-   */
-  @Override
-  public final int getNumberOfJobsInWaitingArea ()
-  {
-    return SimQueue.super.getNumberOfJobsInWaitingArea ();
-  }
-
-  /** Overridden to make (default) implementation final.
-   * 
-   */
-  @Override
-  public final boolean isJobInWaitingArea (final SimJob job)
-  {
-    return SimQueue.super.isJobInWaitingArea (job);
-  }
-  
-  /** Returns whether or not this queue has at least one job waiting.
-   * 
-   * @return True if there are jobs waiting.
-   * 
-   * @see #getNumberOfJobsInWaitingArea
-   * 
-   */
-  protected final boolean hasJobsInWaitingArea ()
-  {
-    return getNumberOfJobsInWaitingArea () > 0;
-  }
-  
-  /** Returns the first job in {@link #getJobs} that <i>is not</i> in {@link #getJobsInServiceArea}.
-   * 
-   * @return The first job in {@link #getJobs} that is not in {@link #getJobsInServiceArea},
-   *         <code>null</code> if there are no waiting jobs.
-   * 
-   */
-  protected final J getFirstJobInWaitingArea ()
-  {
-    if (getNumberOfJobsInWaitingArea () == 0)
-      return null;
-    for (J j : this.jobQueue)
-      if (! this.jobsInServiceArea.contains (j))
-        return j;
-    throw new IllegalStateException ();
-  }
-
-  /** Returns the last job in {@link #getJobs} that <i>is not</i> in {@link #getJobsInServiceArea}.
-   * 
-   * @return The last job in {@link #getJobs} that is not in {@link #getJobsInServiceArea},
-   *         <code>null</code> if there are no waiting jobs.
-   * 
-   */
-  protected final J getLastJobInWaitingArea ()
-  {
-    if (getNumberOfJobsInWaitingArea () == 0)
-      return null;
-    for (int i = this.jobQueue.size () - 1; i >= 0; i--)
-      if (! this.jobsInServiceArea.contains (this.jobQueue.get (i)))
-        return this.jobQueue.get (i);
-    throw new IllegalStateException ();
-  }
-
   /** Returns whether or not this queue has at least one job in the service area.
+   * 
+   * <p>
+   * Functionally equivalent to {@code getNumberOfJobsInServiceArea () == 0}.
    * 
    * @return True if there are jobs in the service area.
    * 
@@ -295,36 +341,18 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     return ! this.jobsInServiceArea.isEmpty ();
   }
   
-  /** Returns the first job in {@link #getJobs} that <i>is</i> in {@link #getJobsInServiceArea}.
+  /** Returns the first job in {@link #getJobsInServiceArea} (earliest starter).
    * 
-   * @return The first job in {@link #getJobs} that is in {@link #getJobsInServiceArea},
-             <code>null</code> if there are no jobs in the service area.
+   * @return The first job in {@link #getJobsInServiceArea},
+   *           i.e., the one with the earliest start time;
+   *           {@code null} if there are no jobs in the service area.
    * 
    */
   protected final J getFirstJobInServiceArea ()
   {
-    if (getNumberOfJobsInServiceArea () == 0)
+    if (this.jobsInServiceArea.isEmpty ())
       return null;
-    for (J j : this.jobQueue)
-      if (this.jobsInServiceArea.contains (j))
-        return j;
-    throw new IllegalStateException ();
-  }
-
-  /** Returns the last job in {@link #getJobs} that <i>is</i> in {@link #getJobsInServiceArea}.
-   * 
-   * @return The last job in {@link #getJobs} that is in {@link #getJobsInServiceArea},
-             <code>null</code> if there are no jobs in the service area.
-   * 
-   */
-  protected final J getLastJobInServiceArea ()
-  {
-    if (getNumberOfJobsInServiceArea () == 0)
-      return null;
-    for (int i = this.jobQueue.size () - 1; i >= 0; i--)
-      if (this.jobsInServiceArea.contains (this.jobQueue.get (i)))
-        return this.jobQueue.get (i);
-    throw new IllegalStateException ();
+    return this.jobsInServiceArea.iterator ().next ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -338,8 +366,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * Any events in this set must also be in the {@link #eventList}.
    *
    */
-  protected final Set<SimEvent> eventsScheduled
-    = new HashSet<> ();
+  protected final Set<SimEvent> eventsScheduled = new HashSet<> ();
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -356,9 +383,10 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   protected void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
-    for (SimJob j : this.jobQueue)
+    for (SimJob j : this.jobs)
       j.setQueue (null);
-    this.jobQueue.clear ();
+    this.jobs.clear ();
+    this.jobsInWaitingArea.clear ();
     this.jobsInServiceArea.clear ();
     for (SimEvent e : this.eventsScheduled)
       getEventList ().remove (e);
@@ -401,7 +429,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param pendingNotifications The pending notifications.
    * 
    */
-  protected final void startArmedPreNotificationHook
+  private void startArmedPreNotificationHook
   (final List<Map<SimEntitySimpleEventType.Member, SimEntityEvent>> pendingNotifications)
   {
     if (pendingNotifications == null)
@@ -513,8 +541,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * <p>
    * It then invokes {@link #update}
    * and {@link #clearAndUnlockPendingNotificationsIfLocked},
-   * insisting to be a top-level event (at the expense of an {@link IllegalStateException}).
-   * 
+   * insisting to be a top-level event (at the expense of an {@link IllegalStateException}),
+   * and adds a {@link SimQueueSimpleEventType#ARRIVAL} pending notification.
    * 
    * <p>
    * Subsequently, if the queue is on queue-access vacation ({@link #isQueueAccessVacation}),
@@ -525,35 +553,19 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>
    * Otherwise, it then invokes the subclass-specific {@link #insertJobInQueueUponArrival},
-   * and checks the presence of the job in {@link #jobQueue}.
-   * 
-   * <p>
-   * If <i>not</i> present, sets the jobs queue to <code>null</code>
-   * and adds a {@link SimQueueSimpleEventType#DROP} pending notification,
-   * again bypassing {@link #drop} because the job is not present in the system at this point.
-   * Also, in this case, there is no call to {@link #rescheduleAfterArrival}, since
-   * {@link #insertJobInQueueUponArrival} has declined immediately the queue visit.
-   * 
-   * <p>
-   * If however the job is still present, it sets this queue to be the visited queue on the job (with {@link SimJob#setQueue}),
+   * adds the job to the job queue and to the waiting area,
+   * set the job's queue property to this queue through {@link SimJob#setQueue},
    * and invokes the subclass-specific {@link #rescheduleAfterArrival}.
    * 
    * <p>
    * Finally, it notifies listeners of the pending notifications.
    * 
-   * @see #update
-   * @see #isQueueAccessVacation
-   * @see #queueAccessVacationDropSubClass
-   * @see #jobQueue
-   * @see #jobsInServiceArea
    * @see #insertJobInQueueUponArrival
-   * @see SimJob#setQueue
    * @see #rescheduleAfterArrival
+   * 
    * @see #clearAndUnlockPendingNotificationsIfLocked
-   * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
+   * @see #addPendingNotification
    * @see #fireAndLockPendingNotifications
-   * @see SimQueueSimpleEventType#ARRIVAL
-   * @see SimQueueSimpleEventType#DROP
    * 
    */
   @Override
@@ -563,7 +575,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalArgumentException ();
     if (job.getQueue () != null)
       throw new IllegalArgumentException ();
-    if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
+    if (isJob (job) || isJobInWaitingArea (job) || isJobInServiceArea (job))
       throw new RuntimeException ();
     update (time);
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
@@ -578,47 +590,32 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     else
     {
       insertJobInQueueUponArrival (job, time);
-      //
-      // XXX At some point, we used this approach (checking for presence in #jobQueue)
-      // in order to obtain atomicity for "drop-on-arrival" cases.
-      // With the present framework, it might be obsolete; subclasses can simply invoke #drop
-      // from within rescheduleAfterArrival without losing atomicity.
-      //
-      if (! this.jobQueue.contains (job))
+      this.jobs.add (job);
+      this.jobsInWaitingArea.add (job);
+      job.setQueue (this);
+      rescheduleAfterArrival (job, time);
+      if (AbstractSimQueue.SANITY)
       {
-        if (this.jobsInServiceArea.contains (job))
+        if ((! isJob (job))
+        &&  (isJobInWaitingArea (job) || isJobInServiceArea (job) || job.getQueue () == this))
           throw new IllegalStateException ();
-        job.setQueue (null);  // Just in case it was erroneously set by our subclass...
-        addPendingNotification (SimQueueSimpleEventType.DROP, new SimJQEvent.Drop<> (job, this, time));
-      }
-      else
-      {
-        if (this.jobsInServiceArea.contains (job))
-          throw new IllegalStateException ();
-        job.setQueue (this);
-        rescheduleAfterArrival (job, time);
-        if ((! this.jobQueue.contains (job))
-        && (this.jobsInServiceArea.contains (job) || job.getQueue () == this))
+        if (isJob (job) && (isJobInWaitingArea (job) == isJobInServiceArea (job)))
           throw new IllegalStateException ();
       }
     }
     fireAndLockPendingNotifications ();
   }
 
-  /** Inserts a job that just arrived (at given time) into the internal queue(s).
+  /** Inserts a job that just arrived (at given time) into sub-class specific administration.
    * 
    * <p>
    * To be implemented by concrete queue types.
    * 
    * <p>
-   * Implementations <i>must</i> (at least) add the job to {@link #jobQueue}. If not, the job is immediately marked for dropping,
-   * and {@link #rescheduleAfterArrival} is not invoked!
-   * 
-   * <p>
    * Implementations must ignore any queue-access vacation as this is taken care of already by the base class.
    * 
    * <p>
-   * Implementations must <i>not</i> reschedule on the event list, or make changes to {@link #jobsInServiceArea},
+   * Implementations must <i>not</i> reschedule on the event list,
    * but instead wait for the imminent invocation of
    * {@link #rescheduleAfterArrival} for that.
    * 
@@ -654,12 +651,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * as this is already done by the base class {@link AbstractSimQueue}.
    * They must, however, add appropriate notifications for other internal state-changing events.
    * 
-   * <p>
-   * Upon return, the job may have left {@link #jobQueue} already (in which case it <i>must</i> not be present in
-   * {@link #jobsInServiceArea} either), but the caller then assumes that all appropriate notifications
-   * are added (to the pending notifications) in this method.
-   * 
-   * @param job  The job that arrived (and is present in {@link #jobQueue}).
+   * @param job  The job that arrived (and is already present in {@link #getJobs}).
    * @param time The current time (i.e., the arrival time of the job).
    * 
    * @see #arrive
@@ -727,13 +719,11 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * Note that queue-access vacations are entirely dealt with by the base class {@link AbstractSimQueue}; there is
    * no interaction (needed) with concrete subclasses, but see {@link #queueAccessVacationDropSubClass}.
    * 
-   * @see SimQueueSimpleEventType#QUEUE_ACCESS_VACATION
-   * @see SimQueueSimpleEventType#QAV_START
-   * @see SimQueueSimpleEventType#QAV_END
-   * @see #queueAccessVacationDropSubClass
    * @see #arrive
+   * @see #queueAccessVacationDropSubClass
+   * 
    * @see #clearAndUnlockPendingNotificationsIfLocked
-   * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
+   * @see #addPendingNotification
    * @see #fireAndLockPendingNotifications
    * 
    */
@@ -775,6 +765,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job  The dropped job.
    * 
    * @see #arrive
+   * @see #setQueueAccessVacation
    * 
    */
   protected void queueAccessVacationDropSubClass (final double time, final J job)
@@ -800,11 +791,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>
    * It invokes the subclass-specific {@link #removeJobFromQueueUponDrop},
-   * and checks the absence of the job in {@link #jobQueue} and {@link #jobsInServiceArea}
-   * (throwing an {@link IllegalStateException} if not).
-   * 
-   * <p>
-   * It sets the visited queue on the job (with {@link SimJob#setQueue}) to <code>null</code>,
+   * removes the job from the internal administration,
+   * sets the visited queue on the job (with {@link SimJob#setQueue}) to <code>null</code>,
    * and adds a {@link SimQueueSimpleEventType#DROP} pending notification.
    * 
    * <p>
@@ -816,15 +804,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job  The job to be dropped.
    * @param time The current time, i.e., the drop time of the job.
    * 
-   * @throws IllegalArgumentException If the job is <code>null</code> or not found.
+   * @throws IllegalArgumentException If the job is <code>null</code> or not found, or has its queue not set to this queue.
    * @throws IllegalStateException    If the internal administration of this queue has become inconsistent. 
    * 
-   * @see SimQueueSimpleEventType#DROP
    * @see #removeJobFromQueueUponDrop
    * @see #rescheduleAfterDrop
-   * @see #update
-   * @see #getLastUpdateTime
-   * @see SimJob#setQueue
+   * 
    * @see #clearAndUnlockPendingNotificationsIfLocked
    * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
    * @see #fireAndLockPendingNotifications
@@ -832,30 +817,32 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    */
   protected final void drop (final J job, final double time)
   {
-    if (job == null || job.getQueue () != this || ! this.jobQueue.contains (job))
+    if (job == null || job.getQueue () != this || ! isJob (job))
       throw new IllegalArgumentException ();
+    if (isJobInWaitingArea (job) == isJobInServiceArea (job))
+      throw new IllegalStateException ();
     if (time != getLastUpdateTime ())
       throw new IllegalStateException ();
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
     if (isTopLevel)
       throw new IllegalStateException ();
     removeJobFromQueueUponDrop (job, time);
-    if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
-      throw new IllegalStateException ();
+    this.jobs.remove (job);
+    this.jobsInWaitingArea.remove (job);
+    this.jobsInServiceArea.remove (job);
     job.setQueue (null);
     addPendingNotification (SimQueueSimpleEventType.DROP, new SimJQEvent.Drop<> (job, this, time));
     rescheduleAfterDrop (job, time);
   }
 
-  /** Removes a job from the internal queue(s) because it is to be dropped.
+  /** Removes a job from the internal subclass administration because it is to be dropped.
    * 
    * <p>
    * To be implemented by concrete queue types.
    * 
    * <p>
-   * Implementations <i>must</i> (at least) remove the job from {@link #jobQueue} (this is actually checked).
-   * They should also remove any job-specific events (like a departure event) from the event-list and remove the
-   * job (if needed) from the {@link #jobsInServiceArea} set (this is also checked).
+   * Implementations <i>must</i> remove the job from their local administration,
+   * and remove any job-specific events (like a departure event) from the event-list.
    * 
    * <p>
    * Implementations must <i>not</i> reschedule events for <i>other</i> jobs on the event list,
@@ -921,14 +908,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>
    * It invokes the subclass-specific {@link #removeJobFromQueueUponRevokation},
-   * and checks the absence of the job in {@link #jobQueue} and {@link #jobsInServiceArea}
-   * (throwing an {@link IllegalStateException} if not).
-   * 
-   * <p>
-   * It sets the visited queue on the job (with {@link SimJob#setQueue}) to <code>null</code>,
+   * removes the job from the internal administration,
+   * sets the visited queue on the job (with {@link SimJob#setQueue}) to <code>null</code>,
    * and adds a {@link SimQueueSimpleEventType#REVOCATION} pending notification.
-   * 
-   * <p>
    * It then invokes the subclass-specific {@link #rescheduleAfterRevokation}.
    * 
    * <p>
@@ -952,22 +934,25 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if (! this.jobQueue.contains (job))
+    if (! isJob (job))
     {
       if (job.getQueue () == this)
         throw new IllegalStateException ();
       else
         return false;
     }
-    if ((! interruptService) && getJobsInServiceArea ().contains (job))
+    if (isJobInWaitingArea (job) == isJobInServiceArea (job))
+      throw new IllegalStateException ();
+    if ((! interruptService) && isJobInServiceArea (job))
       return false;
     update (time);
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
     if (! isTopLevel)
       throw new IllegalStateException ();
     removeJobFromQueueUponRevokation (job, time, false);
-    if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
-      throw new IllegalStateException ();    
+    this.jobs.remove (job);
+    this.jobsInWaitingArea.remove (job);
+    this.jobsInServiceArea.remove (job);
     job.setQueue (null);
     addPendingNotification
       (SimQueueSimpleEventType.REVOCATION, new SimJQEvent.Revocation<> (job, this, time, interruptService));
@@ -1012,13 +997,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job  The job to be revoked.
    * @param time The current time, i.e., the auto-revocation time of the job.
    * 
-   * @see SimQueueSimpleEventType#AUTO_REVOCATION
    * @see #removeJobFromQueueUponRevokation
    * @see #rescheduleAfterRevokation
-   * @see #revoke
-   * @see #update
-   * @see #getLastUpdateTime
-   * @see SimJob#setQueue
+   * 
    * @see #clearAndUnlockPendingNotificationsIfLocked
    * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
    * @see #fireAndLockPendingNotifications
@@ -1028,7 +1009,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if (! this.jobQueue.contains (job) && job.getQueue () == this)
+    if (! isJob (job) && job.getQueue () == this)
       throw new IllegalStateException ();
     if (time != getLastUpdateTime ())
       throw new IllegalStateException ();
@@ -1036,15 +1017,16 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     if (isTopLevel)
       throw new IllegalStateException ();
     removeJobFromQueueUponRevokation (job, time, true);
-    if (this.jobQueue.contains (job) || this.jobsInServiceArea.contains (job))
-      throw new IllegalStateException ();    
+    this.jobs.remove (job);
+    this.jobsInWaitingArea.remove (job);
+    this.jobsInServiceArea.remove (job);
     job.setQueue (null);
     addPendingNotification
       (SimQueueSimpleEventType.AUTO_REVOCATION, new SimJQEvent.AutoRevocation<> (job, this, time));
     rescheduleAfterRevokation (job, time, true);
   }
 
-  /** Removes a job from the internal queue(s) since it is revoked.
+  /** Removes a job from the internal sub-class administration since it is revoked.
    * 
    * <p>To be implemented by concrete queue types.
    *
@@ -1052,9 +1034,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * This method is shared between {@link #revoke} and {@link #autoRevoke}.
    * 
    * <p>
-   * Implementations <i>must</i> (at least) remove the job from {@link #jobQueue} (this is actually checked).
-   * They should also remove any job-specific events (like a departure event) from the event-list and remove the
-   * job (if needed) from the {@link #jobsInServiceArea} set (this is also checked).
+   * Implementations <i>must</i> remove the job from their local subclass-specific administration.
+   * They should also remove any job-specific events (like a departure event) from the event-list.
    * 
    * <p>
    * Implementations must <i>not</i> reschedule events for <i>other</i> jobs on the event list,
@@ -1150,6 +1131,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   {
     if (credits < 0)
       throw new IllegalArgumentException ();
+    // XXX Shouldn't we always check for a top-level event?
     final int oldCredits = this.serverAccessCredits;
     if (oldCredits != credits)
     {
@@ -1326,7 +1308,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * 
    * <p>
    * Otherwise, it invokes the subclass-specific {@link #insertJobInQueueUponStart},
-   * checks the (mandatory) presence of the job in {@link #jobsInServiceArea},
+   * moves the job from the waiting to the service area,
    * adds a {@link SimQueueSimpleEventType#START} pending notification
    * and invokes the subclass-specific {@link #rescheduleAfterStart}.
    * 
@@ -1336,17 +1318,13 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param job  The job that is to be started.
    * @param time The current time (i.e., start time of the job).
    * 
-   * @see #update
-   * @see #jobQueue
-   * @see #jobsInServiceArea
    * @see #insertJobInQueueUponStart
    * @see #rescheduleAfterStart
    * @see #getAutoRevocationPolicy
-   * @see AutoRevocationPolicy#UPON_START
+   * 
    * @see #clearAndUnlockPendingNotificationsIfLocked
    * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
    * @see #fireAndLockPendingNotifications
-   * @see SimQueueSimpleEventType#START
    * 
    */
   protected final void start (final double time, final J job)
@@ -1355,10 +1333,12 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
       throw new IllegalArgumentException ();
     if (job.getQueue () != this)
       throw new IllegalArgumentException ();
-    if (! this.jobQueue.contains (job))
+    if (! isJob (job))
       throw new RuntimeException ();
-    if (this.jobsInServiceArea.contains (job))
+    if (! isJobInWaitingArea (job))
       throw new RuntimeException ();
+    if (isJobInServiceArea (job))
+      throw new IllegalStateException ();
     if (time != getLastUpdateTime ())
       throw new IllegalStateException ();
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
@@ -1368,31 +1348,26 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
     if (this.autoRevocationPolicy == AutoRevocationPolicy.UPON_START)
     {
       addPendingNotification (SimQueueSimpleEventType.START, new SimJQEvent.Start<> (job, this, time));
+      // Note: we do not bother to first put the job into the service area.
       autoRevoke (time, job);
     }
     else
     {
       insertJobInQueueUponStart (job, time);
-      if (! this.jobQueue.contains (job))
-        throw new RuntimeException ();
-      if (! this.jobsInServiceArea.contains (job))
-        throw new RuntimeException ();
+      this.jobsInWaitingArea.remove (job);
+      this.jobsInServiceArea.add (job);
       addPendingNotification (SimQueueSimpleEventType.START, new SimJQEvent.Start<> (job, this, time));
       rescheduleAfterStart (job, time);
     }
   }
   
-  /** Updates the internal data structures upon the start of a job.
+  /** Updates the internal subclass-specific data structures upon the start of a job.
    * 
    * <p>
    * To be implemented by concrete queue types.
    * 
    * <p>
-   * Implementations must (at least) add the job to {@link #jobsInServiceArea}, even if the job is to depart or be dropped
-   * immediately.
-   * 
-   * <p>
-   * More generally, implementations must <i>not</i> reschedule,
+   * Implementations must <i>not</i> reschedule,
    * but instead wait for the imminent invocation of
    * {@link #rescheduleAfterStart} for that.
    * 
@@ -1416,8 +1391,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * start. Also, {@link #update} has already been called.
    * 
    * <p>
-   * Upon return, the job may have left {@link #jobQueue} already (in which case it <i>must</i> not be present in
-   * {@link #jobsInServiceArea} either), but the caller then assumes that all appropriate notifications
+   * Upon return, the job may have left this {@link AbstractSimQueue} already,
+   * but the caller then assumes that all appropriate notifications
    * are added (to the pending notifications) in this method.
    * 
    * <p>
@@ -1429,7 +1404,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * Implementations should not care about server-access credits or auto-revocation;
    * this is taken care of by {@link #start}.
    * 
-   * @param job  The job that started (and is present in {@link #jobQueue} and {@link #jobsInServiceArea}).
+   * @param job  The job that started (and is already present in {@link #getJobsInServiceArea}.
    * @param time The current time (i.e., the start time of the job).
    * 
    * @see #start
@@ -1544,15 +1519,16 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * have been invoked by the caller (since this is an <i>internal</i> operation).
    * 
    * <p>
+   * XXX Update: the check for presence of the job has been removed after June/July AbstractSimQueue revamp.
+   * 
+   * <p>
    * It sets the visited queue on the job (with {@link SimJob#setQueue}) to <code>null</code>.
    * 
    * <p>
    * It invokes the subclass-specific {@link #removeJobFromQueueUponDeparture},
-   * and checks the absence of the job in {@link #jobQueue} and {@link #jobsInServiceArea}
-   * (throwing an {@link IllegalStateException} if not).
-   * 
-   * <p>
-   * It adds a {@link SimQueueSimpleEventType#DEPARTURE} pending notification.
+   * removes the job from the local administration,
+   * sets the visited queue on the job (with {@link SimJob#setQueue}) to <code>null</code>,
+   * and adds a {@link SimQueueSimpleEventType#DEPARTURE} pending notification.
    * 
    * <p>
    * It then invokes the subclass-specific {@link #rescheduleAfterDeparture}.
@@ -1567,12 +1543,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param time The departure time.
    * @param job  The job that departs.
    * 
-   * @see SimQueueSimpleEventType#DEPARTURE
    * @see #removeJobFromQueueUponDeparture
    * @see #rescheduleAfterDeparture
-   * @see #update
-   * @see #getLastUpdateTime
-   * @see SimJob#setQueue
+   * 
    * @see #clearAndUnlockPendingNotificationsIfLocked
    * @see #addPendingNotification(SimEntitySimpleEventType.Member, SimEntityEvent)
    * @see #fireAndLockPendingNotifications
@@ -1580,18 +1553,25 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    */
   protected final void depart (final double time, final J job)
   {
+    if (! isJob (job))
+      throw new IllegalArgumentException ();
     if (job.getQueue () != this)
       throw new IllegalStateException ();
     if (time != getLastUpdateTime ())
       throw new IllegalStateException ();
+    if (isJobInWaitingArea (job) == isJobInServiceArea (job))
+      throw new IllegalStateException ();
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
     if (isTopLevel)
-      throw new IllegalStateException ();
-    job.setQueue (null);
+      throw new IllegalStateException ();   
     removeJobFromQueueUponDeparture (job, time);
-    if (this.jobQueue.contains (job)
-      || this.jobsInServiceArea.contains (job))
-      throw new IllegalStateException ();
+    this.jobs.remove (job);
+    this.jobsInWaitingArea.remove (job);
+    this.jobsInServiceArea.remove (job);
+    job.setQueue (null);
+//    if (this.jobQueue.contains (job)
+//      || this.jobsInServiceArea.contains (job))
+//      throw new IllegalStateException ();
     addPendingNotification (SimQueueSimpleEventType.DEPARTURE, new SimJQEvent.Departure<> (job, this, time));
     rescheduleAfterDeparture (job, time);
   }
@@ -1599,9 +1579,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   /** Removes a job from the internal queues upon departure.
    * 
    * <p>
-   * Implementations <i>must</i> (at least) remove the job from {@link #jobQueue} (this is actually checked).
-   * They should also remove any job-specific events (like a queue-specific departure event) from the event-list and remove the
-   * job (if needed) from the {@link #jobsInServiceArea} set (this is also checked).
+   * Implementations <i>must</i> (at least) remove the job from their internal administration.
+   * They should also remove any job-specific events (like a queue-specific departure event) from the event-list.
    * 
    * <p>
    * Implementations must <i>not</i> reschedule (e.g., events for <i>other</i> jobs on the event list),
@@ -1672,7 +1651,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   {
     if (time < getLastUpdateTime () || job == null || job.getQueue () != this)
       throw new IllegalArgumentException ();
-    if (! this.jobQueue.contains (job))
+    if (! isJob (job))
       throw new IllegalArgumentException ();
     final SimJQEvent.Departure<J, Q>  event = new SimJQEvent.Departure<> (job, (Q) this, time,
       (SimEventAction) (final SimEvent e) ->
@@ -1690,6 +1669,9 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * After sanity checks on the event not being {@code null},
    * and on the event's presence in {@link #getEventList} and {@link #eventsScheduled},
    * this method removes the event from the event list and from {@link #eventsScheduled}.
+   * 
+   * <p>
+   * XXX Check on presence of job currently deactivated.
    * 
    * <p>
    * The base class {@link AbstractSimQueue} does not use this method; it is provided as a service to subclasses.
@@ -1788,8 +1770,8 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if (! this.jobQueue.contains (job))
-      throw new IllegalArgumentException ();
+//    if (! isJob (job))
+//      throw new IllegalArgumentException ();
     final Set<SimJQEvent.Departure> set = new LinkedHashSet<> ();
     for (SimEvent e : this.eventsScheduled)
       if (e == null)

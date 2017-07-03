@@ -119,26 +119,25 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Adds the job to the tail of the {@link #jobQueue}.
-   * 
-   * @see #jobQueue
-   * @see #arrive
-   * @see #rescheduleAfterArrival
+  /** Performs sanity check (only).
    * 
    * @throws IllegalStateException If more than one job resides (a-priori) in the waiting area upon arrival of the job.
+   * 
+   * @see #getNumberOfJobs
+   * @see #arrive
+   * @see #rescheduleAfterArrival
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    if (this.jobQueue.size () > 1)
+    if (getNumberOfJobs () > 2)
       throw new IllegalStateException ();
-    this.jobQueue.add (job);
   }
 
   /** Makes the current waiting job depart, if present.
    * 
-   * @see #jobQueue
+   * @see #getFirstJobInWaitingArea
    * @see #depart
    * @see #insertJobInQueueUponArrival
    * 
@@ -148,10 +147,10 @@ extends AbstractServerlessSimQueue<J, Q>
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (this.jobQueue.size () > 2)
+    if (getNumberOfJobs () > 2)
       throw new IllegalStateException ();
-    else if (this.jobQueue.size () == 2)
-      depart (time, this.jobQueue.get (0));
+    else if (getNumberOfJobs () == 2)
+      depart (time, getFirstJobInWaitingArea ());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,19 +187,13 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Removes the job, after passing sanity checks, from the job queue {@link #jobQueue}.
-   * 
-   * @see #jobQueue
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponRevokation (final J job, final double time, final boolean auto)
   {
-    if (job == null || ! this.jobQueue.contains (job))
-      throw new IllegalArgumentException ();
-    if (! this.jobsInServiceArea.isEmpty ())
-      throw new IllegalStateException ();
-    this.jobQueue.remove (job);
+    /* EMPTY */
   }
 
   /** Does nothing.
@@ -218,17 +211,13 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Removes the job from the {@link #jobQueue}.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    if (! this.jobQueue.contains (departingJob))
-      throw new IllegalStateException ();
-    if (this.jobsInServiceArea.contains (departingJob))
-      throw new IllegalStateException ();
-    this.jobQueue.remove (departingJob);
+    /* EMPTY */
   }
 
   /** Does nothing.

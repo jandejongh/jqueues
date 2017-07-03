@@ -129,16 +129,13 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of the job queue.
-   * 
-   * @see #jobQueue
-   * @see #insertJobInQueueUponArrival
+  /** Invokes super method and makes method implementation final.
    * 
    */
   @Override
-  protected final void insertAdmittedJobInQueueUponArrival (final J job, final double time)
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (job);
+    super.insertJobInQueueUponArrival (job, time);
   }
 
   /** Throws an exception.
@@ -154,7 +151,9 @@ implements SimQoS<J, Q>
   @Override
   protected final J selectJobToDropAtFullQueue (final J arrivingJob, final double time)
   {
-    throw new IllegalStateException ();
+    if (getNumberOfJobsInWaitingArea () != 1 || ! isJobInWaitingArea (arrivingJob))
+      throw new IllegalStateException ();
+    return arrivingJob;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

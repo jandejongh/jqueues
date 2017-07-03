@@ -122,7 +122,7 @@ implements SimQueueWithGate<J, Q>
    * 
    * @see #getGatePassageCredits
    * @see #update
-   * @see #jobQueue
+   * @see #hasJobsInWaitingArea
    * @see #depart
    * @see #clearAndUnlockPendingNotificationsIfLocked
    * @see #fireAndLockPendingNotifications
@@ -145,7 +145,7 @@ implements SimQueueWithGate<J, Q>
       {
         if (! clearAndUnlockPendingNotificationsIfLocked ())
           throw new IllegalStateException ();
-        while (this.gatePassageCredits > 0 && ! this.jobQueue.isEmpty ())
+        while (this.gatePassageCredits > 0 && hasJobsInWaitingArea ())
         {
           depart (time, getFirstJobInWaitingArea ());
           if (this.gatePassageCredits < Integer.MAX_VALUE)
@@ -240,16 +240,12 @@ implements SimQueueWithGate<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Adds the job to the tail of the {@link #jobQueue}.
-   * 
-   * @see #arrive
-   * @see #jobQueue
+  /** Does nothing.
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (job);
   }
 
   /** Makes the job depart from the job queue if the gate is currently open
@@ -302,15 +298,13 @@ implements SimQueueWithGate<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Removes the job from the {@link #jobQueue}.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponRevokation (final J job, final double time, final boolean auto)
   {
-    if (job == null || ! this.jobQueue.contains (job))
-      throw new IllegalArgumentException ();
-    this.jobQueue.remove (job);
+    /* EMPTY */
   }
 
   /** Does nothing.
@@ -328,17 +322,13 @@ implements SimQueueWithGate<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Removes the job from the {@link #jobQueue}.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    if (! this.jobQueue.contains (departingJob))
-      throw new IllegalStateException ();
-    if (this.jobsInServiceArea.contains (departingJob))
-      throw new IllegalStateException ();
-    this.jobQueue.remove (departingJob);
+    /* EMPTY */
   }
 
   /** Does nothing.

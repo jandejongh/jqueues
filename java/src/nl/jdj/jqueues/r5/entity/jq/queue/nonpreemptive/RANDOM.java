@@ -1,5 +1,7 @@
 package nl.jdj.jqueues.r5.entity.jq.queue.nonpreemptive;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
@@ -138,14 +140,23 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and clears the internal RANDOM queue.
    * 
    */
   @Override
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
+    this.randomWaitingQueue.clear ();
   }  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RANDOM WAITING QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final List<J> randomWaitingQueue = new ArrayList<> ();
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -153,18 +164,16 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at a random position the job queue.
+  /** Inserts the job at a random position the internal RANDOM wait queue.
    * 
-   * @see #jobQueue
    * @see #getRNG
-   * @see #insertJobInQueueUponArrival
    * 
    */
   @Override
-  protected final void insertAdmittedJobInQueueUponArrival (final J job, final double time)
+  protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    final int newPosition = getRNG ().nextInt (this.jobQueue.size () + 1);
-    this.jobQueue.add (newPosition, job);
+    final int newPosition = getRNG ().nextInt (this.randomWaitingQueue.size () + 1);
+    this.randomWaitingQueue.add (newPosition, job);
   }
 
   /** Throws an exception.
@@ -189,15 +198,15 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Returns the result from {@link #getFirstJobInWaitingArea}.
+  /** Returns the first job in (and removes it from) the internal RANDOM queue.
    * 
-   * @return The result from {@link #getFirstJobInWaitingArea}.
+   * @return The first job in the internal RANDOM queue.
    * 
    */
   @Override
   protected final J selectJobToStart ()
   {
-    return getFirstJobInWaitingArea ();
+    return this.randomWaitingQueue.remove (0);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,13 +232,14 @@ implements SimQoS<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and removes the job (if present) from the internal RANDOM queue.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponExit  (final J exitingJob, final double time)
   {
     super.removeJobFromQueueUponExit (exitingJob, time);
+    this.randomWaitingQueue.remove (exitingJob);
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

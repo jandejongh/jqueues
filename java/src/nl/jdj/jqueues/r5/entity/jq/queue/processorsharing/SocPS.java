@@ -234,16 +234,14 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of the job queue.
+  /** Does nothing, and makes that final.
    * 
    * @see #arrive
-   * @see #jobQueue
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (job);
   }
 
   /** Starts the arrived job if server-access credits are available.
@@ -302,12 +300,10 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   /** Removes the jobs from the internal data structures.
    * 
    * <p>
-   * Removes the job from {@link #jobQueue}, {@link #jobsInServiceArea} and {@link #remainingServiceTime}.
+   * Removes the job {@link #remainingServiceTime}.
    * 
    * @see #revoke
    * @see #autoRevoke
-   * @see #jobQueue
-   * @see #jobsInServiceArea
    * @see #remainingServiceTime
    * @see #rescheduleAfterRevokation
    * 
@@ -317,10 +313,8 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   {
     if (job == null)
       throw new IllegalArgumentException ();
-    if (! this.jobQueue.contains (job))
+    if (! isJob (job))
       throw new IllegalArgumentException ();
-    this.jobQueue.remove (job);
-    this.jobsInServiceArea.remove (job);
     this.remainingServiceTime.remove (job);
   }
 
@@ -393,12 +387,10 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job, after sanity checks, in the service area and administers its initial remaining service time.
+  /** Performs sanity checks and administers the job's initial remaining service time.
    * 
-   * @see #jobsInServiceArea
    * @see #getServiceTimeForJob
    * @see #remainingServiceTime
-   * @see #rescheduleAfterStart
    * 
    */
   @Override
@@ -406,10 +398,9 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   {
     if (job == null
     || (! getJobs ().contains (job))
-    || getJobsInServiceArea ().contains (job)
+    || isJobInServiceArea (job)
     || this.remainingServiceTime.containsKey (job))
       throw new IllegalArgumentException ();
-    this.jobsInServiceArea.add (job);
     final double jobRequiredServiceTime = getServiceTimeForJob (job);
     if (jobRequiredServiceTime < 0)
       throw new RuntimeException ();
@@ -484,8 +475,8 @@ extends AbstractProcessorSharingSimQueue<J, Q>
   protected final void rescheduleAfterDeparture (final J departedJob, final double time)
   {
     if (departedJob == null
-    ||  this.jobQueue.contains (departedJob)
-    ||  this.jobsInServiceArea.contains (departedJob)
+    ||  isJob (departedJob)
+    ||  isJobInServiceArea (departedJob)
     ||  this.remainingServiceTime.containsKey (departedJob))
       throw new IllegalArgumentException ();
     if (hasJobsInServiceArea ())

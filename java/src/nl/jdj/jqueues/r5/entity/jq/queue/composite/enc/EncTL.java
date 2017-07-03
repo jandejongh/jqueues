@@ -550,7 +550,7 @@ public class EncTL
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
     super.insertJobInQueueUponArrival (job, time);
-    final DJ delegateJob = getDelegateJob (job);
+    final DJ delegateJob = getDelegateJobMild (job);
     // We always put the delegate job into our arrival-times map upon arrival.
     if (this.arrivalTimes.containsKey (delegateJob))
       throw new IllegalStateException ();
@@ -807,7 +807,7 @@ public class EncTL
   
   private void removeJobUponExitLocal (final J job, final double time)
   {
-    if (this.jobQueue.contains (job))
+    if (isJob (job))
     {
       // We always put the delegate job into our arrival-times map upon arrival.
       final DJ delegateJob = getDelegateJob (job);

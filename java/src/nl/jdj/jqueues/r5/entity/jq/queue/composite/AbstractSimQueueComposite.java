@@ -394,7 +394,7 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
   /** Checks for the presence of a real job (in the administration of this composite queue).
    * 
    * <p>
-   * The result of this method is equivalent to {@code this.jobQueue.contains (realJob)},
+   * The result of this method is equivalent to {@code this.isJob (realJob)},
    * with additional sanity checks on the internal administration,
    * in particular on the mapping between real and delegate jobs.
    * 
@@ -407,14 +407,14 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * 
    * @throws IllegalStateException If sanity checks on the internal job administrations fail.
    * 
-   * @see #jobQueue
+   * @see #isJob
    * 
    */
   protected final boolean isRealJob (final J realJob)
   {
     if (realJob == null)
       return false;
-    if (this.jobQueue.contains (realJob))
+    if (isJob (realJob))
     {
       final DJ delegateJob = this.delegateSimJobMap.get (realJob);
       if (delegateJob == null)
@@ -453,7 +453,7 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
         throw new IllegalStateException ();
       if (this.delegateSimJobMap.get (realJob) != delegateJob)
         throw new IllegalStateException ();
-      if (! this.jobQueue.contains (realJob))
+      if (! isJob (realJob))
         throw new IllegalStateException ();
       return true;
     }
@@ -473,13 +473,43 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    * 
    * @see #isRealJob
    * @see #isDelegateJob
+   * @see #getDelegateJobMild
    * 
    */
   protected final DJ getDelegateJob (final J realJob)
   {
     if (realJob == null)
       throw new IllegalStateException ();
-    if (! this.jobQueue.contains (realJob))
+    if (! isJob (realJob))
+      throw new IllegalStateException ();
+    final DJ delegateJob = this.delegateSimJobMap.get (realJob);
+    if (delegateJob == null)
+      throw new IllegalStateException ();
+    if (this.realSimJobMap.get (delegateJob) != realJob)
+      throw new IllegalStateException ();
+    return delegateJob;
+  }
+
+  /** As {@link #getDelegateJob}, but skips the check for presence in the job queue.
+   * 
+   * <p>
+   * Specifically meant to access a delegate job in {@link #insertJobInQueueUponArrival},
+   * in which the real job has not been inserted into the job queue yet.
+   * 
+   * @param realJob The real job.
+   * 
+   * @return The delegate job.
+   * 
+   * @throws IllegalStateException If (remaining) sanity checks fail.
+   * 
+   * @see #getDelegateJob
+   * @see #isRealJob
+   * @see #isDelegateJob
+   * 
+   */
+  protected final DJ getDelegateJobMild (final J realJob)
+  {
+    if (realJob == null)
       throw new IllegalStateException ();
     final DJ delegateJob = this.delegateSimJobMap.get (realJob);
     if (delegateJob == null)
@@ -523,7 +553,7 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
       throw new IllegalStateException ();
     if (this.delegateSimJobMap.get (realJob) != delegateJob)
       throw new IllegalStateException ();
-    if (! this.jobQueue.contains (realJob))
+    if (! isJob (realJob))
       throw new IllegalStateException ();
     if (queue == null)
     {
@@ -562,7 +592,7 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
       throw new IllegalStateException ();
     if (this.delegateSimJobMap.get (realJob) != delegateJob)
       throw new IllegalStateException ();
-    if (! this.jobQueue.contains (realJob))
+    if (! isJob (realJob))
       throw new IllegalStateException ();
     return realJob;
   }
@@ -580,7 +610,7 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
   {
     if (realJob == null)
       throw new IllegalArgumentException ();
-    if (this.jobQueue.contains (realJob) || this.jobsInServiceArea.contains (realJob))
+    if (isJob (realJob) || isJobInServiceArea (realJob))
       throw new IllegalArgumentException ();
     if (this.delegateSimJobMap.containsKey (realJob))
       throw new IllegalStateException ();
@@ -591,7 +621,6 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
       throw new IllegalArgumentException ();
     this.delegateSimJobMap.put (realJob, delegateSimJob);
     this.realSimJobMap.put (delegateSimJob, realJob);
-    this.jobQueue.add (realJob);
   }
 
   /** Removes a real job and a delegate job from the internal data structures.
@@ -608,8 +637,6 @@ implements SimQueueComposite<DJ, DQ, J, Q>,
    */
   protected final void removeJobsFromQueueLocal (final J realJob, final DJ delegateJob)
   {
-    this.jobQueue.remove (realJob);
-    this.jobsInServiceArea.remove (realJob);
     this.delegateSimJobMap.remove (realJob);
     if (delegateJob != null)
       this.realSimJobMap.remove (delegateJob);

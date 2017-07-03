@@ -1,5 +1,7 @@
 package nl.jdj.jqueues.r5.entity.jq.queue.preemptive;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import nl.jdj.jqueues.r5.entity.jq.job.SimJob;
 import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
@@ -17,8 +19,17 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * 
  * <p>
  * This implementation admits waiting jobs to the service area (server) as soon as server-access credits are available,
- * irrespective of their remaining (i.c., required) service time.
- * Once admitted to the service area, they wait until being served exclusively by the (single) server.
+ * irrespective of their remaining (i.c., required) service time,
+ * in other words,
+ * jobs are not held in the waiting area because their required service time is larger
+ * that the remaining service time of the job currently in execution.
+ * Thus, once admitted to the service area, jobs may have to wait <i>there</i>
+ * until being served/executed exclusively by the (single) server.
+ * 
+ * <p>
+ * Jobs <i>are</i>, however, admitted to the service area in increasing order of required service time.
+ * In case of a tie, jobs are admitted in order of arrival.
+ * (This is only relevant to the case of the grant of limited server-access credits; fewer that the number of jobs waiting.)
  * 
  * @param <J> The type of {@link SimJob}s supported.
  * @param <Q> The type of {@link SimQueue}s supported.
@@ -116,14 +127,23 @@ extends AbstractPreemptiveSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Calls super method (in order to make implementation final).
+  /** Calls super method and clears the internal SRTF queue.
    * 
    */
   @Override
   protected final void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
+    this.srtfWaitingQueue.clear ();
   }  
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // SRTF WAITING QUEUE
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  private final List<J> srtfWaitingQueue = new ArrayList<> ();
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -131,12 +151,11 @@ extends AbstractPreemptiveSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job in the job queue maintaining non-decreasing (required) service-time ordering.
+  /** Inserts the job at the head of an internal SRTF wait queue; maintaining non-decreasing (required) service-time ordering.
    * 
    * <p>
    * In case of ties, jobs are inserted in order of arrival.
    * 
-   * @see #jobQueue
    * @see #getServiceTimeForJob
    * 
    */
@@ -144,10 +163,10 @@ extends AbstractPreemptiveSimQueue<J, Q>
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
     int newPosition = 0;
-    while (newPosition < this.jobQueue.size ()
-      && getServiceTimeForJob (this.jobQueue.get (newPosition)) <= getServiceTimeForJob (job))
+    while (newPosition < this.srtfWaitingQueue.size ()
+      && getServiceTimeForJob (this.srtfWaitingQueue.get (newPosition)) <= getServiceTimeForJob (job))
       newPosition++;
-    this.jobQueue.add (newPosition, job);    
+    this.srtfWaitingQueue.add (newPosition, job);    
   }
   
   /** Starts the arrived job if server-access credits are available.
@@ -159,7 +178,7 @@ extends AbstractPreemptiveSimQueue<J, Q>
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (job == null || ! getJobsInWaitingArea ().contains (job))
+    if (job == null || ! isJobInWaitingArea (job))
       throw new IllegalArgumentException ();
     if (hasServerAcccessCredits ())
       start (time, job);
@@ -180,19 +199,22 @@ extends AbstractPreemptiveSimQueue<J, Q>
     super.setServerAccessCreditsSubClass ();
   }
 
-  /** Starts jobs as long as there are server-access credits and jobs waiting.
+  /** Starts jobs in increasing service-time ordering as long as there are server-access credits and jobs waiting.
    * 
+   * <p>
+   * Jobs are started in increasing order of required service time through the use of an internal SRTF (SJF) wait queue.
+   * In case of a tie, jobs are admitted to the service area in order of arrival.
+   *
    * @see #hasServerAcccessCredits
    * @see #hasJobsInWaitingArea
    * @see #start
-   * @see #getFirstJobInWaitingArea
    * 
    */
   @Override
   protected final void rescheduleForNewServerAccessCredits (final double time)
   {
     while (hasServerAcccessCredits () && hasJobsInWaitingArea ())
-      start (time, getFirstJobInWaitingArea ());
+      start (time, this.srtfWaitingQueue.get (0));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +240,7 @@ extends AbstractPreemptiveSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job, after sanity checks, in the service area and administers its remaining service time.
+ /** Performs sanity checks, removes the job from the internal SRTF/SJF wait queue, and administers its remaining service time.
    * 
    * @see #getServiceTimeForJob
    * @see #remainingServiceTime
@@ -232,7 +254,9 @@ extends AbstractPreemptiveSimQueue<J, Q>
     || getJobsInServiceArea ().contains (job)
     || this.remainingServiceTime.containsKey (job))
       throw new IllegalArgumentException ();
-    this.jobsInServiceArea.add (job);
+    if (this.srtfWaitingQueue.get (0) != job)
+      throw new IllegalStateException ();
+    this.srtfWaitingQueue.remove (0);
     final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
@@ -243,7 +267,6 @@ extends AbstractPreemptiveSimQueue<J, Q>
    *  or if its (remaining) service time is strictly smaller than the remaining service of a job in execution,
    *  the latter of which is then preempted.
    * 
-   * @see #jobsBeingServed
    * @see #remainingServiceTime
    * @see #preemptJob
    * @see #startServiceChunk
@@ -311,10 +334,9 @@ extends AbstractPreemptiveSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Removes the job from the internal data structures and removes its departure event, if needed.
+  /** Removes the job from the internal data structures (a.o., the SRTF/SJF wait queue)
+   *  and removes its departure event, if needed.
    * 
-   * @see #jobQueue
-   * @see #jobsInServiceArea
    * @see #remainingServiceTime
    * @see #jobsBeingServed
    * @see #getDepartureEvents
@@ -324,10 +346,12 @@ extends AbstractPreemptiveSimQueue<J, Q>
   @Override
   protected final void removeJobFromQueueUponExit (final J exitingJob, final double time)
   {
-    if (exitingJob == null || ! this.jobQueue.contains (exitingJob))
+    if (exitingJob == null || ! isJob (exitingJob))
       throw new IllegalArgumentException ();
-    if (this.jobsInServiceArea.contains (exitingJob))
+    if (isJobInServiceArea (exitingJob))
     {
+      if (this.srtfWaitingQueue.contains (exitingJob))
+        throw new IllegalStateException ();
       if (! this.remainingServiceTime.containsKey (exitingJob))
         throw new IllegalStateException ();
       this.remainingServiceTime.remove (exitingJob);
@@ -342,17 +366,15 @@ extends AbstractPreemptiveSimQueue<J, Q>
         }
         this.jobsBeingServed.remove (exitingJob);
       }
-      this.jobsInServiceArea.remove (exitingJob);
     }
-    this.jobQueue.remove (exitingJob);
+    else if (! this.srtfWaitingQueue.remove (exitingJob))
+      throw new IllegalStateException ();
   }
 
   /** If there are jobs in the service area but none in execution,
    *  starts a service-chunk for the job in the service area
    *  with the minimum remaining service time.
    * 
-   * @see #jobsBeingServed
-   * @see #jobsInServiceArea
    * @see #remainingServiceTime
    * @see #startServiceChunk
    * 
@@ -360,7 +382,7 @@ extends AbstractPreemptiveSimQueue<J, Q>
   @Override
   protected final void rescheduleAfterExit (final double time)
   {
-    if (this.jobsBeingServed.isEmpty () && ! this.jobsInServiceArea.isEmpty ())
+    if (this.jobsBeingServed.isEmpty () && hasJobsInServiceArea ())
     {
       final double sRST = this.remainingServiceTime.firstValue ();
       final Set<J> jobsWithSRST = this.remainingServiceTime.getPreImageForValue (sRST);

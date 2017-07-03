@@ -143,13 +143,12 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Adds the job to the tail of the {@link #jobQueue}.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (job);
   }
 
   /** If needed, schedules a departure event for the arrived job respecting the fixed wait time of this queue;
@@ -213,8 +212,7 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Cancels the departure of the job (if present) and removes it,
-   *  after passing sanity checks, from the job queue {@link #jobQueue}.
+  /** Cancels the departure of the job (if present).
    * 
    * @see #cancelDepartureEvent
    * 
@@ -222,13 +220,8 @@ extends AbstractServerlessSimQueue<J, Q>
   @Override
   protected final void removeJobFromQueueUponRevokation (final J job, final double time, final boolean auto)
   {
-    if (job == null || ! this.jobQueue.contains (job))
-      throw new IllegalArgumentException ();
-    if (! this.jobsInServiceArea.isEmpty ())
-      throw new IllegalStateException ();
     if (! getDepartureEvents (job).isEmpty ())
       cancelDepartureEvent (job);
-    this.jobQueue.remove (job);
   }
 
   /** Does nothing.
@@ -246,17 +239,13 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Removes the job, after several sanity checks, from the {@link #jobQueue}.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    if (departingJob == null || ! this.jobQueue.contains (departingJob))
-      throw new IllegalArgumentException ();
-    if (! this.jobsInServiceArea.isEmpty ())
-      throw new IllegalStateException ();
-    this.jobQueue.remove (departingJob);
+    /* EMPTY */
   }
 
   /** Does nothing.

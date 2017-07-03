@@ -118,16 +118,12 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Adds the job to the tail of the {@link #jobQueue}.
-   * 
-   * @see #arrive
-   * @see #jobQueue
+  /** Does nothing.
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    this.jobQueue.add (job);
   }
 
   /** Makes the job depart.
@@ -203,17 +199,13 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Removes the job from the {@link #jobQueue}.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    if (! this.jobQueue.contains (departingJob))
-      throw new IllegalStateException ();
-    if (this.jobsInServiceArea.contains (departingJob))
-      throw new IllegalStateException ();
-    this.jobQueue.remove (departingJob);
+    /* EMPTY */
   }
 
   /** Does nothing.

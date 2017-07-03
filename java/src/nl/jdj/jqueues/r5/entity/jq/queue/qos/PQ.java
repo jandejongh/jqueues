@@ -125,7 +125,7 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job into {@link #jobQueue} (tail) and {@link #jobsQoSMap}.
+  /** Inserts the job into {@link #jobsQoSMap}.
    * 
    * @see  SimQueueQoSUtils#getAndCheckJobQoS
    * 
@@ -133,13 +133,6 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    if (job == null || this.jobQueue.contains (job) || job.getQueue () != null)
-      throw new IllegalArgumentException ();
-    if (this.jobsInServiceArea.contains (job))
-      throw new IllegalStateException ();
-    if (this.jobsBeingServed.keySet ().contains (job))
-      throw new IllegalStateException ();
-    this.jobQueue.add (job);
     final P qos = SimQueueQoSUtils.getAndCheckJobQoS (job, this);
     if (! this.jobsQoSMap.containsKey (qos))
       this.jobsQoSMap.put (qos, new LinkedHashSet<> ());
@@ -155,10 +148,6 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (! this.jobQueue.contains (job))
-      throw new IllegalStateException ();
-    if (this.jobsInServiceArea.contains (job))
-      throw new IllegalStateException ();
     final P qos = SimQueueQoSUtils.getAndCheckJobQoS (job, this);
     if (! this.jobsQoSMap.get (qos).contains (job))
       throw new IllegalStateException ();
@@ -215,9 +204,8 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Adds the job to the service area and updates {@link #remainingServiceTime}.
+  /** Updates {@link #remainingServiceTime}.
    * 
-   * @see #jobsInServiceArea
    * @see #getServiceTimeForJob
    * @see #remainingServiceTime
    * 
@@ -226,11 +214,10 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
   protected final void insertJobInQueueUponStart (final J job, final double time)
   {
     if (job == null
-    || (! getJobs ().contains (job))
-    || getJobsInServiceArea ().contains (job)
+    || (! isJob (job))
+    || isJobInServiceArea (job)
     || this.remainingServiceTime.containsKey (job))
       throw new IllegalArgumentException ();
-    this.jobsInServiceArea.add (job);
     final double jobServiceTime = getServiceTimeForJob (job);
     if (jobServiceTime < 0)
       throw new RuntimeException ();
@@ -247,8 +234,8 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
   protected final void rescheduleAfterStart (final J job, final double time)
   {
     if (job == null
-    || (! getJobs ().contains (job))
-    || (! getJobsInServiceArea ().contains (job))
+    || (! isJob (job))
+    || (! isJobInServiceArea (job))
     || (! this.remainingServiceTime.containsKey (job)))
       throw new IllegalArgumentException ();
     final double jobServiceTime = this.remainingServiceTime.get (job);
@@ -282,8 +269,6 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
   
   /** Removes the job from internal administration and cancels a pending departure event for it.
    * 
-   * @see #jobQueue
-   * @see #jobsInServiceArea
    * @see #remainingServiceTime
    * @see #jobsBeingServed
    * @see #getDepartureEvents
@@ -295,9 +280,9 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
   @Override
   protected final void removeJobFromQueueUponExit (final J exitingJob, final double time)
   {
-    if (exitingJob == null || ! this.jobQueue.contains (exitingJob))
+    if (exitingJob == null || ! isJob (exitingJob))
       throw new IllegalArgumentException ();
-    if (this.jobsInServiceArea.contains (exitingJob))
+    if (isJobInServiceArea (exitingJob))
     {
       if (! this.remainingServiceTime.containsKey (exitingJob))
         throw new IllegalStateException ();
@@ -313,7 +298,6 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
         }
         this.jobsBeingServed.remove (exitingJob);
       }
-      this.jobsInServiceArea.remove (exitingJob);
     }
     final P qos = SimQueueQoSUtils.getAndCheckJobQoS (exitingJob, this);
     if (! this.jobsQoSMap.containsKey (qos))
@@ -323,7 +307,6 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
     this.jobsQoSMap.get (qos).remove (exitingJob);
     if (this.jobsQoSMap.get (qos).isEmpty ())
       this.jobsQoSMap.remove (qos);
-    this.jobQueue.remove (exitingJob);
   }
   
   /** Invokes {@link #reschedule}.
@@ -346,9 +329,9 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
    * <p>
    * This method effectively determines the job that <i>should</i> be in service in {@link PQ}
    * by examining (solely)
-   * {@link #jobQueue},
+   * {@link #getJobs},
    * {@link #jobsQoSMap},
-   * {@link #jobsInServiceArea},
+   * {@link #getJobsInServiceArea},
    * and {@link #hasServerAcccessCredits}.
    * 
    * <p>
@@ -370,9 +353,9 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
         throw new IllegalStateException ();
       else
         for (final J job : jobsP)
-          if (job == null || ! this.jobQueue.contains (job))
+          if (job == null || ! isJob (job))
             throw new IllegalStateException ();
-          else if (this.jobsInServiceArea.contains (job) || hasServerAcccessCredits ())
+          else if (isJobInServiceArea (job) || hasServerAcccessCredits ())
             return job;
     return null;
   }
@@ -387,13 +370,13 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
    * it preempts the latter job through {@link #preemptJob}, and recurs.
    * Otherwise, if there is a mismatch but no job is currently being served,
    * it starts {@link #getExecutableJobWithHighestPriority}
-   * either by {@link #start} if the job is not already in {@link #jobsInServiceArea},
+   * either by {@link #start} if the job is not already in the service area,
    * or by {@link #startServiceChunk} otherwise.
    * 
    * @see #jobsBeingServed
    * @see #getExecutableJobWithHighestPriority
    * @see #preemptJob
-   * @see #jobsInServiceArea
+   * @see #isJobInServiceArea
    * @see #start
    * @see #startServiceChunk
    * 
@@ -416,7 +399,7 @@ extends AbstractPreemptiveSimQueueQoS<J, Q, P>
       }
       else
       {
-        if (! this.jobsInServiceArea.contains (jobToServe))
+        if (! isJobInServiceArea (jobToServe))
           start (getLastUpdateTime (), jobToServe);
         else
           startServiceChunk (getLastUpdateTime (), jobToServe);

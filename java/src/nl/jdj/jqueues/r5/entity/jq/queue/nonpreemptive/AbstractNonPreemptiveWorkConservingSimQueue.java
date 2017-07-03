@@ -50,7 +50,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  * <li> Resetting the queueing system, if queue-specific data structures are maintained for visiting jobs,
  *      by augmenting {@link #resetEntitySubClass}.
  * <li> Inserting a job in the waiting area (possibly imposing a queue-specific structure)
- *      by implementing {@link #insertAdmittedJobInQueueUponArrival}.
+ *      by overriding {@link #insertJobInQueueUponArrival}.
  * <li> If needed, override {@link #selectJobToDropAtFullQueue} in order to impose a non-default drop policy.
  * <li> Selecting which job to start by implementing {@link #selectJobToStart}
  *      (the moments to start jobs are entirely managed by this class).
@@ -114,7 +114,7 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   protected void resetEntitySubClass ()
   {
     super.resetEntitySubClass ();
-    this.jobToDropAtFullQueue = null;
+//    this.jobToDropAtFullQueue = null;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -145,127 +145,24 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** A flag used between {@link #insertJobInQueueUponArrival}
-   *  and {@link #rescheduleAfterArrival}
-   *  to indicate that a job from the waiting area must be dropped.
+  /** The default implementation does nothing.
    * 
-   * <p>
-   * The flag is cleared upon construction,
-   * upon a reset,
-   * and just before the actual drop takes place.
-   * 
-   */
-  private J jobToDropAtFullQueue = null;
-  
-  /** Enters the job into the queue administration if admitted;
-   *  if needed, prepares the drop of another job in the waiting area.
-   * 
-   * <P>
-   * If the arriving job can be taken into service immediately,
-   * or if there is sufficient waiting room,
-   * it is admitted and entered into the
-   * internal administration through {@link #insertAdmittedJobInQueueUponArrival}.
-   * 
-   * <p>
-   * Note that we must temporarily accept the fact that in case there is no waiting room left, but we know that the job will
-   * be taken into service immediately, we leave the queue in an inconsistent state by adding the job to {@link #jobQueue},
-   * having more jobs waiting than allowed.
-   * Here we rely on the fact that by contract of {@link AbstractSimQueue#arrive}, between corresponding calls to
-   * {@link #insertJobInQueueUponArrival} and {@link #rescheduleAfterArrival} there can be no event handling from the event list
-   * or from notifications from elsewhere.
-   * 
-   * <p>
-   * If the arriving job finds a full (and non-empty) waiting area,
-   * this method invokes {@link #selectJobToDropAtFullQueue}
-   * by which sub-classes indicate the drop policy.
-   * If the arriving job is to be dropped,
-   * it is simply not entered into the {@link #jobQueue}
-   * and the {@link AbstractSimQueue} infrastructure will automatically drop the job.
-   * If, however, another job is selected from the waiting area,
-   * the arriving job is entered through {@link #insertAdmittedJobInQueueUponArrival}
-   * (again temporarily leaving the system in a consistent state),
-   * and an internal flag is raised for {@link #rescheduleAfterArrival}
-   * in order to carry out the actual drop.
-   * 
-   * @see #hasServerAcccessCredits
-   * @see #isStartArmed
-   * @see #getNumberOfJobsInWaitingArea
-   * @see #getBufferSize
-   * @see #jobQueue
-   * @see #insertAdmittedJobInQueueUponArrival
-   * @see #selectJobToDropAtFullQueue
    * 
    */
   @Override
-  protected final void insertJobInQueueUponArrival (final J job, final double time)
+  protected void insertJobInQueueUponArrival (final J job, final double time)
   {
-    if ((hasServerAcccessCredits () && isStartArmed ())
-      || getBufferSize () == Integer.MAX_VALUE
-      || getNumberOfJobsInWaitingArea () < getBufferSize ())
-    {
-      insertAdmittedJobInQueueUponArrival (job, time);
-      if (! this.jobQueue.contains (job))
-        throw new IllegalStateException ();
-    }
-    else if (hasJobsInWaitingArea ())
-    {
-      final J jobToDrop = selectJobToDropAtFullQueue (job, time);
-      if (jobToDrop == null)
-        throw new RuntimeException ();
-      if (jobToDrop != job)
-      {
-        insertAdmittedJobInQueueUponArrival (job, time);
-        if (this.jobToDropAtFullQueue != null)
-          throw new IllegalStateException ();
-        if (! this.jobQueue.contains (job))
-          throw new IllegalStateException ();
-        if (! this.jobQueue.contains (jobToDrop))
-          throw new IllegalStateException ();
-        this.jobToDropAtFullQueue = jobToDrop;
-      }
-    }
   }
 
-  /** Inserts an admitted job into {@link #jobQueue} upon arrival.
-   * 
-   * <p>
-   * Auxiliary method to the final {@link #insertJobInQueueUponArrival}.
-   * 
-   * <p>
-   * Caller has already checked queue-access vacations and admission to the waiting area (in view of the buffer size).
-   * Note that implementations must temporarily admit a single job more that the available waiting area,
-   * to account for the fact that there may not be waiting area available, must an arriving job
-   * is taken into service immediately.
-   * Another such case arises when an arriving job must be entered into the {@link #jobQueue}
-   * before another job must be dropped (due to a full buffer).
-   * 
-   * <p>
-   * Obviously, implementations are free to maintain more complicated structures for the waiting area next to just
-   * {@link #jobQueue} and {@link #jobsInServiceArea}.
-   * However, at the expense of an exception upon return, implementations must <i>always</i> insert the
-   * job in {@link #jobQueue}.
-   * 
-   * @param job  The job to insert, non-{@code null}.
-   * @param time The current time, i.e., the job's arrival time.
-   * 
-   * @see #insertJobInQueueUponArrival
-   * @see #rescheduleAfterArrival
-   * 
-   */
-  protected abstract void insertAdmittedJobInQueueUponArrival (final J job, final double time);
-  
-  /** Selects the job to drop in case the waiting area is full (and non-empty) when a job arrives.
-   * 
-   * <p>
-   * Implementations can rely on the fact that the arriving job has not yet entered the
-   * {@link #jobQueue}, and that the waiting area is full and non-empty
-   * (the latter rules out the case of a waiting area of zero size).
+  /** Selects the job to drop from the waiting area that in case it "overflows".
    * 
    * <p>
    * Implementations only have to select either the arriving job,
    * or a job from the waiting area to be dropped,
    * i.e., they should not alter the internal administration
    * and they should not reschedule.
+   * Note that the arriving job is actually present in the waiting area,
+   * see {@link AbstractSimQueue#arrive}.
    * 
    * <p>
    * The default implementation returns the {@code arrivingJob} argument;
@@ -284,7 +181,16 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
     return arrivingJob;
   }
   
-  /** Carries out a pending job drop, if present; otherwise invokes {@link #reschedule}.
+  /** Drops a job from the waiting area if it has overflown; otherwise reschedules.
+   * 
+   * <p>
+   * The waiting area is "overflown" if it holds more (i.c., one) jobs than the buffer size
+   * <i>and</i> a job cannot be taken into service immediately
+   * in view of {@link #hasServerAcccessCredits} and {@link #isStartArmed}.
+   * 
+   * <p>
+   * If a job is to be dropped from the waiting area,
+   * it is selected through {@link #selectJobToDropAtFullQueue}.
    * 
    * @see #insertJobInQueueUponArrival
    * @see #selectJobToDropAtFullQueue
@@ -295,12 +201,10 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   @Override
   protected final void rescheduleAfterArrival (final J job, final double time)
   {
-    if (this.jobToDropAtFullQueue != null)
-    {
-      final J jobToDrop = this.jobToDropAtFullQueue;
-      this.jobToDropAtFullQueue = null;
-      drop (jobToDrop, time);
-    }
+    if ((! (hasServerAcccessCredits () && isStartArmed ()))
+    &&  getBufferSize () < Integer.MAX_VALUE
+    &&  getNumberOfJobsInWaitingArea () > getBufferSize ())
+      drop (selectJobToDropAtFullQueue (job, time), time);
     else
       reschedule (time);
   }
@@ -422,28 +326,22 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
    * <p>
    * Implementations can assume that the waiting area is non-empty.
    * Moreover, they are free to chose whichever job from the waiting area to start,
-   * irrespective of the structure implied by {@link #insertAdmittedJobInQueueUponArrival}.
+   * irrespective of the structure implied by {@link #insertJobInQueueUponArrival}.
    * 
    * @return The job in the waiting area to start next, must not be {@code null} and <i>must</i> be present in the waiting area.
    * 
-   * @see #insertAdmittedJobInQueueUponArrival
+   * @see #insertJobInQueueUponArrival
    * @see #reschedule
-   * @see #getFirstJobInWaitingArea
    * 
    */
   protected abstract J selectJobToStart ();
   
-  /** Adds the job to the tail of the service area (but its order is irrelevant).
-   * 
-   * @see #jobsInServiceArea
+  /** Does nothing.
    * 
    */
   @Override
   protected final void insertJobInQueueUponStart (final J job, final double time)
   {
-    if (job == null || (! getJobs ().contains (job)) || getJobsInServiceArea ().contains (job))
-      throw new IllegalArgumentException ();
-    this.jobsInServiceArea.add (job);
   }
 
   /** Depending on the job's requested service time, makes it depart immediately, schedules a suitable departure event,
@@ -506,10 +404,9 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   /** Removes the job from the system and cancels its departure event (if present).
    * 
    * <p>
-   * Checks the presence of the departing job in {@link #jobQueue} (jobs must be present),
+   * Checks the presence of the departing job through {@link #isJob} (jobs must be present),
    * cancels pending departure events for the job (if present),
-   * invokes {@link #removeJobFromQueueUponExit}
-   * and checks the absence of the job in {@link #jobQueue} and {@link #jobsInServiceArea}.
+   * and invokes {@link #removeJobFromQueueUponExit}.
    * 
    * <p>
    * This method also serves as entry point for
@@ -518,23 +415,17 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
    * 
    * @throws IllegalStateException If sanity checks fail.
    * 
-   * @see #jobQueue
-   * @see #jobsInServiceArea
    * @see #removeJobFromQueueUponExit
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    if (! this.jobQueue.contains (departingJob))
+    if (! isJob (departingJob))
       throw new IllegalStateException ();
     if (! getDepartureEvents (departingJob).isEmpty ())
       cancelDepartureEvent (departingJob);
     removeJobFromQueueUponExit (departingJob, time);
-    if (this.jobQueue.contains (departingJob))
-      throw new RuntimeException ();
-    if (this.jobsInServiceArea.contains (departingJob))
-      throw new RuntimeException ();
   }
 
   /** Invokes {@link #reschedule} passing the time argument.
@@ -555,13 +446,12 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   /** Removes a job that ends its visit (in whatever way) from the internal administration.
    * 
    * <p>
-   * The default implementation removes the job from {@link #jobsInServiceArea} and {@link #jobQueue},
-   * which is also the minimum requirement for overrides.
+   * The default implementation does nothing.
    * 
    * <p>
-   * Implementations do not have to cancel departure events; this has been done by caller already.
+   * Implementations do not have to cancel (registered) departure events; this has been done by caller already.
    * 
-   * @param exitingJob The jobs that ends its visit, non-{@code null} and present in {@link #jobQueue}.
+   * @param exitingJob The jobs that ends its visit, non-{@code null}.
    * @param time       The current time, i.e., the time the job ends its visit.
    * 
    * @see #removeJobFromQueueUponDrop
@@ -571,8 +461,6 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
    */
   protected void removeJobFromQueueUponExit  (final J exitingJob, final double time)
   {
-    this.jobQueue.remove (exitingJob);
-    this.jobsInServiceArea.remove (exitingJob);    
   }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -591,7 +479,7 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
    * and started through {@link #start}.
    * 
    * @see #hasServerAcccessCredits
-   * @see #getNumberOfJobsInWaitingArea
+   * @see #hasJobsInWaitingArea
    * @see #hasServerAvailable
    * @see #start
    * @see #selectJobToStart
@@ -602,7 +490,7 @@ public abstract class AbstractNonPreemptiveWorkConservingSimQueue
   protected final void reschedule (final double time)
   {
     while (hasServerAcccessCredits ()
-      && getNumberOfJobsInWaitingArea () > 0
+      && hasJobsInWaitingArea ()
       && hasServerAvailable ())
       // We rely on the sanity checks in AbstractSimQueue.start here...
       start (time, selectJobToStart ());

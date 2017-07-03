@@ -12,7 +12,7 @@ import nl.jdj.jsimulation.r5.SimEventList;
  *  but are dropped if they exceed a give arrival-rate limit.
  * 
  * <p>
- * This {@link SimQueue} is server-less.
+ * This {@link SimQueue} is server-less, actually, without waiting area as well (it never exposes jobs present).
  * 
  * <p>
  * The operation of this {@link SimQueue} is controlled by the {@code rateLimit} property, see {@link #getRateLimit}.
@@ -46,7 +46,7 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Creates a {@link ALIMIT} queue with infinite buffer size given an event list and (arrival) rate limit.
+  /** Creates a {@link ALIMIT} queue with (irrelevant) infinite buffer size given an event list and (arrival) rate limit.
    *
    * @param eventList The event list to use.
    * @param rateLimit The (arrival) rate limit, non-negative.
@@ -185,23 +185,17 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of the job queue.
-   * 
-   * @see #jobQueue
-   * @see #rescheduleAfterArrival
+  /** Does nothing.
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    if ((! isRateLimited ())
-      || getBufferSize () == Integer.MAX_VALUE
-      || getNumberOfJobsInWaitingArea () < getBufferSize ())
-    this.jobQueue.add (job);      
+    /* EMPTY */
   }
 
-  /** Makes the job depart if the queue is not rate-limited and schedules a new {@link RateLimitExpirationEvent}
-   *  if the arrival-rate limit is finite and non-zero; drops the jobs if the queue is rate-limited.
+  /** Drops the job if the queue is currently rate-limited,
+   *  but makes it depart immediately otherwise, scheduling a new {@link RateLimitExpirationEvent} if needed.
    * 
    * @see #isRateLimited
    * @see #depart
@@ -232,13 +226,13 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Invokes {@link #removeJobFromQueueUponDeparture}.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
-    removeJobFromQueueUponDeparture (job, time);
+    /* EMPTY */
   }
 
   /** Does nothing.
@@ -256,22 +250,26 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Invokes {@link #removeJobFromQueueUponDeparture}.
+  /** Throws {@link IllegalStateException}.
+   * 
+   * @throws IllegalStateException Always, as a call to this method is unexpected.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponRevokation (final J job, final double time, final boolean auto)
   {
-    removeJobFromQueueUponDeparture (job, time);
+    throw new IllegalStateException ();
   }
 
-  /** Does nothing.
+  /** Throws {@link IllegalStateException}.
+   * 
+   * @throws IllegalStateException Always, as a call to this method is unexpected.
    * 
    */
   @Override
   protected final void rescheduleAfterRevokation (final J job, final double time, final boolean auto)
   {
-    /* EMPTY */
+    throw new IllegalStateException ();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -390,20 +388,13 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Removes the job, after passing sanity checks, from the {@link #jobQueue}.
-   * 
-   * <p>
-   * Core method for removing a job from the queue (drop/revocation/departure).
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    if (departingJob == null || ! this.jobQueue.contains (departingJob))
-      throw new IllegalArgumentException ();
-    if (! this.jobsInServiceArea.isEmpty ())
-      throw new IllegalStateException ();
-    this.jobQueue.remove (departingJob);
+    /* EMPTY */
   }
 
   /** Does nothing.

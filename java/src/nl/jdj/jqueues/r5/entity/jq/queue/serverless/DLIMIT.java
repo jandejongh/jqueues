@@ -205,39 +205,17 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Inserts the job at the tail of the job queue if it will depart immediately,
-   *  or else if there is still waiting room available.
-   * 
-   * <p>
-   * Note that we must temporarily accept the fact that in case there is no waiting room left, but we know that the job will
-   * depart immediately, we leave the queue in an inconsistent state by adding the job to {@link #jobQueue},
-   * having more jobs waiting than allowed.
-   * Here we rely on the fact that by contract of {@link AbstractSimQueue#arrive}, between corresponding calls to
-   * {@link #insertJobInQueueUponArrival} and {@link #rescheduleAfterArrival} there can be no event handling from the event list
-   * or from notifications from elsewhere.
-   * 
-   * <p>
-   * The check for full occupation of the waiting area is not needed for the native {@link DLIMIT} queueing system,
-   * but added as a courtesy for sub-classes that (potentially) use a finite buffer size, see, for instance, {@link LeakyBucket}.
-   * 
-   * @see #isRateLimited
-   * @see #getNumberOfJobsInWaitingArea
-   * @see #getBufferSize
-   * @see #jobQueue
-   * @see #rescheduleAfterArrival
-   * @see LeakyBucket
+
+  /** Does nothing.
    * 
    */
   @Override
   protected final void insertJobInQueueUponArrival (final J job, final double time)
   {
-    if ((! isRateLimited ())
-      || getBufferSize () == Integer.MAX_VALUE
-      || getNumberOfJobsInWaitingArea () < getBufferSize ())
-    this.jobQueue.add (job);      
+    /* EMPTY */
   }
 
-  /** Makes the job depart if the queue is not rate-limited.
+  /** Makes the job depart if the queue is not rate-limited; otherwise drop it if the waiting queue is "overflown".
    * 
    * @see #isRateLimited
    * @see #depart
@@ -249,6 +227,8 @@ extends AbstractServerlessSimQueue<J, Q>
   {
     if (! isRateLimited ())
       depart (time, job);
+    else if (getBufferSize () < Integer.MAX_VALUE && getNumberOfJobsInWaitingArea () > getBufferSize ())
+      drop (job, time);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -257,26 +237,22 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Throws {@link IllegalStateException}.
-   * 
-   * @throws IllegalStateException Always, as a call to this method is unexpected.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDrop (final J job, final double time)
   {
-    throw new IllegalStateException ();
+    /* EMPTY */
   }
 
-  /** Throws {@link IllegalStateException}.
-   * 
-   * @throws IllegalStateException Always, as a call to this method is unexpected.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void rescheduleAfterDrop (final J job, final double time)
   {
-    throw new IllegalStateException ();
+    /* EMPTY */
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -285,19 +261,13 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Removes the job, after passing sanity checks, from the job queue {@link #jobQueue}.
-   * 
-   * @see #jobQueue
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponRevokation (final J job, final double time, final boolean auto)
   {
-    if (job == null || ! this.jobQueue.contains (job))
-      throw new IllegalArgumentException ();
-    if (! this.jobsInServiceArea.isEmpty ())
-      throw new IllegalStateException ();
-    this.jobQueue.remove (job);
+    /* EMPTY */
   }
 
   /** Does nothing.
@@ -334,7 +304,7 @@ extends AbstractServerlessSimQueue<J, Q>
    * @see RateLimitExpirationEvent
    * @see #eventsScheduled
    * @see #isRateLimited
-   * @see #jobQueue
+   * @see #hasJobsInWaitingArea
    * @see #depart
    * @see #triggerPotentialNewStartArmed
    * @see #clearAndUnlockPendingNotificationsIfLocked
@@ -356,8 +326,7 @@ extends AbstractServerlessSimQueue<J, Q>
     final boolean isTopLevel = clearAndUnlockPendingNotificationsIfLocked ();
     if (! isTopLevel)
       throw new IllegalStateException ();
-    // Note: all jobs present are in waiting area; might as well check 'jobQueue' directly.
-    if (! this.jobQueue.isEmpty ())
+    if (hasJobsInWaitingArea ())
       depart (time, getFirstJobInWaitingArea ());
     else
       triggerPotentialNewStartArmed (time);
@@ -451,33 +420,22 @@ extends AbstractServerlessSimQueue<J, Q>
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /** Removes the job from the {@link #jobQueue}.
+  /** Does nothing.
    * 
    */
   @Override
   protected final void removeJobFromQueueUponDeparture (final J departingJob, final double time)
   {
-    if (! this.jobQueue.contains (departingJob))
-      throw new IllegalStateException ();
-    if (this.jobsInServiceArea.contains (departingJob))
-      throw new IllegalStateException ();
-    this.jobQueue.remove (departingJob);
   }
 
   /** Schedules a new {@link RateLimitExpirationEvent} if the departure-rate limit is finite and non-zero.
    * 
    * <p>
    * If the rate limit is zero or negative, this method throws an exception, as departures are not supposed to happen.
-   * If the rate limit is {@link Double#POSITIVE_INFINITY},
-   * this method departs the next job in the waiting area, i.c., {@link #getFirstJobInWaitingArea},
-   * through {@link #depart} (if such a job is available).
    * 
    * @see #isRateLimited
    * @see #getRateLimit
    * @see #scheduleRateLimitExpirationEvent
-   * @see #jobsInServiceArea
-   * @see #getFirstJobInWaitingArea
-   * @see #depart
    * 
    * @throws IllegalStateException If the rate limit is not strictly positive, or if this queue is currently under
    *                               rate-limitation, as determined through {@link #isRateLimited},
@@ -494,8 +452,6 @@ extends AbstractServerlessSimQueue<J, Q>
       this.isRateLimited = true;
       scheduleRateLimitExpirationEvent (time + 1.0 / this.rateLimit);
     }
-    else if (! this.jobsInServiceArea.isEmpty ())
-      depart (time, getFirstJobInWaitingArea ());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
