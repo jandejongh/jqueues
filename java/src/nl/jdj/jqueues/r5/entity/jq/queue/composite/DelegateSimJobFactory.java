@@ -22,8 +22,30 @@ import nl.jdj.jqueues.r5.entity.jq.queue.SimQueue;
  * This file is covered by the LICENSE file in the root of this project.
  * 
  */
+@FunctionalInterface
 public interface DelegateSimJobFactory<DJ extends SimJob, DQ extends SimQueue, J extends SimJob, Q extends SimQueue>
 {
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // RESET FACTORY
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Resets this factory.
+   * 
+   * <p>
+   * The default implementation does nothing.
+   * Delegate {@code SimJob} factories are automatically reset upon a reset at the (composite) queue to which they are attached.
+   * 
+   * @param time  The (simulation) time of the reset (the "new" current time).
+   * @param queue The queue at which the reset occurs; may be {@code null} for autonomous resets.
+   * 
+   */
+  default void resetFactory (final double time, final Q queue)
+  {
+    /* EMPTY */
+  }
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
