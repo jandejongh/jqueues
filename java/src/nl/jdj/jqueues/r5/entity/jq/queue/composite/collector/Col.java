@@ -88,6 +88,9 @@ public class Col
    * @see #getEventList
    * @see #getMainQueue
    * @see #getCollectorQueue
+   * @see #isCollectDrops
+   * @see #isCollectAutoRevocations
+   * @see #isCollectDepartures
    * @see #getDelegateSimJobFactory
    * 
    */
@@ -102,7 +105,7 @@ public class Col
        collectorQueueCopy,
        isCollectDrops (),
        isCollectAutoRevocations (),
-       isCollectAutoRevocations (),
+       isCollectDepartures (),
        getDelegateSimJobFactory ());
   }
   
