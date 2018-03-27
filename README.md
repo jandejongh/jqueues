@@ -7,6 +7,13 @@ Unlike DEMOS, which also includes support for (e.g.) random-number generation, s
 
 On the other hand, compared to DEMOS, jqueues has a somewhat larger collection of well-known queueing systems, and supports the notion of composite queues in which queueing systems are constructed by "combining" other queueing systems (e.g., by putting them in tandem).
 
-The project depends on jsimulation (https://github.com/jandejongh/jsimulation). Both jsimulation and jqueues have extensive javadoc comments; a 'Guided Tour' is on its way.
+### Dependencies
 
-License: Apache v2.0.
+The project depends on jsimulation (https://github.com/jandejongh/jsimulation).
+
+### Documentation
+
+Both jsimulation and jqueues have extensive javadoc comments; a 'Guided Tour' is on its way.
+
+### License
+Apache v2.0.
