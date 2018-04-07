@@ -13,4 +13,6 @@ r5.1.0
         - Removed code samples for book & guided tour.
 	- Added 'license header' to all (Java) files.
 	- Started maintenance of 'Issues' on github/jandejongh/jqueues.
-	- First version on Maven Central.
+
+r5.2.0
+	- First release on Maven Central / OSSRH.
