@@ -62,7 +62,7 @@ extends DefaultSelfListeningSimJob<J, Q>
    * @param name                    The name.
    * @param requestedServiceTimeMap The requested service-time map.
    * 
-   * @see DefaultSimJob#DefaultSimJob(nl.jdj.jsimulation.r5.SimEventList, java.lang.String, java.util.Map)
+   * @see DefaultSimJob#DefaultSimJob(SimEventList, String, Map)
    *        For detailed explanation on the parameters.
    * 
    */
@@ -77,7 +77,7 @@ extends DefaultSelfListeningSimJob<J, Q>
    * @param name                 The name.
    * @param requestedServiceTime The requested service-time.
    * 
-   * @see DefaultSimJob#DefaultSimJob(nl.jdj.jsimulation.r5.SimEventList, java.lang.String, double)
+   * @see DefaultSimJob#DefaultSimJob(SimEventList, String, double)
    *        For detailed explanation on the parameters.
    * 
    */

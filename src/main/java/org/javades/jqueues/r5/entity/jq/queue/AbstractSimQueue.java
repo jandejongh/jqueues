@@ -982,7 +982,7 @@ public abstract class AbstractSimQueue<J extends SimJob, Q extends AbstractSimQu
    * @param time The time at which the request is issued, i.c., the current time.
    * @param job  The job to be revoked from the queue.
    * 
-   * @see SimQueue#revoke(double, nl.jdj.jqueues.r5.entity.jq.job.SimJob, boolean)
+   * @see SimQueue#revoke(double, SimJob, boolean)
    * 
    */
   @Override

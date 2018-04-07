@@ -367,7 +367,7 @@ extends SimEntity, SimQoS<J, Q>
   /** Revocation of a job at a queue.
    *
    * <p>
-   * Unlike {@link #revoke(double, nl.jdj.jqueues.r5.entity.jq.job.SimJob, boolean)}, this request can never fail
+   * Unlike {@link #revoke(double, SimJob, boolean)}, this request can never fail
    * in the sense that upon return from this method, the job is no longer present in the queue.
    * This method does nothing if the job is not present a priori at the queue.
    * 
