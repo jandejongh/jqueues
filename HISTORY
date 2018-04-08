@@ -13,6 +13,8 @@ r5.1.0
         - Removed code samples for book & guided tour.
 	- Added 'license header' to all (Java) files.
 	- Started maintenance of 'Issues' on github/jandejongh/jqueues.
+	- Minor incompatibility with previous release (constructors of DefaultSimEventList and super-classes).
 
 r5.2.0
 	- First release on Maven Central / OSSRH.
+	- Incompatible with previous releases due to change of package prefix (nl.jdj -> org.javades).
