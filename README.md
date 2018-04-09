@@ -14,10 +14,16 @@ like FCFS, FCFS_B (limited buffer), FCFS_c (multiple servers),
 LCFS (PR), Infinite Server, Random, PS, SJF, SRTF, Wait-Until-Relieved,
 GATE, LeakyBucket, ALIMIT (arrival-rate limiter), Social PS, Catch-Up PS, etc.
 All queues support job revocations.
+
 It also features generic composite queueing systems like Tandem, FeedBack and Jackson queues.
-With the CTandem2 queue, you can even connect the "waiting area" of one queue with
+In a composite queue, the sub-queues and their interconnections are effectively
+hidden; instead, a single queueing system is presented.
+Composite queueing systems can be nested arbitrarily deep.
+
+With the (composite) CTandem2 queue, you can even connect the "waiting area" of one queue with
 the "service area" of another. This allows for many other queueing systems like
 Multi-Server Shortest-Job First through SJF_c = CTandem2[SJF, FCFS_c].
+
 Finally, a special class of composite queues named "encapsulators"
 operate on a single queueing system.
 An encapsulator is able to modify specific aspects of the (sub)queue's behavior,
