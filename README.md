@@ -22,7 +22,7 @@ Finally, a special class of composite queues named "encapsulators"
 operate on a single queueing system.
 An encapsulator is able to modify specific aspects of the (sub)queue's behavior,
 like hiding the start of jobs, or limiting the waiting time of jobs
-(jobs that must wait beyond a threshold are automatically dropped).
+(jobs that must wait beyond a given threshold are automatically dropped).
 
 ### What is does NOT do
 
