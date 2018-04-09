@@ -19,7 +19,7 @@ the "service area" of another. This allows for many other queueing systems like
 Multi-Server Shortest-Job First through SJF_c = CTandem2[SJF, FCFS_c].
 Finally, a special class of composite queues named "encapsulators"
 operate on a single queueing system.
-An encapsulator is able to modify specific aspects of the queue's behavior,
+An encapsulator is able to modify specific aspects of the (sub)queue's behavior,
 like hiding the start of jobs, or limiting the waiting time of jobs
 (jobs that must wait beyond a threshold are automatically dropped).
 
