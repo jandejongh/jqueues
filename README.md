@@ -46,7 +46,8 @@ The project depends on jsimulation (https://github.com/jandejongh/jsimulation).
 
 ### Documentation
 
-Both jsimulation and jqueues have extensive javadoc comments; a 'Guided Tour' is on its way.
+Both jsimulation and jqueues have extensive javadoc comments; a 'Guided Tour' is on its way;
+see https://github.com/jandejongh/jqueues-guided-tour.
 
 ### License
 Apache v2.0.
