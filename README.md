@@ -24,11 +24,14 @@ With the (composite) CTandem2 queue, you can even connect the "waiting area" of 
 the "service area" of another. This allows for many other queueing systems like
 Multi-Server Shortest-Job First through SJF_c = CTandem2[SJF, FCFS_c].
 
-Finally, a special class of composite queues named "encapsulators"
+A special class of composite queues named "encapsulators"
 operate on a single queueing system.
 An encapsulator is able to modify specific aspects of the (sub)queue's behavior,
 like hiding the start of jobs, or limiting the waiting time of jobs
 (jobs that must wait beyond a given threshold are automatically dropped).
+
+The software comes with many abstract base classes for queueing systems,
+allowing for smooth realization of new queueing systems.
 
 ### What is does NOT do
 
