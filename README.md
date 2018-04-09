@@ -11,7 +11,8 @@ On the other hand, compared to DEMOS, jqueues has a somewhat larger collection o
 
 The software features a wide range of both well-known as well as hardly known queueing systems,
 like FCFS, FCFS_B (limited buffer), FCFS_c (multiple servers),
-LCFS (PR), Infinite Server, Random, PS, SJF, SRTF, Wait-Until-Relieved, GATE, etc.
+LCFS (PR), Infinite Server, Random, PS, SJF, SRTF, Wait-Until-Relieved,
+GATE, Social PS, Catch-Up PS, etc.
 All queues support job revocations.
 It also features generic composite queueing systems like Tandem, FeedBack and Jackson queues.
 With the CTandem2 queue, you can even connect the "waiting area" of one queue with
