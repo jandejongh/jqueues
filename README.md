@@ -10,12 +10,18 @@ On the other hand, compared to DEMOS, jqueues has a somewhat larger collection o
 ### Features
 
 The software features a wide range of both well-known as well as hardly known queueing systems,
-like FCFS, FCFS_B, LCFS (PR), Infinite Server, Random, PS, SRTF, Wait-Until-Relieved, GATE, etc.
+like FCFS, FCFS_B (limited buffer), FCFS_c (multiple servers),
+LCFS (PR), Infinite Server, Random, PS, SJF, SRTF, Wait-Until-Relieved, GATE, etc.
 All queues support job revocations.
 It also features generic composite queueing systems like Tandem, FeedBack and Jackson queues.
 With the CTandem2 queue, you can even connect the "waiting area" of one queue with
 the "service area" of another. This allows for many other queueing systems like
-LCFS_B = CTandem2[FCFS_B,LCFS].
+Multi-Server Shortest-Job First through SJF_c = CTandem2[SJF, FCFS_c].
+Finally, a special class of composite queues named "encapsulators"
+operate on a single queueing system.
+An encapsulator is able to modify specific aspects of the queue's behavior,
+like hiding the start of jobs, or limiting the waiting time of jobs
+(jobs that must wait beyond a threshold are automatically dropped).
 
 ### What is does NOT do
 
