@@ -16,6 +16,7 @@
  */
 package org.javades.jqueues.r5.entity.jq.job;
 
+import java.util.function.Function;
 import org.javades.jqueues.r5.entity.SimEntity;
 import org.javades.jqueues.r5.entity.jq.SimQoS;
 import org.javades.jqueues.r5.entity.jq.queue.SimQueue;
@@ -54,7 +55,7 @@ extends SimEntity, SimQoS<J, Q>
    * @return The {@link SimQueue} this {@link SimJob} is currently visiting or
    *         {@code null}.
    */
-  public Q getQueue ();
+  Q getQueue ();
 
   /** Set the queue being visited.
    *
@@ -71,7 +72,7 @@ extends SimEntity, SimQoS<J, Q>
    *                               and the supplied argument is not {@code null}.
    *
    */
-  public void setQueue (Q queue)
+  void setQueue (Q queue)
     throws IllegalStateException;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,9 +110,29 @@ extends SimEntity, SimQoS<J, Q>
    * @see #getQueue
    *
    */
-  public double getServiceTime (Q queue)
+  double getServiceTime (Q queue)
     throws IllegalArgumentException;
 
+  /** Returns a {@link Function} that maps a {@link SimQueue} onto this {@link SimJob}'s requested service time
+   *  for that queue.
+   * 
+   * <p>
+   * The returned function must <i>always</i> (continue to) match the behavior of {@link #getServiceTime}.
+   * 
+   * <p>
+   * The default implementation uses {@link #getServiceTime}.
+   * 
+   * @return A {@link Function} that maps a {@link SimQueue} onto this {@link SimJob}'s requested service time
+   *         for that queue.
+   * 
+   * @see #getServiceTime
+   * 
+   */
+  default Function<Q, Double> getRequestedServiceTimeFunction ()
+  {
+    return q -> SimJob.this.getServiceTime (q);
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   // END OF FILE

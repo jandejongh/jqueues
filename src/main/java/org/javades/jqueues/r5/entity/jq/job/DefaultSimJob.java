@@ -111,13 +111,13 @@ implements SimJob<J, Q>
    * in absence of invocations of {@link #setFallbackRequestedServiceTime}.
    * 
    */
-  public final static double DEFAULT_FALLBACK_REQUESTED_SERIVE_TIME = 1.0;
+  public final static double DEFAULT_FALLBACK_REQUESTED_SERVICE_TIME = 1.0;
   
   /** The fallback requested service time, in case a value could not be obtained from the internal mapping of {@link SimQueue}s
    *  onto requested service times.
    * 
    */
-  private double fallbackRequestedServiceTime = DefaultSimJob.DEFAULT_FALLBACK_REQUESTED_SERIVE_TIME;
+  private double fallbackRequestedServiceTime = DefaultSimJob.DEFAULT_FALLBACK_REQUESTED_SERVICE_TIME;
   
   /** Returns the fallback requested service time,
    *  in case a value could not be obtained from the internal mapping of {@link SimQueue}s
@@ -127,7 +127,7 @@ implements SimJob<J, Q>
    *           in case a value could not be obtained from the internal mapping of {@link SimQueue}s
    *           onto requested service times.
    * 
-   * @see #DEFAULT_FALLBACK_REQUESTED_SERIVE_TIME
+   * @see #DEFAULT_FALLBACK_REQUESTED_SERVICE_TIME
    * 
    */
   public final double getFallbackRequestedServiceTime ()
@@ -200,7 +200,7 @@ implements SimJob<J, Q>
    * @see #getQueue
    * 
    */
-  public void setRequestedServiceTimeMappingForQueue (final Q queue, final double serviceTime)
+  public final void setRequestedServiceTimeMappingForQueue (final Q queue, final double serviceTime)
   {
     if (queue == null || serviceTime < 0)
       throw new IllegalArgumentException ();
